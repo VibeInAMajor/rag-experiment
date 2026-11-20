@@ -21,7 +21,7 @@ import {
   createPipeline,
   exportPipeline,
   importPipeline,
-  validateGraph,
+  checkPreviewGraph,
 } from "./domain/graph";
 import type {
   GraphIssue,
@@ -31,6 +31,7 @@ import type {
 } from "./domain/types";
 import { useGraphHistory } from "./hooks/useGraphHistory";
 import { usePreview } from "./hooks/usePreview";
+import { useValidation } from "./hooks/useValidation";
 import { PipelinesView } from "./views/PipelinesView";
 import { DocumentsView } from "./views/DocumentsView";
 import { RunsView } from "./views/RunsView";
@@ -56,6 +57,7 @@ export function App() {
   const [page, setPage] = useState<Page>("editor");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [issues, setIssues] = useState<GraphIssue[]>([]);
+  const [showValidationIssues, setShowValidationIssues] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -69,6 +71,7 @@ export function App() {
   const current = pipeline ?? fallback;
   const history = useGraphHistory(current, setPipelines);
   const preview = usePreview(setRuns);
+  const validation = useValidation(current);
   const displayedRun = runs.find((run) => run.pipelineId === current.id);
 
   useEffect(
@@ -91,6 +94,7 @@ export function App() {
     setPage("editor");
     setSelectedNodeId(null);
     setIssues([]);
+    setShowValidationIssues(false);
     setResultsOpen(false);
   };
   const newPipeline = (template: TemplateId) => {
@@ -153,16 +157,22 @@ export function App() {
     }
   };
 
-  const validate = () => {
-    const found = validateGraph(current.graph);
-    setIssues(found);
+  const checkPreview = () => {
+    const found = checkPreviewGraph(current.graph);
+    setIssues(
+      found.map((issue) => ({
+        ...issue,
+        message: `Preview only: ${issue.message}`,
+      })),
+    );
     if (found.length) {
       setResultsOpen(true);
       notify(
         `${found.length} validation issue${found.length === 1 ? "" : "s"} found.`,
         true,
       );
-    } else notify("Pipeline is valid for preview.");
+    } else
+      notify("Fixture preview checks passed; this is not Haystack validation.");
     return found.length === 0;
   };
 
@@ -261,14 +271,21 @@ export function App() {
                 onSelectNode={setSelectedNodeId}
                 onGraphChange={(update, record) => {
                   history.updateGraph(update, record);
-                  setIssues([]);
+                  if (record !== false) setIssues([]);
                 }}
                 onBack={() => setPage("pipelines")}
                 onExport={downloadPipeline}
                 onImport={uploadPipeline}
-                onValidate={validate}
+                onValidate={() => {
+                  setShowValidationIssues(true);
+                  setIssues([]);
+                  setResultsOpen(true);
+                  void validation.validate();
+                }}
+                validationStatus={validation.state.status}
                 onRun={() => {
-                  if (validate()) {
+                  setShowValidationIssues(false);
+                  if (checkPreview()) {
                     setResultsOpen(true);
                     void preview
                       .runPipeline(current, settings)
@@ -295,7 +312,15 @@ export function App() {
                     : null
                 }
                 run={displayedRun}
-                issues={issues}
+                issues={[
+                  ...issues,
+                  ...(showValidationIssues ? validation.state.issues : []).map(
+                    (issue) => ({
+                      ...issue,
+                      message: `${issue.code}${issue.nodeId ? ` · ${current.graph.nodes.find((node) => node.id === issue.nodeId)?.data.label ?? issue.nodeId}` : ""}${issue.edgeId ? ` · edge ${issue.edgeId}` : ""}: ${issue.message}`,
+                    }),
+                  ),
+                ]}
                 resultsOpen={resultsOpen}
                 onResultsOpen={setResultsOpen}
                 notify={notify}

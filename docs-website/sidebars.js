@@ -10,6 +10,11 @@ export default {
       label: 'Introduction',
     },
     {
+      type: 'doc',
+      id: 'architecture/rag-runtime-contract',
+      label: 'RAG Runtime Contract',
+    },
+    {
       type: 'category',
       label: 'Get Started',
       items: [

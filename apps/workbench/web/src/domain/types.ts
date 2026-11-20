@@ -61,7 +61,13 @@ export type NodeDefinition = {
   parameters: Parameter[];
   defaults: Record<string, string | number>;
 };
-export type GraphIssue = { nodeId?: string; message: string };
+export type GraphIssue = {
+  nodeId?: string;
+  edgeId?: string;
+  code?: string;
+  field?: string;
+  message: string;
+};
 export type PreviewDocument = {
   id: string;
   name: string;

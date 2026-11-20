@@ -26,9 +26,9 @@ export function ResultsPanel({
   const [tab, setTab] = useState<"output" | "nodes" | "errors">("output");
   const [json, setJson] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const errors = [
-    ...issues.map((issue) => issue.message),
-    ...(run?.errors ?? []),
+  const errors: GraphIssue[] = [
+    ...issues,
+    ...(run?.errors ?? []).map((message) => ({ message })),
   ];
   const effectiveTab = issues.length ? "errors" : tab;
   return (
@@ -103,9 +103,22 @@ export function ResultsPanel({
           errors.length ? (
             <div className="error-list">
               {errors.map((error, index) => (
-                <div key={`${error}-${index}`}>
+                <div key={`${error.message}-${index}`}>
                   <CircleAlert size={16} />
-                  <span>{error}</span>
+                  <span>
+                    {error.message}
+                    {error.field && <code> · {error.field}</code>}
+                  </span>
+                  {error.nodeId && (
+                    <button
+                      className="button small"
+                      onClick={() => {
+                        if (error.nodeId) onSelectNode(error.nodeId);
+                      }}
+                    >
+                      Select node
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

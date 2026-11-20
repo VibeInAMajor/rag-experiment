@@ -199,18 +199,14 @@ export function Inspector({
                   {graph.nodes
                     .filter((item) => item.id !== node.id)
                     .flatMap((item) =>
-                      getDefinition(item.data.kind)
-                        .outputs.filter(
-                          (port) => port.valueKind === input.valueKind,
-                        )
-                        .map((port) => (
-                          <option
-                            key={`${item.id}-${port.id}`}
-                            value={`${item.id}::${port.id}`}
-                          >
-                            {item.data.label} / {port.label}
-                          </option>
-                        )),
+                      getDefinition(item.data.kind).outputs.map((port) => (
+                        <option
+                          key={`${item.id}-${port.id}`}
+                          value={`${item.id}::${port.id}`}
+                        >
+                          {item.data.label} / {port.label}
+                        </option>
+                      )),
                     )}
                 </select>
               </label>

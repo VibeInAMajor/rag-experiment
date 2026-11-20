@@ -125,12 +125,41 @@ export function topologicalNodeIds(graph: Graph): string[] {
   }
   if (order.length !== graph.nodes.length)
     throw new Error(
-      "Connections must form a DAG. Remove the cycle to continue.",
+      "Fixture preview requires a DAG. Remove the cycle to preview; this is not a Haystack restriction.",
     );
   return order;
 }
 
-export function validateConnection(
+export function checkDraftConnection(
+  graph: Graph,
+  connection: Connection,
+): string | null {
+  const source = graph.nodes.find((node) => node.id === connection.source);
+  const target = graph.nodes.find((node) => node.id === connection.target);
+  if (!source || !target) return "Choose two existing components.";
+  if (
+    !getDefinition(source.data.kind).outputs.some(
+      (port) => port.id === connection.sourceHandle,
+    ) ||
+    !getDefinition(target.data.kind).inputs.some(
+      (port) => port.id === connection.targetHandle,
+    )
+  )
+    return "Choose existing editor input and output handles.";
+  if (
+    graph.edges.some(
+      (edge) =>
+        edge.source === source.id &&
+        edge.target === target.id &&
+        edge.sourceHandle === connection.sourceHandle &&
+        edge.targetHandle === connection.targetHandle,
+    )
+  )
+    return "These ports are already connected.";
+  return null;
+}
+
+export function checkPreviewConnection(
   graph: Graph,
   connection: Connection,
 ): string | null {
@@ -171,7 +200,7 @@ export function validateConnection(
   while (pending.length) {
     const id = pending.pop()!;
     if (id === source.id)
-      return "This connection would create a cycle. Pipelines must form a DAG.";
+      return "Fixture preview cannot simulate this cycle; Haystack may support the loop.";
     if (visited.has(id)) continue;
     visited.add(id);
     pending.push(
@@ -183,7 +212,7 @@ export function validateConnection(
   return null;
 }
 
-export function validateGraph(graph: Graph): GraphIssue[] {
+export function checkPreviewGraph(graph: Graph): GraphIssue[] {
   const issues: GraphIssue[] = [];
   if (!graph.nodes.length)
     return [{ message: "Add a component to start building your pipeline." }];
@@ -266,7 +295,7 @@ export function validateGraph(graph: Graph): GraphIssue[] {
     if (edgeIds.has(edge.id))
       issues.push({ message: "Connection identifiers must be unique." });
     edgeIds.add(edge.id);
-    const message = validateConnection(
+    const message = checkPreviewConnection(
       { nodes: graph.nodes, edges: graph.edges.slice(0, index) },
       edge,
     );
@@ -399,6 +428,39 @@ function parseEdge(value: unknown): Edge {
   };
 }
 
+export function portableGraph(graph: Graph): Graph {
+  return {
+    nodes: graph.nodes.map((node) => ({
+      id: node.id,
+      type: "workbench",
+      position: { x: node.position.x, y: node.position.y },
+      data: {
+        kind: node.data.kind,
+        label: node.data.label,
+        parameters: { ...node.data.parameters },
+        status: "idle",
+      },
+    })),
+    edges: graph.edges.map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: edge.sourceHandle,
+      targetHandle: edge.targetHandle,
+      type: "smoothstep",
+    })),
+    ...(graph.viewport
+      ? {
+          viewport: {
+            x: graph.viewport.x,
+            y: graph.viewport.y,
+            zoom: graph.viewport.zoom,
+          },
+        }
+      : {}),
+  };
+}
+
 function portablePipeline(pipeline: Pipeline): Pipeline {
   return {
     id: pipeline.id,
@@ -406,33 +468,9 @@ function portablePipeline(pipeline: Pipeline): Pipeline {
     description: pipeline.description,
     templateId: pipeline.templateId,
     updatedAt: pipeline.updatedAt,
-    graph: {
-      nodes: pipeline.graph.nodes.map((node) => ({
-        id: node.id,
-        type: "workbench",
-        position: { ...node.position },
-        data: {
-          kind: node.data.kind,
-          label: node.data.label,
-          parameters: { ...node.data.parameters },
-          status: "idle",
-        },
-      })),
-      edges: pipeline.graph.edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        type: "smoothstep",
-      })),
-      ...(pipeline.graph.viewport
-        ? { viewport: { ...pipeline.graph.viewport } }
-        : {}),
-    },
+    graph: portableGraph(pipeline.graph),
   };
 }
-
 export function exportPipeline(pipeline: Pipeline): string {
   return JSON.stringify(
     { schemaVersion: 1, pipeline: portablePipeline(pipeline) },
@@ -484,7 +522,7 @@ export function importPipeline(serialized: string): Pipeline {
     const edge = parseEdge(item);
     if (edgeIds.has(edge.id))
       throw new Error("Connection identifiers must be unique.");
-    const issue = validateConnection(graph, edge);
+    const issue = checkDraftConnection(graph, edge);
     if (issue) throw new Error(issue);
     edgeIds.add(edge.id);
     graph.edges.push(edge);

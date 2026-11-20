@@ -80,7 +80,11 @@ async function smoke(page) {
       exact: true,
     })
     .selectOption({ label: "Secondary fusion / Combined matches" });
-  await page.getByRole("alert").filter({ hasText: "cycle" }).waitFor();
+  await page.getByRole("button", { name: "Run", exact: true }).click();
+  await page
+    .locator(".error-list")
+    .filter({ hasText: "Preview only:" })
+    .waitFor();
   await page.getByRole("button", { name: "Dismiss notification" }).click();
   await page
     .locator(".node-title")
@@ -134,5 +138,5 @@ async function smoke(page) {
     (await page.locator(".error-list").innerText()).includes("Simulated"),
     "Expected a visible preview error",
   );
-  return "PASS: edit, undo/redo, JSON roundtrip, branch creation, cycle rejection, preview success, document chunks, run history, preview failure";
+  return "PASS: edit, undo/redo, JSON roundtrip, branch creation, preview-only cycle restriction, preview success, document chunks, run history, preview failure";
 }

@@ -155,6 +155,30 @@ e2e = 'pytest {args:e2e}'
 
 types = "mypy --install-types --non-interactive --cache-dir=.mypy_cache/ {args:haystack test}"
 
+# Independent local Workbench API; these dependencies are not part of the Haystack library.
+[tool.hatch.envs.workbench-api]
+detached = true
+installer = "uv"
+dependencies = [
+  "fastapi==0.165.0",
+  "starlette==1.10.0",
+  "uvicorn==0.54.0",
+  "pydantic==2.14.4",
+  "httpx==0.28.1",
+  "pytest==9.2.0",
+  "pytest-asyncio>=1.3,<2",
+  "jsonschema>=4.26,<5",
+  "types-jsonschema",
+  "ruff==0.17.6",
+  "mypy>=1.19,<2",
+]
+
+[tool.hatch.envs.workbench-api.scripts]
+serve = "python -m apps.workbench.api"
+test = "python -m pytest -q apps/workbench/api/tests {args}"
+check = "ruff check apps/workbench/api && ruff format --check apps/workbench/api"
+types = "mypy --explicit-package-bases apps/workbench/api"
+
 [project.urls]
 "CI: GitHub" = "https://github.com/deepset-ai/haystack/actions"
 "Docs: RTD" = "https://haystack.deepset.ai/overview/intro"

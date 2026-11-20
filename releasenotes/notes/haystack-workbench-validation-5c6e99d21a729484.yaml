@@ -1,0 +1,10 @@
+features:
+  - |
+    Add an isolated local Haystack validation service for Workbench pipeline
+    drafts and complete input checks, with mapped node and edge diagnostics.
+upgrade:
+  - |
+    Workbench ``Validate`` now requires the optional local validation service.
+    Offline editing, safe JSON import and fixture previews remain available;
+    their checks no longer indicate Haystack compatibility. See the Workbench
+    README for startup instructions and unsupported catalog mappings.

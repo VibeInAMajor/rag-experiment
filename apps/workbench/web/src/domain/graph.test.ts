@@ -5,8 +5,8 @@ import {
   exportPipeline,
   importPipeline,
   topologicalNodeIds,
-  validateConnection,
-  validateGraph,
+  checkPreviewConnection,
+  checkPreviewGraph,
 } from "./graph";
 import {
   completePreviewNode,
@@ -18,14 +18,14 @@ import type { Graph, PreviewRun } from "./types";
 describe("pipeline validation", () => {
   it("accepts the indexing and branched retrieval templates", () => {
     for (const template of ["indexing", "retrieval"] as const)
-      expect(validateGraph(createPipeline(template).graph)).toEqual([]);
+      expect(checkPreviewGraph(createPipeline(template).graph)).toEqual([]);
   });
 
   it("rejects a connection between incompatible values", () => {
     const source = createNode("query", { x: 0, y: 0 });
     const target = createNode("parser", { x: 300, y: 0 });
     expect(
-      validateConnection(
+      checkPreviewConnection(
         { nodes: [source, target], edges: [] },
         {
           source: source.id,
@@ -40,7 +40,7 @@ describe("pipeline validation", () => {
   it("rejects an edge whose declared port does not exist", () => {
     const graph = createPipeline("retrieval").graph;
     expect(
-      validateConnection(
+      checkPreviewConnection(
         { ...graph, edges: [] },
         { ...graph.edges[0], sourceHandle: "invented" },
       ),
@@ -49,12 +49,12 @@ describe("pipeline validation", () => {
 
   it("rejects duplicate edges and a second producer on a single input", () => {
     const graph = createPipeline("retrieval").graph;
-    expect(validateConnection(graph, graph.edges[0])).toContain(
+    expect(checkPreviewConnection(graph, graph.edges[0])).toContain(
       "already connected",
     );
     const otherQuery = createNode("query", { x: 0, y: 400 });
     expect(
-      validateConnection(
+      checkPreviewConnection(
         { ...graph, nodes: [...graph.nodes, otherQuery] },
         { ...graph.edges[0], source: otherQuery.id },
       ),
@@ -65,7 +65,7 @@ describe("pipeline validation", () => {
     const graph = createPipeline("retrieval").graph;
     const edge = graph.edges[4];
     expect(
-      validateConnection(
+      checkPreviewConnection(
         { ...graph, edges: graph.edges.filter((item) => item.id !== edge.id) },
         edge,
       ),
@@ -93,7 +93,7 @@ describe("pipeline validation", () => {
       sourceHandle: "documents",
       targetHandle: "documents",
     };
-    expect(validateConnection(graph, back)).toContain("cycle");
+    expect(checkPreviewConnection(graph, back)).toContain("cycle");
     expect(() =>
       topologicalNodeIds({
         ...graph,
@@ -108,7 +108,7 @@ describe("pipeline validation", () => {
     graph.nodes.find(
       (node) => node.data.kind === "query",
     )!.data.parameters.query = "   ";
-    const issues = validateGraph(graph);
+    const issues = checkPreviewGraph(graph);
     expect(
       issues.some((issue) => issue.message.includes("connect the query")),
     ).toBe(true);
@@ -122,7 +122,7 @@ describe("pipeline validation", () => {
     const chunker = graph.nodes.find((node) => node.data.kind === "chunker")!;
     chunker.data.parameters.overlap = chunker.data.parameters.size;
     expect(
-      validateGraph(graph).some((issue) =>
+      checkPreviewGraph(graph).some((issue) =>
         issue.message.includes("overlap must be smaller"),
       ),
     ).toBe(true);
@@ -217,7 +217,9 @@ describe("portable pipeline files", () => {
         },
       ],
     };
-    expect(() => importPipeline(exportPipeline(pipeline))).toThrow("cycle");
+    expect(importPipeline(exportPipeline(pipeline)).graph.edges).toHaveLength(
+      2,
+    );
     pipeline.graph.edges = [
       pipeline.graph.edges[0],
       { ...pipeline.graph.edges[0], id: "duplicate" },
@@ -276,7 +278,7 @@ describe("portable pipeline files", () => {
       .parameters.query;
     const restored = importPipeline(exportPipeline(pipeline));
     expect(
-      validateGraph(restored.graph).some((issue) =>
+      checkPreviewGraph(restored.graph).some((issue) =>
         issue.message.includes("Question is required"),
       ),
     ).toBe(true);

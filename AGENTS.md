@@ -1,5 +1,20 @@
 # Haystack Guidelines for AI Agents
 
+
+## Task routing
+
+- **Find existing logic:** [Project map](docs/PROJECT_MAP.md).
+- **Naming, reuse, testing and integration rules:** [Engineering conventions](docs/ENGINEERING.md).
+- **UI:** [Workbench README](apps/workbench/web/README.md). In `apps/workbench/web`, run `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` (after `npm ci` if needed).
+- **Haystack Python:** [Engineering conventions](docs/ENGINEERING.md#haystack-python) and [CONTRIBUTING.md](CONTRIBUTING.md). Use Hatch; run targeted tests and configured quality checks.
+- **RAG architecture:** [Project map: implemented vs planned](docs/PROJECT_MAP.md#implemented-vs-planned). The dated [RAG MVP plan](docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) is a reference, not an implemented contract.
+
+## Scoped guidance
+
+Follow narrower `AGENTS.md` instructions in `docs-website/`, `docs-website/docs/`, `haystack/hooks/compaction/`, `releasenotes/notes/`, and `test/` when editing those trees. Narrower instructions take precedence within their scope.
+
+Before finishing, summarize changed files, existing logic reused, checks run/not run, remaining risks, and any intentional contract or design changes.
+
 ## Environment
 
 Haystack uses **Hatch** for environment and dependency management.

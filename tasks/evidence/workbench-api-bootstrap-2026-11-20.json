@@ -1,0 +1,102 @@
+{
+  "checked_at_utc": "2026-11-20T21:10:56.947652+00:00",
+  "base_url": "http://127.0.0.1:8011",
+  "schema_validation": "passed",
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/api/v1/health/live",
+      "http_status": 200,
+      "payload": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "b63d20153e5b4f6b8710319c07f9ef2d",
+        "trace_id": "4cff41049eeb4b58931a123dc600e302",
+        "status": "alive",
+        "backend_revision": "workbench-api-bootstrap-v1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/health/ready",
+      "http_status": 503,
+      "payload": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "826b2893b9f7470882c11e2e52524095",
+        "trace_id": "3860c86130724c968c0aaf961c286991",
+        "error": {
+          "code": "NOT_READY",
+          "message": "No execution profile is ready.",
+          "retryable": true,
+          "http_status": 503
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/capabilities",
+      "http_status": 200,
+      "payload": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "7a889acf99444e07ad3d8519991e2bc1",
+        "trace_id": "42926f0170334ce49720d4b4130c7cbd",
+        "backend_revision": "workbench-api-bootstrap-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [],
+        "features": {
+          "documents": false,
+          "search": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/health/live",
+      "http_status": 403,
+      "payload": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "cb2191a2c3d7436f90d1880ad070ff1e",
+        "trace_id": "3178d95fd80245d18f5ceec2ac5dca20",
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "The request origin is not permitted.",
+          "retryable": false,
+          "http_status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/not-present",
+      "http_status": 404,
+      "payload": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "6c9052b9594b4db08361ee42cde04812",
+        "trace_id": "29f266f8ee9b42d192456a6f224442dc",
+        "error": {
+          "code": "ENDPOINT_NOT_FOUND",
+          "message": "The endpoint does not exist.",
+          "retryable": false,
+          "http_status": 404
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/health/live",
+      "http_status": 405,
+      "payload": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "0f53949d1c0647e28c2f2c9bdabd9b51",
+        "trace_id": "2dd0742f143a4be291bff2ec00317f8e",
+        "error": {
+          "code": "METHOD_NOT_ALLOWED",
+          "message": "The HTTP method is not supported.",
+          "retryable": false,
+          "http_status": 405
+        }
+      }
+    }
+  ],
+  "retrieval_database_inference": "not_run"
+}

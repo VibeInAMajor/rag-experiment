@@ -1,5 +1,5 @@
 import { previewDocuments } from "./fixtures";
-import { topologicalNodeIds, validateGraph } from "./graph";
+import { topologicalNodeIds, checkPreviewGraph } from "./graph";
 import type {
   NodeResult,
   Pipeline,
@@ -63,7 +63,7 @@ function failureNodeId(run: PreviewRun): string | undefined {
 }
 
 export function createPreviewRun(pipeline: Pipeline): PreviewRun {
-  const issues = validateGraph(pipeline.graph);
+  const issues = checkPreviewGraph(pipeline.graph);
   if (issues.length) throw new Error(issues[0].message);
   topologicalNodeIds(pipeline.graph);
   const graph = structuredClone(pipeline.graph);

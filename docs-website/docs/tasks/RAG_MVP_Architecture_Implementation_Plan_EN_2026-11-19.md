@@ -1,4 +1,66 @@
-# RAG Platform — MVP Architecture and Implementation Plan
+# RAG Platform — MVP Planning Reference
+
+**Created:** 2026-11-19
+
+**Updated:** 2026-11-20
+
+**Status:** Reconciled planning reference; not an implemented runtime contract.
+
+**Current contract:** [Canonical RAG runtime contract](../architecture/rag-runtime-contract.md).
+
+## Current decisions and precedence
+
+The canonical contract owns execution profiles, API v1 schemas, storage boundaries, and runtime terminology. This dated document preserves the broader MVP backlog and its original research. Its archived version 1.1 below does **not** override the canonical contract or establish that any planned service is deployed.
+
+| Concern | Current agreed direction | Superseded historical direction |
+|---|---|---|
+| Durable storage | PostgreSQL for all durable application data, with pgvector for vectors | PostgreSQL metadata plus OpenSearch searchable chunks |
+| Metadata/version registry | Explicit PostgreSQL ownership of sources, versions, active-version publication, jobs and permissions, separate from search-adapter responsibilities | Cross-database PostgreSQL/OpenSearch reconciliation as the mandatory design |
+| First live search slice | Planned `bm25-v1`: query → real BM25 → ranked source passages | Hybrid retrieval and reranking as prerequisites for the first connection |
+| BM25 computation | A transient derived Haystack BM25 index, rebuilt from an approved PostgreSQL corpus snapshot; PostgreSQL owns durable data from the first live slice | OpenSearch-specific BM25 indexes and aliases |
+| Embeddings | Existing TEI service direction, Qwen3-Embedding-4B, expected full dimension 2560; integration and compatibility probes remain future work | Ollama `/api/embed` as the required embedding transport |
+| Generation | Deferred until retrieval MVP has passed its quality gates | No change to the original generation deferral |
+
+PostgreSQL full-text ranking is not BM25 and must not be labeled BM25. A transient BM25 index is computation state, not a second durable database. The first live slice may use a small development corpus seeded into PostgreSQL; no in-memory fixture store replaces the durable authority. Readiness requires a complete authorized snapshot of that corpus.
+
+The initial BM25 slice has no embedding or model dependency. Later dense/hybrid retrieval uses the agreed TEI profile. The selected endpoint, served model identity/revision, tokenization, query instruction, normalization, actual vector length, limits and usage reporting must be verified before connecting that profile. An expected dimension of 2560 is not evidence that a request was sent or a vector was stored.
+
+## Implemented versus planned
+
+| Capability | Repository evidence and status |
+|---|---|
+| Workbench graph editing and portable graph JSON | Implemented in [`apps/workbench/web`](../../../apps/workbench/web/README.md); `schemaVersion: 1` is editor state, not an executable Haystack serialization |
+| Preview documents, runs and retrieval scores | Fixture-only; no live indexing, embedding, retrieval or generation is implied |
+| Authoritative component/connection checking | Implemented validation-only boundary in [`apps/workbench/validator`](../../../apps/workbench/validator/README.md); builds approved actual components without warming or executing them |
+| API v1 health/readiness/capability discovery | Implemented bootstrap in [`apps/workbench/api`](../../../apps/workbench/api/README.md); default profiles are empty and readiness is 503 |
+| Workspace/document/search API and live run history | Planned; neither the discovery bootstrap nor the validator executes retrieval |
+| `bm25-v1` live profile | Planned; it must not be advertised as executable until its backend and acceptance evidence exist |
+| PostgreSQL/pgvector integration, TEI wiring, delta publication and reranking | Planned application work; neither upstream library classes nor documentation prove these integrations are deployed |
+
+The validation-only service can return `unsupported` for UI-only source/result nodes or unavailable/unmapped integrations. Passing its requested validation level is not an execution guarantee, an authorization decision, or evidence that any data was retrieved. The Workbench Preview DAG restriction is separate from Haystack's supported loop semantics.
+
+## Incremental delivery and acceptance
+
+1. **Contract first:** use the canonical contract's provider-neutral API v1 requests, typed results, errors, capability revisions and server-owned workspace/source identity. Capabilities advertise only implemented approved profiles, never UI component labels or planned providers.
+2. **First live retrieval:** implement minimum PostgreSQL registry migrations and corpus loading, then only the approved `bm25-v1` query-to-results profile. Reject unsupported graphs/profiles explicitly; do not execute raw Workbench JSON, client-provided Python names or uploaded Haystack YAML.
+3. **Extended durable application data:** expand the PostgreSQL metadata/version registry for ingestion and attach pgvector adapters. Source identity, active versions and access rules remain authoritative server state.
+4. **Extraction and delta indexing:** preserve structural parsing reports, provenance, deterministic chunk occurrences and profile-aware embedding reuse. Only successful complete versions may become visible; deletion and crash recovery require focused tests.
+5. **Dense and hybrid retrieval:** probe the TEI profile, validate finite 2560-dimensional vectors and matching query/document representations, then compare dense and BM25+RRF retrieval on the same corpus. Select a reranker only after measuring quality and resource costs.
+6. **Capacity and resilience:** benchmark the actual selected TEI/runtime profile. Separate estimated/admitted tokens from reported completed usage; do not import historical TEI/Azure/Ollama throughput figures as this application's quota or SLA. Missing actual usage stays unknown.
+7. **Generation later:** add grounded answer generation after retrieval acceptance, with its own evidence, citation and failure contracts.
+
+Broader priorities from the historical research remain useful acceptance scenarios: parsing without silent loss, source/chunk delta reuse, stale-version exclusion, correct provenance, workspace isolation, retry/recovery, retrieval quality and observable stage timings. Their former OpenSearch- and Ollama-specific implementation instructions are superseded. First-slice single-workspace development is not production multi-tenant security; later workspace/permission gates must be tested independently.
+
+Live results must carry the canonical run and trace identifiers, actual stage durations, source/chunk references, rank, numeric score and score type. Preview runs retain their explicit fixture origin. Retrieval scores are ranking values, not probabilities or measured answer quality. No runtime benchmark or retrieval pass is claimed by this documentation-only reconciliation.
+
+## Historical architecture and audit record — superseded
+
+The original 2026-11-19 version 1.1 is retained below for its parsing research, delta/TPM audit scenarios and source references. **Every architecture selection, present-tense requirement, sample configuration, API path, milestone and performance figure inside this archive is historical, not an active implementation instruction.** OpenSearch indexes/aliases, Ollama embedding transport and cross-database publication procedures must not be copied into new work merely because they appear here. Follow the current canonical contract for any subsequent implementation.
+
+<details>
+<summary>Archived version 1.1 — superseded OpenSearch / Ollama proposal and audit</summary>
+
+# Archived: RAG Platform — MVP Architecture and Implementation Plan
 
 *RAG / Product Engineering*
 
@@ -968,3 +1030,5 @@ These links refer to documentation and source code checked as of November 19, 20
 **Changes in v1.1 (November 19, 2026):** Added Chapter 16 with a detailed code-reuse audit of both subsystems; adapters and dependencies; TEI and Azure benchmarks as external reference points; Ollama calibration; a test matrix; REUSE-01 through REUSE-05; process-local and licensing limitations. Clarified P0.2/P0.3/P0.7, chunk identities, and TPM acceptance criteria.
 
 **End of specification · MVP first; scale only after quality has been demonstrated**
+
+</details>

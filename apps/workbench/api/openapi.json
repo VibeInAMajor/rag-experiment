@@ -1,0 +1,672 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Workbench API",
+    "version": "rag-api-v1.0"
+  },
+  "paths": {
+    "/api/v1/health/live": {
+      "get": {
+        "summary": "Live",
+        "operationId": "live_api_v1_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_api_v1_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/capabilities": {
+      "get": {
+        "summary": "Capabilities",
+        "operationId": "capabilities_api_v1_capabilities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilitiesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "retryable": {
+            "type": "boolean",
+            "title": "Retryable"
+          },
+          "http_status": {
+            "type": "integer",
+            "title": "Http Status"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,128}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ErrorField"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "retryable",
+          "http_status"
+        ],
+        "title": "ApiError"
+      },
+      "CapabilitiesResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "backend_revision": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Backend Revision"
+          },
+          "deployment_mode": {
+            "type": "string",
+            "const": "single_workspace_dev",
+            "title": "Deployment Mode",
+            "default": "single_workspace_dev"
+          },
+          "service_state": {
+            "$ref": "#/components/schemas/ServiceState"
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/components/schemas/ExecutionProfile"
+            },
+            "type": "array",
+            "title": "Profiles"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "backend_revision",
+          "service_state",
+          "profiles"
+        ],
+        "title": "CapabilitiesResponse"
+      },
+      "ErrorField": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "code"
+        ],
+        "title": "ErrorField"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiError"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "ExecutionProfile": {
+        "properties": {
+          "profile_id": {
+            "type": "string",
+            "const": "bm25-v1",
+            "title": "Profile Id",
+            "default": "bm25-v1"
+          },
+          "profile_revision": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Profile Revision"
+          },
+          "kind": {
+            "type": "string",
+            "const": "lexical_search",
+            "title": "Kind",
+            "default": "lexical_search"
+          },
+          "workspace_ids": {
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Workspace Ids"
+          },
+          "corpus_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Corpus Id"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/ProfileParameters"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/ProfileLimits"
+          },
+          "score_type": {
+            "type": "string",
+            "const": "bm25_raw",
+            "title": "Score Type",
+            "default": "bm25_raw"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile_revision",
+          "workspace_ids",
+          "corpus_id"
+        ],
+        "title": "ExecutionProfile"
+      },
+      "Features": {
+        "properties": {
+          "documents": {
+            "type": "boolean",
+            "title": "Documents",
+            "default": false
+          },
+          "search": {
+            "type": "boolean",
+            "title": "Search",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Features"
+      },
+      "LiveResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "alive",
+            "title": "Status",
+            "default": "alive"
+          },
+          "backend_revision": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Backend Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "backend_revision"
+        ],
+        "title": "LiveResponse"
+      },
+      "ProfileLimits": {
+        "properties": {
+          "max_request_bytes": {
+            "type": "integer",
+            "const": 32768,
+            "title": "Max Request Bytes",
+            "default": 32768
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "const": 10000,
+            "title": "Timeout Ms",
+            "default": 10000
+          },
+          "max_concurrent_searches": {
+            "type": "integer",
+            "const": 2,
+            "title": "Max Concurrent Searches",
+            "default": 2
+          },
+          "max_corpus_chunks": {
+            "type": "integer",
+            "const": 10000,
+            "title": "Max Corpus Chunks",
+            "default": 10000
+          },
+          "max_corpus_bytes": {
+            "type": "integer",
+            "const": 52428800,
+            "title": "Max Corpus Bytes",
+            "default": 52428800
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProfileLimits"
+      },
+      "ProfileParameters": {
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/QueryParameter"
+          },
+          "top_k": {
+            "$ref": "#/components/schemas/TopKParameter"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProfileParameters"
+      },
+      "QueryParameter": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "string",
+            "title": "Type",
+            "default": "string"
+          },
+          "min_length": {
+            "type": "integer",
+            "const": 1,
+            "title": "Min Length",
+            "default": 1
+          },
+          "max_length": {
+            "type": "integer",
+            "const": 4096,
+            "title": "Max Length",
+            "default": 4096
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "QueryParameter"
+      },
+      "ReadyResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "ready",
+            "title": "Status",
+            "default": "ready"
+          },
+          "backend_revision": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Backend Revision"
+          },
+          "ready_profile_ids": {
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            },
+            "type": "array",
+            "title": "Ready Profile Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "backend_revision",
+          "ready_profile_ids"
+        ],
+        "title": "ReadyResponse"
+      },
+      "ServiceState": {
+        "type": "string",
+        "enum": [
+          "starting",
+          "running",
+          "stopping",
+          "stopped"
+        ],
+        "title": "ServiceState"
+      },
+      "TopKParameter": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "integer",
+            "title": "Type",
+            "default": "integer"
+          },
+          "default": {
+            "type": "integer",
+            "const": 10,
+            "title": "Default",
+            "default": 10
+          },
+          "minimum": {
+            "type": "integer",
+            "const": 1,
+            "title": "Minimum",
+            "default": 1
+          },
+          "maximum": {
+            "type": "integer",
+            "const": 50,
+            "title": "Maximum",
+            "default": 50
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TopKParameter"
+      }
+    }
+  }
+}

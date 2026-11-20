@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Add an opt-in, loopback-only Workbench API bootstrap. Run
+    ``hatch run workbench-api:serve`` from the repository root to inspect
+    ``/api/v1/health/live``, ``/api/v1/health/ready`` and
+    ``/api/v1/capabilities``. The bootstrap advertises no executable profiles
+    and reports not ready until a qualified retrieval implementation is added.
+    The standalone preview UI and existing construction validator remain independent.

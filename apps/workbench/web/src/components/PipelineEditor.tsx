@@ -32,7 +32,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { catalog, createNode, getDefinition } from "../domain/catalog";
-import { validateConnection } from "../domain/graph";
+import { checkDraftConnection } from "../domain/graph";
 import type {
   GraphIssue,
   NodeKind,
@@ -46,6 +46,7 @@ import { PipelineNode } from "./PipelineNode";
 import { NodeIcon } from "./NodeIcon";
 import { Inspector } from "./Inspector";
 import { ResultsPanel } from "./ResultsPanel";
+import type { ValidationState } from "../domain/validation";
 
 const nodeTypes = { workbench: PipelineNode };
 const groups = ["Inputs", "Processing", "Retrieval", "Outputs"] as const;
@@ -89,6 +90,7 @@ type Props = {
   onExport: () => void;
   onImport: (file: File) => void;
   onValidate: () => void;
+  validationStatus: ValidationState["status"];
   onRun: () => void;
   onStop: () => void;
   onRename: (name: string) => void;
@@ -277,7 +279,7 @@ function Editor(props: Props) {
       props.notify("A pipeline may contain up to 300 connections.", true);
       return;
     }
-    const error = validateConnection(graph, connection);
+    const error = checkDraftConnection(graph, connection);
     if (error) {
       props.notify(error, true);
       return;
@@ -385,11 +387,28 @@ function Editor(props: Props) {
           <button
             className="button small"
             onClick={props.onValidate}
-            disabled={busy}
+            disabled={busy || props.validationStatus === "checking"}
           >
             <Check size={15} />
-            Validate
+            {props.validationStatus === "checking" ? "Checking…" : "Validate"}
           </button>
+          <span
+            role="status"
+            className={`status ${props.validationStatus === "valid" ? "success" : props.validationStatus === "unchecked" || props.validationStatus === "checking" ? "neutral" : "error"}`}
+            title="Authoritative Haystack validation; preview is separate"
+          >
+            {props.validationStatus === "valid"
+              ? "Haystack valid"
+              : props.validationStatus === "unchecked"
+                ? "Not checked"
+                : props.validationStatus === "unavailable"
+                  ? "Validator unavailable · retry"
+                  : props.validationStatus === "unsupported"
+                    ? "Unsupported nodes"
+                    : props.validationStatus === "invalid"
+                      ? "Invalid graph"
+                      : "Checking Haystack"}
+          </span>
           <button
             className="button small export-button"
             onClick={props.onExport}
