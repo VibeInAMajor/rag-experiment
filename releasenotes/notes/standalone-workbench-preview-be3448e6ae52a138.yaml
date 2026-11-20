@@ -1,0 +1,5 @@
+features:
+  - |
+    Add the standalone Haystack Workbench frontend under ``apps/workbench/web``.
+    Edit pipeline graphs, import and export JSON, inspect sample documents, and
+    replay demonstration runs without a backend, database, or model service.
