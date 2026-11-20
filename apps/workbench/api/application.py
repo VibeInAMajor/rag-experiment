@@ -13,24 +13,34 @@ from apps.workbench.api.boundary import RequestBoundary, error_response, log_eve
 from apps.workbench.api.config import ApiSettings
 from apps.workbench.api.contracts import (
     CapabilitiesResponse,
+    Dependencies,
     ErrorResponse,
     Features,
     LiveResponse,
     ReadyResponse,
     ServiceState,
 )
+from apps.workbench.api.database_dependency import create_database_dependency
+from apps.workbench.api.persistence import PersistencePort
 from apps.workbench.api.services import ReadinessProbe, ReadinessSnapshot, UnconfiguredReadiness
 
 _READINESS_TIMEOUT_SECONDS = 1.0
 
 
-def create_app(*, settings: ApiSettings | None = None, readiness: ReadinessProbe | None = None) -> FastAPI:
+def create_app(
+    *,
+    settings: ApiSettings | None = None,
+    readiness: ReadinessProbe | None = None,
+    persistence: PersistencePort | None = None,
+) -> FastAPI:
     """Create the local API; injected readiness must certify actual executable profiles."""
     configuration = ApiSettings.from_env() if settings is None else settings
     probe = UnconfiguredReadiness() if readiness is None else readiness
+    database = create_database_dependency(configuration.database_dsn, persistence=persistence)
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+        await database.start()
         application.state.lifecycle = ServiceState.RUNNING
         log_event("service_state", state=ServiceState.RUNNING.value)
         try:
@@ -38,6 +48,7 @@ def create_app(*, settings: ApiSettings | None = None, readiness: ReadinessProbe
         finally:
             application.state.lifecycle = ServiceState.STOPPING
             log_event("service_state", state=ServiceState.STOPPING.value)
+            await database.close()
             application.state.lifecycle = ServiceState.STOPPED
             log_event("service_state", state=ServiceState.STOPPED.value)
 
@@ -99,8 +110,9 @@ def create_app(*, settings: ApiSettings | None = None, readiness: ReadinessProbe
 
     @app.get("/api/v1/health/ready", response_model=ReadyResponse, responses={503: {"model": ErrorResponse}})
     async def ready(request: Request) -> ReadyResponse | JSONResponse:
+        dependency = await database.snapshot(trace_id=request_meta(request).trace_id)
         current = await snapshot()
-        if not current.profiles:
+        if dependency.status != "ready" or not current.profiles:
             return error_response(
                 request_meta(request),
                 status=503,
@@ -117,12 +129,14 @@ def create_app(*, settings: ApiSettings | None = None, readiness: ReadinessProbe
     @app.get("/api/v1/capabilities", response_model=CapabilitiesResponse)
     async def capabilities(request: Request) -> CapabilitiesResponse:
         current = await snapshot()
+        dependency = await database.snapshot(trace_id=request_meta(request).trace_id)
         return CapabilitiesResponse(
             **request_meta(request).model_dump(),
             backend_revision=configuration.backend_revision,
             service_state=app.state.lifecycle,
-            profiles=current.profiles,
+            profiles=current.profiles if dependency.status == "ready" else [],
             features=Features(),
+            dependencies=Dependencies(database=dependency),
         )
 
     return app

@@ -1,0 +1,452 @@
+{
+  "baseline": {
+    "row_count": 8,
+    "corpus_sha256": "cc5f32c55c7c0b48870aff3b8aaa83b38f0b014ad20d0bcfaa423a819aadc296",
+    "chunk_ids": [
+      "demo-backup-chunk-1",
+      "demo-health-chunk-1",
+      "demo-identifiers-chunk-1",
+      "demo-publication-chunk-1",
+      "demo-scope-chunk-1",
+      "demo-search-chunk-1",
+      "demo-security-chunk-1",
+      "demo-vectors-chunk-1"
+    ],
+    "postgresql": "17.10 (Debian 17.10-1.pgdg12+1)",
+    "pgvector": "0.8.2",
+    "application": {
+      "ready": {
+        "schema_revision": "0001",
+        "workspace_id": "development",
+        "source_count": 8,
+        "chunk_count": 8
+      },
+      "source_ids": [
+        "demo-backup",
+        "demo-health",
+        "demo-identifiers",
+        "demo-publication",
+        "demo-scope",
+        "demo-search",
+        "demo-security",
+        "demo-vectors"
+      ],
+      "queries": [
+        {
+          "query_case": 1,
+          "source_ids": [
+            "demo-publication"
+          ],
+          "scores": [
+            0.10000000149011612
+          ],
+          "score_type": "postgres_ts_rank_cd",
+          "duration_ms": 0.0
+        },
+        {
+          "query_case": 2,
+          "source_ids": [
+            "demo-identifiers"
+          ],
+          "scores": [
+            0.10000000149011612
+          ],
+          "score_type": "postgres_ts_rank_cd",
+          "duration_ms": 15.99999999962165
+        }
+      ],
+      "trace_id": "868076ef3f514d71b1a2c9540c0867b1"
+    },
+    "api_capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "941c9aeb4f8f4bfaa709fe19be9e5b4c",
+      "trace_id": "2d13f1eecbc144bd8ff3cb31161470f3",
+      "backend_revision": "workbench-api-bootstrap-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [],
+      "features": {
+        "documents": false,
+        "search": false
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0001",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      }
+    },
+    "indexes": [
+      {
+        "indexname": "alembic_version_pkc",
+        "indexdef": "CREATE UNIQUE INDEX alembic_version_pkc ON workbench.alembic_version USING btree (version_num)"
+      },
+      {
+        "indexname": "chunks_pkey",
+        "indexdef": "CREATE UNIQUE INDEX chunks_pkey ON workbench.chunks USING btree (workspace_id, chunk_id)"
+      },
+      {
+        "indexname": "chunks_search_vector",
+        "indexdef": "CREATE INDEX chunks_search_vector ON workbench.chunks USING gin (search_vector)"
+      },
+      {
+        "indexname": "chunks_source_version",
+        "indexdef": "CREATE INDEX chunks_source_version ON workbench.chunks USING btree (workspace_id, source_id, version_id)"
+      },
+      {
+        "indexname": "embedding_profiles_pkey",
+        "indexdef": "CREATE UNIQUE INDEX embedding_profiles_pkey ON workbench.embedding_profiles USING btree (profile_id)"
+      },
+      {
+        "indexname": "embedding_profiles_profile_id_dimensions_key",
+        "indexdef": "CREATE UNIQUE INDEX embedding_profiles_profile_id_dimensions_key ON workbench.embedding_profiles USING btree (profile_id, dimensions)"
+      },
+      {
+        "indexname": "schema_migrations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX schema_migrations_pkey ON workbench.schema_migrations USING btree (revision)"
+      },
+      {
+        "indexname": "source_versions_one_active",
+        "indexdef": "CREATE UNIQUE INDEX source_versions_one_active ON workbench.source_versions USING btree (workspace_id, source_id) WHERE (status = 'active'::text)"
+      },
+      {
+        "indexname": "source_versions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX source_versions_pkey ON workbench.source_versions USING btree (workspace_id, source_id, version_id)"
+      },
+      {
+        "indexname": "sources_pkey",
+        "indexdef": "CREATE UNIQUE INDEX sources_pkey ON workbench.sources USING btree (workspace_id, source_id)"
+      },
+      {
+        "indexname": "workspaces_pkey",
+        "indexdef": "CREATE UNIQUE INDEX workspaces_pkey ON workbench.workspaces USING btree (workspace_id)"
+      }
+    ],
+    "diagnostic_explain_seqscan_disabled": [
+      {
+        "QUERY PLAN": "Index Scan using chunks_source_version on chunks  (cost=0.14..8.16 rows=1 width=32)"
+      },
+      {
+        "QUERY PLAN": "  Index Cond: (workspace_id = 'development'::text)"
+      },
+      {
+        "QUERY PLAN": "  Filter: (search_vector @@ '''publication'''::tsquery)"
+      }
+    ],
+    "ann_index_claim": "none"
+  },
+  "after-api": {
+    "row_count": 8,
+    "corpus_sha256": "cc5f32c55c7c0b48870aff3b8aaa83b38f0b014ad20d0bcfaa423a819aadc296",
+    "chunk_ids": [
+      "demo-backup-chunk-1",
+      "demo-health-chunk-1",
+      "demo-identifiers-chunk-1",
+      "demo-publication-chunk-1",
+      "demo-scope-chunk-1",
+      "demo-search-chunk-1",
+      "demo-security-chunk-1",
+      "demo-vectors-chunk-1"
+    ],
+    "postgresql": "17.10 (Debian 17.10-1.pgdg12+1)",
+    "pgvector": "0.8.2",
+    "application": {
+      "ready": {
+        "schema_revision": "0001",
+        "workspace_id": "development",
+        "source_count": 8,
+        "chunk_count": 8
+      },
+      "source_ids": [
+        "demo-backup",
+        "demo-health",
+        "demo-identifiers",
+        "demo-publication",
+        "demo-scope",
+        "demo-search",
+        "demo-security",
+        "demo-vectors"
+      ],
+      "queries": [
+        {
+          "query_case": 1,
+          "source_ids": [
+            "demo-publication"
+          ],
+          "scores": [
+            0.10000000149011612
+          ],
+          "score_type": "postgres_ts_rank_cd",
+          "duration_ms": 0.0
+        },
+        {
+          "query_case": 2,
+          "source_ids": [
+            "demo-identifiers"
+          ],
+          "scores": [
+            0.10000000149011612
+          ],
+          "score_type": "postgres_ts_rank_cd",
+          "duration_ms": 15.000000001236913
+        }
+      ],
+      "trace_id": "824021ff3bf349f5a64b999ac0f20b7d"
+    },
+    "api_capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "03872528dfb64811906e85284fd7fdc8",
+      "trace_id": "56f5a2e4f29748a1b0857ca85be96ecb",
+      "backend_revision": "workbench-api-bootstrap-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [],
+      "features": {
+        "documents": false,
+        "search": false
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0001",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      }
+    },
+    "indexes": [
+      {
+        "indexname": "alembic_version_pkc",
+        "indexdef": "CREATE UNIQUE INDEX alembic_version_pkc ON workbench.alembic_version USING btree (version_num)"
+      },
+      {
+        "indexname": "chunks_pkey",
+        "indexdef": "CREATE UNIQUE INDEX chunks_pkey ON workbench.chunks USING btree (workspace_id, chunk_id)"
+      },
+      {
+        "indexname": "chunks_search_vector",
+        "indexdef": "CREATE INDEX chunks_search_vector ON workbench.chunks USING gin (search_vector)"
+      },
+      {
+        "indexname": "chunks_source_version",
+        "indexdef": "CREATE INDEX chunks_source_version ON workbench.chunks USING btree (workspace_id, source_id, version_id)"
+      },
+      {
+        "indexname": "embedding_profiles_pkey",
+        "indexdef": "CREATE UNIQUE INDEX embedding_profiles_pkey ON workbench.embedding_profiles USING btree (profile_id)"
+      },
+      {
+        "indexname": "embedding_profiles_profile_id_dimensions_key",
+        "indexdef": "CREATE UNIQUE INDEX embedding_profiles_profile_id_dimensions_key ON workbench.embedding_profiles USING btree (profile_id, dimensions)"
+      },
+      {
+        "indexname": "schema_migrations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX schema_migrations_pkey ON workbench.schema_migrations USING btree (revision)"
+      },
+      {
+        "indexname": "source_versions_one_active",
+        "indexdef": "CREATE UNIQUE INDEX source_versions_one_active ON workbench.source_versions USING btree (workspace_id, source_id) WHERE (status = 'active'::text)"
+      },
+      {
+        "indexname": "source_versions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX source_versions_pkey ON workbench.source_versions USING btree (workspace_id, source_id, version_id)"
+      },
+      {
+        "indexname": "sources_pkey",
+        "indexdef": "CREATE UNIQUE INDEX sources_pkey ON workbench.sources USING btree (workspace_id, source_id)"
+      },
+      {
+        "indexname": "workspaces_pkey",
+        "indexdef": "CREATE UNIQUE INDEX workspaces_pkey ON workbench.workspaces USING btree (workspace_id)"
+      }
+    ],
+    "diagnostic_explain_seqscan_disabled": [
+      {
+        "QUERY PLAN": "Index Scan using chunks_source_version on chunks  (cost=0.14..8.16 rows=1 width=32)"
+      },
+      {
+        "QUERY PLAN": "  Index Cond: (workspace_id = 'development'::text)"
+      },
+      {
+        "QUERY PLAN": "  Filter: (search_vector @@ '''publication'''::tsquery)"
+      }
+    ],
+    "ann_index_claim": "none"
+  },
+  "database_stopped": {
+    "live_http": 200,
+    "ready_http": 503,
+    "capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "0af2344f5f3149af8336ba33a7f5437d",
+      "trace_id": "cb7a952ae53348edac2a7035cdb6c9d7",
+      "backend_revision": "workbench-api-bootstrap-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [],
+      "features": {
+        "documents": false,
+        "search": false
+      },
+      "dependencies": {
+        "database": {
+          "status": "unavailable",
+          "schema_revision": null,
+          "workspace_id": null,
+          "source_count": null,
+          "chunk_count": null
+        }
+      }
+    }
+  },
+  "after-database": {
+    "row_count": 8,
+    "corpus_sha256": "cc5f32c55c7c0b48870aff3b8aaa83b38f0b014ad20d0bcfaa423a819aadc296",
+    "chunk_ids": [
+      "demo-backup-chunk-1",
+      "demo-health-chunk-1",
+      "demo-identifiers-chunk-1",
+      "demo-publication-chunk-1",
+      "demo-scope-chunk-1",
+      "demo-search-chunk-1",
+      "demo-security-chunk-1",
+      "demo-vectors-chunk-1"
+    ],
+    "postgresql": "17.10 (Debian 17.10-1.pgdg12+1)",
+    "pgvector": "0.8.2",
+    "application": {
+      "ready": {
+        "schema_revision": "0001",
+        "workspace_id": "development",
+        "source_count": 8,
+        "chunk_count": 8
+      },
+      "source_ids": [
+        "demo-backup",
+        "demo-health",
+        "demo-identifiers",
+        "demo-publication",
+        "demo-scope",
+        "demo-search",
+        "demo-security",
+        "demo-vectors"
+      ],
+      "queries": [
+        {
+          "query_case": 1,
+          "source_ids": [
+            "demo-publication"
+          ],
+          "scores": [
+            0.10000000149011612
+          ],
+          "score_type": "postgres_ts_rank_cd",
+          "duration_ms": 0.0
+        },
+        {
+          "query_case": 2,
+          "source_ids": [
+            "demo-identifiers"
+          ],
+          "scores": [
+            0.10000000149011612
+          ],
+          "score_type": "postgres_ts_rank_cd",
+          "duration_ms": 16.00000000144064
+        }
+      ],
+      "trace_id": "f7794727c195455281b8414ad5fedfc2"
+    },
+    "api_capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "3f559941009245d3a8eb774cf9f623f6",
+      "trace_id": "5155208e265e4cd28e046b14e834b966",
+      "backend_revision": "workbench-api-bootstrap-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [],
+      "features": {
+        "documents": false,
+        "search": false
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0001",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      }
+    },
+    "indexes": [
+      {
+        "indexname": "alembic_version_pkc",
+        "indexdef": "CREATE UNIQUE INDEX alembic_version_pkc ON workbench.alembic_version USING btree (version_num)"
+      },
+      {
+        "indexname": "chunks_pkey",
+        "indexdef": "CREATE UNIQUE INDEX chunks_pkey ON workbench.chunks USING btree (workspace_id, chunk_id)"
+      },
+      {
+        "indexname": "chunks_search_vector",
+        "indexdef": "CREATE INDEX chunks_search_vector ON workbench.chunks USING gin (search_vector)"
+      },
+      {
+        "indexname": "chunks_source_version",
+        "indexdef": "CREATE INDEX chunks_source_version ON workbench.chunks USING btree (workspace_id, source_id, version_id)"
+      },
+      {
+        "indexname": "embedding_profiles_pkey",
+        "indexdef": "CREATE UNIQUE INDEX embedding_profiles_pkey ON workbench.embedding_profiles USING btree (profile_id)"
+      },
+      {
+        "indexname": "embedding_profiles_profile_id_dimensions_key",
+        "indexdef": "CREATE UNIQUE INDEX embedding_profiles_profile_id_dimensions_key ON workbench.embedding_profiles USING btree (profile_id, dimensions)"
+      },
+      {
+        "indexname": "schema_migrations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX schema_migrations_pkey ON workbench.schema_migrations USING btree (revision)"
+      },
+      {
+        "indexname": "source_versions_one_active",
+        "indexdef": "CREATE UNIQUE INDEX source_versions_one_active ON workbench.source_versions USING btree (workspace_id, source_id) WHERE (status = 'active'::text)"
+      },
+      {
+        "indexname": "source_versions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX source_versions_pkey ON workbench.source_versions USING btree (workspace_id, source_id, version_id)"
+      },
+      {
+        "indexname": "sources_pkey",
+        "indexdef": "CREATE UNIQUE INDEX sources_pkey ON workbench.sources USING btree (workspace_id, source_id)"
+      },
+      {
+        "indexname": "workspaces_pkey",
+        "indexdef": "CREATE UNIQUE INDEX workspaces_pkey ON workbench.workspaces USING btree (workspace_id)"
+      }
+    ],
+    "diagnostic_explain_seqscan_disabled": [
+      {
+        "QUERY PLAN": "Index Scan using chunks_source_version on chunks  (cost=0.14..8.16 rows=1 width=32)"
+      },
+      {
+        "QUERY PLAN": "  Index Cond: (workspace_id = 'development'::text)"
+      },
+      {
+        "QUERY PLAN": "  Filter: (search_vector @@ '''publication'''::tsquery)"
+      }
+    ],
+    "ann_index_claim": "none"
+  },
+  "backup_restore": {
+    "format": "pg_dump custom",
+    "row_count": 8,
+    "corpus_sha256": "cc5f32c55c7c0b48870aff3b8aaa83b38f0b014ad20d0bcfaa423a819aadc296",
+    "migration_compatible": true,
+    "restored_to_owned_disposable_database": true
+  }
+}

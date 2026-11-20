@@ -184,3 +184,7 @@ haystack/json-schemas
 
 # uv
 uv.lock
+
+# Workbench database credentials and local backups
+apps/workbench/postgres/.env
+apps/workbench/postgres/backups/

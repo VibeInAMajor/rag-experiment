@@ -1,0 +1,16 @@
+{
+  "haystack_version": "3.5.0",
+  "integration_version": "8.2.1",
+  "disposable_write_count": 2,
+  "keyword_expected_source_first": true,
+  "synthetic_vector_expected_source_first": true,
+  "restricted_role_implicit_ddl_refused": true,
+  "selected_application_adapter": "app_owned_sql",
+  "reasons": [
+    "integration owns a flat id-primary-key document table with JSON metadata",
+    "application requires composite workspace/source/version foreign keys and forced RLS",
+    "integration initializes table/index DDL instead of using the migration-owned chunk contract",
+    "a second integration-owned table would duplicate the application corpus"
+  ],
+  "real_embedding_inference": "not_run"
+}

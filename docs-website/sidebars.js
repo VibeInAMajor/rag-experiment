@@ -15,6 +15,11 @@ export default {
       label: 'RAG Runtime Contract',
     },
     {
+      type: 'doc',
+      id: 'architecture/postgresql-foundation',
+      label: 'PostgreSQL Foundation',
+    },
+    {
       type: 'category',
       label: 'Get Started',
       items: [

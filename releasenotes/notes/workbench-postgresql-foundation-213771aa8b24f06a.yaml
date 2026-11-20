@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Add an isolated PostgreSQL and pgvector foundation for Workbench, including
+    explicit Alembic migrations, an idempotent development seed, workspace-scoped
+    storage and database dependency diagnostics. Follow the PostgreSQL runbook
+    before starting the API with ``WORKBENCH_DB_DSN``. Native full-text ranking
+    uses ``postgres_ts_rank_cd``; synthetic vector checks do not enable semantic
+    search. API startup never seeds data or recreates persistent tables.

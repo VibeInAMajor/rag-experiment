@@ -163,11 +163,12 @@ NO verified network API/client → NO verified deployed RAG backend.
 | --- | --- | --- |
 | Local pipeline editor + validation | Implemented in Workbench | Reuse `domain/graph.ts` |
 | Local simulated runs and document lists | Implemented as demo fixtures | Do not present as production metrics |
-| API liveness/readiness/capability discovery | Implemented in `apps/workbench/api/`; default profiles empty and readiness 503 | Use the isolated Hatch environment and [API runbook](../apps/workbench/api/README.md) |
+| API liveness/readiness/capability discovery | Implemented; database dependency status is reported separately, profiles remain empty | Use the isolated Hatch environment and [API runbook](../apps/workbench/api/README.md) |
 | RAG execution API backend and execution client | **Not found**; discovery bootstrap and separate validation-only API/client exist | Follow the canonical runtime contract before creating execution adapters |
-| Workspace identity, authorization and isolation | **Not found** as server implementation | Enforce in backend; never accept UI workspace selection as authorization |
-| Document ingestion / chunk persistence / delta updates | **Not found** as deployed workflow | Reuse Haystack components; design idempotent versioned publishing |
-| PostgreSQL + pgvector and TEI service wiring | Described as chosen direction in Workbench README; **not found** as deployed app integration | Confirm running services, schema, vectors and API contracts independently |
+| Workspace registry / storage scope | Implemented PostgreSQL composite FKs and forced RLS; single development resolver only | Production authentication/authorization remains future work |
+| Chunk persistence / publication | Implemented app-owned PostgreSQL adapter and transactional source version publication | Ingestion and delta-detection workflows remain separate |
+| PostgreSQL + pgvector | Dedicated Docker service, Alembic migrations, explicit seed and nullable synthetic-vector storage implemented | Follow the [PostgreSQL runbook](docs/architecture/postgresql-foundation.md); real TEI integration remains planned |
+| Native PostgreSQL lexical primitive | Implemented with `simple`, GIN and `postgres_ts_rank_cd` | HTTP retrieval is the next task; do not label native FTS BM25 |
 | BM25 + vector hybrid retrieval + RRF backend | UI template and simulation exist; **backend not verified** | Separate mock graph from real search |
 | Observability / evaluation pipeline for this RAG app | Framework functionality exists; app-level integration **not verified** | Define trace and evaluation evidence |
 | Answer generation | Planned; Workbench does not infer | Do not claim LLM responses are live |

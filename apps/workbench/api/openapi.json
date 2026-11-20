@@ -328,6 +328,9 @@
           },
           "features": {
             "$ref": "#/components/schemas/Features"
+          },
+          "dependencies": {
+            "$ref": "#/components/schemas/Dependencies"
           }
         },
         "additionalProperties": false,
@@ -340,6 +343,84 @@
           "profiles"
         ],
         "title": "CapabilitiesResponse"
+      },
+      "DatabaseDependencyStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unconfigured",
+              "ready",
+              "unavailable",
+              "incompatible",
+              "empty"
+            ],
+            "title": "Status"
+          },
+          "schema_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Revision"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,128}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id"
+          },
+          "source_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Count"
+          },
+          "chunk_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "DatabaseDependencyStatus"
+      },
+      "Dependencies": {
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseDependencyStatus"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Dependencies"
       },
       "ErrorField": {
         "properties": {
@@ -395,7 +476,10 @@
         "properties": {
           "profile_id": {
             "type": "string",
-            "const": "bm25-v1",
+            "enum": [
+              "bm25-v1",
+              "postgres-keyword-v1"
+            ],
             "title": "Profile Id",
             "default": "bm25-v1"
           },
@@ -433,7 +517,10 @@
           },
           "score_type": {
             "type": "string",
-            "const": "bm25_raw",
+            "enum": [
+              "bm25_raw",
+              "postgres_ts_rank_cd"
+            ],
             "title": "Score Type",
             "default": "bm25_raw"
           }

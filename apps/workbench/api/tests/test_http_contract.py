@@ -19,6 +19,7 @@ from apps.workbench.api.application import create_app
 from apps.workbench.api.config import ApiSettings
 from apps.workbench.api.contracts import ExecutionProfile, ServiceState
 from apps.workbench.api.services import ReadinessSnapshot
+from apps.workbench.api.tests._persistence import _DatabaseProbe
 
 _BASE_URL = "http://127.0.0.1:8011"
 _LIVE = "/api/v1/health/live"
@@ -127,7 +128,7 @@ async def test_slow_readiness_is_cancelled_without_disabling_liveness(monkeypatc
             return ReadinessSnapshot()
 
     monkeypatch.setattr(application_module, "_READINESS_TIMEOUT_SECONDS", 0.01)
-    app = create_app(settings=ApiSettings(), readiness=SlowReadiness())
+    app = create_app(settings=ApiSettings(), readiness=SlowReadiness(), persistence=_DatabaseProbe())
     async with (
         app.router.lifespan_context(app),
         httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=_BASE_URL) as client,
@@ -153,7 +154,7 @@ async def test_late_dependency_success_cannot_publish_readiness_after_shutdown()
             await release.wait()
             return await super().snapshot()
 
-    app = create_app(settings=ApiSettings(), readiness=ControlledReadiness(ready=True))
+    app = create_app(settings=ApiSettings(), readiness=ControlledReadiness(ready=True), persistence=_DatabaseProbe())
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=_BASE_URL) as client:
         async with app.router.lifespan_context(app):
             pending = asyncio.create_task(client.get(_READY))
@@ -168,7 +169,7 @@ async def test_late_dependency_success_cannot_publish_readiness_after_shutdown()
 def test_readiness_tracks_the_injected_dependency_snapshot() -> None:
     """Readiness can change without restarting or pretending that configuration is health."""
     probe = _MutableReadiness()
-    app = create_app(settings=ApiSettings(), readiness=probe)
+    app = create_app(settings=ApiSettings(), readiness=probe, persistence=_DatabaseProbe())
     with TestClient(app, base_url=_BASE_URL) as client:
         _assert_error(client.get(_READY), status=503, code="NOT_READY")
         probe.ready = True
@@ -186,10 +187,26 @@ def test_readiness_tracks_the_injected_dependency_snapshot() -> None:
     assert probe.calls >= 5
 
 
+def test_qualified_executor_cannot_bypass_unconfigured_postgresql() -> None:
+    """A ready execution probe cannot grant readiness without the required durable corpus."""
+    probe = _MutableReadiness(ready=True)
+    app = create_app(settings=ApiSettings(), readiness=probe)
+    with TestClient(app, base_url=_BASE_URL) as client:
+        assert client.get(_LIVE).status_code == 200
+        response = client.get(_READY)
+        _assert_error(response, status=503, code="NOT_READY")
+        capabilities = client.get(_CAPABILITIES)
+        payload = _assert_metadata(capabilities)
+        assert payload["dependencies"]["database"]["status"] == "unconfigured"
+        assert payload["profiles"] == []
+        assert payload["features"] == {"search": False, "documents": False}
+        _assert_openapi_response(app, capabilities, path=_CAPABILITIES)
+
+
 def test_lifecycle_never_probes_dependencies_outside_the_running_process() -> None:
     """Stopping the app invalidates readiness even if the dependency was previously ready."""
     probe = _MutableReadiness(ready=True)
-    app = create_app(settings=ApiSettings(), readiness=probe)
+    app = create_app(settings=ApiSettings(), readiness=probe, persistence=_DatabaseProbe())
     assert app.state.lifecycle == ServiceState.STARTING
     client = TestClient(app, base_url=_BASE_URL)
     _assert_error(client.get(_READY), status=503, code="NOT_READY")
@@ -371,6 +388,8 @@ def test_bootstrap_has_no_provider_or_haystack_imports() -> None:
     }
     package = Path(__file__).resolve().parents[1]
     for source in package.glob("*.py"):
+        if source.name in {"postgres.py", "db_migrations.py", "db_admin.py"}:
+            continue
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

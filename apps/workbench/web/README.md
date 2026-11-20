@@ -2,7 +2,7 @@
 
 A pipeline editor with an optional, validation-only Haystack service. All documents, runs, scores, and processing reports remain demonstration fixtures. Editing, JSON import/export and Preview run offline; authoritative Validate requires the local Python service. No database, model or credentials are needed.
 
-An independent [Workbench API bootstrap](../api/README.md) also provides health and capability discovery. The UI is not connected to that service; it advertises no executable search profiles yet.
+An independent [Workbench API](../api/README.md) also provides health and capability discovery with an optional persistent PostgreSQL + pgvector foundation. The UI is not connected to that service; it advertises no executable search profiles yet.
 
 ## Start
 
@@ -28,7 +28,7 @@ npm run preview
 
 ### Optional application API bootstrap
 
-From the repository root, launch the separate application API with `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Liveness returns 200; readiness intentionally returns 503 `NOT_READY`, and capabilities returns 200 with an empty profile list and document/search features false. This is truthful bootstrap discovery, not a live BM25 implementation. See the [API runbook](../api/README.md) for configuration and checks. No frontend source or API wiring is changed by that bootstrap.
+From the repository root, launch the separate application API with `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Liveness returns 200; readiness intentionally returns 503 `NOT_READY`, and capabilities returns 200 with an empty profile list and document/search features false. An explicitly configured PostgreSQL dependency may be storage-ready without an executable HTTP search profile. See the [API runbook](../api/README.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md) for pinned Docker setup, explicit migrations/seed and checks. No frontend API wiring is introduced by this foundation.
 
 ### Authoritative validation
 
@@ -90,32 +90,32 @@ Library buttons and connection selectors provide alternatives to drag operations
 - `src/domain` owns view models, catalog, graph validation, JSON parsing, fixtures, and deterministic preview scenarios.
 - `src/hooks` owns editor history and cancellable preview progression.
 - `src/components` owns the editor; `src/views` owns Pipelines, Documents, Runs, and Settings.
-- The frontend's only connected API boundary is the optional local validation service. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. A separate FastAPI health/discovery bootstrap exists, but frontend integration, real execution and model adapters remain future tasks.
+- The frontend's only connected API boundary is the optional local validation service. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. The separate FastAPI application has health/discovery and PostgreSQL persistence, while frontend integration, public search and model adapters remain future tasks.
 
 The canonical implementation contract is [RAG runtime contract](../../../docs-website/docs/architecture/rag-runtime-contract.md). It defines the planned execution profiles, API, source identities, score meanings and error semantics. The dated [RAG MVP Architecture and Implementation Plan](../../../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) remains a historical planning reference; its OpenSearch and Ollama-embedding choices do not override the canonical contract.
 
-### First planned live integration
+### Persistent foundation and first planned live integration
 
-The first execution slice is **BM25 only**, identified by the backend-approved profile `bm25-v1`: **query → BM25 → results**, over a server-authorized PostgreSQL corpus snapshot. Minimum registry migrations and corpus loading precede this slice; its in-memory BM25 index is disposable computation state. This is a planned integration, not an executable profile in the current Workbench or validation service. A future execution adapter must reject graphs outside that profile instead of interpreting arbitrary editor JSON or substituting components based on their display names. The existing indexing and hybrid templates remain fixture previews; their availability in the editor does not imply live support.
+PostgreSQL is now the implemented durable foundation: composite workspace/source/version keys, forced RLS, explicit atomic development seed and nullable pgvector columns. Its native lexical primitive uses PostgreSQL `simple` FTS with `ts_rank_cd` and score type `postgres_ts_rank_cd`; it is not BM25. No search endpoint or executable profile is advertised yet. The next retrieval task must follow the canonical contract's approved profile and score semantics and reject unsupported graphs instead of interpreting arbitrary editor JSON or routing from display names. The existing indexing and hybrid templates remain fixture previews.
 
 Preview runs contain illustrative passages, scores and stage durations. Authoritative Validate checks component compatibility without execution. A future live run must perform the approved backend search and return its actual results and timings. These are three separate behaviors; a successful validation or preview cannot be reported as a live search.
 
 Workbench graph files remain portable editor documents with `schemaVersion: 1`; they are not executable Haystack YAML or a general backend execution contract. Import/export, drafts and preview behavior do not require a migration for this documentation decision.
 
-Durable indexing, the metadata/version registry and vectors are planned for PostgreSQL + pgvector. TEI is the selected embedding transport with an expected 2560-dimensional Qwen3-Embedding-4B profile; exact model/tokenizer revision, endpoint health, token accounting and throughput must be verified separately before live embeddings are enabled. None of these services is connected by the current UI. Indexing, dense/hybrid retrieval and generation are deferred beyond the BM25 slice. Detailed decisions and unresolved probe requirements belong to the canonical contract rather than this README.
+The durable metadata/version registry and nullable vector columns exist in PostgreSQL + pgvector. Ingestion/indexing workflows and real embedding generation remain future work. TEI is the selected embedding transport with an expected 2560-dimensional Qwen3-Embedding-4B profile; model/tokenizer revision, endpoint health, token accounting and actual output still require qualification. The initial enabled vector profile is synthetic and three-dimensional; a synthetic 2560-dimensional storage test does not validate model output. None of these services is connected by the current UI. Dense/hybrid retrieval and generation remain deferred. Detailed decisions belong to the canonical contract.
 
-| Task    | Deliverable                                                      |
-| ------- | ---------------------------------------------------------------- |
-| ARCH-01 | Publish the canonical runtime decisions and integration contract |
-| BM25    | Implement approved `bm25-v1` search and connect its UI slice     |
-| BE-01   | PostgreSQL migrations, workspaces, and isolation                 |
-| BE-02   | Document ingestion, structural parsing, and reports              |
-| BE-03   | Chunking and validated 2560-dimensional TEI embeddings           |
-| BE-04   | Delta indexing, vector reuse, and safe publication               |
-| BE-05   | BM25, dense retrieval, and RRF                                   |
-| BE-06   | Diagnostics, recovery, throughput and quality evaluation         |
-| INT-01  | Connect this UI to the backend in a separate task                |
-| GEN-01  | Add answer generation after retrieval MVP                        |
+| Task      | Deliverable                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------------- |
+| ARCH-01   | Publish the canonical runtime decisions and integration contract                                      |
+| Retrieval | Implement the approved PostgreSQL-backed HTTP search profile and its UI slice                         |
+| BE-01     | PostgreSQL foundation implemented; extend ingestion and operational guarantees through separate tasks |
+| BE-02     | Document ingestion, structural parsing, and reports                                                   |
+| BE-03     | Chunking and validated 2560-dimensional TEI embeddings                                                |
+| BE-04     | Delta indexing, vector reuse, and safe publication                                                    |
+| BE-05     | BM25, dense retrieval, and RRF                                                                        |
+| BE-06     | Diagnostics, recovery, throughput and quality evaluation                                              |
+| INT-01    | Connect this UI to the backend in a separate task                                                     |
+| GEN-01    | Add answer generation after retrieval MVP                                                             |
 
 ## Font licensing
 
