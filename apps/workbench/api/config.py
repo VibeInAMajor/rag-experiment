@@ -15,7 +15,7 @@ class ApiSettings(BaseModel):
 
     host: Literal["127.0.0.1", "localhost", "::1"] = "127.0.0.1"
     port: int = Field(default=8011, ge=1, le=65535)
-    backend_revision: Identifier = "workbench-api-bootstrap-v1"
+    backend_revision: Identifier = "workbench-api-lexical-v1"
     database_dsn: SecretStr | None = None
     allowed_origins: tuple[str, ...] = (
         "http://localhost:5173",

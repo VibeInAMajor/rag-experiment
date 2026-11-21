@@ -2,7 +2,7 @@
 
 A pipeline editor with an optional, validation-only Haystack service. All documents, runs, scores, and processing reports remain demonstration fixtures. Editing, JSON import/export and Preview run offline; authoritative Validate requires the local Python service. No database, model or credentials are needed.
 
-An independent [Workbench API](../api/README.md) also provides health and capability discovery with an optional persistent PostgreSQL + pgvector foundation. The UI is not connected to that service; it advertises no executable search profiles yet.
+An independent [Workbench API](../api/README.md) provides actual PostgreSQL lexical retrieval through Haystack, with capability/readiness discovery and persisted document metadata. The UI is not connected to that service; its Run action remains fixture Preview.
 
 ## Start
 
@@ -26,9 +26,9 @@ npm run preview
 
 `build` creates the independent static application in `dist`. `preview` serves that build locally. It is not a backend service.
 
-### Optional application API bootstrap
+### Optional application lexical API
 
-From the repository root, launch the separate application API with `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Liveness returns 200; readiness intentionally returns 503 `NOT_READY`, and capabilities returns 200 with an empty profile list and document/search features false. An explicitly configured PostgreSQL dependency may be storage-ready without an executable HTTP search profile. See the [API runbook](../api/README.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md) for pinned Docker setup, explicit migrations/seed and checks. No frontend API wiring is introduced by this foundation.
+After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). No frontend Live wiring is introduced here.
 
 ### Authoritative validation
 
@@ -90,15 +90,17 @@ Library buttons and connection selectors provide alternatives to drag operations
 - `src/domain` owns view models, catalog, graph validation, JSON parsing, fixtures, and deterministic preview scenarios.
 - `src/hooks` owns editor history and cancellable preview progression.
 - `src/components` owns the editor; `src/views` owns Pipelines, Documents, Runs, and Settings.
-- The frontend's only connected API boundary is the optional local validation service. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. The separate FastAPI application has health/discovery and PostgreSQL persistence, while frontend integration, public search and model adapters remain future tasks.
+- The frontend's only connected API boundary is the optional local validation service. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. The separate FastAPI application exposes persisted document lists and live PostgreSQL lexical search; frontend Live integration and model adapters remain future tasks.
 
 The canonical implementation contract is [RAG runtime contract](../../../docs-website/docs/architecture/rag-runtime-contract.md). It defines the planned execution profiles, API, source identities, score meanings and error semantics. The dated [RAG MVP Architecture and Implementation Plan](../../../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) remains a historical planning reference; its OpenSearch and Ollama-embedding choices do not override the canonical contract.
 
-### Persistent foundation and first planned live integration
+### Persistent foundation and lexical API
 
-PostgreSQL is now the implemented durable foundation: composite workspace/source/version keys, forced RLS, explicit atomic development seed and nullable pgvector columns. Its native lexical primitive uses PostgreSQL `simple` FTS with `ts_rank_cd` and score type `postgres_ts_rank_cd`; it is not BM25. No search endpoint or executable profile is advertised yet. The next retrieval task must follow the canonical contract's approved profile and score semantics and reject unsupported graphs instead of interpreting arbitrary editor JSON or routing from display names. The existing indexing and hybrid templates remain fixture previews.
+PostgreSQL is the durable corpus: composite workspace/source/version keys, forced RLS, explicit atomic eight-source development seed and nullable pgvector columns. The live API's `postgres-fts-baseline` profile uses PostgreSQL `simple` FTS with `ts_rank_cd` and score type `postgres_ts_rank_cd`; it is not BM25. Requests require query, integer top-k, profile ID and expected profile revision. Results include authoritative source/chunk/version identity, corpus revision and measured timings. No raw editor graph is executed.
 
-Preview runs contain illustrative passages, scores and stage durations. Authoritative Validate checks component compatibility without execution. A future live run must perform the approved backend search and return its actual results and timings. These are three separate behaviors; a successful validation or preview cannot be reported as a live search.
+The existing BM25 node, indexing and hybrid templates remain fixture previews. They are not executable Live bindings for native PostgreSQL FTS. A future UI adapter must explicitly recognize the approved profile and reject unsupported graphs without changing their meaning from display labels. Settings cannot select a database or grant workspace access.
+
+Preview runs contain illustrative passages, scores and stage durations. Authoritative Validate checks component compatibility without execution. Live API requests execute the approved backend search and return actual results and timings. These remain three separate behaviors; validation or browser Preview cannot be reported as live search.
 
 Workbench graph files remain portable editor documents with `schemaVersion: 1`; they are not executable Haystack YAML or a general backend execution contract. Import/export, drafts and preview behavior do not require a migration for this documentation decision.
 
@@ -107,7 +109,7 @@ The durable metadata/version registry and nullable vector columns exist in Postg
 | Task      | Deliverable                                                                                           |
 | --------- | ----------------------------------------------------------------------------------------------------- |
 | ARCH-01   | Publish the canonical runtime decisions and integration contract                                      |
-| Retrieval | Implement the approved PostgreSQL-backed HTTP search profile and its UI slice                         |
+| Retrieval | PostgreSQL lexical HTTP profile implemented; frontend Live integration remains separate               |
 | BE-01     | PostgreSQL foundation implemented; extend ingestion and operational guarantees through separate tasks |
 | BE-02     | Document ingestion, structural parsing, and reports                                                   |
 | BE-03     | Chunking and validated 2560-dimensional TEI embeddings                                                |

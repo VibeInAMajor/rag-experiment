@@ -1,30 +1,426 @@
-"""Compose the discovery-only Workbench API without enabling runtime providers."""
+"""Compose the approved, read-only PostgreSQL lexical HTTP boundary."""
 
-from asyncio import timeout
+import asyncio
+import base64
+import hashlib
+import hmac
+import json
+import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from time import monotonic
+from typing import Any
+from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
-from apps.workbench.api.boundary import RequestBoundary, error_response, log_event, request_meta
+from apps.workbench.api.boundary import RequestBoundary, _ClientDisconnected, error_response, log_event, request_meta
 from apps.workbench.api.config import ApiSettings
 from apps.workbench.api.contracts import (
     CapabilitiesResponse,
     Dependencies,
+    DocumentItem,
+    DocumentPage,
     ErrorResponse,
     Features,
     LiveResponse,
     ReadyResponse,
+    SearchRequest,
+    SearchResponse,
     ServiceState,
+    WorkspaceItem,
+    WorkspacePage,
 )
-from apps.workbench.api.database_dependency import create_database_dependency
-from apps.workbench.api.persistence import PersistencePort
-from apps.workbench.api.services import ReadinessProbe, ReadinessSnapshot, UnconfiguredReadiness
+from apps.workbench.api.database_dependency import DatabaseDependency, create_database_dependency
+from apps.workbench.api.persistence import (
+    DatabaseUnavailable,
+    LexicalSearchSnapshot,
+    PersistenceError,
+    PersistencePort,
+    SchemaIncompatible,
+    WorkspaceContext,
+    WorkspaceNotFound,
+    resolve_development_workspace,
+)
+from apps.workbench.api.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
+from apps.workbench.api.projection import project_search
+from apps.workbench.api.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot
 
 _READINESS_TIMEOUT_SECONDS = 1.0
+_SEARCH_TIMEOUT_SECONDS = 10.0
+
+
+class _InvalidCursor(ValueError):
+    pass
+
+
+class _ServiceStopping(PersistenceError):
+    pass
+
+
+def _ensure_running(app: FastAPI) -> None:
+    if app.state.lifecycle != ServiceState.RUNNING:
+        raise _ServiceStopping("The service is not running.")
+
+
+class _Cursors:
+    def __init__(self) -> None:
+        self._key = secrets.token_bytes(32)
+
+    def encode(self, *, kind: str, context: WorkspaceContext, revision: str, after: str) -> str:
+        payload = base64.urlsafe_b64encode(
+            json.dumps([kind, context.workspace_id, revision, after], separators=(",", ":")).encode()
+        ).rstrip(b"=")
+        signature = base64.urlsafe_b64encode(hmac.digest(self._key, payload, "sha256")).rstrip(b"=")
+        return (payload + b"." + signature).decode("ascii")
+
+    def offset(self, token: str | None, *, kind: str, context: WorkspaceContext, revision: str, ids: list[str]) -> int:
+        if token is None:
+            return 0
+        if not 1 <= len(token) <= 512:
+            raise _InvalidCursor("Invalid cursor")
+        try:
+            payload, signature = token.encode("ascii").split(b".")
+            expected = base64.urlsafe_b64encode(hmac.digest(self._key, payload, "sha256")).rstrip(b"=")
+            decoded = json.loads(base64.b64decode(payload + b"=" * (-len(payload) % 4), altchars=b"-_", validate=True))
+        except (ValueError, UnicodeError, TypeError):
+            raise _InvalidCursor("Restart the list from its first page.") from None
+        if not hmac.compare_digest(expected, signature) or not isinstance(decoded, list) or len(decoded) != 4:
+            raise _InvalidCursor("Invalid cursor")
+        if decoded[:3] != [kind, context.workspace_id, revision] or decoded[3] not in ids:
+            raise _InvalidCursor("Expired cursor")
+        return ids.index(decoded[3]) + 1
+
+
+def _context(request: Request, workspace_id: str = "development") -> WorkspaceContext:
+    return resolve_development_workspace(workspace_id).model_copy(update={"trace_id": request_meta(request).trace_id})
+
+
+async def _wait_for_disconnect(request: Request) -> None:
+    while True:
+        message = await request.receive()
+        if message["type"] == "http.disconnect":
+            return
+
+
+async def _execute_search(
+    request: Request, service: LexicalServicePort, *, context: WorkspaceContext, body: SearchRequest
+) -> LexicalSearchSnapshot:
+    work = asyncio.create_task(
+        service.search(
+            context,
+            query=body.query,
+            top_k=body.top_k,
+            profile_id=body.profile_id,
+            expected_profile_revision=body.expected_profile_revision,
+        )
+    )
+    disconnected = asyncio.create_task(_wait_for_disconnect(request))
+    try:
+        finished, _pending = await asyncio.wait({work, disconnected}, return_when=asyncio.FIRST_COMPLETED)
+        if disconnected in finished:
+            disconnected.result()
+            raise _ClientDisconnected
+        return await work
+    finally:
+        work.cancel()
+        disconnected.cancel()
+        # Keep the admission slot until the owned pipeline and SQL cancellation finish.
+        await asyncio.gather(work, disconnected, return_exceptions=True)
+
+
+def _failure(request: Request, error: Exception, *, run_id: str | None = None) -> JSONResponse:
+    if isinstance(error, WorkspaceNotFound):
+        status, code, message = (404, "WORKSPACE_NOT_FOUND", "Workspace is not available.")
+    elif isinstance(error, _InvalidCursor):
+        status, code, message = (400, "INVALID_CURSOR", "Restart the list from its first page.")
+    elif isinstance(error, DatabaseUnavailable):
+        status, code, message = (503, "DEPENDENCY_UNAVAILABLE", "The data dependency is unavailable.")
+    elif isinstance(error, _ServiceStopping):
+        status, code, message = (503, "SERVICE_UNAVAILABLE", "The service is not running.")
+    elif isinstance(error, (SchemaIncompatible, PersistenceError)):
+        status, code, message = (503, "NOT_READY", "The persisted corpus is not ready.")
+    else:
+        status, code, message = (500, "INTERNAL_ERROR", "The service could not complete the request.")
+    if run_id is not None:
+        log_event(
+            "search_failed", run_id=run_id, trace_id=request_meta(request).trace_id, code=code, http_status=status
+        )
+    return error_response(
+        request_meta(request), status=status, code=code, message=message, retryable=status == 503, run_id=run_id
+    )
+
+
+async def _http_error(request: Request, exception: Exception) -> JSONResponse:
+    if not isinstance(exception, HTTPException):
+        return _failure(request, exception)
+    definitions = {
+        404: ("ENDPOINT_NOT_FOUND", "The endpoint does not exist."),
+        405: ("METHOD_NOT_ALLOWED", "The HTTP method is not supported."),
+    }
+    code, message = definitions.get(exception.status_code, ("INVALID_REQUEST", "The request could not be accepted."))
+    response = error_response(request_meta(request), status=exception.status_code, code=code, message=message)
+    if exception.status_code == 405 and exception.headers and ("Allow" in exception.headers):
+        response.headers["Allow"] = exception.headers["Allow"]
+    return response
+
+
+async def _validation_error(request: Request, exception: Exception) -> JSONResponse:
+    if not isinstance(exception, RequestValidationError):
+        return _failure(request, exception)
+    cursor_error = any(error["loc"][:2] == ("query", "cursor") for error in exception.errors())
+    return error_response(
+        request_meta(request),
+        status=400,
+        code="INVALID_CURSOR" if cursor_error else "INVALID_REQUEST",
+        message="The request is invalid.",
+    )
+
+
+class _Routes:
+    def __init__(
+        self,
+        *,
+        app: FastAPI,
+        configuration: ApiSettings,
+        database: DatabaseDependency,
+        service: LexicalServicePort | None,
+        readiness: ReadinessProbe | None,
+    ) -> None:
+        self.app = app
+        self.configuration = configuration
+        self.database = database
+        self.service = service
+        self.readiness = readiness
+        self.cursors = _Cursors()
+        self.active_searches = 0
+
+    async def _snapshot(self, request: Request) -> ReadinessSnapshot:
+        if self.app.state.lifecycle != ServiceState.RUNNING or self.service is None:
+            return ReadinessSnapshot()
+        try:
+            async with asyncio.timeout(_READINESS_TIMEOUT_SECONDS):
+                current = await self.service.snapshot(_context(request))
+                if self.readiness is not None and (not (await self.readiness.snapshot()).profiles):
+                    return ReadinessSnapshot()
+        except Exception:
+            log_event("readiness_unavailable", code="DEPENDENCY_UNAVAILABLE")
+            return ReadinessSnapshot()
+        return current if self.app.state.lifecycle == ServiceState.RUNNING else ReadinessSnapshot()
+
+    async def _live(self, request: Request) -> LiveResponse | JSONResponse:
+        if self.app.state.lifecycle != ServiceState.RUNNING:
+            return error_response(
+                request_meta(request),
+                status=503,
+                code="SERVICE_UNAVAILABLE",
+                message="The service is not running.",
+                retryable=True,
+            )
+        return LiveResponse(**request_meta(request).model_dump(), backend_revision=self.configuration.backend_revision)
+
+    async def _ready(self, request: Request) -> ReadyResponse | JSONResponse:
+        current = await self._snapshot(request)
+        dependency = await self.database.snapshot(trace_id=request_meta(request).trace_id)
+        if self.app.state.lifecycle != ServiceState.RUNNING or dependency.status != "ready" or not current.profiles:
+            return error_response(
+                request_meta(request),
+                status=503,
+                code="NOT_READY",
+                message="No execution profile is ready.",
+                retryable=True,
+            )
+        return ReadyResponse(
+            **request_meta(request).model_dump(),
+            backend_revision=self.configuration.backend_revision,
+            ready_profile_ids=[profile.profile_id for profile in current.profiles],
+        )
+
+    async def _capabilities(self, request: Request) -> CapabilitiesResponse:
+        current = await self._snapshot(request)
+        dependency = await self.database.snapshot(trace_id=request_meta(request).trace_id)
+        available = (
+            self.app.state.lifecycle == ServiceState.RUNNING and dependency.status == "ready" and bool(current.profiles)
+        )
+        return CapabilitiesResponse(
+            **request_meta(request).model_dump(),
+            backend_revision=self.configuration.backend_revision,
+            service_state=self.app.state.lifecycle,
+            profiles=current.profiles if available else [],
+            features=Features(documents=available, search=available),
+            dependencies=Dependencies(database=dependency),
+        )
+
+    def _unavailable(self, request: Request) -> JSONResponse:
+        return error_response(
+            request_meta(request),
+            status=503,
+            code="NOT_READY",
+            message="No execution profile is ready.",
+            retryable=True,
+        )
+
+    async def _workspaces(
+        self,
+        request: Request,
+        limit: int = Query(default=50, ge=1, le=100),
+        cursor: str | None = Query(default=None, max_length=512),
+    ) -> WorkspacePage | JSONResponse:
+        if self.service is None or self.app.state.lifecycle != ServiceState.RUNNING:
+            return self._unavailable(request)
+        try:
+            context = _context(request)
+            await self.service.documents(context)
+            records = sorted(await self.service.workspaces(context), key=lambda item: item.workspace_id)
+            _ensure_running(self.app)
+            if any(item.workspace_id != context.workspace_id for item in records):
+                return _failure(request, WorkspaceNotFound("Workspace is not available."))
+            items = [WorkspaceItem(workspace_id=item.workspace_id, name=item.name, status="ready") for item in records]
+            revision = hashlib.sha256(
+                json.dumps([item.model_dump() for item in items], sort_keys=True).encode()
+            ).hexdigest()
+            ids = [item.workspace_id for item in items]
+            offset = self.cursors.offset(cursor, kind="workspaces", context=context, revision=revision, ids=ids)
+            page = items[offset : offset + limit]
+            following = (
+                self.cursors.encode(kind="workspaces", context=context, revision=revision, after=page[-1].workspace_id)
+                if page and offset + limit < len(items)
+                else None
+            )
+            return WorkspacePage(**request_meta(request).model_dump(), items=page, next_cursor=following)
+        except Exception as error:
+            return _failure(request, error)
+
+    async def _documents(
+        self,
+        request: Request,
+        workspace_id: str,
+        limit: int = Query(default=50, ge=1, le=100),
+        cursor: str | None = Query(default=None, max_length=512),
+    ) -> DocumentPage | JSONResponse:
+        try:
+            context = _context(request, workspace_id)
+            if self.service is None or self.app.state.lifecycle != ServiceState.RUNNING:
+                return self._unavailable(request)
+            corpus = await self.service.documents(context)
+            _ensure_running(self.app)
+            records = sorted(corpus.documents, key=lambda item: item.source_id)
+            offset = self.cursors.offset(
+                cursor,
+                kind="documents",
+                context=context,
+                revision=corpus.corpus_revision,
+                ids=[item.source_id for item in records],
+            )
+            page = [DocumentItem.model_validate(item.model_dump()) for item in records[offset : offset + limit]]
+            following = (
+                self.cursors.encode(
+                    kind="documents", context=context, revision=corpus.corpus_revision, after=page[-1].source_id
+                )
+                if page and offset + limit < len(records)
+                else None
+            )
+            payload = DocumentPage(
+                **request_meta(request).model_dump(),
+                workspace_id=context.workspace_id,
+                corpus_revision=corpus.corpus_revision,
+                items=page,
+                next_cursor=following,
+            ).model_dump()
+            for item in payload["items"]:
+                if item["error_code"] is None:
+                    del item["error_code"]
+            return JSONResponse(payload)
+        except Exception as error:
+            return _failure(request, error)
+
+    async def _search(self, request: Request, workspace_id: str, body: SearchRequest) -> SearchResponse | JSONResponse:
+        try:
+            context = _context(request, workspace_id)
+        except WorkspaceNotFound as error:
+            return _failure(request, error)
+        if (
+            body.profile_id != POSTGRES_FTS_PROFILE_ID
+            or body.expected_profile_revision != POSTGRES_FTS_PROFILE_REVISION
+        ):
+            return error_response(
+                request_meta(request),
+                status=409,
+                code="PROFILE_NOT_AVAILABLE",
+                message="Refresh executable profiles before searching.",
+            )
+        if self.service is None or self.app.state.lifecycle != ServiceState.RUNNING:
+            return self._unavailable(request)
+        if self.active_searches >= 2:
+            response = error_response(
+                request_meta(request),
+                status=429,
+                code="SEARCH_BUSY",
+                message="Search capacity is busy.",
+                retryable=True,
+            )
+            response.headers["Retry-After"] = "1"
+            return response
+        self.active_searches += 1
+        started = monotonic()
+        run_id = uuid4().hex
+        try:
+            async with asyncio.timeout(_SEARCH_TIMEOUT_SECONDS):
+                result = await _execute_search(request, self.service, context=context, body=body)
+                _ensure_running(self.app)
+                search_response = project_search(
+                    result,
+                    context=context,
+                    top_k=body.top_k,
+                    meta=request_meta(request),
+                    run_id=run_id,
+                    started=started,
+                )
+                log_event(
+                    "search_completed",
+                    run_id=run_id,
+                    trace_id=context.trace_id or "",
+                    workspace_id=context.workspace_id,
+                    profile_id=POSTGRES_FTS_PROFILE_ID,
+                    result_count=len(search_response.results),
+                    duration_ms=search_response.duration_ms,
+                    corpus_load_ms=result.corpus_load_duration_ms,
+                    retrieval_ms=result.retrieval_duration_ms,
+                )
+                return search_response
+        except TimeoutError:
+            log_event(
+                "search_failed", run_id=run_id, trace_id=context.trace_id or "", code="SEARCH_TIMEOUT", http_status=504
+            )
+            return error_response(
+                request_meta(request),
+                status=504,
+                code="SEARCH_TIMEOUT",
+                message="The search deadline elapsed.",
+                retryable=True,
+                run_id=run_id,
+            )
+        except Exception as error:
+            return _failure(request, error, run_id=run_id)
+        finally:
+            self.active_searches -= 1
+
+
+class _Application(FastAPI):
+    def openapi(self) -> dict[str, Any]:
+        """Publish the actual normalized 400 validation contract instead of automatic 422 responses."""
+        specification = super().openapi()
+        for path in specification["paths"].values():
+            for operation in path.values():
+                if isinstance(operation, dict):
+                    operation.get("responses", {}).pop("422", None)
+        schemas = specification.get("components", {}).get("schemas", {})
+        schemas.pop("HTTPValidationError", None)
+        schemas.pop("ValidationError", None)
+        return specification
 
 
 def create_app(
@@ -32,11 +428,12 @@ def create_app(
     settings: ApiSettings | None = None,
     readiness: ReadinessProbe | None = None,
     persistence: PersistencePort | None = None,
+    lexical: LexicalServicePort | None = None,
 ) -> FastAPI:
-    """Create the local API; injected readiness must certify actual executable profiles."""
+    """Bind the qualified lexical service to the existing persistent corpus."""
     configuration = ApiSettings.from_env() if settings is None else settings
-    probe = UnconfiguredReadiness() if readiness is None else readiness
     database = create_database_dependency(configuration.database_dsn, persistence=persistence)
+    service = lexical
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -52,91 +449,40 @@ def create_app(
             application.state.lifecycle = ServiceState.STOPPED
             log_event("service_state", state=ServiceState.STOPPED.value)
 
-    app = FastAPI(
+    if service is None and database.persistence is not None:
+        from apps.workbench.api.lexical import LexicalService
+
+        service = LexicalService(database.persistence)
+    app = _Application(
         title="Workbench API",
         version="rag-api-v1.0",
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,
         openapi_url=None,
-        responses={status: {"model": ErrorResponse} for status in (400, 403, 404, 405, 500)},
+        responses={status: {"model": ErrorResponse} for status in (400, 403, 404, 405, 500, 503)},
     )
     app.state.lifecycle = ServiceState.STARTING
     app.add_middleware(RequestBoundary, settings=configuration)
-
-    @app.exception_handler(HTTPException)
-    async def http_error(request: Request, exception: HTTPException) -> JSONResponse:
-        definitions = {
-            404: ("ENDPOINT_NOT_FOUND", "The endpoint does not exist."),
-            405: ("METHOD_NOT_ALLOWED", "The HTTP method is not supported."),
-            400: ("INVALID_REQUEST", "The request is invalid."),
-        }
-        code, message = definitions.get(
-            exception.status_code, ("INVALID_REQUEST", "The request could not be accepted.")
-        )
-        response = error_response(request_meta(request), status=exception.status_code, code=code, message=message)
-        if exception.status_code == 405 and exception.headers and "Allow" in exception.headers:
-            response.headers["Allow"] = exception.headers["Allow"]
-        return response
-
-    @app.exception_handler(RequestValidationError)
-    async def validation_error(request: Request, _exception: RequestValidationError) -> JSONResponse:
-        return error_response(
-            request_meta(request), status=400, code="INVALID_REQUEST", message="The request is invalid."
-        )
-
-    async def snapshot() -> ReadinessSnapshot:
-        if app.state.lifecycle != ServiceState.RUNNING:
-            return ReadinessSnapshot()
-        try:
-            async with timeout(_READINESS_TIMEOUT_SECONDS):
-                current = await probe.snapshot()
-        except Exception:
-            log_event("readiness_unavailable", code="DEPENDENCY_UNAVAILABLE")
-            return ReadinessSnapshot()
-        return current if app.state.lifecycle == ServiceState.RUNNING else ReadinessSnapshot()
-
-    @app.get("/api/v1/health/live", response_model=LiveResponse, responses={503: {"model": ErrorResponse}})
-    async def live(request: Request) -> LiveResponse | JSONResponse:
-        if app.state.lifecycle != ServiceState.RUNNING:
-            return error_response(
-                request_meta(request),
-                status=503,
-                code="SERVICE_UNAVAILABLE",
-                message="The service is not running.",
-                retryable=True,
-            )
-        return LiveResponse(**request_meta(request).model_dump(), backend_revision=configuration.backend_revision)
-
-    @app.get("/api/v1/health/ready", response_model=ReadyResponse, responses={503: {"model": ErrorResponse}})
-    async def ready(request: Request) -> ReadyResponse | JSONResponse:
-        dependency = await database.snapshot(trace_id=request_meta(request).trace_id)
-        current = await snapshot()
-        if dependency.status != "ready" or not current.profiles:
-            return error_response(
-                request_meta(request),
-                status=503,
-                code="NOT_READY",
-                message="No execution profile is ready.",
-                retryable=True,
-            )
-        return ReadyResponse(
-            **request_meta(request).model_dump(),
-            backend_revision=configuration.backend_revision,
-            ready_profile_ids=[profile.profile_id for profile in current.profiles],
-        )
-
-    @app.get("/api/v1/capabilities", response_model=CapabilitiesResponse)
-    async def capabilities(request: Request) -> CapabilitiesResponse:
-        current = await snapshot()
-        dependency = await database.snapshot(trace_id=request_meta(request).trace_id)
-        return CapabilitiesResponse(
-            **request_meta(request).model_dump(),
-            backend_revision=configuration.backend_revision,
-            service_state=app.state.lifecycle,
-            profiles=current.profiles if dependency.status == "ready" else [],
-            features=Features(),
-            dependencies=Dependencies(database=dependency),
-        )
-
+    app.add_exception_handler(HTTPException, _http_error)
+    app.add_exception_handler(RequestValidationError, _validation_error)
+    routes = _Routes(app=app, configuration=configuration, database=database, service=service, readiness=readiness)
+    app.add_api_route("/api/v1/health/live", routes._live, response_model=LiveResponse, name="live")
+    app.add_api_route("/api/v1/health/ready", routes._ready, response_model=ReadyResponse, name="ready")
+    app.add_api_route(
+        "/api/v1/capabilities", routes._capabilities, response_model=CapabilitiesResponse, name="capabilities"
+    )
+    app.add_api_route("/api/v1/workspaces", routes._workspaces, response_model=WorkspacePage, name="workspaces")
+    app.add_api_route(
+        "/api/v1/workspaces/{workspace_id}/documents", routes._documents, response_model=DocumentPage, name="documents"
+    )
+    app.add_api_route(
+        "/api/v1/workspaces/{workspace_id}/search",
+        routes._search,
+        methods=["POST"],
+        response_model=SearchResponse,
+        response_model_exclude_none=True,
+        name="search",
+        responses={status: {"model": ErrorResponse} for status in (409, 413, 415, 429, 504)},
+    )
     return app

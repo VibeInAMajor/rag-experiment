@@ -161,6 +161,7 @@ detached = true
 installer = "uv"
 dependencies = [
   "fastapi==0.165.0",
+  "haystack-ai @ {root:uri}",
   "starlette==1.10.0",
   "uvicorn==0.54.0",
   "pydantic==2.14.4",
@@ -178,11 +179,15 @@ dependencies = [
   "mypy>=1.19,<2",
 ]
 
+[tool.hatch.envs.workbench-api.env-vars]
+HAYSTACK_TELEMETRY_ENABLED = "false"
+HAYSTACK_CONTENT_TRACING_ENABLED = "false"
+
 [tool.hatch.envs.workbench-api.scripts]
 serve = "python -m apps.workbench.api"
 test = "python -m pytest -q apps/workbench/api/tests {args}"
 check = "ruff check apps/workbench/api && ruff format --check apps/workbench/api"
-types = "mypy --explicit-package-bases apps/workbench/api"
+types = "mypy --explicit-package-bases --follow-imports=silent apps/workbench/api"
 db-bootstrap = "python -m apps.workbench.api.db_admin bootstrap-db"
 db-migrate = "python -m apps.workbench.api.db_admin migrate"
 db-status = "python -m apps.workbench.api.db_admin status"

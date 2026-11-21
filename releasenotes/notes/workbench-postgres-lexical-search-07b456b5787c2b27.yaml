@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Add read-only PostgreSQL lexical retrieval through the Workbench API using
+    the ``postgres-fts-baseline`` execution profile and a real Haystack pipeline.
+    Query the existing development workspace through the workspace/document list
+    and search endpoints. Results include persisted source/version provenance,
+    raw ``postgres_ts_rank_cd`` scores and measured timings. Capabilities and
+    readiness reflect database, corpus and pipeline availability; no in-memory
+    fallback, model inference or frontend Live binding is enabled.

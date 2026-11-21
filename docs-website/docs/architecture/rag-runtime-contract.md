@@ -7,16 +7,16 @@ description: Canonical decisions and integration boundaries for the local RAG Wo
 
 **Created:** 2026-11-20  
 **Updated:** 2026-11-21
-**Decision status:** Accepted implementation contract; discovery bootstrap implemented, retrieval API remains planned.  
+**Decision status:** Accepted implementation contract; PostgreSQL lexical HTTP retrieval implemented.
 **Contract revision:** `rag-api-v1.0`
 
 This is the single source of truth for RAG runtime and Workbench integration. It supersedes runtime choices in the [dated architecture reference](../tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md). The [Workbench README](../../../apps/workbench/web/README.md) describes what can run today. The PostgreSQL foundation decision dated 2026-11-21 supersedes the earlier in-memory BM25 first-slice proposal: the next HTTP retrieval slice must rank persisted rows directly in PostgreSQL and use its truthful native FTS score type. No HTTP retrieval, real embedding or ANN result is implied by the storage foundation.
 
-## Current bootstrap
+## Current runtime
 
-The independent [Workbench API](../../../apps/workbench/api/README.md) implements the three health/discovery routes in section 4. From the repository root, run `hatch run workbench-api:serve`; the default listener is `127.0.0.1:8011`. Its dependencies live in a detached Hatch environment and do not change the Haystack library dependencies. Stop it with Ctrl+C.
+The independent [Workbench API](../../../apps/workbench/api/README.md) implements all six routes in section 4: health/discovery, authorized workspace/document listing and read-only search. Its runtime uses this repository's Haystack source through a dedicated Hatch environment; application dependencies do not change the Haystack library's public dependency contract. Load the application database environment and run `hatch run workbench-api:serve`; the listener is `127.0.0.1:8011`. See the [lexical search guide](postgres-lexical-search.md) for complete commands and examples.
 
-Liveness is 200, overall readiness remains 503 `NOT_READY`, and capabilities return `profiles: []`, `features: {documents: false, search: false}`. Configuring `WORKBENCH_DB_DSN` composes the PostgreSQL persistence adapter; `dependencies.database` reports `unconfigured`, `ready`, `empty`, `incompatible` or `unavailable`. A ready database is necessary storage evidence, not an executable HTTP search profile. There is no workspace/document/search route or readiness-enabling flag yet. The existing validator on port 8010 and standalone preview UI remain independent. Follow the [PostgreSQL runbook](postgresql-foundation.md) for explicit migrations, seed and operations.
+Liveness is independent of storage. Readiness is 200 and capabilities advertise `postgres-fts-baseline` only after the real PostgreSQL schema/index/corpus and allowlisted Haystack pipeline qualify. Without usable storage, readiness is 503 and profiles remain empty. `dependencies.database` reports storage state separately; setting `WORKBENCH_DB_DSN` alone cannot force readiness. The existing validator on port 8010 and standalone preview UI remain independent; the UI is not yet wired to live retrieval. Follow the [PostgreSQL runbook](postgresql-foundation.md) for explicit migrations and seed; API startup performs neither.
 
 The [published OpenAPI schema](../../../apps/workbench/api/openapi.json) describes implemented routes and response models. Capabilities add `service_state` (`starting`, `running`, `stopping`, `stopped`), `features` (`documents`, `search` booleans), and a typed `dependencies.database` status with certified revision/counts when ready. These describe actual availability; constructor mappings are never executable profiles. Configuration, operational logging and startup details are in the API runbook.
 
@@ -35,7 +35,7 @@ Paths below are relative to the repository root; links identify the actual owner
 | [Persistence port](../../../apps/workbench/api/persistence.py), [PostgreSQL adapter](../../../apps/workbench/api/postgres.py) and [migrations](../../../apps/workbench/api/db_migrations.py) | Durable scoped records, forced RLS, native FTS and exact synthetic-vector storage are implemented | Only storage primitives are ready; HTTP retrieval and real embedding qualification remain separate |
 | [Splitter](../../../haystack/components/preprocessors/document_splitter.py) | Token splitting defaults to tiktoken `o200k_base` | Current token splitting is not evidence of Qwen-compatible token counts |
 
-Both the constructor validator and independent API bootstrap exist. The PostgreSQL registry/persistence adapter is implemented; search, ingestion and workspace data HTTP routes are still absent. The implemented `/api/v1/health/*` and `/api/v1/capabilities` routes are separate from `/api/pipelines/validate`; the workspace/search HTTP interface below remains planned.
+The constructor validator and independent lexical API exist. Workspace/document/search HTTP routes use the PostgreSQL registry and persistence adapter; ingestion and model inference remain planned. The API v1 routes are separate from `/api/pipelines/validate`, which still checks constructors without execution.
 
 ## 2. Canonical runtime decisions
 
@@ -43,7 +43,7 @@ Both the constructor validator and independent API bootstrap exist. The PostgreS
 | --- | --- | --- |
 | Durable search data | PostgreSQL 17.10 + pgvector 0.8.2 in a digest-pinned Docker image; app-owned SQL adapter | Container/restart, migration, FTS and synthetic-vector evidence is in the foundation task; no throughput or ANN claim |
 | Metadata/version registry | PostgreSQL relational workspace/source/version/chunk records, composite FKs and forced RLS | Job/cache extensions and production authorization remain future work |
-| First lexical backend | PostgreSQL `simple` configuration, stored `tsvector`, GIN and `ts_rank_cd`; planned profile `postgres-keyword-v1`, score `postgres_ts_rank_cd` | Storage primitive tested; implement and qualify the HTTP retrieval slice before advertising it |
+| First lexical backend | PostgreSQL `simple`, stored `tsvector`, GIN and raw `ts_rank_cd`; executable profile `postgres-fts-baseline` / `postgres-fts-baseline-r1` | Ten labeled exact-query tests and real HTTP/restart evidence qualify the development slice; semantic paraphrase quality is not claimed |
 | Genuine BM25 | Deferred; `bm25-v1` remains reserved for actual BM25 semantics | No Live in-memory corpus/fallback; any PostgreSQL BM25 extension needs a separate deployment/licensing decision |
 | Embedding transport | Existing local TEI service; deployment target `http://127.0.0.1:8081` | Recheck health, server schema, runtime revision and served model before integration; this task performs no inference |
 | Embedding model | Qwen3-Embedding-4B, full **2560** dimensions, normalized vectors and cosine search | Pin model/tokenizer revisions and prove actual output shape, finite values and normalization with a logged probe |
@@ -75,13 +75,13 @@ The [model card](https://huggingface.co/Qwen/Qwen3-Embedding-4B) documents the m
 
 ## 3. First executable profile and graph boundary
 
-The next eligible HTTP slice is `postgres-keyword-v1`: one query, native PostgreSQL full-text ranking, and result projection over authorized persisted active chunks. Its score type is `postgres_ts_rank_cd`; raw values are not probabilities or BM25. Defaults remain `top_k = 10`, range 1–50, with query/HTTP bounds below. It has no embedding, RRF, generation or ingestion stage. The current API advertises no profiles until that HTTP slice is implemented and tested.
+The executable development profile is `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`: one query, native PostgreSQL full-text ranking, and result projection over authorized persisted active chunks. Its score type is `postgres_ts_rank_cd`; raw values are not probabilities or BM25. Defaults remain `top_k = 10`, range 1–50, with bounds below. It has no embedding, RRF, generation or ingestion stage. Per the user's naming clarification, the name comes from the implemented retrieval task. The earlier `postgres-keyword-v1` was only reserved in DTOs and had no executor; it is not an execution alias and search rejects it with 409.
 
 The storage foundation uses an application-owned persistence port and a PostgreSQL adapter behind it. `pgvector-haystack==8.2.1` was exercised with repository Haystack 3.5.0 on a disposable database. Its standard keyword and synthetic-vector operations work, but its flat document table and implicit table/index initialization do not satisfy migration-owned composite workspace/source/version FKs, forced RLS and transactional publication. Reusing it would require a second corpus or invasive overriding. The narrow SQL adapter therefore owns the single authoritative table layout. Evidence and exact commands are in the PostgreSQL runbook.
 
 All reads and writes carry a server-resolved workspace context. Publication stages a full replacement and atomically changes the active version. Queries constrain workspace, active version and, for vectors, compatible embedding profile; user filters cannot overwrite those conditions. Pool, connection, statement and lock limits are bounded. No client graph JSON, Python class path, SQL, YAML, model identifier, provider URL or credential is executable input.
 
-`bm25-v1` remains a distinct reserved profile name for genuine BM25. The prior in-memory BM25-first proposal is superseded by the PostgreSQL foundation decision; neither `ts_rank_cd` nor the current UI BM25 node may be presented as that algorithm. The pending retrieval task must be reconciled before implementation: persisted corpus, native lexical name/score, canonical request/error fields and no memory-only seed.
+`bm25-v1` remains a distinct reserved name for genuine BM25. The prior memory-first proposal is superseded: neither native FTS nor the Preview BM25 node is an executable BM25 implementation here. The implemented retrieval task uses the persisted corpus, the selected native-FTS name/score, canonical request/error fields and no memory-only seed.
 
 ### Workbench eligibility
 
@@ -91,7 +91,7 @@ Query/result nodes remain API projections rather than invented Haystack pass-thr
 
 ## 4. API v1 types and protocol
 
-Only the three health/discovery endpoints are implemented by the bootstrap; workspace/document/search endpoints remain future work. JSON uses UTF-8 and snake_case. Unknown request fields are rejected. Identifiers are opaque server-issued ASCII strings matching `[A-Za-z0-9_-]{1,128}`; examples are illustrative. Times are RFC 3339 UTC, durations are finite nonnegative milliseconds. Counts/ranks/limits are integers, booleans cannot stand in for numbers. Responses include `contract_revision: "rag-api-v1.0"`, `request_id`, and `trace_id`. Every response also returns `X-Request-ID`; the server generates IDs and does not trust arbitrary caller IDs for logging. Use W3C trace context only after validating it under the deployment's trace policy.
+All six endpoints below are implemented. JSON uses UTF-8 and snake_case. Unknown request fields are rejected. Identifiers are opaque server-issued ASCII strings matching `[A-Za-z0-9_-]{1,128}`; examples are illustrative. Times are RFC 3339 UTC, durations are finite nonnegative milliseconds. Counts/ranks/limits are integers, booleans cannot stand in for numbers. Responses include `contract_revision: "rag-api-v1.0"`, `request_id`, and `trace_id`. Every HTTP response also returns `X-Request-ID`; the server generates IDs and does not trust arbitrary caller IDs for logging. This local API disables Haystack telemetry, content tracing and external trace export. A completed client disconnect produces operational status 499 without an HTTP response or exception traceback; ordinary task cancellation still propagates after owned work is cleaned up.
 
 The service binds to loopback for the first development slice. All data endpoints require the server's development identity or later authenticated principal. Workspace listing grants no access by itself. Authorization precedes resource lookup, search and pagination. Health responses reveal no DSNs, filesystem paths, credentials or provider exceptions.
 
@@ -157,7 +157,7 @@ type Capabilities = {
 };
 ```
 
-List only executable, qualified profiles available to the caller at response time. The current API returns `profiles: []`; it may list `postgres-keyword-v1` only after the HTTP implementation and qualification gates pass. `bm25-v1` is reserved for genuine BM25, never a native FTS alias. `backend_revision` identifies deployed application/configuration revision; `profile_revision` identifies immutable execution semantics. Neither is the validator's `workbench-components-v1`. UI must reject an unknown contract revision, refresh changed capabilities and disable Live for profiles absent from them. Availability can change after discovery; the server checks again at execution. Provider substitution preserves the public request shape, but semantic/ranking changes need a new profile revision and qualification.
+List only executable, qualified profiles available to the caller at response time. The API lists `postgres-fts-baseline` only while its database, index, complete bounded corpus and pipeline qualify; failures produce `profiles: []`. `bm25-v1` is reserved for genuine BM25, never a native FTS alias. `backend_revision` identifies deployed application/configuration revision; `profile_revision` identifies immutable execution semantics. Neither is the validator's `workbench-components-v1`. UI must reject an unknown contract revision, refresh changed capabilities and disable Live for absent profiles. Availability can change after discovery; execution checks again. Provider substitution preserves the request shape, but semantic/ranking changes need a new profile revision and qualification.
 
 ### Workspaces and documents
 
@@ -197,7 +197,7 @@ Both list endpoints allow integer `limit` 1–100 (default 50) and an optional o
 `POST /api/v1/workspaces/{workspace_id}/search`, `Content-Type: application/json`:
 
 ```json
-{"query":"How are updates published?","top_k":10,"profile_id":"postgres-keyword-v1","expected_profile_revision":"postgres-keyword-v1-r1"}
+{"query":"retention","top_k":10,"profile_id":"postgres-fts-baseline","expected_profile_revision":"postgres-fts-baseline-r1"}
 ```
 
 All four fields are required. `query` is trimmed for execution, then must contain 1–4096 Unicode code points; count before any provider instruction. `top_k` is an integer 1–50. `profile_id` selects an executable backend-approved profile, never a model name. `expected_profile_revision` must equal the revision last discovered in capabilities; a mismatch returns 409 `PROFILE_NOT_AVAILABLE` before execution, requiring refresh. It does not pin the corpus: each run returns the actual certified `corpus_revision`. Total request body is at most 32 KiB, including JSON encoding. No filters, graph or provider overrides are accepted in v1. Headers/transport limits and concurrency quotas are enforced server-side before expensive work.
@@ -231,7 +231,7 @@ type SearchResponse = {
 
 `results` has 0–`top_k` items, unique `chunk_id`, ordered by descending raw score; ties are broken by `chunk_id` over the complete bounded candidate set before truncation. Rank is contiguous and one-based. Scores must be finite; raw lexical values are not percentages, probabilities or comparable across profiles/corpora. Do not clamp or normalize them in the UI. Missing page provenance omits `page`; a present page is a positive one-based integer. Content is the stored passage, rendered as text with unsafe HTML escaped. A successful zero-hit query has `results: []`, not an error. No response contains generated answers.
 
-All hits must come from the same certified corpus revision and authorized active versions. Projection verifies source/version access again before returning content. The first slice returns full stored chunk content up to a corpus-admission ceiling of 32,768 Unicode code points per chunk; larger chunks fail corpus qualification rather than get silently shortened. Search never returns unauthorized hits followed by client-side filtering.
+All hits come from one read-only REPEATABLE READ transaction, including corpus fingerprinting and ranking over authorized active versions. Projection checks the returned scope, unique identities, ranks and ordering before returning content. The response represents that certified snapshot; a later publication can legitimately change the next response's revision. Full stored content is returned up to 32,768 code points per chunk; larger chunks cannot be published through the storage contract. No client-side authorization filtering or silent passage shortening occurs.
 
 ### Stable error semantics
 
@@ -293,6 +293,6 @@ The historical Delta Detector/TPM references are design inputs; source-code reus
 
 ## 8. Compatibility and changes
 
-Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. No runtime data migration or frontend design change occurs here. The validation route/revision is unchanged. API v1 health/discovery is implemented by the isolated bootstrap; workspace/document/search routes and execution remain separate tasks. The additive discovery fields do not change the `rag-api-v1.0` request or score semantics.
+Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. UI integration, ingestion and real embeddings remain separate tasks.
 
 Change this decision before dependent code/tasks when semantics change. Additive responses require clients to tolerate unknown response fields; request fields remain strict. Breaking request/response or score semantics require a new contract/API version or explicitly negotiated profile revision. Rollback is reverting these documentation edits; once dependent implementations exist, reconcile their contracts and migration obligations first.

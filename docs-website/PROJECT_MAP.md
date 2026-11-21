@@ -1,11 +1,13 @@
 # Project Map — RAG Experiment
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-20  
+**Updated:** 2026-11-21
 **Status:** Repository-verified navigation document; not a runtime architecture specification.  
 **Evidence:** GitHub recursive tree `5e7086364f62d4f15b7370e55767a8f84ed4dc14` (12,946 files; complete tree), plus relevant source and README files, inspected on 2026-11-20.
 
 > **Use this map to find an existing owner before editing code.** File presence is evidence of code or documentation, **not** evidence that a corresponding service is deployed or integrated. Recheck the tree and files at implementation time.
+
+**Application update:** PostgreSQL lexical HTTP implementation and real runtime evidence were checked on 2026-11-21 against working-tree base `7f19f4560012a47b812dfabe8f4b1fc53aa384e9` and the scoped retrieval changes. See the canonical contract and retrieval task for execution evidence rather than the historical tree snapshot above.
 
 ## 1. Repository shape (verified)
 
@@ -20,6 +22,8 @@ rag-experiment/
 ├── .github/                        # CI workflows, review templates, utilities
 ├── apps/
 │   └── workbench/
+│       ├── api/                     # PostgreSQL persistence and approved Haystack lexical HTTP profile
+│       ├── validator/               # Independent constructor-only Haystack validation
 │       └── web/                     # Standalone React/TypeScript pipeline Workbench
 │           ├── README.md
 │           ├── package.json
@@ -163,12 +167,12 @@ NO verified network API/client → NO verified deployed RAG backend.
 | --- | --- | --- |
 | Local pipeline editor + validation | Implemented in Workbench | Reuse `domain/graph.ts` |
 | Local simulated runs and document lists | Implemented as demo fixtures | Do not present as production metrics |
-| API liveness/readiness/capability discovery | Implemented; database dependency status is reported separately, profiles remain empty | Use the isolated Hatch environment and [API runbook](../apps/workbench/api/README.md) |
-| RAG execution API backend and execution client | **Not found**; discovery bootstrap and separate validation-only API/client exist | Follow the canonical runtime contract before creating execution adapters |
+| API liveness/readiness/capability discovery | Implemented; qualified `postgres-fts-baseline` is advertised only while storage/corpus/pipeline are ready | Use the Hatch environment and [API runbook](../apps/workbench/api/README.md) |
+| Read-only lexical execution API | Implemented workspace/document/search routes over the existing PostgreSQL adapter and Haystack pipeline | Follow the [lexical guide](docs/architecture/postgres-lexical-search.md); frontend execution binding remains future work |
 | Workspace registry / storage scope | Implemented PostgreSQL composite FKs and forced RLS; single development resolver only | Production authentication/authorization remains future work |
 | Chunk persistence / publication | Implemented app-owned PostgreSQL adapter and transactional source version publication | Ingestion and delta-detection workflows remain separate |
 | PostgreSQL + pgvector | Dedicated Docker service, Alembic migrations, explicit seed and nullable synthetic-vector storage implemented | Follow the [PostgreSQL runbook](docs/architecture/postgresql-foundation.md); real TEI integration remains planned |
-| Native PostgreSQL lexical primitive | Implemented with `simple`, GIN and `postgres_ts_rank_cd` | HTTP retrieval is the next task; do not label native FTS BM25 |
+| PostgreSQL lexical retrieval | Implemented SQL primitive and HTTP profile with `simple`, GIN and `postgres_ts_rank_cd` | Native FTS is not BM25; real semantic/hybrid retrieval remains separate |
 | BM25 + vector hybrid retrieval + RRF backend | UI template and simulation exist; **backend not verified** | Separate mock graph from real search |
 | Observability / evaluation pipeline for this RAG app | Framework functionality exists; app-level integration **not verified** | Define trace and evaluation evidence |
 | Answer generation | Planned; Workbench does not infer | Do not claim LLM responses are live |

@@ -4,8 +4,9 @@ import ast
 import asyncio
 import json
 import logging
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 import httpx
 import pytest
@@ -13,13 +14,14 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ConfigDict
+from starlette.types import Message, Scope
 
 from apps.workbench.api import application as application_module
 from apps.workbench.api.application import create_app
 from apps.workbench.api.config import ApiSettings
 from apps.workbench.api.contracts import ExecutionProfile, ServiceState
 from apps.workbench.api.services import ReadinessSnapshot
-from apps.workbench.api.tests._persistence import _DatabaseProbe
+from apps.workbench.api.tests._persistence import _DatabaseProbe, _QualifiedLexical
 
 _BASE_URL = "http://127.0.0.1:8011"
 _LIVE = "/api/v1/health/live"
@@ -50,7 +52,20 @@ class _ValidationBody(BaseModel):
     count: int
 
 
-def _assert_metadata(response: httpx.Response) -> dict[str, Any]:
+class _Response(Protocol):
+    @property
+    def status_code(self) -> int: ...
+
+    @property
+    def text(self) -> str: ...
+
+    @property
+    def headers(self) -> Mapping[str, str]: ...
+
+    def json(self) -> Any: ...
+
+
+def _assert_metadata(response: _Response) -> dict[str, Any]:
     payload = response.json()
     assert payload["contract_revision"] == "rag-api-v1.0"
     assert payload["request_id"] == response.headers["x-request-id"]
@@ -59,7 +74,7 @@ def _assert_metadata(response: httpx.Response) -> dict[str, Any]:
     return payload
 
 
-def _assert_error(response: httpx.Response, *, status: int, code: str) -> dict[str, Any]:
+def _assert_error(response: _Response, *, status: int, code: str) -> dict[str, Any]:
     assert response.status_code == status
     payload = _assert_metadata(response)
     assert payload["error"]["code"] == code
@@ -70,7 +85,7 @@ def _assert_error(response: httpx.Response, *, status: int, code: str) -> dict[s
     return payload
 
 
-def _assert_openapi_response(app: FastAPI, response: httpx.Response, *, path: str, method: str = "get") -> None:
+def _assert_openapi_response(app: FastAPI, response: _Response, *, path: str, method: str = "get") -> None:
     specification = app.openapi()
     schema = specification["paths"][path][method]["responses"][str(response.status_code)]["content"][
         "application/json"
@@ -78,7 +93,7 @@ def _assert_openapi_response(app: FastAPI, response: httpx.Response, *, path: st
     Draft202012Validator({**schema, "components": specification["components"]}).validate(response.json())
 
 
-def _assert_error_schema(app: FastAPI, response: httpx.Response) -> None:
+def _assert_error_schema(app: FastAPI, response: _Response) -> None:
     Draft202012Validator(
         {"$ref": "#/components/schemas/ErrorResponse", "components": app.openapi()["components"]}
     ).validate(response.json())
@@ -104,7 +119,17 @@ def test_default_discovery_does_not_claim_an_execution_backend(monkeypatch: pyte
         for path, response in [(_LIVE, live), (_READY, ready), (_CAPABILITIES, capabilities)]:
             _assert_openapi_response(app, response, path=path)
         _assert_error(
-            client.post("/api/v1/workspaces/a/search", json={"query": "hello"}), status=404, code="ENDPOINT_NOT_FOUND"
+            client.post(
+                "/api/v1/workspaces/development/search",
+                json={
+                    "query": "hello",
+                    "top_k": 5,
+                    "profile_id": "postgres-fts-baseline",
+                    "expected_profile_revision": "postgres-fts-baseline-r1",
+                },
+            ),
+            status=503,
+            code="NOT_READY",
         )
 
 
@@ -128,7 +153,9 @@ async def test_slow_readiness_is_cancelled_without_disabling_liveness(monkeypatc
             return ReadinessSnapshot()
 
     monkeypatch.setattr(application_module, "_READINESS_TIMEOUT_SECONDS", 0.01)
-    app = create_app(settings=ApiSettings(), readiness=SlowReadiness(), persistence=_DatabaseProbe())
+    app = create_app(
+        settings=ApiSettings(), readiness=SlowReadiness(), persistence=_DatabaseProbe(), lexical=_QualifiedLexical()
+    )
     async with (
         app.router.lifespan_context(app),
         httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=_BASE_URL) as client,
@@ -154,7 +181,12 @@ async def test_late_dependency_success_cannot_publish_readiness_after_shutdown()
             await release.wait()
             return await super().snapshot()
 
-    app = create_app(settings=ApiSettings(), readiness=ControlledReadiness(ready=True), persistence=_DatabaseProbe())
+    app = create_app(
+        settings=ApiSettings(),
+        readiness=ControlledReadiness(ready=True),
+        persistence=_DatabaseProbe(),
+        lexical=_QualifiedLexical(),
+    )
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=_BASE_URL) as client:
         async with app.router.lifespan_context(app):
             pending = asyncio.create_task(client.get(_READY))
@@ -166,16 +198,117 @@ async def test_late_dependency_success_cannot_publish_readiness_after_shutdown()
         _assert_openapi_response(app, response, path=_READY)
 
 
+@pytest.mark.asyncio
+async def test_real_asgi_disconnect_waits_for_cleanup_without_response_or_exception(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A verified transport disconnect records 499 while holding its slot through cleanup."""
+    entered = asyncio.Event()
+    two_entered = asyncio.Event()
+    cancellation_entered = asyncio.Event()
+    finish_cleanup = asyncio.Event()
+    incoming: asyncio.Queue[Message] = asyncio.Queue()
+    sent: list[Message] = []
+    calls = 0
+
+    class DisconnectedSearch(_QualifiedLexical):
+        async def search(self, *_args: Any, **_kwargs: Any) -> Any:
+            nonlocal calls
+            calls += 1
+            entered.set()
+            if calls == 2:
+                two_entered.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancellation_entered.set()
+                await finish_cleanup.wait()
+
+    body = json.dumps(
+        {
+            "query": "PostgreSQL",
+            "top_k": 5,
+            "profile_id": "postgres-fts-baseline",
+            "expected_profile_revision": "postgres-fts-baseline-r1",
+        }
+    ).encode()
+    scope: Scope = {
+        "type": "http",
+        "asgi": {"version": "3.0", "spec_version": "2.3"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": "/api/v1/workspaces/development/search",
+        "raw_path": b"/api/v1/workspaces/development/search",
+        "query_string": b"",
+        "root_path": "",
+        "headers": [
+            (b"host", b"127.0.0.1:8011"),
+            (b"content-type", b"application/json"),
+            (b"content-length", str(len(body)).encode()),
+        ],
+        "server": ("127.0.0.1", 8011),
+        "client": ("127.0.0.1", 10000),
+    }
+    await incoming.put({"type": "http.request", "body": body, "more_body": False})
+
+    async def receive() -> Message:
+        return await incoming.get()
+
+    async def send(message: Message) -> None:
+        sent.append(message)
+
+    app = create_app(settings=ApiSettings(), persistence=_DatabaseProbe(), lexical=DisconnectedSearch())
+    caplog.set_level(logging.INFO, logger="workbench.api")
+    async with (
+        app.router.lifespan_context(app),
+        httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=_BASE_URL) as client,
+    ):
+        raw_request = asyncio.create_task(app(scope, receive, send))
+        await asyncio.wait_for(entered.wait(), timeout=2)
+        second = asyncio.create_task(
+            client.post(scope["path"], content=body, headers={"Content-Type": "application/json"})
+        )
+        try:
+            await asyncio.wait_for(two_entered.wait(), timeout=2)
+            await incoming.put({"type": "http.disconnect"})
+            await asyncio.wait_for(cancellation_entered.wait(), timeout=2)
+            assert not raw_request.done()
+            busy = await client.post(scope["path"], content=body, headers={"Content-Type": "application/json"})
+            _assert_error(busy, status=429, code="SEARCH_BUSY")
+            finish_cleanup.set()
+            await asyncio.wait_for(raw_request, timeout=2)
+            assert not raw_request.cancelled()
+            second.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await second
+        finally:
+            finish_cleanup.set()
+            for task in (raw_request, second):
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(raw_request, second, return_exceptions=True)
+    assert sent == []
+    events = [json.loads(record.getMessage()) for record in caplog.records if record.name == "workbench.api"]
+    logged = next(
+        event
+        for event in events
+        if event.get("event") == "http_request" and event.get("request_id") == scope["state"]["request_id"]
+    )
+    assert logged["http_status"] == 499
+    assert all(record.exc_info is None for record in caplog.records if record.name == "workbench.api")
+
+
 def test_readiness_tracks_the_injected_dependency_snapshot() -> None:
     """Readiness can change without restarting or pretending that configuration is health."""
     probe = _MutableReadiness()
-    app = create_app(settings=ApiSettings(), readiness=probe, persistence=_DatabaseProbe())
+    app = create_app(settings=ApiSettings(), readiness=probe, persistence=_DatabaseProbe(), lexical=_QualifiedLexical())
     with TestClient(app, base_url=_BASE_URL) as client:
         _assert_error(client.get(_READY), status=503, code="NOT_READY")
         probe.ready = True
         ready = client.get(_READY)
         assert ready.status_code == 200
-        assert _assert_metadata(ready)["ready_profile_ids"] == ["bm25-v1"]
+        assert _assert_metadata(ready)["ready_profile_ids"] == ["postgres-fts-baseline"]
         _assert_openapi_response(app, ready, path=_READY)
         capabilities = client.get(_CAPABILITIES)
         assert capabilities.json()["profiles"][0]["profile_revision"] == "qualified-test-revision"
@@ -190,7 +323,7 @@ def test_readiness_tracks_the_injected_dependency_snapshot() -> None:
 def test_qualified_executor_cannot_bypass_unconfigured_postgresql() -> None:
     """A ready execution probe cannot grant readiness without the required durable corpus."""
     probe = _MutableReadiness(ready=True)
-    app = create_app(settings=ApiSettings(), readiness=probe)
+    app = create_app(settings=ApiSettings(), readiness=probe, lexical=_QualifiedLexical())
     with TestClient(app, base_url=_BASE_URL) as client:
         assert client.get(_LIVE).status_code == 200
         response = client.get(_READY)
@@ -206,7 +339,7 @@ def test_qualified_executor_cannot_bypass_unconfigured_postgresql() -> None:
 def test_lifecycle_never_probes_dependencies_outside_the_running_process() -> None:
     """Stopping the app invalidates readiness even if the dependency was previously ready."""
     probe = _MutableReadiness(ready=True)
-    app = create_app(settings=ApiSettings(), readiness=probe, persistence=_DatabaseProbe())
+    app = create_app(settings=ApiSettings(), readiness=probe, persistence=_DatabaseProbe(), lexical=_QualifiedLexical())
     assert app.state.lifecycle == ServiceState.STARTING
     client = TestClient(app, base_url=_BASE_URL)
     _assert_error(client.get(_READY), status=503, code="NOT_READY")
@@ -374,8 +507,8 @@ def test_discovery_rejects_request_body_framing_before_dependency_access(headers
         assert probe.calls == 0
 
 
-def test_bootstrap_has_no_provider_or_haystack_imports() -> None:
-    """Importing discovery cannot construct database clients or load model SDKs."""
+def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
+    """Application policy cannot acquire provider SDKs through an accidental direct import."""
     forbidden = {
         "haystack",
         "openai",
@@ -390,6 +523,7 @@ def test_bootstrap_has_no_provider_or_haystack_imports() -> None:
     for source in package.glob("*.py"):
         if source.name in {"postgres.py", "db_migrations.py", "db_admin.py"}:
             continue
+        restricted = forbidden - {"haystack"} if source.name == "lexical.py" else forbidden
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -398,4 +532,4 @@ def test_bootstrap_has_no_provider_or_haystack_imports() -> None:
                 modules = [node.module or ""]
             else:
                 continue
-            assert not forbidden.intersection(module.split(".")[0] for module in modules), source.name
+            assert not restricted.intersection(module.split(".")[0] for module in modules), source.name

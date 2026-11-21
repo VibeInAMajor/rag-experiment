@@ -1,0 +1,2462 @@
+{
+  "baseline": {
+    "checked_at_utc": "2026-11-20T23:29:53.121197+00:00",
+    "ready_http": 200,
+    "capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "1132ba52881248f28196740ab27cf83f",
+      "trace_id": "7b501c023e1341039dc5d60fa644d673",
+      "backend_revision": "workbench-api-lexical-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [
+        {
+          "profile_id": "postgres-fts-baseline",
+          "profile_revision": "postgres-fts-baseline-r1",
+          "kind": "lexical_search",
+          "workspace_ids": [
+            "development"
+          ],
+          "corpus_id": "development-corpus-v1",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "min_length": 1,
+              "max_length": 4096
+            },
+            "top_k": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "limits": {
+            "max_request_bytes": 32768,
+            "timeout_ms": 10000,
+            "max_concurrent_searches": 2,
+            "max_corpus_chunks": 10000,
+            "max_corpus_bytes": 52428800
+          },
+          "score_type": "postgres_ts_rank_cd"
+        }
+      ],
+      "features": {
+        "documents": true,
+        "search": true
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0001",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      }
+    },
+    "documents": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "b79b2cf51a0a400982307c58310174c6",
+      "trace_id": "8660d0a4c86d4d68a424a235614b32ea",
+      "workspace_id": "development",
+      "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+      "items": [
+        {
+          "source_id": "demo-backup",
+          "title": "Database backups",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-backup-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-health",
+          "title": "Readiness and liveness",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-health-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-identifiers",
+          "title": "Identifiers and multilingual text",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-identifiers-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-publication",
+          "title": "Publishing source versions",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-publication-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-scope",
+          "title": "Workspace boundaries",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-scope-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-search",
+          "title": "Lexical search",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-search-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-security",
+          "title": "Operational diagnostics",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-security-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-vectors",
+          "title": "Synthetic vector checks",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-vectors-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        }
+      ],
+      "next_cursor": null
+    },
+    "search_fingerprint": "4d61e3ebcf3313e910b7c0b3e3e78ebc1d3df41598de0570fbddf4e89407068b",
+    "evaluation": {
+      "gated_exact": [
+        {
+          "case": 1,
+          "expected_source_id": "demo-publication",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "ef4412bb1da247d3b7f9bd555e723795",
+            "trace_id": "572acbb8ea8043f49390b8da6389fe59",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "d3c77a360b644b41acb2319ac6b08e25",
+            "status": "success",
+            "duration_ms": 94.00000000096043,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-publication-chunk-1",
+                "source_id": "demo-publication",
+                "source_version_id": "demo-publication-v1",
+                "title": "Publishing source versions",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "7db9a60d916216a86185d9453b6a3bcad5d5756f99fb3973ecd191d8619113d4"
+              }
+            ],
+            "client_elapsed_ms": 94.00000000096043
+          }
+        },
+        {
+          "case": 2,
+          "expected_source_id": "demo-backup",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "20d817ff35254773bbfa2473c7fb0640",
+            "trace_id": "b66e19e316ee4a6faa83f40b357ef0e2",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "2459af6a8550492f9035dc8fc29b9153",
+            "status": "success",
+            "duration_ms": 30.999999999039574,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-backup-chunk-1",
+                "source_id": "demo-backup",
+                "source_version_id": "demo-backup-v1",
+                "title": "Database backups",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "252a951b0065530158ed17b9786700d4f396b5e83a4cf8e58dc6b9c83e03ceb4"
+              }
+            ],
+            "client_elapsed_ms": 30.999999999039574
+          }
+        },
+        {
+          "case": 3,
+          "expected_source_id": "demo-search",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "85f5e05e7a91450b9e015c01bab630b1",
+            "trace_id": "d1cf6a35d7a640d99ccfa74a9e000207",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "19c5513f65bd43ecadfc62c76537bca2",
+            "status": "success",
+            "duration_ms": 16.00000000325963,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 16.00000000325963
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "title": "Lexical search",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "1802cc44d3058bd91c128480daa9eb86eab7210e77d71d2f1d01312db67d894a"
+              }
+            ],
+            "client_elapsed_ms": 32.00000000288128
+          }
+        },
+        {
+          "case": 4,
+          "expected_source_id": "demo-search",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "2cecdcd55bf541c791640ffb1f3a12f2",
+            "trace_id": "e168548612484ed2b3560693b04ee607",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "5981b90da07547738eea4710188022cd",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "title": "Lexical search",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "1802cc44d3058bd91c128480daa9eb86eab7210e77d71d2f1d01312db67d894a"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 5,
+          "expected_source_id": "demo-vectors",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "d0ba851c945b41f8b2e4d29416d2c011",
+            "trace_id": "cb9c6fab7d4b4eebb86de51a55a7af3b",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "957241bb468a48e38f0fb5dcc5555613",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-vectors-chunk-1",
+                "source_id": "demo-vectors",
+                "source_version_id": "demo-vectors-v1",
+                "title": "Synthetic vector checks",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "059c5d6dc50c1b7d18043210fad30b0cdf44f6532b49f3a50cb2ce0f9b436034"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 6,
+          "expected_source_id": "demo-scope",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "c9217f94436d4c7ba072836384358ce5",
+            "trace_id": "43e1513c862946fa91d01372ecf90ebe",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "1c41a3e7017d49eaaf1e0f57a6f374b7",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-scope-chunk-1",
+                "source_id": "demo-scope",
+                "source_version_id": "demo-scope-v1",
+                "title": "Workspace boundaries",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "0be4207b295a25b781dd73eac7866474c36bfb5509b39f12cb7073101ba08165"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 7,
+          "expected_source_id": "demo-health",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "046b1b1f2fee4879a6bce9ac0648cc1a",
+            "trace_id": "5625ea5fd48644b5933df92337986742",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "cd97a3ca54424503b7475e102b4c70f6",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-health-chunk-1",
+                "source_id": "demo-health",
+                "source_version_id": "demo-health-v1",
+                "title": "Readiness and liveness",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "d13b6999c3e1452c26f483630aa46a90386d667939623a5270b59fb273bd9aa7"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 8,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "bba523ae07af41bdb2c04183982e67e9",
+            "trace_id": "2fd4b4fda38144348bd0c0cce98759c0",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "35204b4446254d4abfe72b270427770d",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "title": "Identifiers and multilingual text",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "23e669e1aa00cf50bf46afe1318d64a292bf1b16396eafd46128e75ca1491b1d"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 9,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "3eff32fa0fd74dc5837d0ad7fb8ddff3",
+            "trace_id": "ec69a6929ccd401793f6d57c3ce351d6",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "ddb1813561774d6d8562fff07c1f3c62",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "title": "Identifiers and multilingual text",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "23e669e1aa00cf50bf46afe1318d64a292bf1b16396eafd46128e75ca1491b1d"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 10,
+          "expected_source_id": "demo-security",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "f43996b9d12347789872a37d588aa847",
+            "trace_id": "2db654cbd17e43a4937fdd80ffbe62e1",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "bc1b3dd7e0ae443e95e687bc405c61a2",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-security-chunk-1",
+                "source_id": "demo-security",
+                "source_version_id": "demo-security-v1",
+                "title": "Operational diagnostics",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "a85efdb4c03fec32a82eb5ad9db9cec9b4a9a128e25a6f24d8399193b1c8c935"
+              }
+            ],
+            "client_elapsed_ms": 32.00000000288128
+          }
+        }
+      ],
+      "matched_top5": 10,
+      "total": 10,
+      "diagnostic_paraphrases": [
+        {
+          "case": 1,
+          "expected_source_id": "demo-publication",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "1399b1ece3874df6bbb1c2dd2e7581db",
+            "trace_id": "0bafb17d7c8540698c68cd94718d7b1c",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "e5b2d3a33226440ba8e2b3ceb126f511",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 2,
+          "expected_source_id": "demo-backup",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "e103f60be12344ed90bde35afc58ff88",
+            "trace_id": "132ca621bfa34e8a86afaa375b99764b",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "e7fc3d3997d6479899752ae512690957",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 3,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "bdcd008770944a158a88e3ed257e4568",
+            "trace_id": "c3b578b391764361b45f014c4130639b",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "23b5411d17ec4369bd22c1de039f78e0",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        }
+      ],
+      "no_match": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "2eddfb125f9648d5b234ab16ea8c4b99",
+        "trace_id": "78a8e4be39994baf81079239981ba6f4",
+        "mode": "live",
+        "workspace_id": "development",
+        "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+        "profile_id": "postgres-fts-baseline",
+        "profile_revision": "postgres-fts-baseline-r1",
+        "run_id": "fb6b21d5c5704c24b194e1a854cfe1bf",
+        "status": "success",
+        "duration_ms": 14.999999999417923,
+        "stages": [
+          {
+            "stage": "corpus_load",
+            "status": "success",
+            "duration_ms": 14.999999999417923
+          },
+          {
+            "stage": "retrieval",
+            "status": "success",
+            "duration_ms": 0.0
+          },
+          {
+            "stage": "projection",
+            "status": "success",
+            "duration_ms": 0.0
+          }
+        ],
+        "results": [],
+        "client_elapsed_ms": 14.999999999417923
+      }
+    },
+    "negative_cases": [
+      {
+        "http_status": 404,
+        "code": "WORKSPACE_NOT_FOUND",
+        "trace_id": "6a189feb784b447b84ed2d4fbfc08a41"
+      },
+      {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "55a92d82785a4941adf9df606c2349b0"
+      },
+      {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "7cfe7626564e4f159f233adafcd7a9e2"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "9096a1efeb334d9491203754bf60e97f"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "779e4a222b474d58bc3e0589e78dcce6"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "8675c1a0f9fc4eb3be03c5dd5879d561"
+      }
+    ]
+  },
+  "after-api": {
+    "checked_at_utc": "2026-11-20T23:31:55.252614+00:00",
+    "ready_http": 200,
+    "capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "fd23a93d54a24d5f94c7dd2972379ba4",
+      "trace_id": "4482d20d044746029f14aaabd428d8e4",
+      "backend_revision": "workbench-api-lexical-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [
+        {
+          "profile_id": "postgres-fts-baseline",
+          "profile_revision": "postgres-fts-baseline-r1",
+          "kind": "lexical_search",
+          "workspace_ids": [
+            "development"
+          ],
+          "corpus_id": "development-corpus-v1",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "min_length": 1,
+              "max_length": 4096
+            },
+            "top_k": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "limits": {
+            "max_request_bytes": 32768,
+            "timeout_ms": 10000,
+            "max_concurrent_searches": 2,
+            "max_corpus_chunks": 10000,
+            "max_corpus_bytes": 52428800
+          },
+          "score_type": "postgres_ts_rank_cd"
+        }
+      ],
+      "features": {
+        "documents": true,
+        "search": true
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0001",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      }
+    },
+    "documents": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "cf9ece6c149b41599f03d68d950b8e77",
+      "trace_id": "3c76f4df6bd64768b13f29bc6f518f45",
+      "workspace_id": "development",
+      "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+      "items": [
+        {
+          "source_id": "demo-backup",
+          "title": "Database backups",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-backup-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-health",
+          "title": "Readiness and liveness",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-health-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-identifiers",
+          "title": "Identifiers and multilingual text",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-identifiers-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-publication",
+          "title": "Publishing source versions",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-publication-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-scope",
+          "title": "Workspace boundaries",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-scope-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-search",
+          "title": "Lexical search",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-search-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-security",
+          "title": "Operational diagnostics",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-security-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-vectors",
+          "title": "Synthetic vector checks",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-vectors-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        }
+      ],
+      "next_cursor": null
+    },
+    "search_fingerprint": "4d61e3ebcf3313e910b7c0b3e3e78ebc1d3df41598de0570fbddf4e89407068b",
+    "evaluation": {
+      "gated_exact": [
+        {
+          "case": 1,
+          "expected_source_id": "demo-publication",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "147f0e1c0f384d769bfc8cc346d17718",
+            "trace_id": "5b3529dd9e994ae89bbda492d69eb4bc",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "7072f55451284b338d7b372c908c874b",
+            "status": "success",
+            "duration_ms": 78.00000000133878,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 16.00000000325963
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-publication-chunk-1",
+                "source_id": "demo-publication",
+                "source_version_id": "demo-publication-v1",
+                "title": "Publishing source versions",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "7db9a60d916216a86185d9453b6a3bcad5d5756f99fb3973ecd191d8619113d4"
+              }
+            ],
+            "client_elapsed_ms": 78.00000000133878
+          }
+        },
+        {
+          "case": 2,
+          "expected_source_id": "demo-backup",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "68165bd84857488cb96da212a9eba85e",
+            "trace_id": "174642269b8047cf8eaf2e25cc2428f3",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "6cfe589a548a4dce9fd95be1564f6fe2",
+            "status": "success",
+            "duration_ms": 30.999999999039574,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 30.999999999039574
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-backup-chunk-1",
+                "source_id": "demo-backup",
+                "source_version_id": "demo-backup-v1",
+                "title": "Database backups",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "252a951b0065530158ed17b9786700d4f396b5e83a4cf8e58dc6b9c83e03ceb4"
+              }
+            ],
+            "client_elapsed_ms": 30.999999999039574
+          }
+        },
+        {
+          "case": 3,
+          "expected_source_id": "demo-search",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "db1110ae93a14eea9d7127d0b1be0758",
+            "trace_id": "d020c1eb111949c6b8a20918cbf51ecb",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "d79fbd5ac85249eaafb8f81bbcc85322",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "title": "Lexical search",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "1802cc44d3058bd91c128480daa9eb86eab7210e77d71d2f1d01312db67d894a"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 4,
+          "expected_source_id": "demo-search",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "d2a3b74808774b8c9dbe9e0bec59ac7e",
+            "trace_id": "e4d8ca15ae0f4f78b8beccd9dc9a782d",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "d19d7a665fdd4b2ebb80164430bd675e",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "title": "Lexical search",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "1802cc44d3058bd91c128480daa9eb86eab7210e77d71d2f1d01312db67d894a"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 5,
+          "expected_source_id": "demo-vectors",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "5e651b91bee9440381a5fec46caa9698",
+            "trace_id": "8709c487018a439391908504984da667",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "02568f4ef2584df6b41d17410421bfcd",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-vectors-chunk-1",
+                "source_id": "demo-vectors",
+                "source_version_id": "demo-vectors-v1",
+                "title": "Synthetic vector checks",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "059c5d6dc50c1b7d18043210fad30b0cdf44f6532b49f3a50cb2ce0f9b436034"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 6,
+          "expected_source_id": "demo-scope",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "15651520268f40a1b3b8a97b7d98a105",
+            "trace_id": "19db2eb939954680aa623a32844a942d",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "a0f5f44168f640d19166248a4026344c",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-scope-chunk-1",
+                "source_id": "demo-scope",
+                "source_version_id": "demo-scope-v1",
+                "title": "Workspace boundaries",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "0be4207b295a25b781dd73eac7866474c36bfb5509b39f12cb7073101ba08165"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 7,
+          "expected_source_id": "demo-health",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "2f1e8d390b814b66ab6589590f65225d",
+            "trace_id": "28f94d078bd444208cde46f6b3f2f750",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "d062ce0be6b54e3b9021fe3742fac050",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-health-chunk-1",
+                "source_id": "demo-health",
+                "source_version_id": "demo-health-v1",
+                "title": "Readiness and liveness",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "d13b6999c3e1452c26f483630aa46a90386d667939623a5270b59fb273bd9aa7"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 8,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "6f67664013814c96a797acd0468bf97c",
+            "trace_id": "56810b14b6b94868bc86ab27158b5752",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "b08336892611420baf7d11df57cfbf5e",
+            "status": "success",
+            "duration_ms": 16.00000000325963,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 16.00000000325963
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "title": "Identifiers and multilingual text",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "23e669e1aa00cf50bf46afe1318d64a292bf1b16396eafd46128e75ca1491b1d"
+              }
+            ],
+            "client_elapsed_ms": 16.00000000325963
+          }
+        },
+        {
+          "case": 9,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "2f54dc43d6aa4cab8e3b205236dcc4d9",
+            "trace_id": "bcd4d16e079c409a9ce9fe440f188eb1",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "59c9480129014a83b69174b9caa4c1ab",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "title": "Identifiers and multilingual text",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "23e669e1aa00cf50bf46afe1318d64a292bf1b16396eafd46128e75ca1491b1d"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 10,
+          "expected_source_id": "demo-security",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "d178aa992d834f4dacd3acb11b095f7b",
+            "trace_id": "af30c1f5b8274f3aab38be8a7200d2b1",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "1e970e94dc3147d39e73d78b136ee28f",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-security-chunk-1",
+                "source_id": "demo-security",
+                "source_version_id": "demo-security-v1",
+                "title": "Operational diagnostics",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "a85efdb4c03fec32a82eb5ad9db9cec9b4a9a128e25a6f24d8399193b1c8c935"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        }
+      ],
+      "matched_top5": 10,
+      "total": 10,
+      "diagnostic_paraphrases": [
+        {
+          "case": 1,
+          "expected_source_id": "demo-publication",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "2d832938025943de9485aa99291665ea",
+            "trace_id": "bf2097608ba74c7585c7617b077bf7ab",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "d16f6054979b4d359825a23c077bd67f",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 2,
+          "expected_source_id": "demo-backup",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "0a340d869aeb4939a731e38701ca9701",
+            "trace_id": "34df249a90564230b7de566d041a2fce",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "b3b5979774e44565a59ca8a053cd4e2e",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 3,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "1300480e94f94ffd8f5eff7068def5c9",
+            "trace_id": "d42e4436292a40c4b8289f7c4125c317",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "bafec1477fcf4111a39353cfe6186df0",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        }
+      ],
+      "no_match": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "d74811ba49d04f9f9ad8fdd6d3133a4a",
+        "trace_id": "d0904acde1cf4c99a85b8eddb034a4a2",
+        "mode": "live",
+        "workspace_id": "development",
+        "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+        "profile_id": "postgres-fts-baseline",
+        "profile_revision": "postgres-fts-baseline-r1",
+        "run_id": "0fd4da9f43ad4f82a0f936970469ddfa",
+        "status": "success",
+        "duration_ms": 15.99999999962165,
+        "stages": [
+          {
+            "stage": "corpus_load",
+            "status": "success",
+            "duration_ms": 0.0
+          },
+          {
+            "stage": "retrieval",
+            "status": "success",
+            "duration_ms": 15.99999999962165
+          },
+          {
+            "stage": "projection",
+            "status": "success",
+            "duration_ms": 0.0
+          }
+        ],
+        "results": [],
+        "client_elapsed_ms": 15.99999999962165
+      }
+    },
+    "negative_cases": [
+      {
+        "http_status": 404,
+        "code": "WORKSPACE_NOT_FOUND",
+        "trace_id": "8057b2ccd7994baa80b73f32e2109cf1"
+      },
+      {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "4842869a63f94be4af5174dc1ac09bf8"
+      },
+      {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "2dca3362095c4caba66fc12aa794cff0"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "3d157288a20b4e668ae9815890383243"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "7cfd8fcdd6b548bca699aac77a462f7a"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "845aa648b2174fb8aba8b90d7423623c"
+      }
+    ]
+  },
+  "database-unavailable": {
+    "live_http": 200,
+    "ready_http": 503,
+    "search_http": 503,
+    "documents_http": 503,
+    "capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "d6e6112f58874300a48ef17b265f8f20",
+      "trace_id": "a01f399ba4d342af860a4924132fd586",
+      "backend_revision": "workbench-api-lexical-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [],
+      "features": {
+        "documents": false,
+        "search": false
+      },
+      "dependencies": {
+        "database": {
+          "status": "unavailable",
+          "schema_revision": null,
+          "workspace_id": null,
+          "source_count": null,
+          "chunk_count": null
+        }
+      }
+    },
+    "search_error": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "a1008781d2e149ff8571117e4cc81720",
+      "trace_id": "9d4dc51cc4de4b85b9676be7ae16fdcf",
+      "error": {
+        "code": "DEPENDENCY_UNAVAILABLE",
+        "message": "The data dependency is unavailable.",
+        "retryable": true,
+        "http_status": 503,
+        "run_id": "38d901f1e88a47fcbba7dc0d449304d3"
+      }
+    },
+    "documents_error": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "4f3caa54a686426a8c381cb92a4c2249",
+      "trace_id": "980b54694ab64867a937934297d6d778",
+      "error": {
+        "code": "DEPENDENCY_UNAVAILABLE",
+        "message": "The data dependency is unavailable.",
+        "retryable": true,
+        "http_status": 503
+      }
+    }
+  },
+  "after-database": {
+    "checked_at_utc": "2026-11-20T23:45:38.226021+00:00",
+    "ready_http": 200,
+    "capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "98622ab0963441d595ec84b5ede26cf8",
+      "trace_id": "4d19a05dc2944a3a83a7e8dd90a2b5aa",
+      "backend_revision": "workbench-api-lexical-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [
+        {
+          "profile_id": "postgres-fts-baseline",
+          "profile_revision": "postgres-fts-baseline-r1",
+          "kind": "lexical_search",
+          "workspace_ids": [
+            "development"
+          ],
+          "corpus_id": "development-corpus-v1",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "min_length": 1,
+              "max_length": 4096
+            },
+            "top_k": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "limits": {
+            "max_request_bytes": 32768,
+            "timeout_ms": 10000,
+            "max_concurrent_searches": 2,
+            "max_corpus_chunks": 10000,
+            "max_corpus_bytes": 52428800
+          },
+          "score_type": "postgres_ts_rank_cd"
+        }
+      ],
+      "features": {
+        "documents": true,
+        "search": true
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0001",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      }
+    },
+    "documents": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "f23d39c6b1b144b59d560b4f36abafec",
+      "trace_id": "b4e5066beb734e0bbde57f5d10044d78",
+      "workspace_id": "development",
+      "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+      "items": [
+        {
+          "source_id": "demo-backup",
+          "title": "Database backups",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-backup-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-health",
+          "title": "Readiness and liveness",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-health-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-identifiers",
+          "title": "Identifiers and multilingual text",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-identifiers-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-publication",
+          "title": "Publishing source versions",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-publication-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-scope",
+          "title": "Workspace boundaries",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-scope-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-search",
+          "title": "Lexical search",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-search-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-security",
+          "title": "Operational diagnostics",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-security-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        },
+        {
+          "source_id": "demo-vectors",
+          "title": "Synthetic vector checks",
+          "media_type": "text/plain",
+          "status": "ready",
+          "active_version_id": "demo-vectors-v1",
+          "chunk_count": 1,
+          "updated_at": "2026-11-20T22:00:40.812201Z"
+        }
+      ],
+      "next_cursor": null
+    },
+    "search_fingerprint": "4d61e3ebcf3313e910b7c0b3e3e78ebc1d3df41598de0570fbddf4e89407068b",
+    "evaluation": {
+      "gated_exact": [
+        {
+          "case": 1,
+          "expected_source_id": "demo-publication",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "c674c1ede58444e3aa3bc0714df63674",
+            "trace_id": "4c14cb3f14074b2b9d4d8be3c73174c3",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "20129c2d4dad47fe9a0e7c3a1f9231ff",
+            "status": "success",
+            "duration_ms": 155.99999999903957,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-publication-chunk-1",
+                "source_id": "demo-publication",
+                "source_version_id": "demo-publication-v1",
+                "title": "Publishing source versions",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "7db9a60d916216a86185d9453b6a3bcad5d5756f99fb3973ecd191d8619113d4"
+              }
+            ],
+            "client_elapsed_ms": 155.99999999903957
+          }
+        },
+        {
+          "case": 2,
+          "expected_source_id": "demo-backup",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "64f4e4111ebf4771b0261dce93570347",
+            "trace_id": "f1315bea56924b50ab0c76b3444ac696",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "219978bd60f649b8be8d8f072e0b1492",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-backup-chunk-1",
+                "source_id": "demo-backup",
+                "source_version_id": "demo-backup-v1",
+                "title": "Database backups",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "252a951b0065530158ed17b9786700d4f396b5e83a4cf8e58dc6b9c83e03ceb4"
+              }
+            ],
+            "client_elapsed_ms": 30.999999999039574
+          }
+        },
+        {
+          "case": 3,
+          "expected_source_id": "demo-search",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "ce3add05b8e94a3bbc3b37b9defb65c3",
+            "trace_id": "a8637a72d95f45cfa8cd60de0461aea2",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "c15fab24368f42b5a1cac8cc9a224d00",
+            "status": "success",
+            "duration_ms": 30.999999999039574,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 30.999999999039574
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "title": "Lexical search",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "1802cc44d3058bd91c128480daa9eb86eab7210e77d71d2f1d01312db67d894a"
+              }
+            ],
+            "client_elapsed_ms": 30.999999999039574
+          }
+        },
+        {
+          "case": 4,
+          "expected_source_id": "demo-search",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "d56ac8fd5f0f41fe833039123f0ceb94",
+            "trace_id": "b9c0eb5eac4d4bcdb616173928a7088c",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "640bf3879cee42d49e5f807566ede7c2",
+            "status": "success",
+            "duration_ms": 16.00000000325963,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 16.00000000325963
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "title": "Lexical search",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "1802cc44d3058bd91c128480daa9eb86eab7210e77d71d2f1d01312db67d894a"
+              }
+            ],
+            "client_elapsed_ms": 16.00000000325963
+          }
+        },
+        {
+          "case": 5,
+          "expected_source_id": "demo-vectors",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "e09cfdcec1e84b9495213ca540a81d9a",
+            "trace_id": "759c45a1489b4ee0ad452ca47e90a7e3",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "8062ced10f35423cb27ee207b0f6e0a2",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-vectors-chunk-1",
+                "source_id": "demo-vectors",
+                "source_version_id": "demo-vectors-v1",
+                "title": "Synthetic vector checks",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "059c5d6dc50c1b7d18043210fad30b0cdf44f6532b49f3a50cb2ce0f9b436034"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 6,
+          "expected_source_id": "demo-scope",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "4c27330bc9c34213b46b04f4e18b3906",
+            "trace_id": "247b1050517149188811a49949dffb68",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "dc932b623dd44b96a0a8d35ac06d1d6f",
+            "status": "success",
+            "duration_ms": 30.999999999039574,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 30.999999999039574
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-scope-chunk-1",
+                "source_id": "demo-scope",
+                "source_version_id": "demo-scope-v1",
+                "title": "Workspace boundaries",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "0be4207b295a25b781dd73eac7866474c36bfb5509b39f12cb7073101ba08165"
+              }
+            ],
+            "client_elapsed_ms": 30.999999999039574
+          }
+        },
+        {
+          "case": 7,
+          "expected_source_id": "demo-health",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "df3a057389ee4ddc80de9f96fc60a977",
+            "trace_id": "0c6b80a64eae49a7813635d08e516dd6",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "b73055b856a94875a4c1a3db96256415",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-health-chunk-1",
+                "source_id": "demo-health",
+                "source_version_id": "demo-health-v1",
+                "title": "Readiness and liveness",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "d13b6999c3e1452c26f483630aa46a90386d667939623a5270b59fb273bd9aa7"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 8,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "6363d15ea52f41cf9d610293f6690305",
+            "trace_id": "702949592de94db99e74cfae3c11185f",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "6aa14bf2dfce422f9191190f9e96fa42",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "title": "Identifiers and multilingual text",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "23e669e1aa00cf50bf46afe1318d64a292bf1b16396eafd46128e75ca1491b1d"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 9,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "e020a696685847eaa6dce5acb4fa074b",
+            "trace_id": "a1ad8731d47f4eed976274f7fa198f9d",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "12b19098db6f4ebea429b78b9a44bf0a",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "title": "Identifiers and multilingual text",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "23e669e1aa00cf50bf46afe1318d64a292bf1b16396eafd46128e75ca1491b1d"
+              }
+            ],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        },
+        {
+          "case": 10,
+          "expected_source_id": "demo-security",
+          "matched_top5": true,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "5b9c59ae6ad042298d2b26249adeea4d",
+            "trace_id": "e5fa30285f5f48a080cb9fc3d8fdc911",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "7dbf8217f4c745a6b4e1f85087667491",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [
+              {
+                "chunk_id": "demo-security-chunk-1",
+                "source_id": "demo-security",
+                "source_version_id": "demo-security-v1",
+                "title": "Operational diagnostics",
+                "rank": 1,
+                "score": 0.10000000149011612,
+                "score_type": "postgres_ts_rank_cd",
+                "content_sha256": "a85efdb4c03fec32a82eb5ad9db9cec9b4a9a128e25a6f24d8399193b1c8c935"
+              }
+            ],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        }
+      ],
+      "matched_top5": 10,
+      "total": 10,
+      "diagnostic_paraphrases": [
+        {
+          "case": 1,
+          "expected_source_id": "demo-publication",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "2d7125256caa48ea89a71a829177e628",
+            "trace_id": "1f1eb94bec1640a69aff942bf534a076",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "4168feea1a70429a869c366e3a910645",
+            "status": "success",
+            "duration_ms": 16.00000000325963,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 32.00000000288128
+          }
+        },
+        {
+          "case": 2,
+          "expected_source_id": "demo-backup",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "5c8b15f1c7b340b0bcfb1e0681b775ea",
+            "trace_id": "8b27e566568541ce968e7e202c788c21",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "fe29446e76d844acaac8f8f5c571fc7c",
+            "status": "success",
+            "duration_ms": 14.999999999417923,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 14.999999999417923
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 14.999999999417923
+          }
+        },
+        {
+          "case": 3,
+          "expected_source_id": "demo-identifiers",
+          "matched_top5": false,
+          "response": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "3baa11548d4b4bdd8605a0496103a54b",
+            "trace_id": "9a490c2f98e74300a9fed7c6e3c622f9",
+            "mode": "live",
+            "workspace_id": "development",
+            "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "run_id": "8c103ec23cd543179a50d1f6d371881a",
+            "status": "success",
+            "duration_ms": 15.99999999962165,
+            "stages": [
+              {
+                "stage": "corpus_load",
+                "status": "success",
+                "duration_ms": 15.99999999962165
+              },
+              {
+                "stage": "retrieval",
+                "status": "success",
+                "duration_ms": 0.0
+              },
+              {
+                "stage": "projection",
+                "status": "success",
+                "duration_ms": 0.0
+              }
+            ],
+            "results": [],
+            "client_elapsed_ms": 15.99999999962165
+          }
+        }
+      ],
+      "no_match": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "84d15b9a0d644247a016ebb30ed28514",
+        "trace_id": "4472bfbc84fb4470b5a5d037ac4bd4e0",
+        "mode": "live",
+        "workspace_id": "development",
+        "corpus_revision": "corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac",
+        "profile_id": "postgres-fts-baseline",
+        "profile_revision": "postgres-fts-baseline-r1",
+        "run_id": "53ca67bcdb9143ae842b5a7f9f9144f4",
+        "status": "success",
+        "duration_ms": 15.99999999962165,
+        "stages": [
+          {
+            "stage": "corpus_load",
+            "status": "success",
+            "duration_ms": 15.99999999962165
+          },
+          {
+            "stage": "retrieval",
+            "status": "success",
+            "duration_ms": 0.0
+          },
+          {
+            "stage": "projection",
+            "status": "success",
+            "duration_ms": 0.0
+          }
+        ],
+        "results": [],
+        "client_elapsed_ms": 15.99999999962165
+      }
+    },
+    "negative_cases": [
+      {
+        "http_status": 404,
+        "code": "WORKSPACE_NOT_FOUND",
+        "trace_id": "6b568e8ba1bf471b86577715cc4a35a6"
+      },
+      {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "592cbee5c0b04a24b9258ac500e0e780"
+      },
+      {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "33dc673bfcd640cdb7576d0b9c348a43"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "33f6894e1cf9402b9a2b19e292c225c2"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "b280333ccceb4a8c9cdd54a07261e0bc"
+      },
+      {
+        "http_status": 400,
+        "code": "INVALID_REQUEST",
+        "trace_id": "87ea1d46bf7642bbbac8209b5470ae22"
+      }
+    ]
+  }
+}

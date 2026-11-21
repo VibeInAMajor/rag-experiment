@@ -1,6 +1,6 @@
-# Workbench API and PostgreSQL foundation
+# Workbench PostgreSQL lexical API
 
-An optional, independent FastAPI process for liveness, readiness and capability discovery, with an application-owned PostgreSQL persistence adapter. The HTTP API does not execute pipelines or search documents. The [canonical RAG runtime contract](../../../docs-website/docs/architecture/rag-runtime-contract.md) defines the later execution boundary; the [PostgreSQL operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md) covers database setup, migrations, backup and recovery.
+An independent FastAPI process exposing the approved, read-only `postgres-fts-baseline` Haystack profile over persisted PostgreSQL records. The [canonical contract](../../../docs-website/docs/architecture/rag-runtime-contract.md) owns API semantics; the [lexical search guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) covers requests, scores and limits. The [PostgreSQL operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md) covers setup, migrations, backup and recovery.
 
 ## Start
 
@@ -11,9 +11,9 @@ hatch --version
 hatch run workbench-api:serve
 ```
 
-The detached `workbench-api` Hatch environment gets its pinned API, PostgreSQL and migration dependencies from the root [pyproject.toml](../../../pyproject.toml). It does not install Haystack, model SDKs or the broad library test environment. Without database configuration, health/discovery still starts and reports the dependency as `unconfigured`. The development listener is `http://127.0.0.1:8011`. Stop it with Ctrl+C.
+The `workbench-api` Hatch environment gets its pinned API/PostgreSQL dependencies and this repository's Haystack 3.5.0 source from the root [pyproject.toml](../../../pyproject.toml). It does not require the broad library test environment or a running model service. Without database configuration, health/discovery starts but advertises no executable profile. The development listener is `http://127.0.0.1:8011`. Stop it with Ctrl+C.
 
-This is separate from the constructor validator at `127.0.0.1:8010`. The existing frontend does not call this API bootstrap. Starting or stopping it has no effect on offline editing, JSON import/export or fixture Preview.
+This is separate from the constructor validator at `127.0.0.1:8010`. The frontend does not call this lexical API. Starting or stopping it has no effect on offline editing, JSON import/export or fixture Preview.
 
 ### Optional persistent development database
 
@@ -40,17 +40,20 @@ hatch run workbench-api:serve
 
 ## Routes and readiness
 
-| Route                      | Default result                                           | Meaning                                                         |
-| -------------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
-| `GET /api/v1/health/live`  | HTTP 200                                                 | The API process is running                                      |
-| `GET /api/v1/health/ready` | HTTP 503, `NOT_READY`                                    | No execution profile is implemented and ready                   |
-| `GET /api/v1/capabilities` | HTTP 200, `profiles: []`, document/search features false | Discovery is working; no executable capabilities are advertised |
+| Route                                             | Purpose                                                             |
+| ------------------------------------------------- | ------------------------------------------------------------------- |
+| `GET /api/v1/health/live`                         | Process liveness, independent of PostgreSQL                         |
+| `GET /api/v1/health/ready`                        | 200 with a qualified executable profile; otherwise 503 `NOT_READY`  |
+| `GET /api/v1/capabilities`                        | Approved profiles, actual feature availability and dependency state |
+| `GET /api/v1/workspaces`                          | Server-authorized development workspace metadata                    |
+| `GET /api/v1/workspaces/{workspace_id}/documents` | Persisted source/version/chunk metadata and corpus revision         |
+| `POST /api/v1/workspaces/{workspace_id}/search`   | Actual PostgreSQL lexical retrieval through Haystack                |
 
-A running process and a ready database are not a ready retrieval API. The 503 response remains intentional: no HTTP execution profile is implemented. Configured persistence verifies the application role, exact schema/checksum/extension, forced workspace RLS and actual committed active corpus. Capabilities exposes this separately as `dependencies.database.status`, with `ready`, `unconfigured`, `unavailable`, `incompatible` or `empty` status. A ready database does not enable an execution profile.
+A running process and an open connection are insufficient. Qualification verifies schema/checksum/extension, the restricted role, forced workspace RLS, valid GIN index, a complete bounded active corpus and the actual allowlisted pipeline. Capabilities separately exposes `dependencies.database.status`. Outages disable profile advertisement and produce truthful 503 responses, without Preview fallback.
 
-Capabilities uses `contract_revision: "rag-api-v1.0"`, `deployment_mode: "single_workspace_dev"`, a lifecycle `service_state`, `profiles: []` and `features: {"documents": false, "search": false}`. A storage-ready dependency also reports schema/workspace identity and committed counts. `backend_revision` identifies this deployed application configuration; it is separate from the constructor validator's capability revision. All responses carry generated `request_id` and `trace_id` values and the `X-Request-ID` header. Readiness failure uses the same metadata and a nested `error` containing `code`, a safe `message`, `retryable` and `http_status`.
+Capabilities uses `contract_revision: "rag-api-v1.0"`, `deployment_mode: "single_workspace_dev"` and a lifecycle `service_state`. A qualified configuration advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`, with document/search features true. Otherwise profiles are empty and those features false. All responses carry generated request/trace IDs and `X-Request-ID`; safe errors add code, message, retryability and HTTP status. The backend revision is independent of the constructor validator's revision.
 
-Inspect the typed response schemas in the checked-in [OpenAPI artifact](openapi.json), generated from `create_app(settings=ApiSettings()).openapi()`. A contract test verifies that it matches the application. The service exposes only the three routes above; OpenAPI is published as a repository artifact. Stable, user-safe errors carry correlation metadata; unknown routes and unexpected failures do not expose internal exception details. The canonical contract owns detailed API semantics rather than this runbook.
+Inspect typed schemas in the checked-in [OpenAPI artifact](openapi.json), generated from `create_app(settings=ApiSettings()).openapi()`. A contract test checks application parity. OpenAPI is a repository artifact rather than another public route. Unknown routes and unexpected failures retain safe correlation envelopes without exception internals.
 
 Manual probes from another PowerShell terminal:
 
@@ -60,7 +63,23 @@ curl.exe -i http://127.0.0.1:8011/api/v1/health/ready
 Invoke-RestMethod http://127.0.0.1:8011/api/v1/capabilities
 ```
 
-The first and third requests should succeed; the second should visibly return 503. These are verification instructions, not a claim that retrieval or model inference has been tested.
+Liveness/discovery work without a configured database; readiness then returns 503. With the migrated, seeded database and qualified profile, readiness returns 200. To execute the native lexical path:
+
+```powershell
+$lexicalCapabilities = Invoke-RestMethod http://127.0.0.1:8011/api/v1/capabilities
+$lexicalProfile = $lexicalCapabilities.profiles | Where-Object profile_id -EQ 'postgres-fts-baseline' | Select-Object -First 1
+if ($null -eq $lexicalProfile) { throw 'No approved lexical profile is ready.' }
+Invoke-RestMethod 'http://127.0.0.1:8011/api/v1/workspaces/development/documents?limit=3'
+$lexicalRequest = @{
+    query = 'backups'
+    top_k = 5
+    profile_id = $lexicalProfile.profile_id
+    expected_profile_revision = $lexicalProfile.profile_revision
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:8011/api/v1/workspaces/development/search' -ContentType 'application/json' -Body $lexicalRequest
+```
+
+All four fields are required: trimmed query 1–4096 code points, integer `top_k` 1–50, approved profile and advertised revision. Invalid input/unknown fields return 400; profile/revision mismatch returns 409. The body is at most 32 KiB. At most two searches execute concurrently, each with a 10-second admitted deadline; busy requests return 429. Authenticated pagination cursors expire when state changes or the API restarts, with 400 `INVALID_CURSOR`. See the lexical guide for full errors and pagination examples.
 
 ## Configuration
 
@@ -70,19 +89,21 @@ Settings are parsed before startup; malformed or nonlocal configuration fails in
 | -------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `WORKBENCH_API_HOST`             | `127.0.0.1`                                                         | `127.0.0.1`, `localhost` or `::1`; no public bind                                            |
 | `WORKBENCH_API_PORT`             | `8011`                                                              | Integer from 1 to 65535                                                                      |
-| `WORKBENCH_API_BACKEND_REVISION` | `workbench-api-bootstrap-v1`                                        | Opaque ASCII identifier, 1–128 characters                                                    |
+| `WORKBENCH_API_BACKEND_REVISION` | `workbench-api-lexical-v1`                                          | Opaque ASCII identifier, 1–128 characters                                                    |
 | `WORKBENCH_API_ALLOWED_ORIGINS`  | HTTP origins for `localhost` and `127.0.0.1` on ports 5173 and 4173 | Comma-separated exact loopback origins; no wildcard, credentials, paths or duplicate entries |
 | `WORKBENCH_DB_DSN`               | Unset                                                               | Secret local PostgreSQL URI for the restricted application role; loaded by `use-dev-env.ps1` |
 
-Administrator-only commands use `WORKBENCH_DB_ADMIN_DSN` and `WORKBENCH_DB_APP_PASSWORD`, loaded with `-IncludeAdmin`. Keep those out of the API terminal. There is no feature-enable environment switch. Setting a revision, database connection or CORS origin does not make HTTP search ready.
+Administrator-only commands use `WORKBENCH_DB_ADMIN_DSN` and `WORKBENCH_DB_APP_PASSWORD`, loaded with `-IncludeAdmin`. Keep those out of the API terminal. There is no feature-enable switch; actual storage, corpus and pipeline binding must qualify.
 
-The default persistence pool uses one to four connections, at most 16 waiters, a three-second acquisition timeout and three-second statement/lock timeouts. Queries and writes use parameterized SQL, server-resolved workspace context and transactions; active-version publication is atomic. PostgreSQL `simple` FTS + GIN and `ts_rank_cd` are storage primitives, with score type `postgres_ts_rank_cd`, not BM25. Nullable vector storage initially enables only a three-dimensional synthetic test profile; synthetic 2560-dimensional tests are not TEI/model qualification. No ANN index or semantic capability is enabled.
+The default pool uses one to four connections, at most 16 waiters, and three-second acquisition/statement/lock timeouts. Each search reads its corpus fingerprint and active-version hits in one read-only REPEATABLE READ transaction, through a fresh Haystack pipeline with genuine async SQL. Cancellation reaches transaction cleanup before its admission slot is released. Synchronous component execution explicitly refuses this loop-bound pool.
+
+PostgreSQL `simple` FTS + GIN uses case-folded AND terms with raw `ts_rank_cd`, score type `postgres_ts_rank_cd`. It is not BM25 or a probability. Responses expose authoritative source/chunk/version identity, corpus revision and measured corpus-load/retrieval/projection stages. Synthetic-vector storage tests do not enable semantic search or qualify TEI/model output.
 
 ## Local security and diagnostics
 
 This service is local development infrastructure, not authenticated production access or tenant isolation. CORS uses an explicit loopback origin allowlist rather than wildcard credential access. Future remote deployment requires its own authentication, TLS, origin policy and operational limits.
 
-Operational diagnostics go to process stdout and contain only bounded correlation IDs, status/error codes and timing metadata. Query/graph/document bodies, credentials, provider identifiers and exception internals must not be logged or returned. No application-managed payload retention or external tracing is enabled. The deployment owner controls stdout capture and must define access, retention and deletion before persisting those logs.
+Operational diagnostics contain bounded IDs, operation/status metadata, counts and timings. They omit query/document bodies, credentials, vectors and exception internals. Haystack telemetry, content tracing and external tracing are disabled. The deployment owner controls console capture and must define access, retention and deletion before persisting logs.
 
 ## Checks
 
@@ -94,14 +115,14 @@ hatch run workbench-api:test
 hatch run workbench-api:types
 ```
 
-The tests cover health/discovery, configuration, CORS/error contracts and persistence boundaries. Container-backed tests require explicitly configured `WORKBENCH_TEST_ADMIN_DSN` and `WORKBENCH_TEST_APP_DSN`; otherwise they skip. The [operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md#checks-and-evidence) gives the environment-loading commands. Record actual results; unit-only success is not storage or model evidence.
+Tests cover HTTP/schema/security contracts, persistence and the lexical profile. Container-backed tests require `WORKBENCH_TEST_ADMIN_DSN` and `WORKBENCH_TEST_APP_DSN`; otherwise they skip. The [operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md#checks-and-evidence) gives environment-loading commands. Quality evidence compares ten labeled exact-term queries and direct SQL scores; paraphrases remain diagnostics. Record actual results; unit-only success is not storage or model evidence.
 
 ## Implemented versus planned
 
-- **API:** typed health/discovery routes, environment settings, lifecycle/composition seam, correlation metadata and safe errors.
-- **Persistence:** pinned PostgreSQL + pgvector infrastructure, explicit checksummed Alembic migrations, forced workspace RLS, bounded pool, transactional publication, explicit eight-source seed, native lexical and exact synthetic-vector adapter operations. These are not public search routes.
+- **API:** health/discovery, authorized workspace/document lists and Haystack-orchestrated PostgreSQL lexical search, with bounded admission and safe metadata/errors.
+- **Persistence:** pinned PostgreSQL + pgvector, explicit migrations/seed, forced workspace RLS, atomic publication and consistent active-version snapshots.
 - **Existing independent validator:** real Haystack construction/connectivity checks, without execution; see [validator documentation](../validator/README.md).
 - **Existing UI:** fixture-only document/run displays and Preview; see [Workbench documentation](../web/README.md).
-- **Planned:** approved HTTP retrieval profile, frontend API integration, ingestion, qualified model embeddings, dense/hybrid retrieval and generation. They must pass their own readiness and capability gates before advertisement.
+- **Planned:** frontend Live integration, ingestion, genuine BM25 if separately justified, qualified embeddings, dense/hybrid retrieval and generation. Each needs its own qualification gate.
 
 The initial database migration is explicit; no Haystack public API changes are introduced. Application rollback is stopping the optional API while preserving its database volume. Destructive schema rollback is restricted to explicitly confirmed disposable databases; the constructor validator and standalone UI remain independent.

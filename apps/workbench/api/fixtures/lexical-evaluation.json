@@ -1,0 +1,21 @@
+{
+  "corpus": "development-corpus-v1",
+  "score_type": "postgres_ts_rank_cd",
+  "gated_exact_queries": [
+    {"query": "superseded", "expected_source_id": "demo-publication"},
+    {"query": "retention", "expected_source_id": "demo-backup"},
+    {"query": "GIN", "expected_source_id": "demo-search"},
+    {"query": "postgres_ts_rank_cd", "expected_source_id": "demo-search"},
+    {"query": "cosine", "expected_source_id": "demo-vectors"},
+    {"query": "Composite foreign keys", "expected_source_id": "demo-scope"},
+    {"query": "Liveness", "expected_source_id": "demo-health"},
+    {"query": "RAG_MVP_2026", "expected_source_id": "demo-identifiers"},
+    {"query": "документация", "expected_source_id": "demo-identifiers"},
+    {"query": "credentials", "expected_source_id": "demo-security"}
+  ],
+  "diagnostic_paraphrases": [
+    {"query": "How do I undo a bad release?", "expected_source_id": "demo-publication"},
+    {"query": "Can I restore lost data?", "expected_source_id": "demo-backup"},
+    {"query": "Чи можна знайти український документ?", "expected_source_id": "demo-identifiers"}
+  ]
+}

@@ -1,4 +1,9 @@
-"""Local, discovery-only Workbench application boundary."""
+"""Local Workbench boundary with payload tracing and telemetry disabled."""
+
+import os
+
+os.environ["HAYSTACK_TELEMETRY_ENABLED"] = "false"
+os.environ["HAYSTACK_CONTENT_TRACING_ENABLED"] = "false"
 
 from apps.workbench.api.application import create_app
 from apps.workbench.api.config import ApiSettings

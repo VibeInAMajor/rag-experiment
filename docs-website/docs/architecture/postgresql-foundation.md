@@ -8,7 +8,7 @@ description: Local PostgreSQL and pgvector setup, explicit migrations, developme
 **Created:** 2026-11-21  
 **Updated:** 2026-11-21
 
-The Workbench persistence foundation stores workspace, source, version and chunk records in PostgreSQL. The browser remains a standalone fixture preview. The application API still exposes only health and capability discovery: storage readiness does not enable an HTTP search profile. Follow the [runtime contract](rag-runtime-contract.md) for the next integration boundary.
+The Workbench persistence foundation stores workspace, source, version and chunk records in PostgreSQL. The browser remains a standalone fixture Preview. The application now also exposes the separately qualified [PostgreSQL lexical profile](postgres-lexical-search.md), using these same records through Haystack. Storage connectivity alone does not establish execution readiness; follow the [runtime contract](rag-runtime-contract.md) for profile semantics.
 
 ## Pinned components and ownership
 
@@ -63,7 +63,7 @@ Invoke-RestMethod http://127.0.0.1:8011/api/v1/capabilities
 curl.exe -i http://127.0.0.1:8011/api/v1/health/ready
 ```
 
-Liveness returns 200 while the API runs. Capabilities can report `dependencies.database.status: "ready"`, schema revision `0001`, and actual committed source/chunk counts. It still returns `profiles: []` and document/search features false. Readiness remains 503 `NOT_READY` because no HTTP execution profile is implemented. An unset connection reports `unconfigured`; unavailable, empty or incompatible storage cannot acquire executable capabilities.
+Liveness returns 200 while the API runs. Capabilities separately reports database status, schema revision `0001` and actual committed counts. Readiness is 200 and `postgres-fts-baseline` is advertised only after schema, role, valid lexical index, complete bounded corpus and the real pipeline qualify. Otherwise readiness is 503 `NOT_READY`, profiles are empty and document/search features false. An unset connection reports `unconfigured`; unavailable, empty or incompatible storage cannot acquire executable capabilities. See the lexical guide for search/document routes and examples.
 
 The default pool has one to four connections, at most 16 waiting acquisitions, a three-second acquisition timeout and three-second statement/lock timeouts. API dependency checks are also bounded. Each data transaction checks the unprivileged role and sets its server-resolved workspace context with transaction-local `set_config`; pooled connections cannot retain that context after transaction completion. Close the API with Ctrl+C to release its pool.
 
@@ -73,7 +73,7 @@ The default pool has one to four connections, at most 16 waiting acquisitions, a
 
 All four scoped tables use row-level security with `FORCE ROW LEVEL SECURITY`, tied to `current_setting('workbench.workspace_id', true)`. The application role is neither a superuser nor table owner, has no RLS bypass or schema creation privileges, and cannot modify migration or embedding-profile registries. The separate administrator is for explicit operations only. Server-resolved development scope and RLS are defense in depth; this local single-workspace setup is not production authentication or multi-tenant authorization.
 
-Chunk `search_vector` is generated with PostgreSQL's **`simple`** text-search configuration and indexed with GIN. The persistence adapter uses `plainto_tsquery('simple', ...)` and actual `ts_rank_cd`, reported as **`postgres_ts_rank_cd`**. It is not BM25, cosine similarity or a probability. `simple` avoids language-specific stemming; qualify the identifiers and non-English vocabulary needed by the real corpus. No public search endpoint is introduced by this foundation.
+Chunk `search_vector` is generated with PostgreSQL's **`simple`** text-search configuration and indexed with GIN. The persistence adapter uses `plainto_tsquery('simple', ...)` and actual `ts_rank_cd`, reported as **`postgres_ts_rank_cd`**. It is not BM25, cosine similarity or a probability. `simple` avoids language-specific stemming; qualify identifiers and non-English vocabulary needed by the real corpus. The separately implemented lexical endpoint reuses this adapter and does not introduce another store.
 
 Embedding columns are nullable for lexical-only records. A dimensionless `vector` column is paired with `embedding_profile_id` and `dimensions`; a composite profile foreign key and `vector_dims` check reject mismatches. Only the explicitly synthetic `synthetic-test-v1` profile, dimension **3**, is initially enabled. Application writes validate profile enablement, dimension and finite values. Exact cosine-distance test operations are available in the adapter; no HNSW or IVFFlat index is created.
 

@@ -28,8 +28,11 @@ def main() -> None:
         )
     )
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
-    with asyncio.Runner(loop_factory=loop_factory) as runner:
-        runner.run(server.serve())
+    try:
+        with asyncio.Runner(loop_factory=loop_factory) as runner:
+            runner.run(server.serve())
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

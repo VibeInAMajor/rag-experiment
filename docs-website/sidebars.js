@@ -20,6 +20,11 @@ export default {
       label: 'PostgreSQL Foundation',
     },
     {
+      type: 'doc',
+      id: 'architecture/postgres-lexical-search',
+      label: 'PostgreSQL Lexical Search',
+    },
+    {
       type: 'category',
       label: 'Get Started',
       items: [

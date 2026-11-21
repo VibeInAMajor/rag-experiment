@@ -4,6 +4,8 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC
+from hashlib import sha256
 from math import isfinite
 from time import monotonic
 from typing import Any
@@ -16,9 +18,13 @@ from psycopg_pool import AsyncConnectionPool, PoolClosed, PoolTimeout
 
 from apps.workbench.api.persistence import (
     Chunk,
+    CorpusNotReady,
+    CorpusSnapshot,
     DatabaseUnavailable,
+    DocumentRecord,
     InvalidEmbedding,
     LexicalHit,
+    LexicalSearchSnapshot,
     PersistenceError,
     PersistenceReady,
     RecordConflict,
@@ -110,12 +116,14 @@ class PostgresPersistence:
 
     @asynccontextmanager
     async def _transaction(
-        self, context: WorkspaceContext, *, operation: str
+        self, context: WorkspaceContext, *, operation: str, repeatable_read: bool = False
     ) -> AsyncIterator[AsyncConnection[dict[str, Any]]]:
         started = monotonic()
         outcome = "interrupted"
         try:
             async with self._pool.connection(timeout=self._timeout) as connection, connection.transaction():
+                if repeatable_read:
+                    await connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
                 await self._check_role(connection)
                 await connection.execute("SELECT set_config('workbench.workspace_id',%s,true)", (context.workspace_id,))
                 await connection.execute(
@@ -162,40 +170,43 @@ class PostgresPersistence:
         if row is None:
             raise WorkspaceNotFound("Workspace is not available.")
 
-    async def readiness(self, context: WorkspaceContext) -> PersistenceReady:
-        """Verify exact migration/extension versions and an active persisted corpus."""
+    async def _verify_schema(self, connection: AsyncConnection[dict[str, Any]]) -> None:
         from apps.workbench.api.db_migrations import migration_checksum
 
+        revision = await (await connection.execute("SELECT version_num FROM workbench.alembic_version")).fetchall()
+        ledger = await (
+            await connection.execute(
+                "SELECT revision,checksum,tool_version FROM workbench.schema_migrations ORDER BY revision"
+            )
+        ).fetchall()
+        extension = await (
+            await connection.execute("SELECT extversion FROM pg_extension WHERE extname='vector'")
+        ).fetchone()
+        protected = await (
+            await connection.execute(
+                "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
+                "WHERE n.nspname='workbench' AND c.relname IN ('workspaces','sources','source_versions','chunks') "
+                "AND c.relrowsecurity AND c.relforcerowsecurity ORDER BY c.relname"
+            )
+        ).fetchall()
+        if (
+            revision != [{"version_num": "0001"}]
+            or ledger != [{"revision": "0001", "checksum": migration_checksum(), "tool_version": "alembic-1.20.1"}]
+            or extension != {"extversion": "0.8.2"}
+            or protected
+            != [
+                {"relname": "chunks"},
+                {"relname": "source_versions"},
+                {"relname": "sources"},
+                {"relname": "workspaces"},
+            ]
+        ):
+            raise SchemaIncompatible("Required database revision or extension is unavailable.")
+
+    async def readiness(self, context: WorkspaceContext) -> PersistenceReady:
+        """Verify exact migration/extension versions and an active persisted corpus."""
         async with self._transaction(context, operation="readiness") as connection:
-            revision = await (await connection.execute("SELECT version_num FROM workbench.alembic_version")).fetchall()
-            ledger = await (
-                await connection.execute(
-                    "SELECT revision,checksum,tool_version FROM workbench.schema_migrations ORDER BY revision"
-                )
-            ).fetchall()
-            extension = await (
-                await connection.execute("SELECT extversion FROM pg_extension WHERE extname='vector'")
-            ).fetchone()
-            protected = await (
-                await connection.execute(
-                    "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
-                    "WHERE n.nspname='workbench' AND c.relname IN ('workspaces','sources','source_versions','chunks') "
-                    "AND c.relrowsecurity AND c.relforcerowsecurity ORDER BY c.relname"
-                )
-            ).fetchall()
-            if (
-                revision != [{"version_num": "0001"}]
-                or ledger != [{"revision": "0001", "checksum": migration_checksum(), "tool_version": "alembic-1.20.1"}]
-                or extension != {"extversion": "0.8.2"}
-                or protected
-                != [
-                    {"relname": "chunks"},
-                    {"relname": "source_versions"},
-                    {"relname": "sources"},
-                    {"relname": "workspaces"},
-                ]
-            ):
-                raise SchemaIncompatible("Required database revision or extension is unavailable.")
+            await self._verify_schema(connection)
             await self._require_workspace(connection, context)
             counts = await (
                 await connection.execute(
@@ -243,6 +254,97 @@ class PostgresPersistence:
                 )
             ).fetchall()
             return [Source.model_validate(row) for row in rows]
+
+    async def _require_lexical_index(self, connection: AsyncConnection[dict[str, Any]]) -> None:
+        index = await (
+            await connection.execute(
+                "SELECT i.indisvalid AND i.indisready AND i.indnkeyatts=1 AND am.amname='gin' "
+                "AND pg_get_indexdef(i.indexrelid,1,true)='search_vector' AS usable "
+                "FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid JOIN pg_am am ON am.oid=c.relam "
+                "WHERE i.indexrelid=to_regclass('workbench.chunks_search_vector') "
+                "AND i.indrelid=to_regclass('workbench.chunks')"
+            )
+        ).fetchone()
+        if index != {"usable": True}:
+            raise SchemaIncompatible("The required lexical index is unavailable.")
+
+    async def _corpus_snapshot(
+        self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext
+    ) -> CorpusSnapshot:
+        await self._verify_schema(connection)
+        await self._require_workspace(connection, context)
+        await self._require_lexical_index(connection)
+        counts = await (
+            await connection.execute(
+                "SELECT count(*) AS chunk_count, COALESCE(sum(octet_length(c.content)),0)::bigint AS content_bytes "
+                "FROM workbench.chunks c JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
+                "WHERE c.workspace_id=%s AND v.status='active'",
+                (context.workspace_id,),
+            )
+        ).fetchone()
+        if counts is None or counts["chunk_count"] > 10000 or counts["content_bytes"] > 52428800:
+            raise CorpusNotReady("The complete corpus exceeds the approved profile bounds.")
+        rows = await (
+            await connection.execute(
+                "SELECT s.source_id,s.title,s.media_type,active.version_id AS active_version_id, "
+                "COALESCE(active.chunk_count,0)::bigint AS chunk_count, "
+                "greatest(s.updated_at,COALESCE(latest.updated_at,s.updated_at)) AS updated_at, "
+                "CASE WHEN latest.status='error' THEN 'error' WHEN latest.status='staged' THEN 'processing' "
+                "WHEN active.version_id IS NOT NULL THEN 'ready' ELSE 'processing' END AS status "
+                "FROM workbench.sources s LEFT JOIN LATERAL ("
+                "SELECT v.version_id,count(c.chunk_id) AS chunk_count FROM workbench.source_versions v "
+                "LEFT JOIN workbench.chunks c USING(workspace_id,source_id,version_id) "
+                "WHERE v.workspace_id=s.workspace_id AND v.source_id=s.source_id AND v.status='active' "
+                "GROUP BY v.workspace_id,v.source_id,v.version_id) active ON true "
+                "LEFT JOIN LATERAL (SELECT status,updated_at FROM workbench.source_versions v "
+                "WHERE v.workspace_id=s.workspace_id AND v.source_id=s.source_id "
+                "ORDER BY updated_at DESC,version_id DESC LIMIT 1) latest ON true "
+                "WHERE s.workspace_id=%s ORDER BY s.source_id LIMIT 10001",
+                (context.workspace_id,),
+            )
+        ).fetchall()
+        if len(rows) > 10000:
+            raise CorpusNotReady("The complete corpus exceeds the approved profile bounds.")
+        documents = [
+            DocumentRecord(
+                **{
+                    **row,
+                    "updated_at": row["updated_at"].astimezone(UTC).isoformat().replace("+00:00", "Z"),
+                    "error_code": "PROCESSING_FAILED" if row["status"] == "error" else None,
+                }
+            )
+            for row in rows
+        ]
+        chunks = await (
+            await connection.execute(
+                "SELECT c.chunk_id,c.source_id,c.version_id,c.title,c.page, "
+                "encode(sha256(convert_to(c.content,'UTF8')),'hex') AS content_sha256, "
+                "encode(sha256(convert_to(c.metadata::text,'UTF8')),'hex') AS metadata_sha256, "
+                "v.content_hash AS version_content_hash, "
+                "encode(sha256(convert_to(v.metadata::text,'UTF8')),'hex') AS version_metadata_sha256 "
+                "FROM workbench.chunks c JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
+                "WHERE c.workspace_id=%s AND v.status='active' ORDER BY c.chunk_id",
+                (context.workspace_id,),
+            )
+        ).fetchall()
+        fingerprint = json.dumps(
+            {
+                "workspace_id": context.workspace_id,
+                "documents": [document.model_dump() for document in documents],
+                "chunks": chunks,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+        return CorpusSnapshot(
+            corpus_revision=f"corpus-{sha256(fingerprint.encode('utf-8')).hexdigest()}", documents=documents, **counts
+        )
+
+    async def corpus_snapshot(self, context: WorkspaceContext) -> CorpusSnapshot:
+        """Fingerprint actual persisted records under a repeatable-read snapshot."""
+        async with self._transaction(context, operation="corpus_snapshot", repeatable_read=True) as connection:
+            return await self._corpus_snapshot(connection, context)
 
     async def get_chunk(self, context: WorkspaceContext, chunk_id: str) -> Chunk | None:
         """Read an active-version chunk in the authorized workspace."""
@@ -364,6 +466,12 @@ class PostgresPersistence:
 
     async def lexical_search(self, context: WorkspaceContext, *, query: str, top_k: int = 10) -> list[LexicalHit]:
         """Run native full-text ranking over persisted active chunks."""
+        return (await self.lexical_search_snapshot(context, query=query, top_k=top_k)).hits
+
+    async def lexical_search_snapshot(
+        self, context: WorkspaceContext, *, query: str, top_k: int = 10
+    ) -> LexicalSearchSnapshot:
+        """Read corpus revision and real ranks in the same read-only SQL snapshot."""
         if (
             not isinstance(query, str)
             or not 1 <= len(query.strip()) <= 4096
@@ -371,18 +479,31 @@ class PostgresPersistence:
             or not 1 <= top_k <= 50
         ):
             raise ValueError("Invalid lexical search parameters.")
-        async with self._transaction(context, operation="lexical_search") as connection:
-            await self._require_workspace(connection, context)
+        started = monotonic()
+        async with self._transaction(context, operation="lexical_search", repeatable_read=True) as connection:
+            corpus = await self._corpus_snapshot(connection, context)
+            loaded = monotonic()
             rows = await (
                 await connection.execute(
                     f"SELECT {_CHUNK_COLUMNS},ts_rank_cd(c.search_vector,q.query)::double precision AS score "
                     "FROM workbench.chunks c JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
                     "CROSS JOIN plainto_tsquery('simple',%s) AS q(query) WHERE c.workspace_id=%s "
-                    "AND v.status='active' AND c.search_vector @@ q.query ORDER BY score DESC,c.chunk_id LIMIT %s",
+                    "AND v.status='active' AND c.search_vector @@ q.query "
+                    'ORDER BY score DESC,c.chunk_id COLLATE "C" LIMIT %s',
                     (query.strip(), context.workspace_id, top_k),
                 )
             ).fetchall()
-            return [LexicalHit(chunk=_chunk(row), rank=index, score=row["score"]) for index, row in enumerate(rows, 1)]
+            retrieved = monotonic()
+            return LexicalSearchSnapshot(
+                corpus_revision=corpus.corpus_revision,
+                chunk_count=corpus.chunk_count,
+                content_bytes=corpus.content_bytes,
+                hits=[
+                    LexicalHit(chunk=_chunk(row), rank=index, score=row["score"]) for index, row in enumerate(rows, 1)
+                ],
+                corpus_load_duration_ms=(loaded - started) * 1000,
+                retrieval_duration_ms=(retrieved - loaded) * 1000,
+            )
 
     async def vector_search(
         self, context: WorkspaceContext, *, embedding: list[float], profile_id: str, top_k: int = 10

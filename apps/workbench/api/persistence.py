@@ -36,6 +36,10 @@ class RecordConflict(PersistenceError):
     """A write conflicts with immutable identities or reference constraints."""
 
 
+class CorpusNotReady(PersistenceError):
+    """The complete authorized corpus cannot qualify for this execution profile."""
+
+
 class WorkspaceContext(ContractModel):
     """Server-resolved scope; never deserialize this from an HTTP body/filter."""
 
@@ -126,6 +130,33 @@ class PersistenceReady(ContractModel):
     chunk_count: int = Field(ge=1)
 
 
+class DocumentRecord(ContractModel):
+    source_id: Identifier
+    title: str
+    media_type: str
+    status: Literal["ready", "processing", "error"]
+    active_version_id: Identifier | None
+    chunk_count: int = Field(ge=0)
+    updated_at: str
+    error_code: str | None = None
+
+
+class CorpusSnapshot(ContractModel):
+    corpus_revision: Identifier
+    documents: list[DocumentRecord]
+    chunk_count: int = Field(ge=0)
+    content_bytes: int = Field(ge=0)
+
+
+class LexicalSearchSnapshot(ContractModel):
+    corpus_revision: Identifier
+    hits: list[LexicalHit]
+    chunk_count: int = Field(ge=0)
+    content_bytes: int = Field(ge=0)
+    corpus_load_duration_ms: float = Field(ge=0, allow_inf_nan=False)
+    retrieval_duration_ms: float = Field(ge=0, allow_inf_nan=False)
+
+
 class PersistencePort(Protocol):
     async def start(self) -> None:
         """Open a bounded database pool without modifying its schema."""
@@ -163,6 +194,16 @@ class PersistencePort(Protocol):
 
     async def lexical_search(self, context: WorkspaceContext, *, query: str, top_k: int = 10) -> list[LexicalHit]:
         """Search persisted active chunks using native PostgreSQL ranking."""
+        ...
+
+    async def corpus_snapshot(self, context: WorkspaceContext) -> CorpusSnapshot:
+        """Read bounded authoritative source metadata and a stable corpus fingerprint."""
+        ...
+
+    async def lexical_search_snapshot(
+        self, context: WorkspaceContext, *, query: str, top_k: int = 10
+    ) -> LexicalSearchSnapshot:
+        """Read fingerprint and ranked hits from one repeatable-read SQL snapshot."""
         ...
 
     async def vector_search(
