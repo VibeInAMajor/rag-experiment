@@ -16,6 +16,11 @@ type Connection = {
   targetHandle?: string | null;
 };
 const templates: Record<TemplateId, { name: string; description: string }> = {
+  keyword: {
+    name: "Keyword search",
+    description:
+      "Search the persisted corpus with an approved Live lexical profile.",
+  },
   retrieval: {
     name: "Hybrid document search",
     description:
@@ -65,6 +70,16 @@ export function createPipeline(templateId: TemplateId): Pipeline {
       connect(keyword, "documents", joiner, "documents"),
       connect(semantic, "documents", joiner, "documents"),
       connect(joiner, "documents", results, "documents"),
+    );
+  } else if (templateId === "keyword") {
+    const query = createNode("query", { x: 0, y: 160 });
+    query.data.parameters.query = "retention";
+    const keyword = createNode("keyword-search", { x: 300, y: 160 });
+    const results = createNode("results", { x: 600, y: 160 });
+    nodes.push(query, keyword, results);
+    edges.push(
+      connect(query, "query", keyword, "query"),
+      connect(keyword, "documents", results, "documents"),
     );
   } else if (templateId === "indexing") {
     const kinds: NodeKind[] = [
@@ -218,6 +233,13 @@ export function checkPreviewGraph(graph: Graph): GraphIssue[] {
     return [{ message: "Add a component to start building your pipeline." }];
   const ids = new Set<string>();
   for (const node of graph.nodes) {
+    if (node.data.kind === "keyword-search")
+      issues.push({
+        nodeId: node.id,
+        code: "PREVIEW_UNSUPPORTED",
+        message:
+          "Keyword search requires Live mode and a ready backend profile. Preview does not simulate this component.",
+      });
     if (ids.has(node.id))
       issues.push({
         nodeId: node.id,
@@ -505,6 +527,7 @@ export function importPipeline(serialized: string): Pipeline {
   if (
     pipeline.templateId !== "blank" &&
     pipeline.templateId !== "retrieval" &&
+    pipeline.templateId !== "keyword" &&
     pipeline.templateId !== "indexing"
   )
     throw new Error("Unsupported pipeline template.");

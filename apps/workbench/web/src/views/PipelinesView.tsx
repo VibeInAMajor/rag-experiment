@@ -10,12 +10,13 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { Pipeline, PreviewRun, TemplateId } from "../domain/types";
+import type { Pipeline, TemplateId } from "../domain/types";
+import type { RunEntry } from "../domain/liveSearch";
 import "./views.css";
 
 type Props = {
   pipelines: Pipeline[];
-  runs: PreviewRun[];
+  runs: RunEntry[];
   defaultTemplate: TemplateId;
   onOpen: (id: string) => void;
   onCreate: (template: TemplateId) => void;
@@ -25,6 +26,11 @@ type Props = {
 };
 
 const templates: { id: TemplateId; title: string; description: string }[] = [
+  {
+    id: "keyword",
+    title: "Keyword search",
+    description: "Search the approved PostgreSQL lexical profile.",
+  },
   {
     id: "blank",
     title: "Blank pipeline",
@@ -149,8 +155,10 @@ export function PipelinesView({
           <tbody>
             {visible.map((pipeline) => {
               const lastRun = runs
-                .filter((run) => run.pipelineId === pipeline.id)
-                .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
+                .filter((entry) => entry.run.pipelineId === pipeline.id)
+                .sort((a, b) =>
+                  b.run.startedAt.localeCompare(a.run.startedAt),
+                )[0];
               return (
                 <tr key={pipeline.id}>
                   <td>
@@ -172,11 +180,18 @@ export function PipelinesView({
                   <td className="mono">{pipeline.graph.nodes.length}</td>
                   <td>
                     {lastRun ? (
-                      <span
-                        className={`status ${lastRun.status === "Completed" ? "success" : lastRun.status === "Failed" ? "error" : lastRun.status === "Running" ? "running" : "neutral"}`}
-                      >
-                        {lastRun.status}
-                      </span>
+                      <>
+                        <span className="run-source mono">
+                          {lastRun.source === "live" ? "Live" : "Preview"}
+                        </span>
+                        <span
+                          className={`status ${lastRun.run.status === "Completed" ? "success" : lastRun.run.status === "Failed" ? "error" : lastRun.run.status === "Running" ? "running" : "neutral"}`}
+                        >
+                          {lastRun.run.status === "InterruptedLocally"
+                            ? "Interrupted locally"
+                            : lastRun.run.status}
+                        </span>
+                      </>
                     ) : (
                       <span className="view-muted">Not run</span>
                     )}

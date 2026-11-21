@@ -24,6 +24,11 @@ export default {
       id: 'architecture/postgres-lexical-search',
       label: 'PostgreSQL Lexical Search',
     },
+      {
+        type: 'doc',
+        id: 'architecture/local-source-reveal',
+        label: 'Local Source Originals',
+      },
     {
       type: 'category',
       label: 'Get Started',

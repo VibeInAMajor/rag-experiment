@@ -41,12 +41,16 @@ type DiscoverySelection =
 export type BackendDiscoveryState = DiscoveryDetails & DiscoverySelection;
 type DiscoveryResult = Omit<DiscoveryDetails, "lastCheckedAt"> &
   DiscoverySelection;
+export type BackendDiscoveryClient = Pick<
+  WorkbenchApiClient,
+  "getLive" | "getReady" | "getCapabilities" | "listWorkspaces"
+>;
 
-const supportedProfile = {
+export const supportedLexicalProfile = {
   id: "postgres-fts-baseline",
   revision: "postgres-fts-baseline-r1",
   scoreType: "postgres_ts_rank_cd",
-};
+} as const;
 const maxWorkspacePages = 10;
 const discoveryTimeoutMs = 15000;
 
@@ -91,7 +95,7 @@ export class BackendDiscovery {
   private preferredWorkspaceId: string | null = null;
 
   constructor(
-    private client: WorkbenchApiClient | (() => WorkbenchApiClient),
+    private client: BackendDiscoveryClient | (() => BackendDiscoveryClient),
     private onChange: (state: BackendDiscoveryState) => void,
   ) {}
 
@@ -288,9 +292,9 @@ export class BackendDiscovery {
     }
     const profiles = capabilities.profiles.filter(
       (profile) =>
-        profile.profile_id === supportedProfile.id &&
-        profile.profile_revision === supportedProfile.revision &&
-        profile.score_type === supportedProfile.scoreType,
+        profile.profile_id === supportedLexicalProfile.id &&
+        profile.profile_revision === supportedLexicalProfile.revision &&
+        profile.score_type === supportedLexicalProfile.scoreType,
     );
     if (!profiles.length) {
       unavailable(

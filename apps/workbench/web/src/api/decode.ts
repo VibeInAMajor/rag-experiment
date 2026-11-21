@@ -5,7 +5,11 @@ import {
   type BackendCapabilities,
   type BackendProfile,
   type LiveResponse,
+  type LocalSourceFile,
   type ReadyResponse,
+  type SearchRequest,
+  type SearchResponse,
+  type SourceRevealResponse,
   type WorkspacePage,
 } from "./contracts";
 import { invalidResponse } from "./errors";
@@ -14,6 +18,179 @@ function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value))
     invalidResponse();
   return value as Record<string, unknown>;
+}
+
+function finiteNumber(value: unknown, minimum = 0): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < minimum)
+    invalidResponse();
+  return value;
+}
+
+function positiveInteger(value: unknown): number {
+  const number = finiteNumber(value, 1);
+  if (!Number.isSafeInteger(number)) invalidResponse();
+  return number;
+}
+
+function documentText(value: unknown): string {
+  if (
+    typeof value !== "string" ||
+    value.length > 52428800 ||
+    /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(
+      value,
+    )
+  )
+    invalidResponse();
+  return value;
+}
+
+export function decodeSearchRequest(value: unknown): SearchRequest {
+  const item = object(value);
+  const keys = Object.keys(item);
+  const required = [
+    "query",
+    "top_k",
+    "profile_id",
+    "expected_profile_revision",
+  ];
+  if (
+    keys.length !== required.length ||
+    keys.some((key) => !required.includes(key)) ||
+    typeof item.query !== "string"
+  )
+    invalidResponse();
+  const query = item.query.trim();
+  if (query.includes("\0") || [...query].length < 1 || [...query].length > 4096)
+    invalidResponse();
+  documentText(query);
+  const topK = positiveInteger(item.top_k);
+  if (topK > 50) invalidResponse();
+  return {
+    query,
+    top_k: topK,
+    profile_id: identifier(item.profile_id),
+    expected_profile_revision: identifier(item.expected_profile_revision),
+  };
+}
+
+export function validateResourceId(value: unknown): string {
+  return identifier(value);
+}
+
+export function decodeLocalSourceFile(value: unknown): LocalSourceFile {
+  const item = object(value);
+  const name = item.name === null ? null : text(item.name, 510);
+  if (name !== null) documentText(name);
+  if (
+    name !== null &&
+    (!name.trim() ||
+      [...name].length > 255 ||
+      /[/\\:]/u.test(name) ||
+      name === "." ||
+      name === "..")
+  )
+    invalidResponse();
+  const canReveal = boolean(item.can_reveal);
+  const reason =
+    item.reason == null
+      ? item.reason
+      : choice(item.reason, [
+          "not_registered",
+          "demo_source",
+          "root_unconfigured",
+          "file_unavailable",
+          "host_unavailable",
+        ]);
+  if (canReveal && (name === null || reason != null)) invalidResponse();
+  return {
+    ...meta(item),
+    name,
+    can_reveal: canReveal,
+    ...(reason !== undefined ? { reason } : {}),
+  };
+}
+
+export function decodeSourceReveal(value: unknown): SourceRevealResponse {
+  const item = object(value);
+  return { ...meta(item), status: literal(item.status, "revealed") };
+}
+
+export function decodeSearch(
+  value: unknown,
+  workspaceId: string,
+  submitted: SearchRequest,
+): SearchResponse {
+  const item = object(value);
+  const metadata = meta(item);
+  if (
+    item.workspace_id !== workspaceId ||
+    item.profile_id !== submitted.profile_id ||
+    item.profile_revision !== submitted.expected_profile_revision
+  )
+    invalidResponse();
+  const durationMs = finiteNumber(item.duration_ms);
+  const expectedStages = ["corpus_load", "retrieval", "projection"] as const;
+  const stages = array(item.stages, 3).map((entry, index) => {
+    const stage = object(entry);
+    return {
+      stage: literal(stage.stage, expectedStages[index]),
+      status: choice(stage.status, ["success", "skipped"]),
+      duration_ms: finiteNumber(stage.duration_ms),
+    };
+  });
+  if (
+    stages.length !== 3 ||
+    stages.reduce((sum, stage) => sum + stage.duration_ms, 0) >
+      durationMs + 1e-6
+  )
+    invalidResponse();
+  const results = array(item.results, submitted.top_k).map((entry, index) => {
+    const result = object(entry);
+    if (result.rank !== index + 1) invalidResponse();
+    return {
+      chunk_id: identifier(result.chunk_id),
+      source_id: identifier(result.source_id),
+      source_version_id: identifier(result.source_version_id),
+      title: documentText(result.title),
+      content: documentText(result.content),
+      ...(result.page === undefined
+        ? {}
+        : { page: result.page === null ? null : positiveInteger(result.page) }),
+      rank: index + 1,
+      score: finiteNumber(result.score),
+      score_type: literal(result.score_type, "postgres_ts_rank_cd"),
+    };
+  });
+  const seen = new Set<string>();
+  for (let index = 0; index < results.length; index++) {
+    const result = results[index];
+    const previous = results[index - 1];
+    if (
+      seen.has(result.chunk_id) ||
+      (previous &&
+        (result.score > previous.score ||
+          (result.score === previous.score &&
+            result.chunk_id < previous.chunk_id)))
+    )
+      invalidResponse();
+    seen.add(result.chunk_id);
+  }
+  return {
+    ...metadata,
+    mode: literal(item.mode, "live"),
+    workspace_id: workspaceId,
+    corpus_revision: identifier(item.corpus_revision),
+    profile_id: literal(item.profile_id, "postgres-fts-baseline"),
+    profile_revision: literal(
+      item.profile_revision,
+      "postgres-fts-baseline-r1",
+    ),
+    run_id: identifier(item.run_id),
+    status: literal(item.status, "success"),
+    duration_ms: durationMs,
+    stages,
+    results,
+  };
 }
 
 function text(value: unknown, maximum = 4096): string {

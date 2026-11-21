@@ -189,6 +189,28 @@ export const catalog: NodeDefinition[] = [
     defaults: { collection: "Product knowledge", topK: 20 },
   },
   {
+    kind: "keyword-search",
+    label: "Keyword search",
+    component: "Approved lexical profile",
+    group: "Retrieval",
+    description:
+      "Search the authorized corpus using the discovered Live lexical profile.",
+    inputs: [
+      { id: "query", label: "Query", valueKind: "text", required: true },
+    ],
+    outputs: [{ id: "documents", label: "Matches", valueKind: "documents" }],
+    parameters: [
+      {
+        key: "topK",
+        label: "Maximum results",
+        type: "number",
+        min: 1,
+        required: true,
+      },
+    ],
+    defaults: { topK: 10 },
+  },
+  {
     kind: "vector",
     label: "Semantic search",
     component: "PgvectorEmbeddingRetriever",

@@ -37,11 +37,11 @@ import type {
   GraphIssue,
   NodeKind,
   Pipeline,
-  PreviewRun,
   WorkbenchNode,
   WorkbenchSettings,
 } from "../domain/types";
 import type { GraphUpdate } from "../hooks/useGraphHistory";
+import type { RunEntry } from "../domain/liveSearch";
 import { PipelineNode } from "./PipelineNode";
 import { NodeIcon } from "./NodeIcon";
 import { Inspector } from "./Inspector";
@@ -93,6 +93,7 @@ type Props = {
   validationStatus: ValidationState["status"];
   onRun: () => void;
   runDisabledReason?: string;
+  executionNotice?: string;
   onStop: () => void;
   onRename: (name: string) => void;
   onUndo: () => void;
@@ -100,8 +101,9 @@ type Props = {
   canUndo: boolean;
   canRedo: boolean;
   busy: boolean;
+  liveMode: boolean;
   runningNodeId: string | null;
-  run?: PreviewRun;
+  run?: RunEntry;
   issues: GraphIssue[];
   resultsOpen: boolean;
   onResultsOpen: (open: boolean) => void;
@@ -117,6 +119,7 @@ function Editor(props: Props) {
     onSelectNode,
     busy,
   } = props;
+  const editingBlocked = busy && !props.liveMode;
   const [libraryOpen, setLibraryOpen] = useState(
     () => window.innerWidth >= 1280,
   );
@@ -145,7 +148,10 @@ function Editor(props: Props) {
   const nodes = useMemo(
     () =>
       pipeline.graph.nodes.map((node) => {
-        const result = props.run?.nodes.find((item) => item.nodeId === node.id);
+        const result =
+          props.run?.source === "preview"
+            ? props.run.run.nodes.find((item) => item.nodeId === node.id)
+            : undefined;
         return {
           ...node,
           ariaLabel: node.data.label,
@@ -190,7 +196,7 @@ function Editor(props: Props) {
   );
 
   const deleteSelected = useCallback(() => {
-    if (!selectedNodeId || busy) return;
+    if (!selectedNodeId || editingBlocked) return;
     onGraphChange((graph) => ({
       ...graph,
       nodes: graph.nodes.filter((node) => node.id !== selectedNodeId),
@@ -200,10 +206,10 @@ function Editor(props: Props) {
       ),
     }));
     onSelectNode(null);
-  }, [selectedNodeId, busy, onGraphChange, onSelectNode]);
+  }, [selectedNodeId, editingBlocked, onGraphChange, onSelectNode]);
 
   const duplicateSelected = useCallback(() => {
-    if (!selectedNode || busy) return;
+    if (!selectedNode || editingBlocked) return;
     if (pipeline.graph.nodes.length >= 100) {
       props.notify("A pipeline may contain up to 100 components.", true);
       return;
@@ -223,7 +229,7 @@ function Editor(props: Props) {
     };
     onGraphChange((graph) => ({ ...graph, nodes: [...graph.nodes, node] }));
     onSelectNode(node.id);
-  }, [selectedNode, busy, onGraphChange, onSelectNode]);
+  }, [selectedNode, editingBlocked, onGraphChange, onSelectNode]);
 
   useEffect(() => {
     const handleKeys = (event: KeyboardEvent) => {
@@ -232,7 +238,7 @@ function Editor(props: Props) {
         return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
         event.preventDefault();
-        if (!busy) event.shiftKey ? props.onRedo() : props.onUndo();
+        if (!editingBlocked) event.shiftKey ? props.onRedo() : props.onUndo();
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
         event.preventDefault();
@@ -254,7 +260,7 @@ function Editor(props: Props) {
     };
     window.addEventListener("keydown", handleKeys);
     return () => window.removeEventListener("keydown", handleKeys);
-  }, [busy, duplicateSelected, onSelectNode, props]);
+  }, [editingBlocked, duplicateSelected, onSelectNode, props]);
 
   const connect = (connection: Connection, replace = false) => {
     const target = pipeline.graph.nodes.find(
@@ -295,21 +301,22 @@ function Editor(props: Props) {
   };
 
   const nodeChanges = (changes: NodeChangeset<WorkbenchNode>) => {
-    const significant = changes
+    // Rebuilt controlled nodes must retain measurements to stay initialized.
+    const edits = changes
       .toArray()
-      .filter(
-        (change) => change.type !== "select" && change.type !== "dimensions",
-      );
+      .filter((change) => change.type !== "select");
     const selected = changes
       .toArray()
       .find((change) => change.type === "select" && change.selected);
     if (selected && selected.type === "select") onSelectNode(selected.id);
-    if (!significant.length) return;
-    const record = significant.some(
-      (change) => change.type !== "position" || change.dragging === undefined,
+    if (!edits.length) return;
+    const record = edits.some(
+      (change) =>
+        change.type !== "dimensions" &&
+        (change.type !== "position" || change.dragging === undefined),
     );
     onGraphChange((graph) => {
-      const nextNodes = new NodeChangeset(significant).applyTo(graph.nodes);
+      const nextNodes = new NodeChangeset(edits).applyTo(graph.nodes);
       return {
         ...graph,
         nodes: nextNodes,
@@ -389,7 +396,7 @@ function Editor(props: Props) {
             className="button small"
             onClick={props.onValidate}
             title="Haystack constructor validation"
-            disabled={busy || props.validationStatus === "checking"}
+            disabled={editingBlocked || props.validationStatus === "checking"}
           >
             <Check size={15} />
             {props.validationStatus === "checking" ? "Checking…" : "Validate"}
@@ -439,9 +446,9 @@ function Editor(props: Props) {
           )}
         </div>
       </header>
-      {props.runDisabledReason && (
+      {(props.runDisabledReason || props.executionNotice) && (
         <div className="execution-notice" id="live-run-notice">
-          {props.runDisabledReason}
+          {props.runDisabledReason ?? props.executionNotice}
         </div>
       )}
       <div className="editor-workspace">
@@ -485,9 +492,9 @@ function Editor(props: Props) {
                       <button
                         key={definition.kind}
                         className={`library-item ${["files", "writer", "results"].includes(definition.kind) ? "resource" : ""}`}
-                        disabled={busy}
+                        disabled={editingBlocked}
                         title={definition.description}
-                        draggable={!busy}
+                        draggable={!editingBlocked}
                         onDragStart={(event) => {
                           event.dataTransfer.setData(
                             "application/workbench-node",
@@ -515,7 +522,7 @@ function Editor(props: Props) {
               <button
                 className="button small"
                 onClick={() => importInput.current?.click()}
-                disabled={busy}
+                disabled={editingBlocked}
               >
                 <Upload size={14} />
                 Import pipeline
@@ -549,7 +556,7 @@ function Editor(props: Props) {
             <div className="canvas-history">
               <button
                 className="icon-button"
-                disabled={!props.canUndo || busy}
+                disabled={!props.canUndo || editingBlocked}
                 onClick={props.onUndo}
                 aria-label="Undo"
                 title="Undo (Ctrl+Z)"
@@ -558,7 +565,7 @@ function Editor(props: Props) {
               </button>
               <button
                 className="icon-button"
-                disabled={!props.canRedo || busy}
+                disabled={!props.canRedo || editingBlocked}
                 onClick={props.onRedo}
                 aria-label="Redo"
                 title="Redo (Ctrl+Shift+Z)"
@@ -575,7 +582,7 @@ function Editor(props: Props) {
             }}
             onDrop={(event) => {
               event.preventDefault();
-              if (busy) return;
+              if (editingBlocked) return;
               if (pipeline.graph.nodes.length >= 100) {
                 props.notify(
                   "A pipeline may contain up to 100 components.",
@@ -628,12 +635,12 @@ function Editor(props: Props) {
                 setZoom(Math.round(instance.getZoom() * 100))
               }
               defaultViewport={pipeline.graph.viewport}
-              nodesDraggable={!busy}
-              nodesConnectable={!busy}
+              nodesDraggable={!editingBlocked}
+              nodesConnectable={!editingBlocked}
               edgesReconnectable={false}
               elevateEdgesOnSelect={false}
-              elementsSelectable={!busy}
-              deleteKeyCode={busy ? null : ["Backspace", "Delete"]}
+              elementsSelectable={!editingBlocked}
+              deleteKeyCode={editingBlocked ? null : ["Backspace", "Delete"]}
               connectionLineType={ConnectionLineType.SmoothStep}
               defaultEdgeOptions={{
                 type: "smoothstep",
@@ -748,7 +755,7 @@ function Editor(props: Props) {
           <Inspector
             node={selectedNode}
             graph={pipeline.graph}
-            disabled={busy}
+            disabled={editingBlocked}
             onChange={onGraphChange}
             onClose={() => onSelectNode(null)}
             onDelete={deleteSelected}

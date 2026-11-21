@@ -2,6 +2,7 @@
 
 import os
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 
@@ -17,12 +18,28 @@ class ApiSettings(BaseModel):
     port: int = Field(default=8011, ge=1, le=65535)
     backend_revision: Identifier = "workbench-api-lexical-v1"
     database_dsn: SecretStr | None = None
+    local_source_root: str | None = None
     allowed_origins: tuple[str, ...] = (
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:4173",
         "http://127.0.0.1:4173",
     )
+
+    @field_validator("local_source_root")
+    @classmethod
+    def _validate_local_source_root(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if (
+            not value
+            or len(value) > 2048
+            or not Path(value).is_absolute()
+            or value.startswith(("\\\\", "//"))
+            or any(ord(character) < 32 for character in value)
+        ):
+            raise ValueError("Local source root must be an explicit absolute local directory")
+        return value
 
     @field_validator("database_dsn")
     @classmethod
@@ -93,4 +110,7 @@ class ApiSettings(BaseModel):
         database_dsn = environment.get("WORKBENCH_DB_DSN")
         if database_dsn is not None:
             values["database_dsn"] = SecretStr(database_dsn)
+        local_root = environment.get("WORKBENCH_LOCAL_SOURCE_ROOT")
+        if local_root is not None:
+            values["local_source_root"] = local_root
         return cls.model_validate(values)

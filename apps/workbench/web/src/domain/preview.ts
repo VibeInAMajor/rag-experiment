@@ -89,6 +89,10 @@ export function completePreviewNode(
   node: WorkbenchNode,
   scenario: Scenario,
 ): NodeResult {
+  if (node.data.kind === "keyword-search")
+    throw new Error(
+      "Keyword search is unavailable in Preview. Select Live mode.",
+    );
   if (!run.graph.nodes.some((item) => item.id === node.id))
     throw new Error("The component does not belong to this run.");
   if (scenario === "error" && node.id === failureNodeId(run)) {
@@ -111,7 +115,7 @@ export function completePreviewNode(
     (document) => document.status === "Indexed",
   );
   const summaries: Record<
-    WorkbenchNode["data"]["kind"],
+    Exclude<WorkbenchNode["data"]["kind"], "keyword-search">,
     { durationMs: number; summary: string; output: Record<string, unknown> }
   > = {
     files: {

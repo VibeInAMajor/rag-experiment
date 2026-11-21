@@ -130,3 +130,19 @@ export type DocumentPage = ApiMeta & {
   items: DocumentItem[];
   next_cursor: string | null;
 };
+
+export type LocalSourceFile = ApiMeta & {
+  name: string | null;
+  can_reveal: boolean;
+  reason?:
+    | "not_registered"
+    | "demo_source"
+    | "root_unconfigured"
+    | "file_unavailable"
+    | "host_unavailable"
+    | null;
+};
+
+export type SourceRevealResponse = ApiMeta & {
+  status: "revealed";
+};

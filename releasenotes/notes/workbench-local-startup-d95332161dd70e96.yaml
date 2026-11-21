@@ -1,0 +1,6 @@
+features:
+  - |
+    Start the initialized local Workbench with ``.\start.ps1`` from the repository
+    root. The launcher starts PostgreSQL, the API, constructor validation and the
+    website, reuses healthy services and writes background-service logs without
+    migrating, seeding or resetting the database.

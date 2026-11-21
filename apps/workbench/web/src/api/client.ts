@@ -2,16 +2,25 @@ import type {
   ApiMeta,
   BackendCapabilities,
   LiveResponse,
+  LocalSourceFile,
   ReadyResponse,
+  SearchRequest,
+  SearchResponse,
+  SourceRevealResponse,
   WorkspacePage,
 } from "./contracts";
 import {
   decodeCapabilities,
   decodeFailure,
   decodeLive,
+  decodeLocalSourceFile,
   decodeReady,
+  decodeSearch,
+  decodeSearchRequest,
+  decodeSourceReveal,
   decodeWorkspaces,
   validateCursor,
+  validateResourceId,
 } from "./decode";
 import { invalidResponse, WorkbenchApiError } from "./errors";
 
@@ -27,6 +36,23 @@ export type WorkbenchApiClient = {
   getReady(options?: RequestOptions): Promise<ReadyResponse>;
   getCapabilities(options?: RequestOptions): Promise<BackendCapabilities>;
   listWorkspaces(options?: WorkspaceOptions): Promise<WorkspacePage>;
+  search(
+    workspaceId: string,
+    body: SearchRequest,
+    options?: RequestOptions,
+  ): Promise<SearchResponse>;
+  getLocalFile(
+    workspaceId: string,
+    sourceId: string,
+    versionId: string,
+    options?: RequestOptions,
+  ): Promise<LocalSourceFile>;
+  revealLocalFile(
+    workspaceId: string,
+    sourceId: string,
+    versionId: string,
+    options?: RequestOptions,
+  ): Promise<SourceRevealResponse>;
 };
 
 function publicBase(value: string): string {
@@ -70,13 +96,19 @@ export function createWorkbenchApiClient({
   baseUrl = import.meta.env.VITE_WORKBENCH_API_BASE_URL ?? "/api/v1",
   fetchImpl = globalThis.fetch,
   timeoutMs = 5000,
+  searchTimeoutMs = 15000,
 }: {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  searchTimeoutMs?: number;
 } = {}): WorkbenchApiClient {
   const base = publicBase(baseUrl);
-  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000)
+  if (
+    [timeoutMs, searchTimeoutMs].some(
+      (value) => !Number.isSafeInteger(value) || value < 1 || value > 60000,
+    )
+  )
     throw new WorkbenchApiError("Use a bounded API request timeout.", {
       kind: "configuration",
       code: "INVALID_TIMEOUT",
@@ -86,6 +118,11 @@ export function createWorkbenchApiClient({
     path: string,
     decode: (value: unknown) => T,
     { signal }: RequestOptions = {},
+    transport: {
+      body?: SearchRequest | Record<string, never>;
+      timeoutMs?: number;
+      maxResponseChars?: number;
+    } = {},
   ): Promise<T> {
     const controller = new AbortController();
     let rejectAbort: (error: WorkbenchApiError) => void = () => {};
@@ -95,8 +132,8 @@ export function createWorkbenchApiClient({
     const cancel = (timeout: boolean) => {
       const error = new WorkbenchApiError(
         timeout
-          ? "Backend discovery timed out. Retry the connection."
-          : "Backend discovery cancelled.",
+          ? "Backend request timed out. Retry when available."
+          : "Backend request interrupted locally.",
         {
           kind: timeout ? "timeout" : "cancelled",
           code: timeout ? "TIMEOUT" : "CANCELLED",
@@ -108,7 +145,10 @@ export function createWorkbenchApiClient({
     };
     const onAbort = () => cancel(false);
     signal?.addEventListener("abort", onAbort, { once: true });
-    const timer = setTimeout(() => cancel(true), timeoutMs);
+    const timer = setTimeout(
+      () => cancel(true),
+      transport.timeoutMs ?? timeoutMs,
+    );
     try {
       const operation = async () => {
         if (signal?.aborted) {
@@ -116,8 +156,16 @@ export function createWorkbenchApiClient({
           throw controller.signal.reason;
         }
         const response = await fetchImpl(`${base}${path}`, {
-          method: "GET",
-          headers: { Accept: "application/json" },
+          method: transport.body === undefined ? "GET" : "POST",
+          headers: {
+            Accept: "application/json",
+            ...(transport.body === undefined
+              ? {}
+              : { "Content-Type": "application/json" }),
+          },
+          ...(transport.body === undefined
+            ? {}
+            : { body: JSON.stringify(transport.body) }),
           signal: controller.signal,
           credentials: "omit",
           cache: "no-store",
@@ -140,11 +188,12 @@ export function createWorkbenchApiClient({
             },
           );
         }
-        const body = await response.text();
-        if (body.length > 1048576) invalidResponse();
+        const responseBody = await response.text();
+        if (responseBody.length > (transport.maxResponseChars ?? 1048576))
+          invalidResponse();
         let value: unknown;
         try {
-          value = JSON.parse(body);
+          value = JSON.parse(responseBody);
         } catch {
           return invalidResponse();
         }
@@ -187,7 +236,45 @@ export function createWorkbenchApiClient({
     }
   }
 
+  const localFilePath = (
+    workspaceId: string,
+    sourceId: string,
+    versionId: string,
+  ) => {
+    const [workspace, source, version] = [workspaceId, sourceId, versionId].map(
+      (value) => encodeURIComponent(validateResourceId(value)),
+    );
+    return `/workspaces/${workspace}/sources/${source}/versions/${version}/local-file`;
+  };
+
   return {
+    search: async (workspaceId, body, options) => {
+      const scope = validateResourceId(workspaceId);
+      const submitted = decodeSearchRequest(body);
+      return request(
+        `/workspaces/${encodeURIComponent(scope)}/search`,
+        (value) => decodeSearch(value, scope, submitted),
+        options,
+        {
+          body: submitted,
+          timeoutMs: searchTimeoutMs,
+          maxResponseChars: 67108864,
+        },
+      );
+    },
+    getLocalFile: async (workspaceId, sourceId, versionId, options) =>
+      request(
+        localFilePath(workspaceId, sourceId, versionId),
+        decodeLocalSourceFile,
+        options,
+      ),
+    revealLocalFile: async (workspaceId, sourceId, versionId, options) =>
+      request(
+        `${localFilePath(workspaceId, sourceId, versionId)}/reveal`,
+        decodeSourceReveal,
+        options,
+        { body: {} },
+      ),
     getLive: (options) => request("/health/live", decodeLive, options),
     getReady: (options) => request("/health/ready", decodeReady, options),
     getCapabilities: (options) =>

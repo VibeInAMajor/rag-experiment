@@ -1,6 +1,7 @@
 """Application-owned records and workspace-scoped persistence boundary."""
 
 from math import isfinite
+from pathlib import PurePosixPath
 from typing import Literal, Protocol
 
 from pydantic import ConfigDict, Field, JsonValue, field_validator, model_validator
@@ -76,6 +77,40 @@ class SourceVersion(ContractModel):
     content_hash: str = Field(min_length=1, max_length=128)
     status: Literal["staged", "active", "superseded", "error"] = "staged"
     metadata: dict[str, JsonValue] = Field(default_factory=dict)
+
+
+class LocalOriginalRegistration(ContractModel):
+    """Version-bound relative location recorded by a trusted local operator."""
+
+    relative_path: str = Field(min_length=1, max_length=2048)
+    sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+    @field_validator("relative_path")
+    @classmethod
+    def _relative_path(cls, value: str) -> str:
+        path = PurePosixPath(value)
+        if (
+            path.is_absolute()
+            or not path.parts
+            or path.as_posix() != value
+            or any(part in {".", ".."} for part in path.parts)
+            or any(character in value for character in ("\\", ":"))
+            or any(
+                ord(character) < 32 or ord(character) == 127 or 0xD800 <= ord(character) <= 0xDFFF
+                for character in value
+            )
+        ):
+            raise ValueError("Original location must be a normalized relative path")
+        return value
+
+
+class LocalOriginalRecord(ContractModel):
+    """Scoped original-registration lookup without exposing locations over HTTP."""
+
+    source_id: Identifier
+    version_id: Identifier
+    is_demo: bool
+    registration: LocalOriginalRegistration | None = None
 
 
 class Chunk(ContractModel):
@@ -184,6 +219,18 @@ class PersistencePort(Protocol):
 
     async def get_chunk(self, context: WorkspaceContext, chunk_id: str) -> Chunk | None:
         """Read an active chunk without revealing foreign-workspace identities."""
+        ...
+
+    async def get_local_original(
+        self, context: WorkspaceContext, *, source_id: str, version_id: str
+    ) -> LocalOriginalRecord | None:
+        """Read the registered original for an active version in this scope."""
+        ...
+
+    async def register_local_original(
+        self, context: WorkspaceContext, *, source_id: str, version_id: str, relative_path: str, sha256: str
+    ) -> None:
+        """Register an existing non-demo active version; identical retries are harmless."""
         ...
 
     async def publish_source(

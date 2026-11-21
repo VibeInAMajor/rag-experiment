@@ -27,7 +27,10 @@ from apps.workbench.api.contracts import (
     ErrorResponse,
     Features,
     LiveResponse,
+    LocalSourceFileResponse,
     ReadyResponse,
+    RevealSourceRequest,
+    RevealSourceResponse,
     SearchRequest,
     SearchResponse,
     ServiceState,
@@ -35,6 +38,14 @@ from apps.workbench.api.contracts import (
     WorkspacePage,
 )
 from apps.workbench.api.database_dependency import DatabaseDependency, create_database_dependency
+from apps.workbench.api.local_sources import (
+    FileRevealFailed,
+    LocalFileLauncher,
+    LocalSources,
+    SourceFileUnavailable,
+    SourceNotFound,
+    WindowsExplorer,
+)
 from apps.workbench.api.persistence import (
     DatabaseUnavailable,
     LexicalSearchSnapshot,
@@ -135,6 +146,12 @@ async def _execute_search(
 def _failure(request: Request, error: Exception, *, run_id: str | None = None) -> JSONResponse:
     if isinstance(error, WorkspaceNotFound):
         status, code, message = (404, "WORKSPACE_NOT_FOUND", "Workspace is not available.")
+    elif isinstance(error, SourceNotFound):
+        status, code, message = (404, "SOURCE_NOT_FOUND", "The source version is not available.")
+    elif isinstance(error, SourceFileUnavailable):
+        status, code, message = (409, "SOURCE_FILE_UNAVAILABLE", "The local original is not available.")
+    elif isinstance(error, FileRevealFailed):
+        status, code, message = (503, "FILE_REVEAL_FAILED", "Explorer could not select the original file.")
     elif isinstance(error, _InvalidCursor):
         status, code, message = (400, "INVALID_CURSOR", "Restart the list from its first page.")
     elif isinstance(error, DatabaseUnavailable):
@@ -189,14 +206,46 @@ class _Routes:
         database: DatabaseDependency,
         service: LexicalServicePort | None,
         readiness: ReadinessProbe | None,
+        local_sources: LocalSources,
     ) -> None:
         self.app = app
         self.configuration = configuration
         self.database = database
         self.service = service
         self.readiness = readiness
+        self.local_sources = local_sources
         self.cursors = _Cursors()
         self.active_searches = 0
+
+    async def _local_file(
+        self, request: Request, workspace_id: str, source_id: str, version_id: str
+    ) -> LocalSourceFileResponse | JSONResponse:
+        try:
+            context = _context(request, workspace_id)
+            _ensure_running(self.app)
+            return await self.local_sources.describe(
+                context, source_id=source_id, version_id=version_id, meta=request_meta(request)
+            )
+        except Exception as error:
+            return _failure(request, error)
+
+    async def _reveal_local_file(
+        self, request: Request, workspace_id: str, source_id: str, version_id: str, _body: RevealSourceRequest
+    ) -> RevealSourceResponse | JSONResponse:
+        async def before_dispatch() -> None:
+            _ensure_running(self.app)
+            if await request.is_disconnected():
+                raise _ClientDisconnected
+
+        try:
+            context = _context(request, workspace_id)
+            _ensure_running(self.app)
+            await self.local_sources.reveal(
+                context, source_id=source_id, version_id=version_id, before_dispatch=before_dispatch
+            )
+            return RevealSourceResponse(**request_meta(request).model_dump())
+        except Exception as error:
+            return _failure(request, error)
 
     async def _snapshot(self, request: Request) -> ReadinessSnapshot:
         if self.app.state.lifecycle != ServiceState.RUNNING or self.service is None:
@@ -429,6 +478,7 @@ def create_app(
     readiness: ReadinessProbe | None = None,
     persistence: PersistencePort | None = None,
     lexical: LexicalServicePort | None = None,
+    local_file_launcher: LocalFileLauncher | None = None,
 ) -> FastAPI:
     """Bind the qualified lexical service to the existing persistent corpus."""
     configuration = ApiSettings.from_env() if settings is None else settings
@@ -466,7 +516,19 @@ def create_app(
     app.add_middleware(RequestBoundary, settings=configuration)
     app.add_exception_handler(HTTPException, _http_error)
     app.add_exception_handler(RequestValidationError, _validation_error)
-    routes = _Routes(app=app, configuration=configuration, database=database, service=service, readiness=readiness)
+    local_sources = LocalSources(
+        persistence=database.persistence,
+        root=configuration.local_source_root,
+        launcher=WindowsExplorer() if local_file_launcher is None else local_file_launcher,
+    )
+    routes = _Routes(
+        app=app,
+        configuration=configuration,
+        database=database,
+        service=service,
+        readiness=readiness,
+        local_sources=local_sources,
+    )
     app.add_api_route("/api/v1/health/live", routes._live, response_model=LiveResponse, name="live")
     app.add_api_route("/api/v1/health/ready", routes._ready, response_model=ReadyResponse, name="ready")
     app.add_api_route(
@@ -484,5 +546,19 @@ def create_app(
         response_model_exclude_none=True,
         name="search",
         responses={status: {"model": ErrorResponse} for status in (409, 413, 415, 429, 504)},
+    )
+    app.add_api_route(
+        "/api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file",
+        routes._local_file,
+        response_model=LocalSourceFileResponse,
+        name="local_file",
+    )
+    app.add_api_route(
+        "/api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file/reveal",
+        routes._reveal_local_file,
+        methods=["POST"],
+        response_model=RevealSourceResponse,
+        name="reveal_local_file",
+        responses={status: {"model": ErrorResponse} for status in (409, 413, 415)},
     )
     return app

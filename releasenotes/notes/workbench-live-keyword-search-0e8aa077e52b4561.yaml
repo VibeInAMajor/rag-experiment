@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Run approved Keyword search graphs in Workbench Live mode through the existing
+    PostgreSQL lexical profile. Results retain server ranks, raw
+    ``postgres_ts_rank_cd`` scores, source/version provenance, correlation IDs and
+    measured stages. Stop interrupts the local request without claiming confirmed
+    server cancellation. Session history distinguishes Live and Preview and is
+    limited to 100 entries. Existing Hybrid and indexing graphs remain Preview;
+    graph exports retain ``schemaVersion: 1``.

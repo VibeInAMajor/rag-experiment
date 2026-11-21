@@ -1,11 +1,11 @@
 """Bounded PostgreSQL repository; all application data operations carry workspace scope."""
 
+import hashlib
 import json
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import UTC
-from hashlib import sha256
 from math import isfinite
 from time import monotonic
 from typing import Any
@@ -15,6 +15,7 @@ from psycopg import AsyncConnection, Error, errors
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool, PoolClosed, PoolTimeout
+from pydantic import ValidationError
 
 from apps.workbench.api.persistence import (
     Chunk,
@@ -25,6 +26,8 @@ from apps.workbench.api.persistence import (
     InvalidEmbedding,
     LexicalHit,
     LexicalSearchSnapshot,
+    LocalOriginalRecord,
+    LocalOriginalRegistration,
     PersistenceError,
     PersistenceReady,
     RecordConflict,
@@ -63,6 +66,13 @@ def _chunk(row: dict[str, Any]) -> Chunk:
     fields = {name: row[name] for name in Chunk.model_fields}
     fields["embedding"] = None if row["embedding"] is None else Vector.from_text(row["embedding"]).to_list()
     return Chunk.model_validate(fields)
+
+
+def _demo_original(source_id: str, source_metadata: dict[str, Any], version_metadata: dict[str, Any]) -> bool:
+    return source_id.startswith("demo-") or any(
+        "development_seed" in metadata or metadata.get("synthetic", False) is not False
+        for metadata in (source_metadata, version_metadata)
+    )
 
 
 class PostgresPersistence:
@@ -255,6 +265,72 @@ class PostgresPersistence:
             ).fetchall()
             return [Source.model_validate(row) for row in rows]
 
+    async def get_local_original(
+        self, context: WorkspaceContext, *, source_id: str, version_id: str
+    ) -> LocalOriginalRecord | None:
+        """Look up an active registered original without relaxing workspace isolation."""
+        async with self._transaction(context, operation="get_local_original") as connection:
+            await self._require_workspace(connection, context)
+            row = await (
+                await connection.execute(
+                    "SELECT s.metadata AS source_metadata,v.metadata AS version_metadata "
+                    "FROM workbench.source_versions v JOIN workbench.sources s USING(workspace_id,source_id) "
+                    "WHERE v.workspace_id=%s AND v.source_id=%s AND v.version_id=%s AND v.status='active'",
+                    (context.workspace_id, source_id, version_id),
+                )
+            ).fetchone()
+            if row is None:
+                return None
+            registration = None
+            if "local_original" in row["version_metadata"]:
+                # Corrupt or pre-contract metadata never grants a filesystem action.
+                with suppress(ValidationError):
+                    registration = LocalOriginalRegistration.model_validate(row["version_metadata"]["local_original"])
+            return LocalOriginalRecord(
+                source_id=source_id,
+                version_id=version_id,
+                is_demo=_demo_original(source_id, row["source_metadata"], row["version_metadata"]),
+                registration=registration,
+            )
+
+    async def register_local_original(
+        self, context: WorkspaceContext, *, source_id: str, version_id: str, relative_path: str, sha256: str
+    ) -> None:
+        """Attach an immutable original registration to an existing real active version."""
+        registration = LocalOriginalRegistration(relative_path=relative_path, sha256=sha256)
+        async with self._transaction(context, operation="register_local_original") as connection:
+            await self._require_workspace(connection, context)
+            source = await (
+                await connection.execute(
+                    "SELECT metadata FROM workbench.sources WHERE workspace_id=%s AND source_id=%s FOR UPDATE",
+                    (context.workspace_id, source_id),
+                )
+            ).fetchone()
+            if source is None:
+                raise RecordConflict("The original cannot be registered for this source version.")
+            version = await (
+                await connection.execute(
+                    "SELECT metadata,status FROM workbench.source_versions "
+                    "WHERE workspace_id=%s AND source_id=%s AND version_id=%s FOR UPDATE",
+                    (context.workspace_id, source_id, version_id),
+                )
+            ).fetchone()
+            if (
+                version is None
+                or version["status"] != "active"
+                or _demo_original(source_id, source["metadata"], version["metadata"])
+            ):
+                raise RecordConflict("The original cannot be registered for this source version.")
+            if "local_original" in version["metadata"]:
+                if version["metadata"]["local_original"] != registration.model_dump():
+                    raise RecordConflict("The original registration is already bound to this source version.")
+                return
+            await connection.execute(
+                "UPDATE workbench.source_versions SET metadata=jsonb_set(metadata,'{local_original}',%s::jsonb),"
+                "updated_at=now() WHERE workspace_id=%s AND source_id=%s AND version_id=%s",
+                (Jsonb(registration.model_dump()), context.workspace_id, source_id, version_id),
+            )
+
     async def _require_lexical_index(self, connection: AsyncConnection[dict[str, Any]]) -> None:
         index = await (
             await connection.execute(
@@ -338,7 +414,9 @@ class PostgresPersistence:
             ensure_ascii=False,
         )
         return CorpusSnapshot(
-            corpus_revision=f"corpus-{sha256(fingerprint.encode('utf-8')).hexdigest()}", documents=documents, **counts
+            corpus_revision=f"corpus-{hashlib.sha256(fingerprint.encode('utf-8')).hexdigest()}",
+            documents=documents,
+            **counts,
         )
 
     async def corpus_snapshot(self, context: WorkspaceContext) -> CorpusSnapshot:

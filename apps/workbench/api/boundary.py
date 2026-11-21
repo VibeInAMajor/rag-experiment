@@ -60,6 +60,13 @@ def _search_path(scope: Scope) -> bool:
     return re.fullmatch(r"/api/v1/workspaces/[^/]+/search", scope["path"]) is not None
 
 
+def _reveal_path(scope: Scope) -> bool:
+    return (
+        re.fullmatch(r"/api/v1/workspaces/[^/]+/sources/[^/]+/versions/[^/]+/local-file/reveal", scope["path"])
+        is not None
+    )
+
+
 def _list_path(scope: Scope) -> bool:
     return (
         scope["path"] == "/api/v1/workspaces"
@@ -133,10 +140,12 @@ class RequestBoundary:
                 await rejection(scope, tracked_receive, correlated_send)
             elif scope["method"] == "OPTIONS" and origin is not None:
                 response = JSONResponse(content=meta.model_dump())
-                response.headers["Access-Control-Allow-Methods"] = "POST" if _search_path(scope) else "GET"
+                response.headers["Access-Control-Allow-Methods"] = (
+                    "POST" if _search_path(scope) or _reveal_path(scope) else "GET"
+                )
                 response.headers["Access-Control-Allow-Headers"] = "Accept, Content-Type"
                 await response(scope, tracked_receive, correlated_send)
-            elif scope["method"] == "POST" and _search_path(scope):
+            elif scope["method"] == "POST" and (_search_path(scope) or _reveal_path(scope)):
                 await self._search_request(scope, tracked_receive, correlated_send, headers, meta)
             else:
                 await self.app(scope, tracked_receive, correlated_send)
@@ -173,6 +182,10 @@ class RequestBoundary:
             return error_response(meta, status=403, code="FORBIDDEN", message="The request host is not permitted.")
         if origins and (len(origins) != 1 or origins[0] not in self.settings.allowed_origins):
             return error_response(meta, status=403, code="FORBIDDEN", message="The request origin is not permitted.")
+        if scope["method"] == "POST" and _reveal_path(scope) and not origins:
+            return error_response(
+                meta, status=403, code="FORBIDDEN", message="An explicit local browser origin is required."
+            )
         if scope.get("query_string") and not self._valid_pagination(scope):
             return error_response(
                 meta, status=400, code="INVALID_REQUEST", message="Query parameters are not supported."
@@ -192,7 +205,7 @@ class RequestBoundary:
             requested = dict(headers)
             method = requested.get(b"access-control-request-method", "")
             names = requested.get(b"access-control-request-headers", "")
-            permitted_method = "POST" if _search_path(scope) else "GET"
+            permitted_method = "POST" if _search_path(scope) or _reveal_path(scope) else "GET"
             if method != permitted_method or any(
                 name.strip().lower() not in {"accept", "content-type"} for name in names.split(",") if name.strip()
             ):
@@ -219,7 +232,9 @@ class RequestBoundary:
     ) -> None:
         content_types = [value for key, value in headers if key == _CONTENT_TYPE]
         if len(content_types) != 1 or content_types[0].split(";", 1)[0].strip().lower() != "application/json":
-            response = error_response(meta, status=415, code="UNSUPPORTED_MEDIA_TYPE", message="Search requires JSON.")
+            response = error_response(
+                meta, status=415, code="UNSUPPORTED_MEDIA_TYPE", message="This operation requires JSON."
+            )
             await response(scope, receive, send)
             return
         body = bytearray()
@@ -228,7 +243,7 @@ class RequestBoundary:
             if message["type"] == "http.disconnect":
                 return
             incoming = message.get("body", b"")
-            if len(body) + len(incoming) > 32768:
+            if len(body) + len(incoming) > (1024 if _reveal_path(scope) else 32768):
                 response = error_response(
                     meta, status=413, code="PAYLOAD_TOO_LARGE", message="Request body exceeds the byte limit."
                 )

@@ -43,6 +43,8 @@ class _DatabaseProbe(PersistencePort):
     list_workspaces = _unexpected
     list_sources = _unexpected
     get_chunk = _unexpected
+    get_local_original = _unexpected
+    register_local_original = _unexpected
     publish_source = _unexpected
     lexical_search = _unexpected
     lexical_search_snapshot = _unexpected

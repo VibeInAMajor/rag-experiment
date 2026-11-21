@@ -1,0 +1,18 @@
+.source-name {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-blue);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.source-name-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #b42318;
+}

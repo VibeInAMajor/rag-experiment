@@ -9,6 +9,7 @@ export type NodeKind =
   | "query"
   | "text-embedder"
   | "bm25"
+  | "keyword-search"
   | "vector"
   | "joiner"
   | "results";
@@ -26,7 +27,7 @@ export type Graph = {
   edges: Edge[];
   viewport?: Viewport;
 };
-export type TemplateId = "blank" | "indexing" | "retrieval";
+export type TemplateId = "blank" | "indexing" | "retrieval" | "keyword";
 export type Pipeline = {
   id: string;
   name: string;

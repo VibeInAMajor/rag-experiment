@@ -192,6 +192,7 @@ db-bootstrap = "python -m apps.workbench.api.db_admin bootstrap-db"
 db-migrate = "python -m apps.workbench.api.db_admin migrate"
 db-status = "python -m apps.workbench.api.db_admin status"
 db-seed = "python -m apps.workbench.api.db_seed"
+source-register = "python -m apps.workbench.api.source_registration {args}"
 
 [tool.hatch.envs.workbench-db-compat]
 installer = "uv"

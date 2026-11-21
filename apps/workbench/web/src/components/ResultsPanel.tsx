@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Braces,
   Check,
@@ -9,8 +9,156 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import type { GraphIssue, PreviewRun } from "../domain/types";
+import type { RunEntry } from "../domain/liveSearch";
+import { ServerDuration } from "./ServerDuration";
+import {
+  LiveRunDetails,
+  LiveRunMetadata,
+  type LiveResultView,
+} from "./LiveRunDetails";
 
 export function ResultsPanel({
+  run,
+  ...props
+}: {
+  run?: RunEntry;
+  issues: GraphIssue[];
+  selectedNodeId: string | null;
+  onSelectNode: (id: string) => void;
+  onClose: () => void;
+}) {
+  return run?.source === "live" ? (
+    <LiveResultsPanel
+      run={run.run}
+      issues={props.issues}
+      onSelectNode={props.onSelectNode}
+      onClose={props.onClose}
+    />
+  ) : (
+    <PreviewResultsPanel {...props} run={run?.run} />
+  );
+}
+
+function LiveResultsPanel({
+  run,
+  issues,
+  onSelectNode,
+  onClose,
+}: {
+  run: Extract<RunEntry, { source: "live" }>["run"];
+  issues: GraphIssue[];
+  onSelectNode: (id: string) => void;
+  onClose: () => void;
+}) {
+  const [tab, setTab] = useState<LiveResultView>(
+    issues.length ? "errors" : "output",
+  );
+  const [json, setJson] = useState(false);
+  const issueSignature = JSON.stringify(issues);
+  useEffect(() => {
+    if (issueSignature !== "[]") setTab("errors");
+  }, [issueSignature]);
+  const errorCount = issues.length + (run.error ? 1 : 0);
+  const tabs = ["output", "stages", "errors"] as const;
+  return (
+    <section className="results-panel" aria-label="Pipeline results">
+      <div className="results-heading">
+        <div className="results-tabs" role="tablist" aria-label="Result views">
+          {tabs.map((item, index) => (
+            <button
+              key={item}
+              role="tab"
+              id={`live-results-tab-${item}`}
+              aria-selected={tab === item}
+              tabIndex={tab === item ? 0 : -1}
+              aria-controls="live-results-content"
+              onClick={() => setTab(item)}
+              onKeyDown={(event) => {
+                const next =
+                  event.key === "ArrowRight"
+                    ? (index + 1) % tabs.length
+                    : event.key === "ArrowLeft"
+                      ? (index + tabs.length - 1) % tabs.length
+                      : -1;
+                if (next >= 0) {
+                  event.preventDefault();
+                  setTab(tabs[next]);
+                  document
+                    .getElementById(`live-results-tab-${tabs[next]}`)
+                    ?.focus();
+                }
+              }}
+            >
+              {item[0].toUpperCase() + item.slice(1)}
+              {item === "errors" && errorCount > 0 && (
+                <span className="error-count">{errorCount}</span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="results-meta">
+          <span className="run-source mono">Live</span>
+          <span
+            className={`status ${run.status === "Completed" ? "success" : run.status === "Failed" ? "error" : "neutral"}`}
+          >
+            {run.status === "InterruptedLocally"
+              ? "Interrupted locally"
+              : run.status}
+          </span>
+          {run.durationMs !== undefined && (
+            <ServerDuration durationMs={run.durationMs} />
+          )}
+          <button
+            className={`icon-button ${json ? "active" : ""}`}
+            onClick={() => setJson(!json)}
+            aria-label="Toggle JSON"
+            title="Toggle JSON"
+            aria-pressed={json}
+          >
+            <Braces size={16} />
+          </button>
+          <button
+            className="icon-button"
+            onClick={onClose}
+            aria-label="Close results"
+            title="Close results"
+          >
+            <ChevronDown size={17} />
+          </button>
+        </div>
+      </div>
+      <LiveRunMetadata run={run} />
+      <div
+        className="results-content"
+        id="live-results-content"
+        role="tabpanel"
+        aria-labelledby={`live-results-tab-${tab}`}
+      >
+        {!json && tab === "errors" && issues.length > 0 && (
+          <div className="error-list">
+            {issues.map((issue, index) => (
+              <div key={index}>
+                <CircleAlert size={16} />
+                <span>{issue.message}</span>
+                {issue.nodeId && (
+                  <button
+                    className="button small"
+                    onClick={() => issue.nodeId && onSelectNode(issue.nodeId)}
+                  >
+                    Select node
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <LiveRunDetails run={run} view={tab} json={json} />
+      </div>
+    </section>
+  );
+}
+
+function PreviewResultsPanel({
   run,
   issues,
   selectedNodeId,
@@ -209,7 +357,7 @@ export function ResultsPanel({
                   ? "Indexing preview complete. Open Nodes to inspect the output."
                   : run?.status === "Failed"
                     ? "Preview failed. Open Errors for details."
-                    : "Run a preview to inspect the results."}
+                    : "Run this pipeline to inspect the results."}
             </span>
           </div>
         )}

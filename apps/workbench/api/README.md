@@ -4,7 +4,23 @@ An independent FastAPI process exposing the approved, read-only `postgres-fts-ba
 
 ## Start
 
-Run from the repository root with Hatch:
+For the complete local application, after the one-time database setup below, run from the repository root:
+
+```powershell
+.\start.ps1
+```
+
+Requires Windows PowerShell 5.1 or PowerShell 7, Hatch, Node.js >=22.12, npm and Docker Desktop with Compose. The launcher checks Hatch, starts Docker Desktop if necessary (standard installation location), waits for the existing PostgreSQL container, starts the API and constructor validator, and builds/starts the site at <http://127.0.0.1:4173/>. It installs locked frontend dependencies only when Vite is absent. Healthy services are reused; an occupied unhealthy port produces an error without stopping its owner. API readiness is checked through the website proxy. No migrations, seeds, credential regeneration or database resets run automatically.
+
+If Windows blocks script execution, allow this invocation only:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+This does not change persistent execution policy. Services run in hidden background processes after the command returns. Logs are written to `output/workbench-services/{api,validator,web}.{stdout,stderr}.log`. Re-running the launcher does not rebuild or restart healthy services; after source changes, stop the relevant service before starting again. Preserve the ignored database `.env` and volume. Optional `WORKBENCH_LOCAL_SOURCE_ROOT` is inherited; the launcher does not invent a source directory.
+
+To start only the API manually, run from the repository root with Hatch:
 
 ```powershell
 hatch --version
@@ -13,7 +29,7 @@ hatch run workbench-api:serve
 
 The `workbench-api` Hatch environment gets its pinned API/PostgreSQL dependencies and this repository's Haystack 3.5.0 source from the root [pyproject.toml](../../../pyproject.toml). It does not require the broad library test environment or a running model service. Without database configuration, health/discovery starts but advertises no executable profile. The development listener is `http://127.0.0.1:8011`. Stop it with Ctrl+C.
 
-This is separate from the constructor validator at `127.0.0.1:8010`. The frontend does not call this lexical API. Starting or stopping it has no effect on offline editing, JSON import/export or fixture Preview.
+This is separate from the constructor validator at `127.0.0.1:8010`. Workbench Live calls discovery and approved lexical search through this API. Starting or stopping it has no effect on offline editing, JSON import/export or fixture Preview.
 
 ### Optional persistent development database
 
@@ -48,6 +64,8 @@ hatch run workbench-api:serve
 | `GET /api/v1/workspaces`                          | Server-authorized development workspace metadata                    |
 | `GET /api/v1/workspaces/{workspace_id}/documents` | Persisted source/version/chunk metadata and corpus revision         |
 | `POST /api/v1/workspaces/{workspace_id}/search`   | Actual PostgreSQL lexical retrieval through Haystack                |
+| `GET /api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file` | Registered original name and native reveal availability; no local path |
+| `POST /api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file/reveal` | Select the registered original in local Windows Explorer |
 
 A running process and an open connection are insufficient. Qualification verifies schema/checksum/extension, the restricted role, forced workspace RLS, valid GIN index, a complete bounded active corpus and the actual allowlisted pipeline. Capabilities separately exposes `dependencies.database.status`. Outages disable profile advertisement and produce truthful 503 responses, without Preview fallback.
 
@@ -92,6 +110,7 @@ Settings are parsed before startup; malformed or nonlocal configuration fails in
 | `WORKBENCH_API_BACKEND_REVISION` | `workbench-api-lexical-v1`                                          | Opaque ASCII identifier, 1–128 characters                                                    |
 | `WORKBENCH_API_ALLOWED_ORIGINS`  | HTTP origins for `localhost` and `127.0.0.1` on ports 5173 and 4173 | Comma-separated exact loopback origins; no wildcard, credentials, paths or duplicate entries |
 | `WORKBENCH_DB_DSN`               | Unset                                                               | Secret local PostgreSQL URI for the restricted application role; loaded by `use-dev-env.ps1` |
+| `WORKBENCH_LOCAL_SOURCE_ROOT` | Unset (local originals unavailable) | Explicit absolute local directory; same-machine interactive Windows for native selection |
 
 Administrator-only commands use `WORKBENCH_DB_ADMIN_DSN` and `WORKBENCH_DB_APP_PASSWORD`, loaded with `-IncludeAdmin`. Keep those out of the API terminal. There is no feature-enable switch; actual storage, corpus and pipeline binding must qualify.
 
@@ -126,3 +145,18 @@ Tests cover HTTP/schema/security contracts, persistence and the lexical profile.
 - **Planned:** frontend Live integration, ingestion, genuine BM25 if separately justified, qualified embeddings, dense/hybrid retrieval and generation. Each needs its own qualification gate.
 
 The initial database migration is explicit; no Haystack public API changes are introduced. Application rollback is stopping the optional API while preserving its database volume. Destructive schema rollback is restricted to explicitly confirmed disposable databases; the constructor validator and standalone UI remain independent.
+
+## Registered local originals
+
+Live result Source values can become filename text links for real active versions registered beneath `WORKBENCH_LOCAL_SOURCE_ROOT`. Demo/synthetic sources stay ordinary text. There is no extra action menu or file picker. Native selection is independent of search availability and never changes the retrieval profile or result scores.
+
+Set the allowed root in the API/CLI terminals, then explicitly bind an existing real source/version:
+
+```powershell
+$env:WORKBENCH_LOCAL_SOURCE_ROOT = 'C:\Documents\Sources'
+hatch run workbench-api:source-register --source-id report --version-id report-v1 --file 'C:\Documents\Sources\report.pdf'
+```
+
+These are example IDs/paths; registration creates no source and performs no ingestion. It stores a relative original pointer and byte SHA256 in the existing version metadata. Exact retry is idempotent; conflicting binding, foreign/inactive/demo records and disallowed paths fail. Registration changes corpus revision and cursor validity because version metadata participates in the corpus fingerprint. No SQL migration is required.
+
+The metadata GET returns only `name`, `can_reveal`, optional safe `reason` and correlation. A reveal POST accepts only JSON `{}`, requires an explicit allowed Origin and rechecks current scope/version, allowed-root containment, regular-file identity and byte SHA before native dispatch. Originals are limited to 512 MiB with a five-second verification deadline. UNC/device/ADS/reparse paths and network drives are refused. The browser never submits/receives the local path. See the [local originals guide](../../../docs-website/docs/architecture/local-source-reveal.md) for exact errors, deployment limits and verification.

@@ -8,11 +8,13 @@ export function SettingsView({
   onChange,
   mode,
   discovery,
+  onWorkspaceChange,
 }: {
   settings: WorkbenchSettings;
   onChange: (settings: WorkbenchSettings) => void;
   mode: ExecutionMode;
   discovery: ReturnType<typeof useBackendDiscovery>;
+  onWorkspaceChange: () => void;
 }) {
   function update<Key extends keyof WorkbenchSettings>(
     key: Key,
@@ -46,7 +48,7 @@ export function SettingsView({
           <p>
             {mode === "preview"
               ? "Select Live to check the API."
-              : "Discovery only. Run remains unavailable."}
+              : "Run the approved Keyword search graph from the editor."}
           </p>
         </div>
         <div className="view-settings-fields">
@@ -87,9 +89,10 @@ export function SettingsView({
             <select
               className="input"
               value={discovery.state.selectedWorkspaceId ?? ""}
-              onChange={(event) =>
-                discovery.selectWorkspace(event.target.value)
-              }
+              onChange={(event) => {
+                onWorkspaceChange();
+                discovery.selectWorkspace(event.target.value);
+              }}
               disabled={mode !== "live" || discovery.state.status !== "ready"}
             >
               <option value="" disabled>
@@ -172,7 +175,8 @@ export function SettingsView({
                 if (
                   value === "blank" ||
                   value === "indexing" ||
-                  value === "retrieval"
+                  value === "retrieval" ||
+                  value === "keyword"
                 ) {
                   update("defaultTemplate", value);
                 }
@@ -181,6 +185,7 @@ export function SettingsView({
               <option value="blank">Blank pipeline</option>
               <option value="indexing">Document indexing</option>
               <option value="retrieval">Hybrid retrieval</option>
+              <option value="keyword">Keyword search</option>
             </select>
           </label>
         </div>
@@ -191,7 +196,10 @@ export function SettingsView({
       >
         <div>
           <h2 id="execution-settings">Preview simulation</h2>
-          <p>Scenario, delay and results apply only to Preview.</p>
+          <p>
+            These preferences apply only to Preview. Live uses the smaller of
+            the graph's candidate and result limits.
+          </p>
         </div>
         <div className="view-settings-fields">
           <label className="view-field">

@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Make registered local source names clickable in Workbench Live results and
+    session details. Clicking the name selects the original in Windows Explorer;
+    demo, synthetic and unavailable sources remain plain text. Local originals
+    are registered explicitly by source/version beneath
+    ``WORKBENCH_LOCAL_SOURCE_ROOT``. The browser sends identifiers only, while
+    the API rechecks workspace, version, file containment and original bytes.
+    No file picker, action menu or ingestion workflow is added.

@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
 import {
   Check,
   CircleAlert,
@@ -33,6 +40,13 @@ import { useGraphHistory } from "./hooks/useGraphHistory";
 import { usePreview } from "./hooks/usePreview";
 import { useValidation } from "./hooks/useValidation";
 import { useBackendDiscovery } from "./hooks/useBackendDiscovery";
+import { useLiveSearch } from "./hooks/useLiveSearch";
+import { matchApprovedKeywordGraph } from "./domain/approvedExecution";
+import {
+  graphFingerprint,
+  type LiveRun,
+  type RunEntry,
+} from "./domain/liveSearch";
 import { ExecutionControls } from "./components/ExecutionControls";
 import { PipelinesView } from "./views/PipelinesView";
 import { DocumentsView } from "./views/DocumentsView";
@@ -47,13 +61,49 @@ const PipelineEditor = lazy(() =>
   })),
 );
 
+function retainSessionRuns(entries: RunEntry[]): RunEntry[] {
+  return entries
+    .sort((a, b) => b.run.startedAt.localeCompare(a.run.startedAt))
+    .slice(0, 100);
+}
+
 export function App() {
   const [pipelines, setPipelines] = useState<Pipeline[]>(() =>
     structuredClone(initialPipelines),
   );
-  const [runs, setRuns] = useState<PreviewRun[]>(() =>
-    structuredClone(initialRuns),
+  const [sessionRuns, setSessionRuns] = useState<RunEntry[]>(() =>
+    structuredClone(initialRuns).map((run) => ({ source: "preview", run })),
   );
+  const runs = sessionRuns.flatMap((entry) =>
+    entry.source === "preview" ? [entry.run] : [],
+  );
+  const liveRuns = sessionRuns.flatMap((entry) =>
+    entry.source === "live" ? [entry.run] : [],
+  );
+  const setRuns = (update: SetStateAction<PreviewRun[]>) =>
+    setSessionRuns((previous) => {
+      const currentRuns = previous.flatMap((entry) =>
+        entry.source === "preview" ? [entry.run] : [],
+      );
+      const nextRuns =
+        typeof update === "function" ? update(currentRuns) : update;
+      return retainSessionRuns([
+        ...previous.filter((entry) => entry.source !== "preview"),
+        ...nextRuns.map((run): RunEntry => ({ source: "preview", run })),
+      ]);
+    });
+  const setLiveRuns = (update: SetStateAction<LiveRun[]>) =>
+    setSessionRuns((previous) => {
+      const currentRuns = previous.flatMap((entry) =>
+        entry.source === "live" ? [entry.run] : [],
+      );
+      const nextRuns =
+        typeof update === "function" ? update(currentRuns) : update;
+      return retainSessionRuns([
+        ...previous.filter((entry) => entry.source !== "live"),
+        ...nextRuns.map((run): RunEntry => ({ source: "live", run })),
+      ]);
+    });
   const [settings, setSettings] = useState(defaultSettings);
   const [mode, setMode] = useState<ExecutionMode>("preview");
   const discovery = useBackendDiscovery(mode);
@@ -63,6 +113,13 @@ export function App() {
   const [issues, setIssues] = useState<GraphIssue[]>([]);
   const [showValidationIssues, setShowValidationIssues] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
+  const [submittedLiveContext, setSubmittedLiveContext] = useState<{
+    pipelineId: string;
+    graph: string;
+    workspaceId: string;
+    profileId: string;
+    profileRevision: string;
+  } | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     error: boolean;
@@ -76,13 +133,45 @@ export function App() {
   const history = useGraphHistory(current, setPipelines);
   const preview = usePreview(setRuns);
   const validation = useValidation(current);
-  const displayedRun =
+  const live = useLiveSearch(
+    {
+      mode,
+      pipeline: current,
+      workspaceId: discovery.state.selectedWorkspaceId,
+      profile: discovery.state.profile,
+    },
+    setLiveRuns,
+    { onInvalidateDiscovery: discovery.refresh },
+  );
+  const approved = matchApprovedKeywordGraph(current.graph, discovery.state);
+  const visibleLiveRun = liveRuns.find(
+    (run) =>
+      submittedLiveContext &&
+      run.pipelineId === current.id &&
+      run.pipelineId === submittedLiveContext.pipelineId &&
+      graphFingerprint(run.graphSnapshot) === submittedLiveContext.graph &&
+      submittedLiveContext.graph === graphFingerprint(current.graph) &&
+      run.workspaceId === submittedLiveContext.workspaceId &&
+      run.profileId === submittedLiveContext.profileId &&
+      run.profileRevision === submittedLiveContext.profileRevision &&
+      ((run.workspaceId === discovery.state.selectedWorkspaceId &&
+        run.profileId === discovery.state.profile?.profile_id &&
+        run.profileRevision === discovery.state.profile?.profile_revision) ||
+        ((run.status === "Failed" || run.status === "InterruptedLocally") &&
+          (discovery.state.selectedWorkspaceId === null ||
+            run.workspaceId === discovery.state.selectedWorkspaceId))),
+  );
+  const previewRun = runs.find((run) => run.pipelineId === current.id);
+  const displayedRun: RunEntry | undefined =
     mode === "preview"
-      ? runs.find((run) => run.pipelineId === current.id)
-      : undefined;
+      ? previewRun && { source: "preview", run: previewRun }
+      : visibleLiveRun && { source: "live", run: visibleLiveRun };
   const changeMode = (next: ExecutionMode) => {
     if (next === mode) return;
     preview.stop();
+    live.stop();
+    setToast(null);
+    setSubmittedLiveContext(null);
     setIssues([]);
     setResultsOpen(false);
     setMode(next);
@@ -104,6 +193,8 @@ export function App() {
   };
 
   const openPipeline = (id: string) => {
+    live.stop();
+    setSubmittedLiveContext(null);
     setActiveId(id);
     setPage("editor");
     setSelectedNodeId(null);
@@ -281,6 +372,10 @@ export function App() {
                 selectedNodeId={selectedNodeId}
                 onSelectNode={setSelectedNodeId}
                 onGraphChange={(update, record) => {
+                  if (record !== false) {
+                    live.stop();
+                    setSubmittedLiveContext(null);
+                  }
                   history.updateGraph(update, record);
                   if (record !== false) setIssues([]);
                 }}
@@ -295,8 +390,27 @@ export function App() {
                 }}
                 validationStatus={validation.state.status}
                 onRun={() => {
-                  if (mode !== "preview") return;
+                  setToast(null);
                   setShowValidationIssues(false);
+                  if (mode === "live") {
+                    if (!approved.supported) return;
+                    setIssues([]);
+                    setResultsOpen(true);
+                    setSubmittedLiveContext({
+                      pipelineId: current.id,
+                      graph: graphFingerprint(current.graph),
+                      workspaceId: approved.workspaceId,
+                      profileId: approved.request.profile_id,
+                      profileRevision:
+                        approved.request.expected_profile_revision,
+                    });
+                    void live.run(
+                      current,
+                      approved.request,
+                      approved.workspaceId,
+                    );
+                    return;
+                  }
                   if (checkPreview()) {
                     setResultsOpen(true);
                     void preview
@@ -313,20 +427,28 @@ export function App() {
                 }}
                 runDisabledReason={
                   mode === "live"
-                    ? "Live search execution is not connected yet"
+                    ? approved.supported
+                      ? undefined
+                      : approved.issues.map((issue) => issue.message).join(" ")
                     : undefined
                 }
-                onStop={preview.stop}
+                executionNotice={
+                  mode === "live" && approved.supported
+                    ? `Requesting up to ${approved.effectiveTopK} results · ${discovery.state.profile?.score_type}. Supported Live profile; constructor validation is separate.`
+                    : undefined
+                }
+                onStop={mode === "live" ? live.stop : preview.stop}
                 onRename={(name) => renamePipeline(current.id, name)}
                 onUndo={history.undo}
                 onRedo={history.redo}
                 canUndo={history.canUndo}
                 canRedo={history.canRedo}
-                busy={mode === "preview" && preview.busy}
+                busy={mode === "live" ? live.busy : preview.busy}
+                liveMode={mode === "live"}
                 runningNodeId={
                   mode === "preview" &&
                   preview.busy &&
-                  displayedRun?.id === preview.liveRunId
+                  previewRun?.id === preview.liveRunId
                     ? preview.runningNodeId
                     : null
                 }
@@ -350,11 +472,12 @@ export function App() {
             <PipelinesView
               pipelines={pipelines}
               defaultTemplate={settings.defaultTemplate}
-              runs={mode === "preview" ? runs : []}
+              runs={sessionRuns}
               onOpen={openPipeline}
               onCreate={newPipeline}
               onRename={renamePipeline}
               onDelete={(id) => {
+                if (live.busy && id === current.id) live.stop();
                 if (
                   preview.busy &&
                   id ===
@@ -395,33 +518,27 @@ export function App() {
                 </p>
               </section>
             ))}
-          {page === "runs" &&
-            (mode === "preview" ? (
-              <RunsView
-                runs={runs}
-                onOpenPipeline={(id) => {
-                  if (pipelines.some((item) => item.id === id)) {
-                    openPipeline(id);
-                    setResultsOpen(true);
-                  } else notify("This pipeline has been deleted.", true);
-                }}
-              />
-            ) : (
-              <section className="view-page" aria-labelledby="live-runs-title">
-                <header className="view-heading">
-                  <h1 id="live-runs-title">Runs</h1>
-                </header>
-                <p className="live-empty">
-                  No Live runs. Search execution is not connected yet.
-                </p>
-              </section>
-            ))}
+          {page === "runs" && (
+            <RunsView
+              runs={sessionRuns}
+              onOpenPipeline={(id) => {
+                if (pipelines.some((item) => item.id === id)) {
+                  openPipeline(id);
+                  setResultsOpen(true);
+                } else notify("This pipeline has been deleted.", true);
+              }}
+            />
+          )}
           {page === "settings" && (
             <SettingsView
               settings={settings}
               onChange={setSettings}
               mode={mode}
               discovery={discovery}
+              onWorkspaceChange={() => {
+                live.stop();
+                setSubmittedLiveContext(null);
+              }}
             />
           )}
         </main>

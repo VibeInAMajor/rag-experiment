@@ -90,6 +90,7 @@ rag-experiment/
 
 | User story / concern | Existing owner | Reuse / inspect first |
 | --- | --- | --- |
+| Start local site, API, validator and PostgreSQL | `start.ps1` | Existing Compose/environment helper and service entry points; see `apps/workbench/api/README.md`; no automatic migration or seeding |
 | Application navigation, local pipeline/run/settings state, imports/exports | `apps/workbench/web/src/App.tsx` | Existing state and UI event handlers; avoid duplicate stores |
 | Node definitions, component labels, port schemas, defaults | `apps/workbench/web/src/domain/catalog.ts` | `catalog`, `createNode`, `getDefinition` |
 | Graph templates and mutations, validation, cycle/port checks | `apps/workbench/web/src/domain/graph.ts` | `createPipeline`, `validateGraph`, `validateConnection`, `topologicalNodeIds` |
@@ -99,8 +100,10 @@ rag-experiment/
 | Deterministic fake execution and sample passages | `apps/workbench/web/src/domain/preview.ts` | `createPreviewRun`, `completePreviewNode`, `finishPreviewRun` |
 | Undo/redo and graph change history | `apps/workbench/web/src/hooks/useGraphHistory.ts` | `useGraphHistory` |
 | Preview sequencing, cancellation and run state | `apps/workbench/web/src/hooks/usePreview.ts` | `usePreview`; **not** a backend executor |
-| RAG HTTP contract, decoding and discovery transport | `apps/workbench/web/src/api/` | `createWorkbenchApiClient`; four discovery GET methods, no search invocation yet |
+| RAG HTTP contract, decoding and discovery transport | `apps/workbench/web/src/api/` | `createWorkbenchApiClient`; discovery GET methods and a strict four-field search POST |
 | Preview/Live connection state and authorized workspace | `apps/workbench/web/src/domain/backendDiscovery.ts`, `apps/workbench/web/src/hooks/useBackendDiscovery.ts` | Cancellable generations, readiness/profile consistency and bounded workspace pagination |
+| Approved graph matching and Live session lifecycle | `apps/workbench/web/src/domain/approvedExecution.ts`, `apps/workbench/web/src/domain/liveSearch.ts`, `apps/workbench/web/src/hooks/useLiveSearch.ts` | Exact keyword topology, immutable submitted graph, cancellation generations and mixed history bound to 100 entries |
+| Click registered source name in Explorer | `apps/workbench/web/src/components/SourceName.tsx`, `apps/workbench/api/local_sources.py`, `apps/workbench/api/source_registration.py` | Reuse version metadata/RLS; explicit registration, safe metadata GET and Origin-protected native reveal; demo remains plain text |
 | Graph canvas, edges and nodes | `apps/workbench/web/src/components/PipelineEditor.tsx`, `PipelineNode.tsx`, `NodeIcon.tsx` | Extend editor components; use `@xyflow/react` contracts |
 | Component configuration | `apps/workbench/web/src/components/Inspector.tsx` | Existing inspector |
 | Execution details and retrieval output | `apps/workbench/web/src/components/ResultsPanel.tsx` | Existing panel and model |
@@ -121,13 +124,14 @@ main.tsx → App.tsx
                 └─ views/* → pipelines, documents, runs, settings
 
 useBackendDiscovery → api/client.ts → /api/v1 health/capabilities/workspaces
-Separate: useValidation → /api/pipelines/validate. Live search UI remains pending.
+matchApprovedKeywordGraph → useLiveSearch → apiClient.search → PostgreSQL lexical profile
+Separate: useValidation → /api/pipelines/validate.
 ```
 
 ### Verified Workbench boundaries
 
 - Frontend stack: React, TypeScript, Vite, Vitest, Prettier, `@xyflow/react`, lucide-react. Confirm exact versions from `apps/workbench/web/package.json` before upgrading.
-- Preview mode simulates results and errors. Running a pipeline does **not** call actual embeddings, retrieval, inference, database writes or a document parser. Live discovery is separate; its Run action is disabled until the execution integration.
+- Preview mode simulates results and errors. Running a pipeline does **not** call actual embeddings, retrieval, inference, database writes or a document parser. The separate approved Keyword search graph performs Live lexical retrieval; Hybrid/indexing graphs remain Preview.
 - Current typography imports **IBM Plex Sans** and **JetBrains Mono** from Fontsource (`src/main.tsx`); CSS theme lives in `src/styles.css`. A Manrope/Plum/Electric redesign is a separate proposed change, not implemented here.
 - Editor validation is **not** authoritative runtime/backend validation. Backend must independently enforce authorization and input constraints.
 
@@ -171,8 +175,9 @@ Separate: useValidation → /api/pipelines/validate. Live search UI remains pend
 | Local pipeline editor + validation | Implemented in Workbench | Reuse `domain/graph.ts` |
 | Local simulated runs and document lists | Implemented as demo fixtures | Do not present as production metrics |
 | API liveness/readiness/capability discovery | Implemented; qualified `postgres-fts-baseline` is advertised only while storage/corpus/pipeline are ready | Use the Hatch environment and [API runbook](../apps/workbench/api/README.md) |
-| Read-only lexical execution API | Implemented workspace/document/search routes over the existing PostgreSQL adapter and Haystack pipeline | Follow the [lexical guide](docs/architecture/postgres-lexical-search.md); frontend execution binding remains future work |
+| Read-only lexical execution API | Implemented workspace/document/search routes over the existing PostgreSQL adapter and Haystack pipeline | Follow the [lexical guide](docs/architecture/postgres-lexical-search.md); approved Keyword search UI is connected; arbitrary graph execution remains unsupported |
 | Workspace registry / storage scope | Implemented PostgreSQL composite FKs and forced RLS; single development resolver only | Production authentication/authorization remains future work |
+| Registered local originals | Version metadata registration and filename-only Live link implemented for same-machine interactive Windows | See [local originals](docs/architecture/local-source-reveal.md); no ingestion or demo originals are invented |
 | Chunk persistence / publication | Implemented app-owned PostgreSQL adapter and transactional source version publication | Ingestion and delta-detection workflows remain separate |
 | PostgreSQL + pgvector | Dedicated Docker service, Alembic migrations, explicit seed and nullable synthetic-vector storage implemented | Follow the [PostgreSQL runbook](docs/architecture/postgresql-foundation.md); real TEI integration remains planned |
 | PostgreSQL lexical retrieval | Implemented SQL primitive and HTTP profile with `simple`, GIN and `postgres_ts_rank_cd` | Native FTS is not BM25; real semantic/hybrid retrieval remains separate |

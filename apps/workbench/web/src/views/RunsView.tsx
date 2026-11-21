@@ -7,25 +7,35 @@ import {
   Play,
   X,
 } from "lucide-react";
-import type { PreviewRun } from "../domain/types";
+import type { LiveRun, RunEntry } from "../domain/liveSearch";
+import { ServerDuration } from "../components/ServerDuration";
+import {
+  LiveRunDetails,
+  LiveRunMetadata,
+  type LiveResultView,
+} from "../components/LiveRunDetails";
 import "./views.css";
 
 export function RunsView({
   runs,
   onOpenPipeline,
 }: {
-  runs: PreviewRun[];
+  runs: RunEntry[];
   onOpenPipeline: (id: string) => void;
 }) {
   const [status, setStatus] = useState("All");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<"results" | "nodes" | "errors">("results");
-  const selected = runs.find((run) => run.id === selectedId);
+  const selectedEntry = runs.find((entry) => entry.run.id === selectedId);
+  const selected =
+    selectedEntry?.source === "preview" ? selectedEntry.run : undefined;
+  const selectedLive =
+    selectedEntry?.source === "live" ? selectedEntry.run : undefined;
   const visible = runs
-    .filter((run) => status === "All" || run.status === status)
+    .filter((entry) => status === "All" || entry.run.status === status)
     .slice()
-    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const statusClass = (value: PreviewRun["status"]) =>
+    .sort((a, b) => b.run.startedAt.localeCompare(a.run.startedAt));
+  const statusClass = (value: string) =>
     value === "Completed"
       ? "success"
       : value === "Failed"
@@ -40,7 +50,7 @@ export function RunsView({
         <div>
           <p className="view-eyebrow">Execution</p>
           <h1 id="runs-title">Runs</h1>
-          <p>Inspect execution results and node outputs.</p>
+          <p>Session history · cleared on refresh.</p>
         </div>
         <span className="view-count mono">
           {runs.length} {runs.length === 1 ? "run" : "runs"}
@@ -55,70 +65,107 @@ export function RunsView({
             value={status}
             onChange={(event) => setStatus(event.target.value)}
           >
-            {["All", "Running", "Completed", "Failed", "Cancelled"].map(
-              (value) => (
-                <option key={value} value={value}>
-                  {value === "All" ? "All statuses" : value}
-                </option>
-              ),
-            )}
+            {[
+              "All",
+              "Running",
+              "Completed",
+              "Failed",
+              "Cancelled",
+              "InterruptedLocally",
+            ].map((value) => (
+              <option key={value} value={value}>
+                {value === "All"
+                  ? "All statuses"
+                  : value === "InterruptedLocally"
+                    ? "Interrupted locally"
+                    : value}
+              </option>
+            ))}
           </select>
         </label>
       </div>
-      <div className={`view-detail-layout${selected ? " has-detail" : ""}`}>
+      <div
+        className={`view-detail-layout${selectedEntry ? " has-detail" : ""}`}
+      >
         <div className="data-panel data-scroll">
           <table className="data-table">
             <thead>
               <tr>
                 <th>Pipeline</th>
+                <th>Source</th>
                 <th>Status</th>
                 <th>Started</th>
                 <th>Duration</th>
               </tr>
             </thead>
             <tbody>
-              {visible.map((run) => (
-                <tr
-                  key={run.id}
-                  className={run.id === selectedId ? "data-selected" : ""}
-                >
-                  <td>
-                    <button
-                      type="button"
-                      className="data-name"
-                      aria-pressed={selectedId === run.id}
-                      onClick={() => {
-                        setSelectedId(run.id);
-                        setTab(run.status === "Failed" ? "errors" : "results");
-                      }}
-                    >
-                      <span className="data-file-icon">
-                        <Play size={16} />
+              {visible.map((entry) => {
+                const run = entry.run;
+                return (
+                  <tr
+                    key={run.id}
+                    data-source={entry.source}
+                    className={run.id === selectedId ? "data-selected" : ""}
+                  >
+                    <td>
+                      <button
+                        type="button"
+                        className="data-name"
+                        aria-pressed={selectedId === run.id}
+                        onClick={() => {
+                          setSelectedId(run.id);
+                          setTab(
+                            run.status === "Failed" ? "errors" : "results",
+                          );
+                        }}
+                      >
+                        <span className="data-file-icon">
+                          <Play size={16} />
+                        </span>
+                        <span>
+                          <strong>{run.pipelineName}</strong>
+                          <small className="mono">
+                            {entry.source === "live"
+                              ? (entry.run.serverRunId ?? "Awaiting server ID")
+                              : run.id}
+                          </small>
+                        </span>
+                      </button>
+                    </td>
+                    <td>
+                      <span className="run-source mono">
+                        {entry.source === "live" ? "Live" : "Preview"}
                       </span>
-                      <span>
-                        <strong>{run.pipelineName}</strong>
-                        <small className="mono">{run.id}</small>
+                    </td>
+                    <td>
+                      <span className={`status ${statusClass(run.status)}`}>
+                        {run.status === "InterruptedLocally"
+                          ? "Interrupted locally"
+                          : run.status}
                       </span>
-                    </button>
-                  </td>
-                  <td>
-                    <span className={`status ${statusClass(run.status)}`}>
-                      {run.status}
-                    </span>
-                  </td>
-                  <td className="data-date mono">
-                    {new Date(run.startedAt).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </td>
-                  <td className="mono data-nowrap">
-                    {(run.durationMs / 1000).toFixed(2)}s
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="data-date mono">
+                      {new Date(run.startedAt).toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="mono data-nowrap">
+                      {entry.source === "live" ? (
+                        entry.run.durationMs === undefined ? (
+                          "—"
+                        ) : (
+                          <ServerDuration durationMs={entry.run.durationMs} />
+                        )
+                      ) : (
+                        `${(entry.run.durationMs / 1000).toFixed(2)}s`
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {visible.length === 0 && (
@@ -303,7 +350,122 @@ export function RunsView({
             </div>
           </aside>
         )}
+        {selectedLive && (
+          <LiveRunHistoryDetails
+            key={selectedLive.id}
+            run={selectedLive}
+            onClose={() => setSelectedId(null)}
+            onOpenPipeline={onOpenPipeline}
+          />
+        )}
       </div>
     </section>
+  );
+}
+
+function LiveRunHistoryDetails({
+  run,
+  onClose,
+  onOpenPipeline,
+}: {
+  run: LiveRun;
+  onClose: () => void;
+  onOpenPipeline: (id: string) => void;
+}) {
+  const [tab, setTab] = useState<LiveResultView>(
+    run.status === "Failed" ? "errors" : "output",
+  );
+  const [json, setJson] = useState(false);
+  const tabs = ["output", "stages", "errors"] as const;
+  return (
+    <aside
+      className="detail-panel"
+      aria-label={`Run details: ${run.pipelineName}`}
+    >
+      <header className="detail-heading">
+        <div>
+          <span className="run-source mono">Live</span>
+          <span
+            className={`status ${run.status === "Completed" ? "success" : run.status === "Failed" ? "error" : "neutral"}`}
+          >
+            {run.status === "InterruptedLocally"
+              ? "Interrupted locally"
+              : run.status}
+          </span>
+          <h2>{run.pipelineName}</h2>
+        </div>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label="Close run details"
+          onClick={onClose}
+        >
+          <X size={18} />
+        </button>
+      </header>
+      <div className="detail-run-summary">
+        <span className="mono">
+          {run.serverRunId ?? "Server run ID not received"}
+        </span>
+        <button
+          type="button"
+          className="button small"
+          onClick={() => onOpenPipeline(run.pipelineId)}
+        >
+          Open pipeline
+          <ArrowUpRight size={14} />
+        </button>
+      </div>
+      <div className="detail-tabs" role="tablist" aria-label="Run details">
+        {tabs.map((value, index) => (
+          <button
+            type="button"
+            key={value}
+            id={`run-live-tab-${value}`}
+            role="tab"
+            aria-selected={tab === value}
+            aria-controls="run-live-tab-panel"
+            tabIndex={tab === value ? 0 : -1}
+            onClick={() => setTab(value)}
+            onKeyDown={(event) => {
+              const next =
+                event.key === "ArrowRight"
+                  ? (index + 1) % tabs.length
+                  : event.key === "ArrowLeft"
+                    ? (index + tabs.length - 1) % tabs.length
+                    : -1;
+              if (next >= 0) {
+                event.preventDefault();
+                setTab(tabs[next]);
+                document.getElementById(`run-live-tab-${tabs[next]}`)?.focus();
+              }
+            }}
+          >
+            {value === "output"
+              ? "Results"
+              : value === "stages"
+                ? "Stages"
+                : "Errors"}
+          </button>
+        ))}
+      </div>
+      <div
+        className="detail-body"
+        id="run-live-tab-panel"
+        role="tabpanel"
+        aria-labelledby={`run-live-tab-${tab}`}
+      >
+        <LiveRunMetadata run={run} />
+        <button
+          type="button"
+          className="button small"
+          aria-pressed={json}
+          onClick={() => setJson(!json)}
+        >
+          Response JSON
+        </button>
+        <LiveRunDetails run={run} view={tab} json={json} />
+      </div>
+    </aside>
   );
 }

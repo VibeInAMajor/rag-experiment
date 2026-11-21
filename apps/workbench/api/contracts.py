@@ -199,3 +199,19 @@ class DocumentPage(Meta):
     corpus_revision: Identifier
     items: list[DocumentItem]
     next_cursor: str | None
+
+
+class LocalSourceFileResponse(Meta):
+    name: str | None = Field(max_length=255)
+    can_reveal: bool
+    reason: (
+        Literal["not_registered", "demo_source", "root_unconfigured", "file_unavailable", "host_unavailable"] | None
+    ) = None
+
+
+class RevealSourceRequest(ContractModel):
+    """Native selection accepts source identity in the route, never a browser path."""
+
+
+class RevealSourceResponse(Meta):
+    status: Literal["revealed"] = "revealed"

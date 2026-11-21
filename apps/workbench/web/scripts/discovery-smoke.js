@@ -70,7 +70,7 @@ async function discoverySmoke(page) {
     );
     check(
       await page.getByRole("button", { name: "Run", exact: true }).isDisabled(),
-      "Live execution must stay disabled before the execution integration task",
+      "The Hybrid graph must stay disabled for the approved lexical profile",
     );
     await page.getByRole("button", { name: "Settings", exact: true }).click();
     await page.getByText(profile.profile_id, { exact: true }).waitFor();
@@ -227,8 +227,10 @@ async function discoverySmoke(page) {
     );
     await page.getByRole("button", { name: "Runs", exact: true }).click();
     check(
-      (await page.locator(".data-table tbody tr").count()) === 0,
-      "Live Runs must not expose Preview fixtures",
+      (await page.locator('tr[data-source="preview"]').allTextContents()).every(
+        (text) => text.includes("Preview"),
+      ),
+      "Mixed session history must label Preview provenance explicitly",
     );
     await page.getByRole("button", { name: "Settings", exact: true }).click();
 

@@ -1,10 +1,20 @@
 # Haystack Workbench · UI-01
 
-A pipeline editor with an optional, validation-only Haystack service. All documents, runs, scores, and processing reports remain demonstration fixtures. Editing, JSON import/export and Preview run offline; authoritative Validate requires the local Python service. No database, model or credentials are needed.
+A pipeline editor with offline Preview, separate Haystack constructor validation and opt-in Live lexical search. Preview documents, scores and processing reports are fixtures. Editing, JSON import/export and Preview need no backend; Live search requires the qualified PostgreSQL-backed API.
 
-An independent [Workbench API](../api/README.md) provides PostgreSQL lexical retrieval through Haystack. The UI connects to its read-only discovery endpoints in **Live** mode. Live search execution and document listing are not connected yet; Run remains available only in Preview.
+An independent [Workbench API](../api/README.md) provides PostgreSQL lexical retrieval through Haystack. **Live** mode executes the approved Keyword search graph through that API. The initial Hybrid graph remains Preview. Live document listing is not connected yet.
 
 ## Start
+
+For the complete local application after the [one-time database setup](../api/README.md#optional-persistent-development-database), run from the repository root:
+
+```powershell
+.\start.ps1
+```
+
+Open <http://127.0.0.1:4173/>. The launcher starts PostgreSQL, the API and constructor validator, builds the site when starting it, and reuses healthy services. Background services continue after the command returns; logs are in `output/workbench-services/`. It never migrates or seeds the database. For launcher prerequisites and restricted PowerShell execution policies, see [the API startup guide](../api/README.md#start).
+
+For frontend development only:
 
 Requires Node.js 22.12 or later and npm. From the repository root:
 
@@ -42,15 +52,30 @@ Start the API and optional validator in separate terminals, then start Vite. Sel
 
 Both Vite modes proxy `/api/v1` to port 8011, independently of the validator route. A static production deployment must provide equivalent trusted same-origin routing; Vite's development proxy is not part of the built assets. The optional public `VITE_WORKBENCH_API_BASE_URL` overrides the browser API origin/path at build time. Never put credentials, tokens or a database DSN in a `VITE_` value. Cross-origin deployment must also satisfy the API's allowed-origin policy.
 
-| Selected mode / state             | Behavior                                                                 |
-| --------------------------------- | ------------------------------------------------------------------------ |
-| Preview, API offline or online    | Fixture Run, documents and history; no discovery requests                |
-| Live, ready                       | Server profile/workspace shown; Run disabled until execution integration |
-| Live, readiness 503 / no profiles | Not ready; no fixture fallback                                           |
-| Live, network failure             | Offline; select Preview explicitly or refresh                            |
-| Live, incompatible contract       | Incompatible; profile and selection cleared                              |
+| Selected mode / state             | Behavior                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| Preview, API offline or online    | Fixture Run, documents and history; no discovery requests                      |
+| Live, ready                       | Approved Keyword search graph can run; other graphs are explicitly unsupported |
+| Live, readiness 503 / no profiles | Not ready; no fixture fallback                                                 |
+| Live, network failure             | Offline; select Preview explicitly or refresh                                  |
+| Live, incompatible contract       | Incompatible; profile and selection cleared                                    |
 
-Discovery checks liveness, readiness, capabilities and bounded workspace pagination. Ready requires consistent responses, a running service, ready database, search support and a supported profile bound to an authorized workspace. A green liveness response alone is insufficient. No search or document-list request is made by this UI milestone. Preview preferences are retained but disabled in Live. Changing mode cancels pending discovery and stops an active Preview; recovery never changes the selected mode automatically. Mode survives navigation; refreshing resets it to Preview.
+Discovery checks liveness, readiness, capabilities and bounded workspace pagination. Ready requires consistent responses, a running service, ready database, search support and a supported profile bound to an authorized workspace. A green liveness response alone is insufficient. Live search uses the existing versioned API; document-list requests remain a subsequent task. Preview preferences are retained but disabled in Live. Changing mode cancels pending requests and stops active local progression; recovery never changes the selected mode automatically. Mode survives navigation; refreshing resets it to Preview.
+
+### Run a Live keyword search
+
+1. Start the qualified API and select **Live**. Open **Pipelines → New pipeline → Keyword search**.
+2. Edit **Search query → Question**. The template starts with `retention`, an exact term in the development corpus, not a promised answer.
+3. Set **Keyword search → Maximum results** and **Search results → Result limit**. Live sends the smaller value, bounded to 1–50; the Preview Settings result limit does not apply.
+4. Select **Run**. Output shows server rank, raw `postgres_ts_rank_cd` score, persisted source/version/chunk identity and page availability. **Stages** shows measured server operations, and **Execution details** contains correlation, profile and corpus IDs. JSON retains exact numeric values.
+
+The approved graph has exactly three nodes and two connections: query → keyword-search → results. Additional nodes, parameters, unsupported profiles or invalid values disable Live Run before any search request. The client sends only `query`, `top_k`, `profile_id` and `expected_profile_revision`; it never sends editor graph JSON. Native PostgreSQL FTS is not BM25 and its raw score is not confidence or a percentage.
+
+**Validate** still checks Haystack constructors separately. Conceptual query/results and the keyword binding can be Unsupported there while the approved Live profile is executable. The new keyword node is explicitly unsupported in Preview; existing Hybrid/indexing fixtures retain their previous behavior.
+
+Stop marks the request **Interrupted locally**; server cancellation is not confirmed. Graph edits, mode/profile/workspace changes, pipeline changes and unmount invalidate pending responses. Pan/zoom only changes the viewport and does not cancel execution. Failures preserve safe codes/correlation and never substitute fixtures; 404/409/503 refresh discovery without retrying the search. Retry manually after reviewing the error.
+
+Runs and pipeline summaries show mixed, explicitly labeled Preview/Live **session** history, limited to 100 entries across both modes. Completed results retain their submitted graph snapshot; edited graphs cannot display an obsolete response as their own. Refresh clears history; there is no server-side run-history API. Graph exports retain `schemaVersion: 1`, including the new keyword kind/template. Older frontend builds reject these new kinds rather than rewriting them; old graph files remain supported.
 
 ### Authoritative validation
 
@@ -86,7 +111,7 @@ The first invocation can download the CLI/browser. The scenario checks graph edi
 1. Open the initial hybrid retrieval pipeline. Select a component to edit its name and parameters.
 2. Add components from the library with a click, keyboard, or drag. Connect ports by dragging or by selecting outputs in the inspector's Connections fields. Single-input selectors replace the existing connection; multi-input selectors add a branch.
 3. Select Validate for an authoritative Haystack result. With the service unavailable the graph stays editable. Run uses separate fixture prerequisites; preview restrictions do not establish Haystack compatibility.
-4. Select Run. The Preview indicator applies to the entire application: this replays sample node results and never performs retrieval, inference, or index writes.
+4. With Preview selected, Run replays sample node results. Select Live and the dedicated Keyword search graph for actual read-only lexical retrieval.
 5. Inspect Output, Nodes, and Errors. Open Runs to find the same execution and its captured graph.
 6. Export a graph to JSON; restore it with Import pipeline or Import JSON on Pipelines. Positions, parameters, connections, and viewport are included.
 
@@ -110,9 +135,9 @@ Library buttons and connection selectors provide alternatives to drag operations
 ## Boundaries and next tasks
 
 - `src/domain` owns view models, catalog, graph validation, JSON parsing, fixtures, and deterministic preview scenarios.
-- `src/hooks` owns editor history and cancellable preview progression.
+- `src/hooks` owns editor history, discovery and separate cancellable Preview/Live progression. `src/domain/approvedExecution.ts` owns exact graph matching; `src/domain/liveSearch.ts` owns immutable Live session records and request generations.
 - `src/components` owns the editor; `src/views` owns Pipelines, Documents, Runs, and Settings.
-- The frontend has separate constructor-validation and read-only execution-discovery API boundaries. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. The separate FastAPI application exposes persisted document lists and live PostgreSQL lexical search; frontend Live execution and model adapters remain future tasks.
+- The frontend has separate constructor-validation and typed RAG API boundaries. Safe import and exact approved-graph matching remain browser-owned; component/socket compatibility belongs to Haystack. Live search uses the fixed server profile; Live document listing and model adapters remain future tasks.
 
 The canonical implementation contract is [RAG runtime contract](../../../docs-website/docs/architecture/rag-runtime-contract.md). It defines the planned execution profiles, API, source identities, score meanings and error semantics. The dated [RAG MVP Architecture and Implementation Plan](../../../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) remains a historical planning reference; its OpenSearch and Ollama-embedding choices do not override the canonical contract.
 
@@ -120,26 +145,26 @@ The canonical implementation contract is [RAG runtime contract](../../../docs-we
 
 PostgreSQL is the durable corpus: composite workspace/source/version keys, forced RLS, explicit atomic eight-source development seed and nullable pgvector columns. The live API's `postgres-fts-baseline` profile uses PostgreSQL `simple` FTS with `ts_rank_cd` and score type `postgres_ts_rank_cd`; it is not BM25. Requests require query, integer top-k, profile ID and expected profile revision. Results include authoritative source/chunk/version identity, corpus revision and measured timings. No raw editor graph is executed.
 
-The existing BM25 node, indexing and hybrid templates remain fixture previews. They are not executable Live bindings for native PostgreSQL FTS. A future UI adapter must explicitly recognize the approved profile and reject unsupported graphs without changing their meaning from display labels. Settings cannot select a database or grant workspace access.
+The existing BM25 node, indexing and hybrid templates remain fixture previews. They are not executable Live bindings for native PostgreSQL FTS. The strict Keyword search adapter recognizes the approved profile and rejects unsupported graphs without changing their meaning from display labels. Settings cannot select a database or grant workspace access.
 
 Preview runs contain illustrative passages, scores and stage durations. Authoritative Validate checks component compatibility without execution. Live API requests execute the approved backend search and return actual results and timings. These remain three separate behaviors; validation or browser Preview cannot be reported as live search.
 
 Workbench graph files remain portable editor documents with `schemaVersion: 1`; they are not executable Haystack YAML or a general backend execution contract. Import/export, drafts and preview behavior do not require a migration for this documentation decision.
 
-The durable metadata/version registry and nullable vector columns exist in PostgreSQL + pgvector. Ingestion/indexing workflows and real embedding generation remain future work. TEI is the selected embedding transport with an expected 2560-dimensional Qwen3-Embedding-4B profile; model/tokenizer revision, endpoint health, token accounting and actual output still require qualification. The initial enabled vector profile is synthetic and three-dimensional; a synthetic 2560-dimensional storage test does not validate model output. None of these services is connected by the current UI. Dense/hybrid retrieval and generation remain deferred. Detailed decisions belong to the canonical contract.
+The durable metadata/version registry and nullable vector columns exist in PostgreSQL + pgvector. Ingestion/indexing workflows and real embedding generation remain future work. TEI is the selected embedding transport with an expected 2560-dimensional Qwen3-Embedding-4B profile; model/tokenizer revision, endpoint health, token accounting and actual output still require qualification. The initial enabled vector profile is synthetic and three-dimensional; a synthetic 2560-dimensional storage test does not validate model output. TEI inference is not connected by the current UI. Dense/hybrid retrieval and generation remain deferred. Detailed decisions belong to the canonical contract.
 
-| Task      | Deliverable                                                                                           |
-| --------- | ----------------------------------------------------------------------------------------------------- |
-| ARCH-01   | Publish the canonical runtime decisions and integration contract                                      |
-| Retrieval | PostgreSQL lexical HTTP profile implemented; frontend Live integration remains separate               |
-| BE-01     | PostgreSQL foundation implemented; extend ingestion and operational guarantees through separate tasks |
-| BE-02     | Document ingestion, structural parsing, and reports                                                   |
-| BE-03     | Chunking and validated 2560-dimensional TEI embeddings                                                |
-| BE-04     | Delta indexing, vector reuse, and safe publication                                                    |
-| BE-05     | BM25, dense retrieval, and RRF                                                                        |
-| BE-06     | Diagnostics, recovery, throughput and quality evaluation                                              |
-| INT-01    | Connect this UI to the backend in a separate task                                                     |
-| GEN-01    | Add answer generation after retrieval MVP                                                             |
+| Task      | Deliverable                                                                                               |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| ARCH-01   | Publish the canonical runtime decisions and integration contract                                          |
+| Retrieval | PostgreSQL lexical HTTP profile and approved Keyword search UI implemented; dense/hybrid remains separate |
+| BE-01     | PostgreSQL foundation implemented; extend ingestion and operational guarantees through separate tasks     |
+| BE-02     | Document ingestion, structural parsing, and reports                                                       |
+| BE-03     | Chunking and validated 2560-dimensional TEI embeddings                                                    |
+| BE-04     | Delta indexing, vector reuse, and safe publication                                                        |
+| BE-05     | BM25, dense retrieval, and RRF                                                                            |
+| BE-06     | Diagnostics, recovery, throughput and quality evaluation                                                  |
+| INT-01    | Connect this UI to the backend in a separate task                                                         |
+| GEN-01    | Add answer generation after retrieval MVP                                                                 |
 
 ## Font licensing
 
@@ -180,3 +205,34 @@ npx --yes --package @playwright/cli playwright-cli -s=workbench run-code --filen
 ```
 
 The scenario checks real discovery, keyboard mode selection, 1440px/1100px layouts, server-owned workspace selection, the second API's actual 503/no-profile payload, injected offline/conflicting/stale responses, explicit Preview recovery and absence of search/document requests. It saves screenshots under `output/playwright/` relative to the browser CLI's working directory. Stop the smoke-only 8012 process afterward. Recorded task evidence distinguishes actual HTTP responses from injected browser failures.
+
+### Live search smoke
+
+With the primary API8011, its existing qualified PostgreSQL corpus, constructor validator8010 and production frontend4173 running:
+
+```powershell
+npx --yes --package @playwright/cli playwright-cli -s=workbench run-code --filename=scripts/live-search-smoke.js
+```
+
+The scenario captures actual POST responses for `retention`, `GIN` and a no-match query without replacing real search traffic. It compares DOM order, IDs, raw scores, passages, JSON and timings to those responses, checks the unchanged source registry, keyword import/export and explicit Preview refusal, then separately injects 400/404/409/429/503/504, gateway/network, malformed-success and delayed-Stop cases. It checks 1440px/1100px layouts and mixed Live session history. Negative injections are test arrangements, not observed backend incidents. Existing `browser-smoke.js` and `validation-smoke.js` remain unchanged and must pass separately. This smoke does not reset or seed the database.
+
+## Local source names
+
+For a registered real original, the **Source** value in Live output/session details is its filename as a text link. Clicking or pressing Enter selects the original in Windows Explorer. Demo/synthetic/unregistered sources remain plain text; no new button, icon, menu or file picker is added. A failed click shows concise error feedback only.
+
+Original registration and `WORKBENCH_LOCAL_SOURCE_ROOT` belong to the local API operator; see the [local originals guide](../../../docs-website/docs/architecture/local-source-reveal.md). The current eight-source demo corpus has no originals and intentionally stays noninteractive. This uses the API host's interactive Windows desktop, not a remote browser client's filesystem. Search results and graph schemas are unchanged.
+
+With the primaryAPI8011 and productionUI4173 running, a supervised real-original smoke can be prepared from the repository root:
+
+```powershell
+. ./apps/workbench/postgres/use-dev-env.ps1 -IncludeAdmin
+hatch run workbench-api:python -m scripts.workbench_source_reveal_fixture
+```
+
+This harness creates only its own disposable PostgreSQL database and temporary original on8014. From this frontend directory, use the documented Playwright session:
+
+```powershell
+npx --yes --package @playwright/cli playwright-cli -s=workbench run-code --filename=scripts/source-name-smoke.js
+```
+
+The scenario first proves actual main demo names are plain text, then points its own browser traffic to the isolated real corpus, verifies the actual filename/keyboard click and native POST `{}`, and checks a separately injected failure. It opens Explorer for that temporary original. Stop the fixture afterward and verify its cleanup marker; abrupt termination may require verified cleanup of the exact owned database printed by the harness. Never reset the main corpus. The temporary original remains for the opened Explorer window.

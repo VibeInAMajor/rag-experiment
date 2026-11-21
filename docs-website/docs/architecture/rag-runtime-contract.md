@@ -14,9 +14,9 @@ This is the single source of truth for RAG runtime and Workbench integration. It
 
 ## Current runtime
 
-The independent [Workbench API](../../../apps/workbench/api/README.md) implements all six routes in section 4: health/discovery, authorized workspace/document listing and read-only search. Its runtime uses this repository's Haystack source through a dedicated Hatch environment; application dependencies do not change the Haystack library's public dependency contract. Load the application database environment and run `hatch run workbench-api:serve`; the listener is `127.0.0.1:8011`. See the [lexical search guide](postgres-lexical-search.md) for complete commands and examples.
+The independent [Workbench API](../../../apps/workbench/api/README.md) implements eight routes in section 4: health/discovery, authorized workspace/document listing, read-only search and optional local-original lookup/reveal. Its runtime uses this repository's Haystack source through a dedicated Hatch environment; application dependencies do not change the Haystack library's public dependency contract. Load the application database environment and run `hatch run workbench-api:serve`; the listener is `127.0.0.1:8011`. See the [lexical search guide](postgres-lexical-search.md) for complete commands and examples.
 
-Liveness is independent of storage. Readiness is 200 and capabilities advertise `postgres-fts-baseline` only after the real PostgreSQL schema/index/corpus and allowlisted Haystack pipeline qualify. Without usable storage, readiness is 503 and profiles remain empty. `dependencies.database` reports storage state separately; setting `WORKBENCH_DB_DSN` alone cannot force readiness. The existing validator on port 8010 remains independent. The UI now supports opt-in Live discovery, while retrieval execution remains unconnected. Follow the [PostgreSQL runbook](postgresql-foundation.md) for explicit migrations and seed; API startup performs neither.
+Liveness is independent of storage. Readiness is 200 and capabilities advertise `postgres-fts-baseline` only after the real PostgreSQL schema/index/corpus and allowlisted Haystack pipeline qualify. Without usable storage, readiness is 503 and profiles remain empty. `dependencies.database` reports storage state separately; setting `WORKBENCH_DB_DSN` alone cannot force readiness. The existing validator on port 8010 remains independent. The UI supports opt-in Live discovery and execution of the exact approved Keyword search graph. Follow the [PostgreSQL runbook](postgresql-foundation.md) for explicit migrations and seed; API startup performs neither.
 
 The [published OpenAPI schema](../../../apps/workbench/api/openapi.json) describes implemented routes and response models. Capabilities add `service_state` (`starting`, `running`, `stopping`, `stopped`), `features` (`documents`, `search` booleans), and a typed `dependencies.database` status with certified revision/counts when ready. These describe actual availability; constructor mappings are never executable profiles. Configuration, operational logging and startup details are in the API runbook.
 
@@ -85,13 +85,13 @@ All reads and writes carry a server-resolved workspace context. Publication stag
 
 ### Workbench eligibility
 
-The frontend defaults to Preview and offers opt-in Live discovery through a runtime-validated client. Live checks readiness, capabilities and server-returned workspaces; it does not execute search or list documents yet. Its existing indexing and hybrid templates, including the BM25-labeled node, are not Live execution bindings. A subsequent UI integration task must introduce a truthful native-keyword node/profile mapping and a strict exact-shape eligibility check; unsupported graphs return `UNSUPPORTED_GRAPH_PROFILE` rather than dropping branches or silently replacing algorithms.
+The frontend defaults to Preview and offers opt-in Live discovery through a runtime-validated client. Live checks readiness, capabilities and server-returned workspaces, then executes only the approved Keyword search graph. Live document listing remains pending. Its existing indexing and hybrid templates, including the BM25-labeled node, are not Live execution bindings. The frontend uses a truthful keyword-search kind and strict three-node/two-edge eligibility check. Unsupported graphs are refused locally before search, without dropping branches or substituting algorithms.
 
 Query/result nodes remain API projections rather than invented Haystack pass-through components. Constructor validation is separate from profile eligibility and data readiness. Reuse the existing catalog/domain structures, `importPipeline`, `portableGraph` and structural checks; preserve graph `schemaVersion: 1`. The selected node parameters must map explicitly to the advertised backend profile. Scope/collection labels and UI Settings do not grant database access.
 
 ## 4. API v1 types and protocol
 
-All six endpoints below are implemented. JSON uses UTF-8 and snake_case. Unknown request fields are rejected. Identifiers are opaque server-issued ASCII strings matching `[A-Za-z0-9_-]{1,128}`; examples are illustrative. Times are RFC 3339 UTC, durations are finite nonnegative milliseconds. Counts/ranks/limits are integers, booleans cannot stand in for numbers. Responses include `contract_revision: "rag-api-v1.0"`, `request_id`, and `trace_id`. Every HTTP response also returns `X-Request-ID`; the server generates IDs and does not trust arbitrary caller IDs for logging. This local API disables Haystack telemetry, content tracing and external trace export. A completed client disconnect produces operational status 499 without an HTTP response or exception traceback; ordinary task cancellation still propagates after owned work is cleaned up.
+All eight endpoints below are implemented. JSON uses UTF-8 and snake_case. Unknown request fields are rejected. Identifiers are opaque server-issued ASCII strings matching `[A-Za-z0-9_-]{1,128}`; examples are illustrative. Times are RFC 3339 UTC, durations are finite nonnegative milliseconds. Counts/ranks/limits are integers, booleans cannot stand in for numbers. Responses include `contract_revision: "rag-api-v1.0"`, `request_id`, and `trace_id`. Every HTTP response also returns `X-Request-ID`; the server generates IDs and does not trust arbitrary caller IDs for logging. This local API disables Haystack telemetry, content tracing and external trace export. A completed client disconnect produces operational status 499 without an HTTP response or exception traceback; ordinary task cancellation still propagates after owned work is cleaned up.
 
 The service binds to loopback for the first development slice. All data endpoints require the server's development identity or later authenticated principal. Workspace listing grants no access by itself. Authorization precedes resource lookup, search and pagination. Health responses reveal no DSNs, filesystem paths, credentials or provider exceptions.
 
@@ -103,7 +103,7 @@ type Meta = {
 };
 type StageTiming = {
   stage: "corpus_load" | "retrieval" | "projection";
-  status: "success" | "error" | "skipped";
+  status: "success" | "skipped";
   duration_ms: number;
 };
 type ErrorBody = Meta & {
@@ -192,6 +192,15 @@ type DocumentPage = {
 
 Both list endpoints allow integer `limit` 1–100 (default 50) and an optional opaque cursor up to 512 characters. Stable ordering is by server ID; cursor is bound to authorized scope and list snapshot. Invalid/expired cursors return 400 `INVALID_CURSOR`; clients restart listing. Empty pages are successful with `items: []`, `next_cursor: null`. Document status `error` contains a safe code, not raw parsing errors; an old active version may remain usable while processing a replacement. No raw filesystem paths or file-download URLs are exposed by this contract.
 
+### Local source originals
+
+Two optional routes resolve an already registered active source version and select its original in the API host's Windows Explorer:
+
+- `GET /api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file` returns Meta plus `name: string | null`, `can_reveal: boolean`, nullable `reason`.
+- `POST .../local-file/reveal` requires `{}` and an explicit allowed browser Origin; success returns Meta plus `status: "revealed"` after native dispatch acceptance.
+
+The browser sends identifiers only. The server resolves `source_versions.metadata.local_original` against explicit `WORKBENCH_LOCAL_SOURCE_ROOT`, rechecks current workspace/version, regular local file containment/identity and original byte SHA. Metadata GET is only a hint; POST is authoritative. Demo/synthetic/unregistered originals are never clickable and cannot be revealed. No filesystem path or executable command is accepted or returned over HTTP. File verification is bounded to512MiB/five seconds; unsupported desktop/root/path or changed original fails safely. The UI renders only an available filename as a text link, without an action menu or button chrome. This is separate from retrieval and does not change SearchRequest, SearchResponse, profile identity or graph schema. See the [local originals guide](local-source-reveal.md) for registration, deployment and exact error semantics.
+
 ### Search
 
 `POST /api/v1/workspaces/{workspace_id}/search`, `Content-Type: application/json`:
@@ -257,6 +266,7 @@ Missing/malformed fields return 400 rather than framework-specific validation pa
 
 - **Preview:** existing deterministic browser fixtures, separate in-memory `PreviewRun` data. Fixture node outputs/timings/scores do not acquire live provenance by passing validation.
 - **Live:** an authorized API call actually runs the approved retrieval profile over the identified persisted corpus. A development seed corpus still requires a real PostgreSQL query. Provider or storage failures remain errors, with no preview fallback.
+- **Workbench session:** the Keyword search template matches exactly query → keyword-search → results and sends four request fields. Effective `top_k` is the smaller of candidate and visible-result limits. Mixed Preview/Live history is in browser memory, capped at 100 entries; local Stop is an interruption without a server-cancellation acknowledgment. Submitted graph snapshots and generation checks prevent stale results from painting edited graphs. Pan/zoom is not an execution change.
 - **Run ID:** new server-generated opaque ID per admitted search, including failed executions. Shape/auth failures before admission have no run ID. Return it on execution errors where allocated. It does not imply a persisted run-history route; future storage/retention is a separate task.
 - **Trace ID:** server-owned correlation identity across API, stages and adapters; present even on rejected requests. It differs from a run ID and never embeds query text or secrets. A trace ID does not promise that an external tracing collector is deployed.
 - **Source identity:** `source_id` is stable server registry identity within a workspace, independent of display title/path. Rename changes metadata, not identity. `source_version_id` identifies a specific immutable parsed content version; `chunk_id` identifies an occurrence within that version. Clients cannot mint authoritative IDs or permissions by editing graphs/Settings.
@@ -293,6 +303,6 @@ The historical Delta Detector/TPM references are design inputs; source-code reus
 
 ## 8. Compatibility and changes
 
-Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. Live discovery is integrated; Live search execution, document listing, ingestion and real embeddings remain separate tasks.
+Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. Live discovery and approved keyword execution are integrated; document listing, ingestion and real embeddings remain separate tasks.
 
 Change this decision before dependent code/tasks when semantics change. Additive responses require clients to tolerate unknown response fields; request fields remain strict. Breaking request/response or score semantics require a new contract/API version or explicitly negotiated profile revision. Rollback is reverting these documentation edits; once dependent implementations exist, reconcile their contracts and migration obligations first.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { NodeChangeset } from "@xyflow/react";
 import { createNode } from "./catalog";
 import {
   createPipeline,
@@ -13,9 +14,37 @@ import {
   createPreviewRun,
   finishPreviewRun,
 } from "./preview";
-import type { Graph, PreviewRun } from "./types";
+import type { Graph, PreviewRun, WorkbenchNode } from "./types";
 
 describe("pipeline validation", () => {
+  it("round-trips the approved keyword graph in schema version 1", () => {
+    const pipeline = createPipeline("keyword");
+    const serialized = exportPipeline(pipeline);
+    expect(JSON.parse(serialized).schemaVersion).toBe(1);
+    const restored = importPipeline(serialized);
+    expect(restored).toEqual(pipeline);
+    expect(restored.graph.nodes.map((node) => node.data.kind)).toEqual([
+      "query",
+      "keyword-search",
+      "results",
+    ]);
+    expect(restored.graph.edges).toHaveLength(2);
+  });
+
+  it("explicitly refuses keyword simulation while preserving old Preview graphs", () => {
+    const pipeline = createPipeline("keyword");
+    expect(checkPreviewGraph(pipeline.graph)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "PREVIEW_UNSUPPORTED" }),
+      ]),
+    );
+    expect(() => createPreviewRun(pipeline)).toThrow("requires Live");
+    const previewRun = createPreviewRun(createPipeline("retrieval"));
+    expect(() =>
+      completePreviewNode(previewRun, pipeline.graph.nodes[1], "success"),
+    ).toThrow("unavailable in Preview");
+  });
+
   it("accepts the indexing and branched retrieval templates", () => {
     for (const template of ["indexing", "retrieval"] as const)
       expect(checkPreviewGraph(createPipeline(template).graph)).toEqual([]);
@@ -139,6 +168,27 @@ describe("pipeline validation", () => {
 });
 
 describe("portable pipeline files", () => {
+  it("keeps controlled canvas measurements out of portable graphs", () => {
+    const pipeline = createPipeline("keyword");
+    const beforeMeasurement = exportPipeline(pipeline);
+    pipeline.graph.nodes = new NodeChangeset<WorkbenchNode>([
+      {
+        type: "dimensions",
+        id: pipeline.graph.nodes[0].id,
+        dimensions: { width: 216, height: 160.5 },
+      },
+    ]).applyTo(pipeline.graph.nodes);
+    expect(pipeline.graph.nodes[0].measured).toEqual({
+      width: 216,
+      height: 160.5,
+    });
+    const serialized = exportPipeline(pipeline);
+    expect(serialized).not.toContain('"measured"');
+    expect(importPipeline(serialized)).toEqual(
+      importPipeline(beforeMeasurement),
+    );
+  });
+
   it("round-trips nodes, parameters, edges and the saved viewport", () => {
     const pipeline = createPipeline("retrieval");
     pipeline.graph.viewport = { x: 40, y: 20, zoom: 0.75 };
