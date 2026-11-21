@@ -9,6 +9,8 @@
 
 **Application update:** PostgreSQL lexical HTTP implementation and real runtime evidence were checked on 2026-11-21 against working-tree base `7f19f4560012a47b812dfabe8f4b1fc53aa384e9` and the scoped retrieval changes. See the canonical contract and retrieval task for execution evidence rather than the historical tree snapshot above.
 
+**Parser update:** internal parser/format boundaries were inspected against base `81e17e404014ed054736826868c775e4800f8fd3` on 2026-11-21. See the [format matrix and handoff](docs/architecture/content-aware-chunking-strategy.md) and [parser task](../tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md). Internal qualification does not enable HTTP upload, chunking or ingestion.
+
 ## 1. Repository shape (verified)
 
 ```text
@@ -178,6 +180,7 @@ Separate: useValidation → /api/pipelines/validate.
 | Read-only lexical execution API | Implemented workspace/document/search routes over the existing PostgreSQL adapter and Haystack pipeline | Follow the [lexical guide](docs/architecture/postgres-lexical-search.md); approved Keyword search UI is connected; arbitrary graph execution remains unsupported |
 | Workspace registry / storage scope | Implemented PostgreSQL composite FKs and forced RLS; single development resolver only | Production authentication/authorization remains future work |
 | Registered local originals | Version metadata registration and filename-only Live link implemented for same-machine interactive Windows | See [local originals](docs/architecture/local-source-reveal.md); no ingestion or demo originals are invented |
+| Internal format inspection and parser registry | Bounded byte-only TXT/Markdown adapters, immutable typed elements and planned-format refusals | `apps/workbench/api/parsing.py` and `parser_registry.py`; [format matrix](docs/architecture/content-aware-chunking-strategy.md); no public upload/format capability |
 | Chunk persistence / publication | Implemented app-owned PostgreSQL adapter and transactional source version publication | Ingestion and delta-detection workflows remain separate |
 | PostgreSQL + pgvector | Dedicated Docker service, Alembic migrations, explicit seed and nullable synthetic-vector storage implemented | Follow the [PostgreSQL runbook](docs/architecture/postgresql-foundation.md); real TEI integration remains planned |
 | PostgreSQL lexical retrieval | Implemented SQL primitive and HTTP profile with `simple`, GIN and `postgres_ts_rank_cd` | Native FTS is not BM25; real semantic/hybrid retrieval remains separate |

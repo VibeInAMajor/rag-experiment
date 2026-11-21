@@ -24,6 +24,11 @@ export default {
       id: 'architecture/postgres-lexical-search',
       label: 'PostgreSQL Lexical Search',
     },
+    {
+      type: 'doc',
+      id: 'architecture/content-aware-chunking-strategy',
+      label: 'Parser and Chunking Boundary',
+    },
       {
         type: 'doc',
         id: 'architecture/local-source-reveal',

@@ -140,11 +140,18 @@ Tests cover HTTP/schema/security contracts, persistence and the lexical profile.
 
 - **API:** health/discovery, authorized workspace/document lists and Haystack-orchestrated PostgreSQL lexical search, with bounded admission and safe metadata/errors.
 - **Persistence:** pinned PostgreSQL + pgvector, explicit migrations/seed, forced workspace RLS, atomic publication and consistent active-version snapshots.
+- **Internal parsing boundary:** immutable static parser registry and bounded UTF-8 TXT/Markdown inspection/projection under `parsing.py` and `parser_registry.py`; no HTTP uploads or new public capabilities. See the [format matrix and parser/chunking handoff](../../../docs-website/docs/architecture/content-aware-chunking-strategy.md).
 - **Existing independent validator:** real Haystack construction/connectivity checks, without execution; see [validator documentation](../validator/README.md).
 - **Existing UI:** fixture-only document/run displays and Preview; see [Workbench documentation](../web/README.md).
 - **Planned:** frontend Live integration, ingestion, genuine BM25 if separately justified, qualified embeddings, dense/hybrid retrieval and generation. Each needs its own qualification gate.
 
 The initial database migration is explicit; no Haystack public API changes are introduced. Application rollback is stopping the optional API while preserving its database volume. Destructive schema rollback is restricted to explicitly confirmed disposable databases; the constructor validator and standalone UI remain independent.
+
+### Internal parser limits
+
+The parser accepts in-memory bytes and an untrusted basename/MIME, not a path or URL. Qualified TXT/Markdown adapters reuse Haystack `TextFileToDocument` through `parsing_adapters.py` and require exactly one nonempty, source-preserving extraction. The conservative unindented single-line ATX/Setext heading subset retains hierarchy; fences, tables, multiline Setext titles and complex/container syntax remain protected raw spans with warnings. Known-signature checks do not claim universal executable/polyglot detection; no source code or content link is executed. Planned PDF/Office/code/media entries cannot dispatch even if an upstream converter is installed.
+
+Reviewed defaults are 1 MiB, 4,096 elements and a shared 2,000 ms cooperative deadline. These synchronous checks do not provide process isolation or preempt a blocked dependency. Safe failures and operational metadata omit content and raw filenames. Chunking and ingestion must consume the verified immutable result without a second MIME classifier; workspace resolution, version publication and public format advertisement remain consuming-workflow responsibilities.
 
 ## Registered local originals
 

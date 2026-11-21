@@ -1,0 +1,5 @@
+features:
+  - |
+    Add an internal Workbench parser registry and bounded TXT/Markdown inspection.
+    Parsing preserves source spans and protects unqualified Markdown structures.
+    Other format adapters remain planned; this adds no HTTP upload capability.

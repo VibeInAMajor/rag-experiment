@@ -523,7 +523,7 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
     for source in package.glob("*.py"):
         if source.name in {"postgres.py", "db_migrations.py", "db_admin.py"}:
             continue
-        restricted = forbidden - {"haystack"} if source.name == "lexical.py" else forbidden
+        restricted = forbidden - {"haystack"} if source.name in {"lexical.py", "parsing_adapters.py"} else forbidden
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
