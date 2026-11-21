@@ -24,7 +24,7 @@ A shared UI validator does not replace mandatory independent server-side authori
 
 ## Workbench: React, TypeScript and Vite
 
-**Current status:** `apps/workbench/web` is a standalone, in-memory demonstration, not a connected RAG service. The app uses React 19, TypeScript, Vite 8, React Flow, Vitest and Prettier. It displays fixtures for documents, processing runs, scores and retrieval results. Never claim that preview data represents actual embeddings, retrieval, index writes or model calls.
+**Current status:** `apps/workbench/web` defaults to an in-memory Preview. Opt-in Live mode connects to read-only API discovery; Live execution and document listing remain pending. The app uses React 19, TypeScript, Vite 8, React Flow, Vitest and Prettier. Preview displays fixtures for documents, processing runs, scores and retrieval results. Never claim that preview data represents actual embeddings, retrieval, index writes or model calls.
 
 ### Module ownership
 
@@ -33,6 +33,7 @@ A shared UI validator does not replace mandatory independent server-side authori
 - `src/domain/graph.ts`: pipeline templates, DAG ordering, connection/graph validation, safe pipeline import/export. Prefer `createPipeline`, `validateConnection`, `validateGraph`, `topologicalNodeIds`, `importPipeline`, `exportPipeline`.
 - `src/domain/fixtures.ts` and `preview.ts`: test/demo data and deterministic preview functions (`createPreviewRun`, `completePreviewNode`, `finishPreviewRun`).
 - `src/hooks/useGraphHistory.ts`: graph edit history, undo/redo. `src/hooks/usePreview.ts`: cancellable simulated run progression.
+- `src/api/`: shared runtime-validated RAG API DTOs and transport; constructor validation retains its separate protocol. `src/domain/backendDiscovery.ts` and `src/hooks/useBackendDiscovery.ts`: bounded discovery, generation cancellation, supported-profile checks and server-returned workspace selection.
 - `src/components/`: pipeline editor, inspector, nodes, results; `src/views/`: Pipelines, Documents, Runs, Settings; `src/App.tsx`: app coordination and local shared state.
 - `src/styles.css` and `src/views/views.css`: current styling. Reuse existing CSS variables and component patterns.
 
@@ -73,7 +74,7 @@ For interaction changes follow `apps/workbench/web/README.md` and `scripts/brows
 
 ## RAG and future backend integration
 
-The [canonical RAG runtime contract](docs/architecture/rag-runtime-contract.md) owns PostgreSQL + pgvector storage, the metadata/version registry, planned TEI embeddings and approved execution profiles. The dated architecture plan preserves superseded OpenSearch/Ollama decisions as history. Workbench has a validation-only API/client and a separate [read-only lexical API](docs/architecture/postgres-lexical-search.md) using Haystack over persisted PostgreSQL records. Follow the [database runbook](docs/architecture/postgresql-foundation.md) for explicit migrations/seed; startup must not recreate tables or seed data. Native `postgres_ts_rank_cd` scores are not BM25, and no Live in-memory fallback is allowed. The frontend remains Preview until a separate integration task.
+The [canonical RAG runtime contract](docs/architecture/rag-runtime-contract.md) owns PostgreSQL + pgvector storage, the metadata/version registry, planned TEI embeddings and approved execution profiles. The dated architecture plan preserves superseded OpenSearch/Ollama decisions as history. Workbench has a validation-only API/client and a separate [read-only lexical API](docs/architecture/postgres-lexical-search.md) using Haystack over persisted PostgreSQL records. Follow the [database runbook](docs/architecture/postgresql-foundation.md) for explicit migrations/seed; startup must not recreate tables or seed data. Native `postgres_ts_rank_cd` scores are not BM25, and no Live in-memory fallback is allowed. The frontend defaults to Preview and supports Live discovery; Live execution and document listing require subsequent integration tasks.
 
 - Enforce workspace scope **on the server** for ingestion, retrieval, document metadata and results; client filters are never authorization.
 - Use stable document identity + content/version fingerprints for delta detection. Reuse compatible vectors for unchanged chunks, stage changes, validate, then publish atomically with rollback/recovery. Make idempotency and interruption behavior testable.
@@ -86,4 +87,4 @@ Describe acceptance criteria before implementation. Extend relevant success, neg
 
 ## Authoritative validation boundary (2026-11-20)
 
-`apps/workbench/validator/` owns the reviewed Python component/socket bindings and validation-only HTTP boundary. Workbench's Validate action uses Haystack; browser graph checks are limited to safe draft structure and explicitly scoped fixture-preview prerequisites. Keep those outcomes distinct from an authoritative verdict. The Vite development/preview proxy forwards only the validation route to a loopback service. See the validator README for supported mappings and the Workbench README for startup. Persistence belongs to the separate PostgreSQL adapter; neither constructor validation nor storage readiness enables an HTTP retrieval profile.
+`apps/workbench/validator/` owns the reviewed Python component/socket bindings and validation-only HTTP boundary. Workbench's Validate action uses Haystack; browser graph checks are limited to safe draft structure and explicitly scoped fixture-preview prerequisites. Keep those outcomes distinct from an authoritative verdict. The Vite development/preview proxy forwards constructor validation to port 8010 and versioned API discovery to port 8011. See the validator README for supported mappings and the Workbench README for startup. Persistence belongs to the separate PostgreSQL adapter; neither constructor validation nor storage readiness enables an HTTP retrieval profile.

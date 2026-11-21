@@ -553,6 +553,47 @@
 .view-local-state svg {
   color: var(--accent-green);
 }
+.live-empty {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+.backend-refresh {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.backend-diagnostics {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+  font-size: 12px;
+}
+.backend-diagnostics > div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+}
+.backend-diagnostics dt {
+  color: var(--text-muted);
+}
+.backend-diagnostics dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.backend-error {
+  border-left: 2px solid #b42335;
+  padding-left: 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.backend-error p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
 .view-settings-section {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);

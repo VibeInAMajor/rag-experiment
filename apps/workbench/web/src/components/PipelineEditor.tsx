@@ -92,6 +92,7 @@ type Props = {
   onValidate: () => void;
   validationStatus: ValidationState["status"];
   onRun: () => void;
+  runDisabledReason?: string;
   onStop: () => void;
   onRename: (name: string) => void;
   onUndo: () => void;
@@ -387,6 +388,7 @@ function Editor(props: Props) {
           <button
             className="button small"
             onClick={props.onValidate}
+            title="Haystack constructor validation"
             disabled={busy || props.validationStatus === "checking"}
           >
             <Check size={15} />
@@ -395,7 +397,7 @@ function Editor(props: Props) {
           <span
             role="status"
             className={`status ${props.validationStatus === "valid" ? "success" : props.validationStatus === "unchecked" || props.validationStatus === "checking" ? "neutral" : "error"}`}
-            title="Authoritative Haystack validation; preview is separate"
+            title="Haystack constructor validation; execution readiness is separate"
           >
             {props.validationStatus === "valid"
               ? "Haystack valid"
@@ -422,13 +424,26 @@ function Editor(props: Props) {
               Stop
             </button>
           ) : (
-            <button className="button primary small" onClick={props.onRun}>
+            <button
+              className="button primary small"
+              onClick={props.onRun}
+              disabled={Boolean(props.runDisabledReason)}
+              title={props.runDisabledReason}
+              aria-describedby={
+                props.runDisabledReason ? "live-run-notice" : undefined
+              }
+            >
               <Play size={14} fill="currentColor" />
               Run
             </button>
           )}
         </div>
       </header>
+      {props.runDisabledReason && (
+        <div className="execution-notice" id="live-run-notice">
+          {props.runDisabledReason}
+        </div>
+      )}
       <div className="editor-workspace">
         {libraryOpen && (
           <aside className="node-library" aria-label="Node library">

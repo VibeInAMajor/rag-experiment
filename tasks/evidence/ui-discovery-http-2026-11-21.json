@@ -1,0 +1,188 @@
+{
+  "date": "2026-11-21",
+  "base_commit": "6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77",
+  "samples": [
+    {
+      "scenario": "healthy",
+      "path": "/api/v1/health/live",
+      "http_status": 200,
+      "request_id_header": "fafaa3477d03434ea78bcedfc1c7cf1d",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "fafaa3477d03434ea78bcedfc1c7cf1d",
+        "trace_id": "0fc086782c30444486cebcade2986754",
+        "status": "alive",
+        "backend_revision": "workbench-api-lexical-v1"
+      }
+    },
+    {
+      "scenario": "healthy",
+      "path": "/api/v1/health/ready",
+      "http_status": 200,
+      "request_id_header": "5a8230133e054d6da1768ced33183ad8",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "5a8230133e054d6da1768ced33183ad8",
+        "trace_id": "12cb8fff71e749e6bb6e37a5bb84d389",
+        "status": "ready",
+        "backend_revision": "workbench-api-lexical-v1",
+        "ready_profile_ids": [
+          "postgres-fts-baseline"
+        ]
+      }
+    },
+    {
+      "scenario": "healthy",
+      "path": "/api/v1/capabilities",
+      "http_status": 200,
+      "request_id_header": "fd179626c07c4fc0b780bfb8a069b32b",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "fd179626c07c4fc0b780bfb8a069b32b",
+        "trace_id": "e0fc641f1591475c9794fe31cc4e6576",
+        "backend_revision": "workbench-api-lexical-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [
+          {
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "kind": "lexical_search",
+            "workspace_ids": [
+              "development"
+            ],
+            "corpus_id": "development-corpus-v1",
+            "parameters": {
+              "query": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 4096
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 50
+              }
+            },
+            "limits": {
+              "max_request_bytes": 32768,
+              "timeout_ms": 10000,
+              "max_concurrent_searches": 2,
+              "max_corpus_chunks": 10000,
+              "max_corpus_bytes": 52428800
+            },
+            "score_type": "postgres_ts_rank_cd"
+          }
+        ],
+        "features": {
+          "documents": true,
+          "search": true
+        },
+        "dependencies": {
+          "database": {
+            "status": "ready",
+            "schema_revision": "0001",
+            "workspace_id": "development",
+            "source_count": 8,
+            "chunk_count": 8
+          }
+        }
+      }
+    },
+    {
+      "scenario": "healthy",
+      "path": "/api/v1/workspaces?limit=50",
+      "http_status": 200,
+      "request_id_header": "493d416b5f744e54affa6b522e539a4a",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "493d416b5f744e54affa6b522e539a4a",
+        "trace_id": "ae34e7df567649dc99a1d44c77258b2f",
+        "items": [
+          {
+            "workspace_id": "development",
+            "name": "Development",
+            "status": "ready"
+          }
+        ],
+        "next_cursor": null
+      }
+    },
+    {
+      "scenario": "unconfigured",
+      "path": "/api/v1/health/live",
+      "http_status": 200,
+      "request_id_header": "ff2dde5c43984369bf27e58a29258db0",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "ff2dde5c43984369bf27e58a29258db0",
+        "trace_id": "d581f8482300492e880f2b86fbb502b5",
+        "status": "alive",
+        "backend_revision": "workbench-api-lexical-v1"
+      }
+    },
+    {
+      "scenario": "unconfigured",
+      "path": "/api/v1/health/ready",
+      "http_status": 503,
+      "request_id_header": "481bd0caf16e4d4c9a415e32fa63df3b",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "481bd0caf16e4d4c9a415e32fa63df3b",
+        "trace_id": "1201515101bf40a9883fa2a4518354a4",
+        "error": {
+          "code": "NOT_READY",
+          "message": "No execution profile is ready.",
+          "retryable": true,
+          "http_status": 503
+        }
+      }
+    },
+    {
+      "scenario": "unconfigured",
+      "path": "/api/v1/capabilities",
+      "http_status": 200,
+      "request_id_header": "d4e7e86e87c0470d88bbf9dfa0a5ff48",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "d4e7e86e87c0470d88bbf9dfa0a5ff48",
+        "trace_id": "54cc3e46aa5148b69964c4fd92880c6f",
+        "backend_revision": "workbench-api-lexical-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [],
+        "features": {
+          "documents": false,
+          "search": false
+        },
+        "dependencies": {
+          "database": {
+            "status": "unconfigured",
+            "schema_revision": null,
+            "workspace_id": null,
+            "source_count": null,
+            "chunk_count": null
+          }
+        }
+      }
+    },
+    {
+      "scenario": "unconfigured",
+      "path": "/api/v1/workspaces?limit=50",
+      "http_status": 503,
+      "request_id_header": "279725f67c3949b682acad8279600fca",
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "279725f67c3949b682acad8279600fca",
+        "trace_id": "64eaddb423514a58b2b016d39c1033d5",
+        "error": {
+          "code": "NOT_READY",
+          "message": "No execution profile is ready.",
+          "retryable": true,
+          "http_status": 503
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+### Browser `ui-regression` opened with pid 42672.
+### Ran Playwright code
+```js
+await page.goto('http://127.0.0.1:4173');
+```
+### Page
+- Page URL: http://127.0.0.1:4173/
+- Page Title: Haystack Workbench
+### Snapshot
+- [Snapshot](.playwright-cli\page-2026-11-21T00-58-43-673Z.yml)

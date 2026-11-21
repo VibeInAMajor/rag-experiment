@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
-  Beaker,
   Check,
   CircleAlert,
   Command,
@@ -25,6 +24,7 @@ import {
 } from "./domain/graph";
 import type {
   GraphIssue,
+  ExecutionMode,
   Pipeline,
   PreviewRun,
   TemplateId,
@@ -32,6 +32,8 @@ import type {
 import { useGraphHistory } from "./hooks/useGraphHistory";
 import { usePreview } from "./hooks/usePreview";
 import { useValidation } from "./hooks/useValidation";
+import { useBackendDiscovery } from "./hooks/useBackendDiscovery";
+import { ExecutionControls } from "./components/ExecutionControls";
 import { PipelinesView } from "./views/PipelinesView";
 import { DocumentsView } from "./views/DocumentsView";
 import { RunsView } from "./views/RunsView";
@@ -53,6 +55,8 @@ export function App() {
     structuredClone(initialRuns),
   );
   const [settings, setSettings] = useState(defaultSettings);
+  const [mode, setMode] = useState<ExecutionMode>("preview");
+  const discovery = useBackendDiscovery(mode);
   const [activeId, setActiveId] = useState(initialPipelines[0].id);
   const [page, setPage] = useState<Page>("editor");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -72,7 +76,17 @@ export function App() {
   const history = useGraphHistory(current, setPipelines);
   const preview = usePreview(setRuns);
   const validation = useValidation(current);
-  const displayedRun = runs.find((run) => run.pipelineId === current.id);
+  const displayedRun =
+    mode === "preview"
+      ? runs.find((run) => run.pipelineId === current.id)
+      : undefined;
+  const changeMode = (next: ExecutionMode) => {
+    if (next === mode) return;
+    preview.stop();
+    setIssues([]);
+    setResultsOpen(false);
+    setMode(next);
+  };
 
   useEffect(
     () => () => {
@@ -203,14 +217,11 @@ export function App() {
           {settings.workspaceName}
         </div>
         <div className="header-right">
-          <span className="preview-badge mono">
-            <Beaker size={12} />
-            PREVIEW
-          </span>
-          <span className="local-indicator">
-            <span className="status-dot success" />
-            Local session
-          </span>
+          <ExecutionControls
+            mode={mode}
+            onChange={changeMode}
+            state={discovery.state}
+          />
           <button
             className="icon-button"
             title="Keyboard shortcuts"
@@ -284,6 +295,7 @@ export function App() {
                 }}
                 validationStatus={validation.state.status}
                 onRun={() => {
+                  if (mode !== "preview") return;
                   setShowValidationIssues(false);
                   if (checkPreview()) {
                     setResultsOpen(true);
@@ -299,15 +311,22 @@ export function App() {
                       );
                   }
                 }}
+                runDisabledReason={
+                  mode === "live"
+                    ? "Live search execution is not connected yet"
+                    : undefined
+                }
                 onStop={preview.stop}
                 onRename={(name) => renamePipeline(current.id, name)}
                 onUndo={history.undo}
                 onRedo={history.redo}
                 canUndo={history.canUndo}
                 canRedo={history.canRedo}
-                busy={preview.busy}
+                busy={mode === "preview" && preview.busy}
                 runningNodeId={
-                  preview.busy && displayedRun?.id === preview.liveRunId
+                  mode === "preview" &&
+                  preview.busy &&
+                  displayedRun?.id === preview.liveRunId
                     ? preview.runningNodeId
                     : null
                 }
@@ -331,7 +350,7 @@ export function App() {
             <PipelinesView
               pipelines={pipelines}
               defaultTemplate={settings.defaultTemplate}
-              runs={runs}
+              runs={mode === "preview" ? runs : []}
               onOpen={openPipeline}
               onCreate={newPipeline}
               onRename={renamePipeline}
@@ -355,22 +374,55 @@ export function App() {
               onImport={uploadPipeline}
             />
           )}
-          {page === "documents" && (
-            <DocumentsView documents={previewDocuments} />
-          )}
-          {page === "runs" && (
-            <RunsView
-              runs={runs}
-              onOpenPipeline={(id) => {
-                if (pipelines.some((item) => item.id === id)) {
-                  openPipeline(id);
-                  setResultsOpen(true);
-                } else notify("This pipeline has been deleted.", true);
-              }}
-            />
-          )}
+          {page === "documents" &&
+            (mode === "preview" ? (
+              <DocumentsView documents={previewDocuments} />
+            ) : (
+              <section
+                className="view-page"
+                aria-labelledby="live-documents-title"
+              >
+                <header className="view-heading">
+                  <h1 id="live-documents-title">Documents</h1>
+                </header>
+                <p className="live-empty">
+                  Live document listing is not connected yet.
+                </p>
+                <p className="live-empty">
+                  {discovery.state.capabilities?.features.documents
+                    ? "The API supports read-only listing."
+                    : "Document availability has not been confirmed."}
+                </p>
+              </section>
+            ))}
+          {page === "runs" &&
+            (mode === "preview" ? (
+              <RunsView
+                runs={runs}
+                onOpenPipeline={(id) => {
+                  if (pipelines.some((item) => item.id === id)) {
+                    openPipeline(id);
+                    setResultsOpen(true);
+                  } else notify("This pipeline has been deleted.", true);
+                }}
+              />
+            ) : (
+              <section className="view-page" aria-labelledby="live-runs-title">
+                <header className="view-heading">
+                  <h1 id="live-runs-title">Runs</h1>
+                </header>
+                <p className="live-empty">
+                  No Live runs. Search execution is not connected yet.
+                </p>
+              </section>
+            ))}
           {page === "settings" && (
-            <SettingsView settings={settings} onChange={setSettings} />
+            <SettingsView
+              settings={settings}
+              onChange={setSettings}
+              mode={mode}
+              discovery={discovery}
+            />
           )}
         </main>
       </div>

@@ -84,7 +84,7 @@ rag-experiment/
 └── images/                          # Repo assets
 ```
 
-**Not present in the inspected tree:** `docs/PROJECT_MAP.md`, `docs/ENGINEERING.md`, a standalone `backend/` or `services/` implementation, and an `apps/workbench/web/src/api/` client directory. These are not established code locations; do not cite them as existing. `docs/` may be added to hold this map, but is not currently checked in.
+**Not present:** `docs/PROJECT_MAP.md`, `docs/ENGINEERING.md`, a standalone `backend/` or `services/` implementation. The navigation documents live in `docs-website/`. The UI discovery task adds the RAG client in `apps/workbench/web/src/api/`; the tree above preserves its earlier coarse inventory.
 
 ## 2. Workbench: source ownership and reuse index
 
@@ -99,6 +99,8 @@ rag-experiment/
 | Deterministic fake execution and sample passages | `apps/workbench/web/src/domain/preview.ts` | `createPreviewRun`, `completePreviewNode`, `finishPreviewRun` |
 | Undo/redo and graph change history | `apps/workbench/web/src/hooks/useGraphHistory.ts` | `useGraphHistory` |
 | Preview sequencing, cancellation and run state | `apps/workbench/web/src/hooks/usePreview.ts` | `usePreview`; **not** a backend executor |
+| RAG HTTP contract, decoding and discovery transport | `apps/workbench/web/src/api/` | `createWorkbenchApiClient`; four discovery GET methods, no search invocation yet |
+| Preview/Live connection state and authorized workspace | `apps/workbench/web/src/domain/backendDiscovery.ts`, `apps/workbench/web/src/hooks/useBackendDiscovery.ts` | Cancellable generations, readiness/profile consistency and bounded workspace pagination |
 | Graph canvas, edges and nodes | `apps/workbench/web/src/components/PipelineEditor.tsx`, `PipelineNode.tsx`, `NodeIcon.tsx` | Extend editor components; use `@xyflow/react` contracts |
 | Component configuration | `apps/workbench/web/src/components/Inspector.tsx` | Existing inspector |
 | Execution details and retrieval output | `apps/workbench/web/src/components/ResultsPanel.tsx` | Existing panel and model |
@@ -118,13 +120,14 @@ main.tsx → App.tsx
                 ├─ components/* → visual editor and inspector
                 └─ views/* → pipelines, documents, runs, settings
 
-NO verified network API/client → NO verified deployed RAG backend.
+useBackendDiscovery → api/client.ts → /api/v1 health/capabilities/workspaces
+Separate: useValidation → /api/pipelines/validate. Live search UI remains pending.
 ```
 
 ### Verified Workbench boundaries
 
 - Frontend stack: React, TypeScript, Vite, Vitest, Prettier, `@xyflow/react`, lucide-react. Confirm exact versions from `apps/workbench/web/package.json` before upgrading.
-- Preview mode simulates results and errors. Running a pipeline does **not** call actual embeddings, retrieval, inference, database writes or a document parser. The UI README explicitly marks it as an independent, fixture-only application.
+- Preview mode simulates results and errors. Running a pipeline does **not** call actual embeddings, retrieval, inference, database writes or a document parser. Live discovery is separate; its Run action is disabled until the execution integration.
 - Current typography imports **IBM Plex Sans** and **JetBrains Mono** from Fontsource (`src/main.tsx`); CSS theme lives in `src/styles.css`. A Manrope/Plum/Electric redesign is a separate proposed change, not implemented here.
 - Editor validation is **not** authoritative runtime/backend validation. Backend must independently enforce authorization and input constraints.
 

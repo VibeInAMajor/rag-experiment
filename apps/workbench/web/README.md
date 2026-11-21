@@ -2,7 +2,7 @@
 
 A pipeline editor with an optional, validation-only Haystack service. All documents, runs, scores, and processing reports remain demonstration fixtures. Editing, JSON import/export and Preview run offline; authoritative Validate requires the local Python service. No database, model or credentials are needed.
 
-An independent [Workbench API](../api/README.md) provides actual PostgreSQL lexical retrieval through Haystack, with capability/readiness discovery and persisted document metadata. The UI is not connected to that service; its Run action remains fixture Preview.
+An independent [Workbench API](../api/README.md) provides PostgreSQL lexical retrieval through Haystack. The UI connects to its read-only discovery endpoints in **Live** mode. Live search execution and document listing are not connected yet; Run remains available only in Preview.
 
 ## Start
 
@@ -28,7 +28,29 @@ npm run preview
 
 ### Optional application lexical API
 
-After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). No frontend Live wiring is introduced here.
+After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). The UI uses discovery only; execution remains a subsequent task.
+
+### Execution modes and API discovery
+
+Start the API and optional validator in separate terminals, then start Vite. Select **Live** in the header and open Settings to inspect the server-returned workspace, database state, profile/revision and score type. **Refresh connection** starts a new check. The workspace display name remains a browser preference and never grants API access.
+
+| Service               | Local port              | Browser route             | Purpose                                         |
+| --------------------- | ----------------------- | ------------------------- | ----------------------------------------------- |
+| Vite                  | 5173 dev / 4173 preview | `/`                       | Interface                                       |
+| Constructor validator | 8010                    | `/api/pipelines/validate` | Haystack constructor/socket validation          |
+| Workbench API         | 8011                    | `/api/v1/...`             | Discovery; backend also supports lexical search |
+
+Both Vite modes proxy `/api/v1` to port 8011, independently of the validator route. A static production deployment must provide equivalent trusted same-origin routing; Vite's development proxy is not part of the built assets. The optional public `VITE_WORKBENCH_API_BASE_URL` overrides the browser API origin/path at build time. Never put credentials, tokens or a database DSN in a `VITE_` value. Cross-origin deployment must also satisfy the API's allowed-origin policy.
+
+| Selected mode / state             | Behavior                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| Preview, API offline or online    | Fixture Run, documents and history; no discovery requests                |
+| Live, ready                       | Server profile/workspace shown; Run disabled until execution integration |
+| Live, readiness 503 / no profiles | Not ready; no fixture fallback                                           |
+| Live, network failure             | Offline; select Preview explicitly or refresh                            |
+| Live, incompatible contract       | Incompatible; profile and selection cleared                              |
+
+Discovery checks liveness, readiness, capabilities and bounded workspace pagination. Ready requires consistent responses, a running service, ready database, search support and a supported profile bound to an authorized workspace. A green liveness response alone is insufficient. No search or document-list request is made by this UI milestone. Preview preferences are retained but disabled in Live. Changing mode cancels pending discovery and stops an active Preview; recovery never changes the selected mode automatically. Mode survives navigation; refreshing resets it to Preview.
 
 ### Authoritative validation
 
@@ -90,7 +112,7 @@ Library buttons and connection selectors provide alternatives to drag operations
 - `src/domain` owns view models, catalog, graph validation, JSON parsing, fixtures, and deterministic preview scenarios.
 - `src/hooks` owns editor history and cancellable preview progression.
 - `src/components` owns the editor; `src/views` owns Pipelines, Documents, Runs, and Settings.
-- The frontend's only connected API boundary is the optional local validation service. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. The separate FastAPI application exposes persisted document lists and live PostgreSQL lexical search; frontend Live integration and model adapters remain future tasks.
+- The frontend has separate constructor-validation and read-only execution-discovery API boundaries. Safe import and editor structure checks remain browser-owned; component/socket compatibility belongs to Haystack. The separate FastAPI application exposes persisted document lists and live PostgreSQL lexical search; frontend Live execution and model adapters remain future tasks.
 
 The canonical implementation contract is [RAG runtime contract](../../../docs-website/docs/architecture/rag-runtime-contract.md). It defines the planned execution profiles, API, source identities, score meanings and error semantics. The dated [RAG MVP Architecture and Implementation Plan](../../../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) remains a historical planning reference; its OpenSearch and Ollama-embedding choices do not override the canonical contract.
 
@@ -140,3 +162,21 @@ hatch run test:types --explicit-package-bases apps/workbench/validator
 ```
 
 The whole upstream Haystack test suite is not required for this boundary-only change; the targeted suite verifies real public Pipeline calls without executing the graph.
+
+### Discovery smoke
+
+Run the primary API on 8011 with its qualified PostgreSQL corpus and the built frontend on 4173. For the real unconfigured/503 sample, start a second API in a separate terminal from the repository root:
+
+```powershell
+Remove-Item Env:WORKBENCH_DB_DSN -ErrorAction SilentlyContinue
+$env:WORKBENCH_API_PORT = "8012"
+hatch run workbench-api:serve
+```
+
+From `apps/workbench/web`, with the Playwright browser session open at the frontend:
+
+```powershell
+npx --yes --package @playwright/cli playwright-cli -s=workbench run-code --filename=scripts/discovery-smoke.js
+```
+
+The scenario checks real discovery, keyboard mode selection, 1440px/1100px layouts, server-owned workspace selection, the second API's actual 503/no-profile payload, injected offline/conflicting/stale responses, explicit Preview recovery and absence of search/document requests. It saves screenshots under `output/playwright/` relative to the browser CLI's working directory. Stop the smoke-only 8012 process afterward. Recorded task evidence distinguishes actual HTTP responses from injected browser failures.

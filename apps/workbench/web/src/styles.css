@@ -324,6 +324,61 @@ textarea.input {
   align-items: center;
   gap: 22px;
 }
+.execution-mode {
+  display: flex;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--border-hairline);
+  border-radius: 7px;
+  gap: 2px;
+  background: var(--bg-card-muted);
+}
+.execution-mode label {
+  position: relative;
+  cursor: pointer;
+}
+.execution-mode input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.execution-mode span {
+  display: block;
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.execution-mode input:checked + span {
+  background: var(--bg-surface);
+  color: var(--accent-blue);
+  box-shadow: 0 1px 3px #0f172a12;
+}
+.execution-mode input:focus-visible + span {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.execution-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 90px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.execution-status.preview {
+  color: var(--accent-blue);
+}
+.execution-notice {
+  padding: 9px 24px;
+  border-bottom: 1px solid var(--border-hairline);
+  background: var(--bg-card-muted);
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
 .preview-badge {
   display: flex;
   align-items: center;

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="96" failures="0" errors="0" time="0.0985216">
+    <testsuite name="src/api/client.test.ts" timestamp="2026-11-21T00:57:27.273Z" hostname="3DM" tests="46" failures="0" errors="0" skipped="0" time="0.0405851">
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; matches implemented discriminator and required-field assumptions against published OpenAPI" time="0.0024237">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; decodes genuine discovery shapes and uses only GET, public headers and no browser credentials" time="0.0180204">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; accepts empty profiles as a valid unavailable-capability response" time="0.0016862">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 0" time="0.0013996">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 1" time="0.00054">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 2" time="0.000376">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 3" time="0.0003136">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 4" time="0.0002909">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 5" time="0.000312">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 6" time="0.0003942">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 7" time="0.0003631">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 8" time="0.0002874">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 9" time="0.0002731">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 10" time="0.0002219">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 11" time="0.0002441">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 12" time="0.0002137">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 13" time="0.0002007">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects malformed capabilities 14" time="0.0001998">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; does not promote additive fields to operations or trust payload type assertions" time="0.0006126">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; decodes liveness and readiness separately" time="0.0005322">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; passes opaque cursors as query parameters without interpreting their contents" time="0.0007575">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects invalid workspace pages 0" time="0.0002651">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects invalid workspace pages 1" time="0.000219">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects invalid workspace pages 2" time="0.0001937">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects invalid workspace pages 3" time="0.0001912">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects invalid workspace pages 4" time="0.0002706">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; retains safe structured errors and correlation for HTTP 404" time="0.0005281">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; retains safe structured errors and correlation for HTTP 409" time="0.0002579">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; retains safe structured errors and correlation for HTTP 429" time="0.0003528">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; retains safe structured errors and correlation for HTTP 503" time="0.0003948">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; retains safe structured errors and correlation for HTTP 504" time="0.0003502">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects conflicting error status and request correlation" time="0.0006386">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; reports proxy HTML/network errors without displaying response contents" time="0.0005034">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects invalid successful JSON and incorrect content types" time="0.0004248">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; times out even when fetch ignores abort and clears its timer" time="0.0022134">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; distinguishes caller cancellation from timeout and removes the listener" time="0.0007756">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; does not fetch for an already aborted signal and clears successful-request timers" time="0.0007901">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base postgres://db/secret" time="0.0002787">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base https://user:password@example.com/api" time="0.0000876">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base //example.com/api" time="0.0000732">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base api/v1" time="0.0000732">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base /api/v1?token=secret" time="0.0000604">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base /api/v1#secret" time="0.0000526">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base  https://example.com/api" time="0.0000759">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; rejects unsafe API base /api\v1" time="0.0000514">
+        </testcase>
+        <testcase classname="src/api/client.test.ts" name="Workbench API discovery transport &gt; supports an explicitly public origin/path and configured public environment override" time="0.0005128">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/domain/graph.test.ts" timestamp="2026-11-21T00:57:27.279Z" hostname="3DM" tests="21" failures="0" errors="0" skipped="0" time="0.0137219">
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; accepts the indexing and branched retrieval templates" time="0.0019236">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; rejects a connection between incompatible values" time="0.0002576">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; rejects an edge whose declared port does not exist" time="0.0001678">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; rejects duplicate edges and a second producer on a single input" time="0.0002027">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; allows multiple ranked inputs into the joiner" time="0.0002402">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; rejects a cycle through multiple compatible components" time="0.0006891">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; reports missing required inputs and an empty question" time="0.000289">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; requires an overlap smaller than the chunk size" time="0.0001767">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="pipeline validation &gt; orders every producer before its dependent node" time="0.0002392">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; round-trips nodes, parameters, edges and the saved viewport" time="0.0011326">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; allows an incomplete graph to be saved and resumed" time="0.0002472">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; rejects unsupported schemas, components and executable payload fields" time="0.0008148">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; rejects duplicate node identifiers, broken connections and nonfinite coordinates" time="0.0006817">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; validates imported connections even when all node types are supported" time="0.0006925">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; rejects incorrectly typed parameters and excessive graph sizes" time="0.000991">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; rejects invalid numeric ranges from imported files" time="0.0012787">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; keeps incomplete parameters editable but blocks their execution" time="0.0003455">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="portable pipeline files &gt; caps file size and rejects malformed JSON" time="0.0001486">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="honest fixture runs &gt; returns bounded sample passages only for a completed retrieval graph" time="0.0010821">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="honest fixture runs &gt; marks the configured failure and never supplies success passages" time="0.0003729">
+        </testcase>
+        <testcase classname="src/domain/graph.test.ts" name="honest fixture runs &gt; rejects invalid graphs and preserves a cancelled run" time="0.0002098">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/domain/validation.test.ts" timestamp="2026-11-21T00:57:27.282Z" hostname="3DM" tests="8" failures="0" errors="0" skipped="0" time="0.0308209">
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; aborts a genuinely pending request at its deadline" time="0.0070141">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; requires correlated authoritative capability and level" time="0.0162299">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; never accepts a failed transport as valid" time="0.0005479">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; rejects malformed and contradictory diagnostics" time="0.001835">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; propagates timeout without guessing a verdict" time="0.001793">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; discards out-of-order responses even if a transport ignores cancellation" time="0.0006783">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="authoritative validation transport &gt; invalidates an in-flight result after a graph edit" time="0.0003276">
+        </testcase>
+        <testcase classname="src/domain/validation.test.ts" name="drafts are not semantic verdicts &gt; allows structurally safe incompatible handles while preview remains restricted" time="0.0013229">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/useBackendDiscovery.test.ts" timestamp="2026-11-21T00:57:27.283Z" hostname="3DM" tests="21" failures="0" errors="0" skipped="0" time="0.0133937">
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; qualifies the discovered profile and server-returned workspace" time="0.0039635">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; retains a safe 503 diagnostic despite successful liveness" time="0.0007923">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; reports incompatible database schema without enabling a profile" time="0.000309">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; does not infer readiness from an empty profile list" time="0.000294">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects search readiness while service is starting" time="0.000306">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects search readiness while service is stopping" time="0.0001831">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects search readiness while service is stopped" time="0.0001608">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects contradictory readiness profile IDs" time="0.0002144">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects mixed backend snapshots" time="0.0002453">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; requires a supported discovered profile revision" time="0.0002691">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; requires intersection with the authorized workspace list" time="0.0002192">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; never treats a cosmetic workspace name as authorization" time="0.0002313">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; follows opaque cursors without deriving workspace IDs" time="0.000282">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects repeated opaque cursors" time="0.0002195">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; bounds workspace pagination to ten pages" time="0.0002219">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; rejects duplicate workspace IDs across pages" time="0.0001843">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; clears previous ready data before a failed explicit refresh" time="0.0003564">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; ignores an old response after a newer request finishes" time="0.0004426">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; aborts and rejects late responses after switching to Preview" time="0.0014153">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; bounds the whole discovery generation and cleans its deadline" time="0.0016678">
+        </testcase>
+        <testcase classname="src/hooks/useBackendDiscovery.test.ts" name="backend discovery &gt; surfaces invalid configuration as incompatible without crashing render" time="0.0002695">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Add explicit Preview and Live modes to Workbench with validated API discovery,
+    readiness diagnostics and selection of server-returned workspaces. Preview
+    remains the default and works offline. Live displays connection failures
+    without substituting demonstration data; search execution and document listing
+    remain unavailable until their UI integrations are connected. Development and
+    preview servers proxy ``/api/v1`` to port 8011 independently of the constructor
+    validator on port 8010.

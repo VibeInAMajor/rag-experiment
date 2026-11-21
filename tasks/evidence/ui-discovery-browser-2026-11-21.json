@@ -1,0 +1,183 @@
+{
+  "result": "PASS",
+  "checked": [
+    "real backend discovery",
+    "keyboard mode selection with visible focus",
+    "1440px and 1100px layout assertions and screenshots",
+    "server-authorized workspace",
+    "read-only document capability",
+    "Live Run disabled",
+    "offline without fallback",
+    "real unconfigured API 503 and empty profiles replayed in browser",
+    "503 and empty profiles",
+    "conflicting workspace",
+    "stale response",
+    "manual Preview offline",
+    "discovery GET operations only"
+  ],
+  "realBackend": {
+    "/api/v1/health/live": {
+      "status": 200,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "fcb7f81fc818486f83950347133171f5",
+        "trace_id": "f7d1b118fc974da2be36af35c4eeb106",
+        "status": "alive",
+        "backend_revision": "workbench-api-lexical-v1"
+      }
+    },
+    "/api/v1/capabilities": {
+      "status": 200,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "19385cc2c3484c018c3d20719da44222",
+        "trace_id": "926ea43e6ef64a99a3322f9487990dd6",
+        "backend_revision": "workbench-api-lexical-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [
+          {
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "kind": "lexical_search",
+            "workspace_ids": [
+              "development"
+            ],
+            "corpus_id": "development-corpus-v1",
+            "parameters": {
+              "query": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 4096
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 50
+              }
+            },
+            "limits": {
+              "max_request_bytes": 32768,
+              "timeout_ms": 10000,
+              "max_concurrent_searches": 2,
+              "max_corpus_chunks": 10000,
+              "max_corpus_bytes": 52428800
+            },
+            "score_type": "postgres_ts_rank_cd"
+          }
+        ],
+        "features": {
+          "documents": true,
+          "search": true
+        },
+        "dependencies": {
+          "database": {
+            "status": "ready",
+            "schema_revision": "0001",
+            "workspace_id": "development",
+            "source_count": 8,
+            "chunk_count": 8
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "status": 200,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "1492024a74e64074a467ed53084b3a80",
+        "trace_id": "ffc9bed41959497b8588b4df921bbe34",
+        "status": "ready",
+        "backend_revision": "workbench-api-lexical-v1",
+        "ready_profile_ids": [
+          "postgres-fts-baseline"
+        ]
+      }
+    },
+    "/api/v1/workspaces": {
+      "status": 200,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "6e63e4d84fcb47a699f87547a1c93e3f",
+        "trace_id": "814290390b3542a7b8e6bec1240fae05",
+        "items": [
+          {
+            "workspace_id": "development",
+            "name": "Development",
+            "status": "ready"
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  },
+  "realUnconfiguredBackend": {
+    "/api/v1/health/live": {
+      "status": 200,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "558e3ed053ef4fcbada83367953e431b",
+        "trace_id": "afbcbb82eece40859a7aaf176b1a3009",
+        "status": "alive",
+        "backend_revision": "workbench-api-lexical-v1"
+      }
+    },
+    "/api/v1/capabilities": {
+      "status": 200,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "34905d7a138f417290c20396d22b74b8",
+        "trace_id": "560c970d180843589d72ceda09cd16f1",
+        "backend_revision": "workbench-api-lexical-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [],
+        "features": {
+          "documents": false,
+          "search": false
+        },
+        "dependencies": {
+          "database": {
+            "status": "unconfigured",
+            "schema_revision": null,
+            "workspace_id": null,
+            "source_count": null,
+            "chunk_count": null
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "status": 503,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "259231e7ea9049b98aaa4c485c22e664",
+        "trace_id": "8fefbe0a9cb24753b376c05439315f75",
+        "error": {
+          "code": "NOT_READY",
+          "message": "No execution profile is ready.",
+          "retryable": true,
+          "http_status": 503
+        }
+      }
+    },
+    "/api/v1/workspaces": {
+      "status": 503,
+      "body": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "ae6f54618e954966a0f2e0f4bd5c266b",
+        "trace_id": "7b052e3146f545188408b48aa0bacdc7",
+        "error": {
+          "code": "NOT_READY",
+          "message": "No execution profile is ready.",
+          "retryable": true,
+          "http_status": 503
+        }
+      }
+    }
+  },
+  "requestCount": 27,
+  "base_commit": "6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77",
+  "checked_on": "2026-11-21"
+}

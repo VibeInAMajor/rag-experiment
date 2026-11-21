@@ -1,13 +1,18 @@
 import { Check } from "lucide-react";
-import type { WorkbenchSettings } from "../domain/types";
+import type { ExecutionMode, WorkbenchSettings } from "../domain/types";
+import type { useBackendDiscovery } from "../hooks/useBackendDiscovery";
 import "./views.css";
 
 export function SettingsView({
   settings,
   onChange,
+  mode,
+  discovery,
 }: {
   settings: WorkbenchSettings;
   onChange: (settings: WorkbenchSettings) => void;
+  mode: ExecutionMode;
+  discovery: ReturnType<typeof useBackendDiscovery>;
 }) {
   function update<Key extends keyof WorkbenchSettings>(
     key: Key,
@@ -34,11 +39,118 @@ export function SettingsView({
       </header>
       <section
         className="view-settings-section"
+        aria-labelledby="backend-settings"
+      >
+        <div>
+          <h2 id="backend-settings">Backend connection</h2>
+          <p>
+            {mode === "preview"
+              ? "Select Live to check the API."
+              : "Discovery only. Run remains unavailable."}
+          </p>
+        </div>
+        <div className="view-settings-fields">
+          <div className="backend-refresh">
+            <button
+              className="button small"
+              onClick={discovery.refresh}
+              disabled={
+                mode !== "live" || discovery.state.status === "checking"
+              }
+            >
+              Refresh connection
+            </button>
+            <span className="view-local-state">
+              {discovery.state.lastCheckedAt
+                ? `Last checked ${new Date(discovery.state.lastCheckedAt).toLocaleTimeString()}`
+                : "Not checked"}
+            </span>
+          </div>
+          {discovery.state.status === "checking" && (
+            <p className="live-empty" role="status">
+              Checking current API state…
+            </p>
+          )}
+          {discovery.state.error && (
+            <div className="backend-error" role="alert">
+              <strong className="mono">{discovery.state.error.code}</strong>
+              <p>{discovery.state.error.message}</p>
+              {discovery.state.error.traceId && (
+                <small className="mono">
+                  Trace: {discovery.state.error.traceId}
+                </small>
+              )}
+            </div>
+          )}
+          <label className="view-field">
+            Backend workspace
+            <select
+              className="input"
+              value={discovery.state.selectedWorkspaceId ?? ""}
+              onChange={(event) =>
+                discovery.selectWorkspace(event.target.value)
+              }
+              disabled={mode !== "live" || discovery.state.status !== "ready"}
+            >
+              <option value="" disabled>
+                No authorized workspace selected
+              </option>
+              {discovery.state.workspaces.map((workspace) => (
+                <option
+                  key={workspace.workspace_id}
+                  value={workspace.workspace_id}
+                >
+                  {workspace.name} · {workspace.workspace_id}
+                </option>
+              ))}
+            </select>
+          </label>
+          <dl className="backend-diagnostics">
+            <div>
+              <dt>Database</dt>
+              <dd>
+                {discovery.state.capabilities?.dependencies.database.status ??
+                  "Not checked"}
+              </dd>
+            </div>
+            <div>
+              <dt>Profile</dt>
+              <dd className="mono">
+                {discovery.state.profile?.profile_id ?? "Unavailable"}
+              </dd>
+            </div>
+            <div>
+              <dt>Profile revision</dt>
+              <dd className="mono">
+                {discovery.state.profile?.profile_revision ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt>Score type</dt>
+              <dd className="mono">
+                {discovery.state.profile?.score_type ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt>Documents</dt>
+              <dd>
+                {discovery.state.capabilities?.features.documents
+                  ? "Read-only listing"
+                  : "Unavailable"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+      <section
+        className="view-settings-section"
         aria-labelledby="workspace-settings"
       >
         <div>
           <h2 id="workspace-settings">Workspace</h2>
-          <p>Name and starting point for new pipelines.</p>
+          <p>
+            Display name and starting point. Backend access is selected above.
+          </p>
         </div>
         <div className="view-settings-fields">
           <label className="view-field">
@@ -78,8 +190,8 @@ export function SettingsView({
         aria-labelledby="execution-settings"
       >
         <div>
-          <h2 id="execution-settings">Execution</h2>
-          <p>Configure simulated runs and retrieval results.</p>
+          <h2 id="execution-settings">Preview simulation</h2>
+          <p>Scenario, delay and results apply only to Preview.</p>
         </div>
         <div className="view-settings-fields">
           <label className="view-field">
@@ -87,6 +199,7 @@ export function SettingsView({
             <select
               className="input"
               value={settings.previewScenario}
+              disabled={mode === "live"}
               onChange={(event) => {
                 const value = event.target.value;
                 if (value === "success" || value === "error") {
@@ -107,6 +220,7 @@ export function SettingsView({
               max={5000}
               step={100}
               value={settings.previewDelay}
+              disabled={mode === "live"}
               onChange={(event) => {
                 const value = event.target.valueAsNumber;
                 if (Number.isFinite(value))
@@ -123,6 +237,7 @@ export function SettingsView({
               max={100}
               step={1}
               value={settings.resultLimit}
+              disabled={mode === "live"}
               onChange={(event) => {
                 const value = event.target.valueAsNumber;
                 if (Number.isFinite(value))

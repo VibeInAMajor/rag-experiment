@@ -1,0 +1,19 @@
+
+> haystack-workbench@0.1.0 test
+> vitest run --reporter=default --reporter=junit --outputFile=../../../tasks/evidence/ui-discovery-tests-2026-11-21.xml
+
+
+ RUN  v5.1.1 C:/Users/dufra/Documents/Web project/rag/apps/workbench/web
+
+ ✓ src/domain/graph.test.ts (21 tests) 14ms
+ ✓ src/hooks/useBackendDiscovery.test.ts (21 tests) 13ms
+ ✓ src/domain/validation.test.ts (8 tests) 31ms
+ ✓ src/api/client.test.ts (46 tests) 41ms
+
+ Test Files  4 passed (4)
+      Tests  96 passed (96)
+   Start at  02:57:27
+   Duration  216ms (tests 44%, import 29%, transform 18%, worker 8%)
+
+JUNIT report written to C:/Users/dufra/Documents/Web project/rag/tasks/evidence/ui-discovery-tests-2026-11-21.xml
+

@@ -1,0 +1,6 @@
+
+> haystack-workbench@0.1.0 format:check
+> prettier --check src scripts index.html package.json tsconfig.json README.md
+
+Checking formatting...
+All matched files use Prettier code style!

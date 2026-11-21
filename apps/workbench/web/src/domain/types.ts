@@ -111,6 +111,8 @@ export type PreviewRun = {
   results: RetrievalResult[];
   errors: string[];
 };
+export type ExecutionMode = "preview" | "live";
+
 export type WorkbenchSettings = {
   workspaceName: string;
   defaultTemplate: TemplateId;
