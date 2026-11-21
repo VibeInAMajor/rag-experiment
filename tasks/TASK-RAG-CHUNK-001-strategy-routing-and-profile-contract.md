@@ -335,7 +335,7 @@ Record actual command output in task evidence; do not claim pass based solely on
 - Database migration: **N/A — policy engine returns prepared data only**. Metadata stays within current JSONB; indexed relational parent-child schema is a separately reviewed change.
 - API migration: **N/A — no HTTP routes in this task**. Future listing of available policies needs explicit contract revision and capability qualification.
 - The prior word-based 500/50 proposal is **superseded before ingestion implementation** by the 500/50 **tiktoken-token + NLTK sentence-aware** default. A future exact Qwen-token budget uses a distinct counter/revision and must not reinterpret prior manifests; character or word units are opt-in benchmarks, not silent fallbacks.
-- Rollback: disable policy selection integration and select the previous explicit lexical word profile in the consuming ingestion service; never delete existing document versions or DB volume.
+- Rollback: disable the new chunking/ingestion integration or restore a previously deployed **explicitly versioned and validated token-counted** profile; if no such profile was ever deployed, keep new ingestion disabled until repaired. Never silently downgrade to words/characters, reinterpret existing indexed chunks or delete document versions/database volumes.
 - Deferred: code AST, page-aware PDFs, DOCX, table reconstruction, Tree-sitter and semantic splitting have separate tasks and acceptance gates.
 
 ## O. Mandatory Completion Checklist
