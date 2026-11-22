@@ -45,7 +45,7 @@ The current Workbench does **not** contain a qualified Docling PDF ingestion int
 | [`haystack/components/preprocessors/recursive_splitter.py`](../haystack/components/preprocessors/recursive_splitter.py) | Recursive splitter for fallback/controls, not authoritative page/table preservation. |
 | [`apps/workbench/api/config.py`](../apps/workbench/api/config.py) | API app configuration currently local-only; no reviewed Docling runtime/inference dependency. |
 | [Docling chunking docs](https://docling-project.github.io/docling/concepts/chunking/) | `HierarchicalChunker`, `HybridChunker`, table header repetition are available in Docling ecosystem, **not yet qualified in this Workbench runtime**. |
-| [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](TASK-RAG-002-ingest-text-and-markdown.md) | Initial allowlist is TXT/Markdown and a 1 MiB request cap. PDF requires new explicit file/body bounds and testing; no silent extension. |
+| [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](completed/TASK-RAG-002-ingest-text-and-markdown.md) | Initial allowlist is TXT/Markdown and a 1 MiB request cap. PDF requires new explicit file/body bounds and testing; no silent extension. |
 
 **Known risk:** PDF may have no text layer, oversized table cells or page/column order ambiguity. A parser that returns empty text while reporting success produces a silent search false-negative. No run of a Docling PDF parser has been executed for this task; no benchmark is claimed.
 
