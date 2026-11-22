@@ -3,6 +3,7 @@
 import re
 from dataclasses import dataclass, replace
 from enum import StrEnum
+from typing import Literal
 
 from apps.workbench.api.parser_registry import ElementKind, FormatId
 
@@ -12,6 +13,7 @@ _SEPARATOR_PROFILES = (
     ("prose_token_sentence_aware", _SENTENCE_SEPARATORS),
     ("prose_token_structural_fallback", _STRUCTURAL_SEPARATORS),
 )
+_CONFIGURED_SEPARATORS = frozenset((*_STRUCTURAL_SEPARATORS, "sentence"))
 _REVISION = re.compile(r"text-token-r[1-9][0-9]{0,2}")
 _LANGUAGE = re.compile(r"[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,2}")
 _RESOURCE_REVISION = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:+@=,/-]{0,255}")
@@ -47,13 +49,25 @@ def _valid_integer(value: int, *, minimum: int, maximum: int) -> bool:
     return type(value) is int and minimum <= value <= maximum
 
 
+def validate_configured_separators(separators: tuple[str, ...]) -> tuple[str, ...]:
+    """Validate ordered literal boundaries; only the sentence sentinel has special semantics."""
+    if (
+        type(separators) is not tuple
+        or not 1 <= len(separators) <= len(_CONFIGURED_SEPARATORS)
+        or any(not isinstance(item, str) or item not in _CONFIGURED_SEPARATORS for item in separators)
+        or len(set(separators)) != len(separators)
+    ):
+        raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
+    return separators
+
+
 @dataclass(frozen=True)
 class ChunkingProfile:
     """Trusted token-sized processing settings; raw separators and counters are not executable input."""
 
     profile_id: str = "text-token"
     profile_revision: str = "text-token-r1"
-    unit: str = "token"
+    unit: Literal["token"] = "token"
     target_size: int = 500
     overlap: int = 50
     token_counter: str = "tiktoken"
@@ -65,6 +79,7 @@ class ChunkingProfile:
     require_sentences: bool = False
     hard_character_limit: int = 32_768
     max_chunks: int = 10_000
+    sentence_keep_white_spaces: bool = True
 
     def __post_init__(self) -> None:
         identity_valid = (
@@ -81,9 +96,16 @@ class ChunkingProfile:
             and _valid_integer(self.hard_character_limit, minimum=1, maximum=32_768)
             and _valid_integer(self.max_chunks, minimum=1, maximum=10_000)
         )
-        if not identity_valid or not limits_valid or type(self.require_sentences) is not bool:
-            raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
         if (
+            not identity_valid
+            or not limits_valid
+            or type(self.require_sentences) is not bool
+            or type(self.sentence_keep_white_spaces) is not bool
+        ):
+            raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
+        if self.separator_profile_id == "prose_token_configured":
+            validate_configured_separators(self.separators)
+        elif (
             type(self.separators) is not tuple
             or (self.separator_profile_id, self.separators) not in _SEPARATOR_PROFILES
         ):
@@ -95,7 +117,7 @@ class ChunkingProfile:
             or _RESOURCE_REVISION.fullmatch(self.sentence_resource_revision) is None
         ):
             raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
-        if self.separator_profile_id == "prose_token_structural_fallback" and (
+        if "sentence" not in self.separators and (
             self.require_sentences or self.sentence_language is not None or self.sentence_resource_revision is not None
         ):
             raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
@@ -195,7 +217,7 @@ def _resolve_sentence_profile(
 ) -> tuple[ChunkingProfile, tuple[str, ...]]:
     if profile.sentence_language is not None and profile.sentence_language != features.language:
         raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
-    if profile.separator_profile_id == "prose_token_structural_fallback":
+    if "sentence" not in profile.separators:
         return profile, ("structural_profile_requested",)
     reason = _sentence_fallback_reason(features, profile=profile, resources=resources)
     if reason is None:

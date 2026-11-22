@@ -9,7 +9,11 @@ description: Bounded uploads, immutable provenance, atomic publication and recov
 **Updated:** 2026-11-22\
 **Qualification:** COMPLETE for local bounded TXT/Markdown ingestion; migration, upload, search, restart and independent evidence audit passed.
 
-The [ingestion task](../../../tasks/TASK-RAG-002-ingest-text-and-markdown.md) adds synchronous uploads to the existing PostgreSQL corpus. The service composes the qualified parser and chunker, then atomically publishes a complete source version and its completed job through the existing persistence writer. The [lexical profile](postgres-lexical-search.md) searches those same active chunks. Upload UI integration remains a separate task; the existing browser can query the resulting corpus in Live mode.
+The [ingestion task](../../../tasks/completed/TASK-RAG-002-ingest-text-and-markdown.md) adds synchronous uploads to the existing PostgreSQL corpus. The service composes the qualified parser and chunker, then atomically publishes a complete source version and its completed job through the existing persistence writer. The [lexical profile](postgres-lexical-search.md) searches those same active chunks. Upload UI integration remains a separate task; the existing browser can query the resulting corpus in Live mode.
+
+## Current processing-policy successor
+
+[CONFIG-001](document-processing-configuration.md) externalizes the active ingestion profile. Normal startup loads the shipped operator YAML: English sentences by default, explicit Russian, 500/50 tiktoken tokens and enabled independent native admission. It uses `txt-markdown-configured-v2` / `configured_sentence_language`; new configured sentence languages fail closed, with no automatic detection. Its full application, offline-resource and local live/restart qualification passed. The parsing/policy and measured acceptance sections below record the original qualified RAG-002 `txt-markdown-structural-v1` baseline and are retained as history. Existing persisted versions and terminal job replay keep that original evidence; a new policy requires explicit guarded re-ingestion with a new key.
 
 ## Upgrade an existing volume
 
@@ -51,7 +55,7 @@ Limits are **1 MiB file + 64 KiB multipart overhead**, three bounded parts, **tw
 
 Success returns `source_id`, `source_version_id`, `job_id`, `outcome` (`created`, `updated`, `unchanged`), `status: completed`, actual `chunk_count`, committed `corpus_revision`, `stages` and `replayed`. Unchanged content creates no new source/version/chunks but reports the actual current count. Identical terminal key replay returns the original committed job snapshot, even after later updates; GET detail is current-state authority. Changed requests conflict. Failed terminal replay repeats its safe failure; intentional retry uses a new key.
 
-## Parsing, tokens and provenance
+## Original RAG-002 parsing, tokens and provenance
 
 `parse_source()` runs once, followed by `prepare_chunks(...)` on exact UTF-8-sig decoded source. The explicit server structural profile uses **500 `tiktoken:o200k_base` tokens**, target overlap **50**, confined to compatible spans. Uploads neither declare nor infer locale: `language_policy: unqualified_source_locale` and `sentence_language: null` avoid imposing English Punkt. EN/RU/UK Unicode content is tested without claiming detected language. The separately qualified language-aware internal seam remains described in the [chunking decision](content-aware-chunking-strategy.md#token-budgeted-chunking-policy).
 
@@ -106,3 +110,6 @@ Measured sequential disposable uploads used nearest-rank quantiles (`sorted[ceil
 | File bytes | 25 | 5,945.720 | 252 | 21,120 |
 
 Two proof-tool corrections were kept distinct from product behavior. The first collector attempt used Python-object validation for a strict enum DTO and failed before any POST; JSON-mode validation corrected it and the failed attempt remains recorded. An initial browser comparison treated JSON object-key serialization order as meaningful; comparison by actual fields then confirmed parity. Neither incident changed the application or uploaded duplicate content.
+### Later stability-artifact limitation
+
+During CONFIG-001's first combined run, the old stability test's fixed output path overwrote this original run's ignored `stability.json`; its original raw bytes were not recoverable. The recorded statistics above describe the original RAG-002 run and were not replaced with current-policy numbers. See the [configuration evidence limitation](document-processing-configuration.md#test-artifact-isolation-and-historical-limitation) for the retained current-run copy and corrected explicit test-output directory. Other historical artifacts were untouched; complete raw stability-evidence preservation is not claimed.

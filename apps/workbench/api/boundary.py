@@ -82,12 +82,33 @@ def _upload_path(scope: Scope) -> bool:
     return re.fullmatch(r"/api/v1/workspaces/[^/]+/documents", scope["path"]) is not None
 
 
+def _configuration_path(scope: Scope) -> bool:
+    return scope["path"] in {"/api/v1/configuration", "/api/v1/configuration/validate"}
+
+
 def _list_path(scope: Scope) -> bool:
     return (
         scope["path"] == "/api/v1/workspaces"
         or re.fullmatch(r"/api/v1/workspaces/[^/]+/documents", scope["path"]) is not None
         or re.fullmatch(r"/api/v1/workspaces/[^/]+/documents/[^/]+/chunks", scope["path"]) is not None
     )
+
+
+def _correlated_headers(
+    scope: Scope, meta: Meta, allowed_origin: str | None, existing: list[tuple[bytes, bytes]]
+) -> list[tuple[bytes, bytes]]:
+    outgoing = [*existing, (b"x-request-id", meta.request_id.encode("ascii"))]
+    if _configuration_path(scope):
+        outgoing.append((b"cache-control", b"no-store"))
+    if allowed_origin is not None:
+        outgoing.extend(
+            [
+                (b"access-control-allow-origin", allowed_origin.encode("ascii")),
+                (b"access-control-expose-headers", b"X-Request-ID"),
+                (b"vary", b"Origin"),
+            ]
+        )
+    return outgoing
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -138,17 +159,7 @@ class RequestBoundary:
             if message["type"] == "http.response.start":
                 response_started = True
                 response_status = message["status"]
-                outgoing = list(message.get("headers", []))
-                outgoing.append((b"x-request-id", meta.request_id.encode("ascii")))
-                if allowed_origin is not None:
-                    outgoing.extend(
-                        [
-                            (b"access-control-allow-origin", allowed_origin.encode("ascii")),
-                            (b"access-control-expose-headers", b"X-Request-ID"),
-                            (b"vary", b"Origin"),
-                        ]
-                    )
-                message["headers"] = outgoing
+                message["headers"] = _correlated_headers(scope, meta, allowed_origin, list(message.get("headers", [])))
             await send(message)
 
         try:
@@ -160,7 +171,12 @@ class RequestBoundary:
                 await response(scope, tracked_receive, correlated_send)
             elif scope["method"] == "POST" and _upload_path(scope):
                 await self._bounded_upload(scope, tracked_receive, correlated_send, headers, meta)
-            elif scope["method"] == "POST" and (_search_path(scope) or _reveal_path(scope)):
+            elif (
+                scope["method"] == "POST"
+                and (_search_path(scope) or _reveal_path(scope))
+                or scope["method"] in {"POST", "PUT", "DELETE"}
+                and _configuration_path(scope)
+            ):
                 await self._search_request(scope, tracked_receive, correlated_send, headers, meta)
             else:
                 await self.app(scope, tracked_receive, correlated_send)
@@ -192,10 +208,20 @@ class RequestBoundary:
     def _preflight(self, scope: Scope, meta: Meta) -> JSONResponse:
         response = JSONResponse(content=meta.model_dump())
         response.headers["Access-Control-Allow-Methods"] = (
-            "GET, POST" if _upload_path(scope) else "POST" if _search_path(scope) or _reveal_path(scope) else "GET"
+            "GET, POST, PUT"
+            if _configuration_path(scope)
+            else "GET, POST"
+            if _upload_path(scope)
+            else "POST"
+            if _search_path(scope) or _reveal_path(scope)
+            else "GET"
         )
         response.headers["Access-Control-Allow-Headers"] = (
-            "Accept, Content-Type, Idempotency-Key" if _upload_path(scope) else "Accept, Content-Type"
+            "Accept, Content-Type, X-Workbench-Request"
+            if _configuration_path(scope)
+            else "Accept, Content-Type, Idempotency-Key"
+            if _upload_path(scope)
+            else "Accept, Content-Type"
         )
         return response
 
@@ -246,7 +272,13 @@ class RequestBoundary:
             return error_response(meta, status=403, code="FORBIDDEN", message="The request host is not permitted.")
         if origins and (len(origins) != 1 or origins[0] not in self.settings.allowed_origins):
             return error_response(meta, status=403, code="FORBIDDEN", message="The request origin is not permitted.")
-        if scope["method"] == "POST" and _reveal_path(scope) and not origins:
+        origin_required = (
+            scope["method"] == "POST"
+            and _reveal_path(scope)
+            or _configuration_path(scope)
+            and scope["method"] in {"POST", "PUT", "DELETE"}
+        )
+        if origin_required and not origins:
             return error_response(
                 meta, status=403, code="FORBIDDEN", message="An explicit local browser origin is required."
             )
@@ -270,7 +302,9 @@ class RequestBoundary:
             method = requested.get(b"access-control-request-method", "")
             names = requested.get(b"access-control-request-headers", "")
             permitted_methods = (
-                {"GET", "POST"}
+                {"GET", "POST", "PUT"}
+                if _configuration_path(scope)
+                else {"GET", "POST"}
                 if _upload_path(scope)
                 else {"POST"}
                 if _search_path(scope) or _reveal_path(scope)
@@ -279,6 +313,8 @@ class RequestBoundary:
             permitted_headers = {"accept", "content-type"}
             if _upload_path(scope):
                 permitted_headers.add("idempotency-key")
+            if _configuration_path(scope):
+                permitted_headers.add("x-workbench-request")
             if method not in permitted_methods or any(
                 name.strip().lower() not in permitted_headers for name in names.split(",") if name.strip()
             ):
@@ -373,12 +409,29 @@ class RequestBoundary:
             await response(scope, receive, send)
             return
         body = bytearray()
+        body_started = monotonic()
         while True:
-            message = await receive()
+            try:
+                message = (
+                    await asyncio.wait_for(receive(), timeout=max(0.001, 5 - (monotonic() - body_started)))
+                    if _configuration_path(scope)
+                    else await receive()
+                )
+            except TimeoutError:
+                await error_response(
+                    meta,
+                    status=504,
+                    code="CONFIGURATION_TIMEOUT",
+                    message="The configuration request body timed out.",
+                    retryable=True,
+                )(scope, receive, send)
+                return
             if message["type"] == "http.disconnect":
                 return
             incoming = message.get("body", b"")
-            if len(body) + len(incoming) > (1024 if _reveal_path(scope) else 32768):
+            if len(body) + len(incoming) > (
+                393728 if _configuration_path(scope) else 1024 if _reveal_path(scope) else 32768
+            ):
                 response = error_response(
                     meta, status=413, code="PAYLOAD_TOO_LARGE", message="Request body exceeds the byte limit."
                 )

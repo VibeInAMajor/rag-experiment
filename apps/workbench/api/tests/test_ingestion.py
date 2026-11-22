@@ -9,14 +9,17 @@ import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import replace
+from pathlib import Path
 from time import perf_counter
 from typing import Any, Literal
 from uuid import uuid4
 
 import pytest
 
+from apps.workbench.api import chunking_adapters as adapters
 from apps.workbench.api import ingestion as ingestion_module
 from apps.workbench.api.chunking_profiles import ChunkingError, ChunkingErrorCode, structural_token_profile
+from apps.workbench.api.document_processing import DocumentProcessingSettings, load_document_processing
 from apps.workbench.api.ingestion import IngestionError, IngestionService, UploadInput
 from apps.workbench.api.parsing import ParsedDocument
 from apps.workbench.api.persistence import (
@@ -230,14 +233,15 @@ async def test_real_processing_publishes_only_complete_lexical_records(filename:
     assert source_record.title == filename
     assert version.content_hash == hashlib.sha256(content).hexdigest()
     assert version.metadata["source_sha256"] == version.content_hash
-    assert version.metadata["language_policy"] == "unqualified_source_locale"
+    assert version.metadata["language_policy"] == "configured_sentence_language"
+    assert version.metadata["default_language"] == "en"
     assert version.metadata["original_content_available"] is False
     assert "local_original" not in version.metadata
     assert chunks and job.chunk_count == len(chunks)
     assert {chunk.metadata["unit"] for chunk in chunks} == {"token"}
     assert {chunk.metadata["target_size"] for chunk in chunks} == {500}
     assert {chunk.metadata["requested_overlap"] for chunk in chunks} == {50}
-    assert all(chunk.metadata["sentence_language"] is None for chunk in chunks)
+    assert all(chunk.metadata["sentence_language"] == "en" for chunk in chunks)
     assert all(chunk.embedding is chunk.embedding_profile_id is chunk.dimensions is None for chunk in chunks)
     assert all(chunk.page is None for chunk in chunks)
     for chunk in chunks:
@@ -620,8 +624,220 @@ async def test_ready_requires_both_storage_and_real_local_processing_assets(monk
     assert not await service.ready(_CONTEXT)
     repository.available = True
 
-    def unavailable() -> bool:
+    def unavailable(**_kwargs: Any) -> bool:
         raise ChunkingError(ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE)
 
     monkeypatch.setattr(ingestion_module, "_processing_available", unavailable)
     assert not await service.ready(_CONTEXT)
+
+
+@pytest.mark.parametrize("language", ["en", "ru"])
+async def test_configured_policy_controls_actual_ingestion_and_is_path_free(language: str) -> None:
+    """The service uses the same explicit language and token settings that it persists."""
+    repository = _Repository()
+    settings = DocumentProcessingSettings.model_validate(
+        {
+            "default_language": language,
+            "recursive_splitter": {
+                "split_length": 40,
+                "split_overlap": 7,
+                "sentence_splitter_params": {"keep_white_spaces": False},
+            },
+        }
+    )
+    service = IngestionService(repository, processing=settings)
+    result = await service.ingest(
+        _CONTEXT, upload=_upload(("Dr. Smith read the report. Another sentence. " * 50).encode())
+    )
+    _source, version, chunks = repository.active[result.job.source_id]
+    assert len(chunks) > 1
+    assert version.metadata["default_language"] == language
+    assert version.metadata["document_processing"] == service.processing_manifest()
+    assert all(chunk.metadata["sentence_language"] == language for chunk in chunks)
+    assert all(chunk.metadata["default_language"] == language for chunk in chunks)
+    assert all(chunk.metadata["target_size"] == 40 and chunk.metadata["requested_overlap"] == 7 for chunk in chunks)
+    for chunk in chunks:
+        length = chunk.metadata["length_tiktoken"]
+        assert isinstance(length, int) and length <= 40
+    assert all(chunk.metadata["fallback_reasons"] == [] for chunk in chunks)
+    decision = version.metadata["processing_profile"]
+    assert isinstance(decision, dict)
+    profile = decision["profile"]
+    assert isinstance(profile, dict) and profile["sentence_keep_white_spaces"] is False
+    assert "local_asset_directory" not in json.dumps(service.processing_manifest())
+
+
+async def test_configured_missing_sentence_resource_refuses_without_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Required English Punkt qualification cannot become structural fallback during ingestion."""
+    resources = replace(adapters.inspect_chunking_resources(), sentence_resource_revisions=())
+    monkeypatch.setattr(adapters, "inspect_chunking_resources", lambda: resources)
+    monkeypatch.setattr(ingestion_module, "inspect_chunking_resources", lambda: resources)
+    repository = _Repository()
+    service = IngestionService(repository)
+    assert not await service.ready(_CONTEXT)
+    with pytest.raises(IngestionError) as failure:
+        await service.ingest(_CONTEXT, upload=_upload(b"No sentence fallback is allowed."))
+    assert failure.value.code == "DEPENDENCY_UNAVAILABLE"
+    assert failure.value.job_id is not None
+    assert repository.jobs[failure.value.job_id].status == "failed"
+    assert not repository.active
+
+
+async def test_explicit_configured_structural_separators_do_not_claim_sentence_segmentation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An intentional no-sentence configuration is distinct from an unavailable-resource fallback."""
+    resources = replace(adapters.inspect_chunking_resources(), sentence_resource_revisions=())
+    monkeypatch.setattr(adapters, "inspect_chunking_resources", lambda: resources)
+    monkeypatch.setattr(ingestion_module, "inspect_chunking_resources", lambda: resources)
+    settings = DocumentProcessingSettings.model_validate(
+        {"recursive_splitter": {"split_length": 30, "split_overlap": 5, "separators": ["\n\n", "\n", " "]}}
+    )
+    repository = _Repository()
+    service = IngestionService(repository, processing=settings)
+    assert await service.ready(_CONTEXT)
+    result = await service.ingest(_CONTEXT, upload=_upload(b"Explicit token boundaries preserve this text. " * 30))
+    _source, version, chunks = repository.active[result.job.source_id]
+    assert version.metadata["language_policy"] == "configured_structural_boundaries"
+    assert version.metadata["default_language"] == "en"
+    assert all(chunk.metadata["sentence_language"] is None for chunk in chunks)
+    assert all(chunk.metadata["language_policy"] == "configured_structural_boundaries" for chunk in chunks)
+    assert all(chunk.metadata["fallback_reasons"] == ["structural_profile_requested"] for chunk in chunks)
+
+
+async def test_native_counter_loads_once_off_loop_and_qualified_input_is_guarded(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A controlled counter proves service wiring; native tokenizer fidelity has separate actual-asset tests."""
+    repository = _Repository()
+    loads: list[int] = []
+    inputs: list[str] = []
+
+    class Counter:
+        counter_revision = "injected-counter-r1"
+
+        def count_tokens(self, text: str) -> int:
+            inputs.append(text)
+            return len(text) + 1
+
+    def load(_directory: Path) -> Counter:
+        loads.append(threading.get_ident())
+        return Counter()
+
+    monkeypatch.setattr(ingestion_module, "LocalQwenTokenCounter", load)
+    settings = DocumentProcessingSettings.model_validate(
+        {
+            "native_model_guard": {
+                "enabled": True,
+                "local_asset_directory": str(tmp_path),
+                "max_tokens": 500,
+                "prefix": "operator-prefix-canary:",
+                "suffix": ":operator-suffix-canary",
+                "include_heading_path": True,
+            }
+        }
+    )
+    service = IngestionService(repository, processing=settings)
+    assert not loads
+    caplog.set_level(logging.INFO)
+    assert await service.ready(_CONTEXT)
+    result = await service.ingest(_CONTEXT, upload=_upload(b"# Heading\n\nBody", filename="native.md"))
+    assert len(loads) == 1 and loads[0] != threading.get_ident()
+    chunk = repository.active[result.job.source_id][2][0]
+    expected = "operator-prefix-canary:Heading\n\n# Heading\n\nBody:operator-suffix-canary"
+    assert expected in inputs
+    assert chunk.metadata["length_model_token"] == len(expected) + 1
+    assert chunk.metadata["model_counter_revision"] == "injected-counter-r1"
+    manifest = json.dumps(service.processing_manifest())
+    assert str(tmp_path) not in manifest
+    assert "operator-prefix-canary" not in manifest and "operator-suffix-canary" not in manifest
+    assert "prefix_sha256" in manifest and "suffix_sha256" in manifest
+    events = [json.loads(record.message) for record in caplog.records if record.name == "workbench.api"]
+    completed = [event for event in events if event.get("event") == "ingestion_processing_completed"]
+    assert len(completed) == 1
+    event = completed[0]
+    assert event["job_id"] == result.job.job_id and event["workspace_id"] == _CONTEXT.workspace_id
+    assert event["split_length"] == 500 and event["split_overlap"] == 50
+    assert event["split_unit"] == "token" and event["tokenizer_encoding"] == "o200k_base"
+    assert event["sentence_language"] == "en" and event["chunk_count"] == result.job.chunk_count
+    assert event["native_guard_enabled"] == 1 and event["model_counter_revision"] == "injected-counter-r1"
+    assert "operator-prefix-canary" not in caplog.text and "operator-suffix-canary" not in caplog.text
+    assert str(tmp_path) not in caplog.text and "# Heading" not in caplog.text
+
+
+async def test_enabled_missing_native_assets_are_durable_dependency_failure(tmp_path: Path) -> None:
+    """Enabled guards remain enabled when approved assets are absent."""
+    repository = _Repository()
+    settings = DocumentProcessingSettings.model_validate(
+        {"native_model_guard": {"enabled": True, "local_asset_directory": str(tmp_path)}}
+    )
+    service = IngestionService(repository, processing=settings)
+    assert not await service.ready(_CONTEXT)
+    with pytest.raises(IngestionError) as failure:
+        await service.ingest(_CONTEXT, upload=_upload(b"A guarded document."))
+    assert failure.value.code == "DEPENDENCY_UNAVAILABLE"
+    assert failure.value.job_id is not None
+    assert repository.jobs[failure.value.job_id].error_code == "DEPENDENCY_UNAVAILABLE"
+    assert not repository.active
+
+
+async def test_native_overflow_is_explicit_durable_and_content_free(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A separate model budget rejects without silently changing the tiktoken profile."""
+
+    class Counter:
+        counter_revision = "injected-overflow-counter-r1"
+
+        def count_tokens(self, text: str) -> int:
+            return len(text) + 1
+
+    repository = _Repository()
+    settings = DocumentProcessingSettings.model_validate(
+        {"native_model_guard": {"enabled": True, "local_asset_directory": str(tmp_path), "max_tokens": 1}}
+    )
+    service = IngestionService(repository, processing=settings, model_counter=Counter())
+    with caplog.at_level(logging.INFO), pytest.raises(IngestionError) as failure:
+        await service.ingest(_CONTEXT, upload=_upload(b"native-overflow-source-canary"))
+    assert (failure.value.code, failure.value.status, failure.value.retryable) == (
+        "MODEL_TOKEN_LIMIT_EXCEEDED",
+        413,
+        False,
+    )
+    assert failure.value.job_id is not None
+    assert repository.jobs[failure.value.job_id].error_code == "MODEL_TOKEN_LIMIT_EXCEEDED"
+    assert not repository.active
+    assert "ingestion_native_overflow" in caplog.text
+    assert "native-overflow-source-canary" not in caplog.text
+
+
+def test_legacy_profile_and_typed_processing_cannot_compete() -> None:
+    """Internal profile injection cannot silently override the operator configuration."""
+    with pytest.raises(ValueError, match="Choose one processing configuration"):
+        IngestionService(_Repository(), profile=structural_token_profile(), processing=DocumentProcessingSettings())
+
+
+async def test_configuration_provenance_changes_do_not_reindex_identical_effective_policy(tmp_path: Path) -> None:
+    """File formatting and configuration source remain observable without changing effective processing identity."""
+    repository = _Repository()
+    content = b"Stable effective configuration."
+    first = await IngestionService(repository, processing=DocumentProcessingSettings()).ingest(
+        _CONTEXT, upload=_upload(content)
+    )
+    selected = tmp_path / "processing.yaml"
+    selected.write_text("# Operator comment\ndocument_processing: {}\n", encoding="utf-8")
+    settings = load_document_processing({"WORKBENCH_DOCUMENT_PROCESSING_CONFIG": str(selected)})
+    assert settings.safe_manifest()["configuration_provenance"]["source"] == "selected_operator_file"
+    changed = await IngestionService(repository, processing=settings).ingest(
+        _CONTEXT,
+        upload=_upload(
+            content,
+            key="config-provenance-change",
+            source_id=first.job.source_id,
+            expected_active_version_id=first.job.effective_version_id,
+        ),
+    )
+    assert changed.job.outcome == "unchanged"
+    assert changed.job.effective_version_id == first.job.effective_version_id
+    assert changed.job.processing_profile_fingerprint == first.job.processing_profile_fingerprint
+    assert len(repository.versions) == 1

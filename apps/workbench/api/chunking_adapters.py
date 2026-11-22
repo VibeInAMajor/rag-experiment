@@ -170,9 +170,12 @@ def _splitter(decision: ChunkingDecision) -> Any:
     splitter: Any = RecursiveDocumentSplitter(
         split_length=profile.target_size,
         split_overlap=profile.overlap,
-        split_unit="token",
+        split_unit=profile.unit,
         separators=list(profile.separators),
-        sentence_splitter_params={"language": profile.sentence_language, "keep_white_spaces": True},
+        sentence_splitter_params={
+            "language": profile.sentence_language,
+            "keep_white_spaces": profile.sentence_keep_white_spaces,
+        },
         tokenizer_encoding=profile.tokenizer_encoding,
     )
     splitter.tiktoken_tokenizer = _encoding()
@@ -182,9 +185,13 @@ def _splitter(decision: ChunkingDecision) -> Any:
             raise ChunkingError(ChunkingErrorCode.SENTENCE_RESOURCE_UNAVAILABLE, reason="SENTENCE_REVISION_MISMATCH")
         _configure_sentence_path()
         if profile.sentence_language == "en":
-            splitter.nltk_tokenizer = SentenceSplitter(language="en", keep_white_spaces=True)
+            splitter.nltk_tokenizer = SentenceSplitter(
+                language="en", keep_white_spaces=profile.sentence_keep_white_spaces
+            )
         else:
-            splitter.nltk_tokenizer = SentenceSplitter(language="ru", keep_white_spaces=True)
+            splitter.nltk_tokenizer = SentenceSplitter(
+                language="ru", keep_white_spaces=profile.sentence_keep_white_spaces
+            )
     # Haystack 3.5.0 warm_up() calls URL-backed get_encoding(). Only replace setup state, never splitting logic.
     splitter._is_warmed_up = True
     return splitter

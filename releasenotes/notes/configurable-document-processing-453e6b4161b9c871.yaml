@@ -1,0 +1,17 @@
+---
+enhancements:
+  - |
+    Configure Workbench token splitting and English/Russian sentence segmentation
+    through the operator document-processing YAML, with a separate exact native
+    tokenizer admission guard. Explicit asset setup now supports verified offline
+    imports and copies only approved local Qwen tokenizer JSON files.
+upgrade:
+  - |
+    Normal Workbench API startup reads ``apps/workbench/document_processing.yaml``;
+    the shipped policy enables native-token admission and requires explicitly
+    provisioned local tokenizer assets. Run ``hatch run workbench-api:chunking-setup``
+    with the approved ``--qwen-from-directory`` before enabling upload. Use
+    ``WORKBENCH_DOCUMENT_PROCESSING_CONFIG`` for an alternate reviewed file and
+    ``WORKBENCH_DEFAULT_LANGUAGE`` for an explicit ``en`` or ``ru`` override.
+    Existing versions remain unchanged; apply a changed policy through explicit
+    guarded re-ingestion with a new idempotency key. Startup never downloads assets.

@@ -254,7 +254,11 @@ class DocumentDetail(Meta):
     processing_profile: dict[str, JsonValue] | None = None
     processing_profile_fingerprint: str | None = None
     ingestion_policy_revision: str | None = None
-    language_policy: Literal["unqualified_source_locale"] | None = None
+    language_policy: (
+        Literal["unqualified_source_locale", "configured_sentence_language", "configured_structural_boundaries"] | None
+    ) = None
+    default_language: Literal["en", "ru"] | None = None
+    document_processing: dict[str, JsonValue] | None = None
     source_content_sha256: str | None = None
     source_bytes: int | None = Field(default=None, ge=0)
     parsed_element_count: int | None = Field(default=None, ge=0)
@@ -296,3 +300,39 @@ class RevealSourceRequest(ContractModel):
 
 class RevealSourceResponse(Meta):
     status: Literal["revealed"] = "revealed"
+
+
+class ConfigurationYamlRequest(ContractModel):
+    yaml: str = Field(min_length=1)
+
+
+class ConfigurationSaveRequest(ConfigurationYamlRequest):
+    expected_revision: str = Field(pattern=r"^config-(?:[0-9a-f]{64}|missing)$")
+
+
+class ConfigurationIssueResponse(ContractModel):
+    message: str
+    path: str | None = None
+    line: int | None = None
+    column: int | None = None
+
+
+class ConfigurationValidationResponse(Meta):
+    valid: bool
+    errors: list[ConfigurationIssueResponse] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class ConfigurationDocumentResponse(Meta):
+    scope: Literal["application"] = "application"
+    yaml: str
+    revision: str
+    exists: bool
+    activation: Literal["active", "requires_restart"]
+    max_bytes: Literal[65536] = 65536
+    effective_default_language: Literal["en", "ru"]
+    deployment_overrides: list[Literal["default_language"]] = Field(default_factory=list)
+
+
+class ConfigurationSaveResponse(ConfigurationDocumentResponse):
+    status: Literal["saved"] = "saved"

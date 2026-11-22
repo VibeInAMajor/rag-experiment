@@ -151,6 +151,7 @@ class PreparedChunk:
             "separator_profile_id": profile.separator_profile_id,
             "separators": list(profile.separators),
             "sentence_language": profile.sentence_language,
+            "sentence_keep_white_spaces": profile.sentence_keep_white_spaces,
             "sentence_resource_revision": profile.sentence_resource_revision,
             "selection_reason": self.decision.selection_reason,
             "fallback_reasons": list(self.decision.fallback_reasons),

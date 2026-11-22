@@ -9,19 +9,31 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from functools import partial
 from math import isfinite
+from pathlib import Path
+from threading import Lock
 from time import perf_counter
-from typing import Literal, TypeVar
+from typing import Any, Literal, TypeVar
 
 from apps.workbench.api.boundary import log_event
-from apps.workbench.api.chunking import ChunkingInput, prepare_chunks
+from apps.workbench.api.chunking import ChunkingInput, ExactModelCounter, ModelTokenAdmission, prepare_chunks
 from apps.workbench.api.chunking_adapters import inspect_chunking_resources
 from apps.workbench.api.chunking_profiles import (
     ChunkingError,
     ChunkingErrorCode,
     ChunkingProfile,
-    structural_token_profile,
+    DocumentFeatures,
+    resolve_profile,
 )
-from apps.workbench.api.parser_registry import FormatId, ParseErrorCode, ParsingError, UploadLimits, select_parser
+from apps.workbench.api.document_processing import DocumentProcessingSettings
+from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.api.parser_registry import (
+    ElementKind,
+    FormatId,
+    ParseErrorCode,
+    ParsingError,
+    UploadLimits,
+    select_parser,
+)
 from apps.workbench.api.parsing import ParsedDocument, parse_source
 from apps.workbench.api.persistence import (
     Chunk,
@@ -44,14 +56,15 @@ from apps.workbench.api.persistence import (
 
 _T = TypeVar("_T")
 _OPAQUE_ID = re.compile(r"[A-Za-z0-9_-]+")
-_INGESTION_POLICY_REVISION = "txt-markdown-structural-v1"
-_LANGUAGE_POLICY = "unqualified_source_locale"
+_INGESTION_POLICY_REVISION = "txt-markdown-configured-v2"
+_LANGUAGE_POLICY = "configured_sentence_language"
 _NORMALIZATION_POLICY = "utf8-sig-exact-decoded-source-v1"
 _ERROR_POLICIES = {
     "INVALID_REQUEST": (400, False),
     "INVALID_DOCUMENT": (400, False),
     "UNSUPPORTED_MEDIA_TYPE": (415, False),
     "PAYLOAD_TOO_LARGE": (413, False),
+    "MODEL_TOKEN_LIMIT_EXCEEDED": (413, False),
     "DOCUMENT_NOT_FOUND": (404, False),
     "WORKSPACE_NOT_FOUND": (404, False),
     "IDEMPOTENCY_CONFLICT": (409, False),
@@ -149,7 +162,16 @@ def _request_fingerprint(upload: UploadInput, source_sha256: str) -> str:
 
 
 def _prepare_publication(
-    *, upload: UploadInput, parsed: ParsedDocument, job: IngestionJob, profile: ChunkingProfile
+    *,
+    upload: UploadInput,
+    parsed: ParsedDocument,
+    job: IngestionJob,
+    profile: ChunkingProfile,
+    language: str,
+    language_policy: str,
+    configuration: dict[str, Any],
+    model_admission: ModelTokenAdmission | None,
+    model_counter: ExactModelCounter | None,
 ) -> _Publication:
     prepared = prepare_chunks(
         ChunkingInput(
@@ -158,8 +180,11 @@ def _prepare_publication(
             workspace_id=job.workspace_id,
             source_id=job.source_id,
             source_version_id=job.reserved_version_id,
+            language=language,
         ),
         profile=profile,
+        model_admission=model_admission,
+        model_counter=model_counter,
     )
     warnings = tuple(
         dict.fromkeys(parsed.warning_codes + tuple(code for chunk in prepared for code in chunk.warning_codes))
@@ -167,11 +192,19 @@ def _prepare_publication(
     processing = json.loads(json.dumps(asdict(prepared[0].decision)))
     ingestion_policy = {
         "ingestion_policy_revision": _INGESTION_POLICY_REVISION,
-        "language_policy": _LANGUAGE_POLICY,
+        "language_policy": language_policy,
+        "default_language": language,
         "normalization_policy": _NORMALIZATION_POLICY,
         "chunking_profile_fingerprint": prepared[0].processing_fingerprint,
+        "document_processing": configuration,
     }
-    fingerprint = hashlib.sha256(json.dumps(ingestion_policy, sort_keys=True).encode()).hexdigest()
+    effective_policy = {
+        **ingestion_policy,
+        "document_processing": {
+            key: value for key, value in configuration.items() if key != "configuration_provenance"
+        },
+    }
+    fingerprint = hashlib.sha256(json.dumps(effective_policy, sort_keys=True).encode()).hexdigest()
     version_metadata = {
         "source_sha256": parsed.source_sha256,
         "source_bytes": parsed.inspected_source.bytes_count,
@@ -192,6 +225,8 @@ def _prepare_publication(
         chunk = item.to_chunk(title=parsed.inspected_source.safe_basename)
         chunk.metadata["ingestion_processing_fingerprint"] = fingerprint
         chunk.metadata["ingestion_policy_revision"] = _INGESTION_POLICY_REVISION
+        chunk.metadata["language_policy"] = language_policy
+        chunk.metadata["default_language"] = language
         chunks.append(chunk)
     return _Publication(
         source=Source(
@@ -230,6 +265,8 @@ def _parse_failure_code(error: ParsingError) -> str:
 
 
 def _chunk_failure_code(error: ChunkingError) -> str:
+    if error.code is ChunkingErrorCode.MODEL_TOKEN_LIMIT_EXCEEDED:
+        return "MODEL_TOKEN_LIMIT_EXCEEDED"
     if error.code is ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED:
         return "PAYLOAD_TOO_LARGE"
     if error.code in {
@@ -263,27 +300,120 @@ def _mapped_error(error: Exception, *, job_id: str | None = None) -> IngestionEr
     return IngestionError("INGESTION_FAILED", job_id=job_id)
 
 
-def _processing_available() -> bool:
+def _processing_available(*, profile: ChunkingProfile, language: str) -> bool:
     select_parser(FormatId.PLAIN_TEXT)
     select_parser(FormatId.MARKDOWN)
-    inspect_chunking_resources()
+    resolve_profile(
+        DocumentFeatures(FormatId.PLAIN_TEXT, False, (ElementKind.PARAGRAPH,), language=language),
+        profile=profile,
+        resources=inspect_chunking_resources(),
+    )
     return True
 
 
 class IngestionService:
     """Coordinate durable checkpoints; workers hold no persistence reference and never publish."""
 
-    def __init__(self, repository: PersistencePort, *, profile: ChunkingProfile | None = None) -> None:
+    def __init__(
+        self,
+        repository: PersistencePort,
+        *,
+        profile: ChunkingProfile | None = None,
+        processing: DocumentProcessingSettings | None = None,
+        model_counter: ExactModelCounter | None = None,
+    ) -> None:
+        if profile is not None and processing is not None:
+            raise ValueError("Choose one processing configuration")
         self._repository = repository
-        self._profile = profile or structural_token_profile()
+        self._processing = processing or DocumentProcessingSettings()
+        self._profile = profile or self._processing.to_profile()
+        self._language = (
+            (profile.sentence_language or "en") if profile is not None else self._processing.default_language
+        )
+        self._language_policy = (
+            "unqualified_source_locale"
+            if profile is not None
+            else _LANGUAGE_POLICY
+            if self._profile.sentence_language is not None
+            else "configured_structural_boundaries"
+        )
+        self._counter = model_counter
+        self._counter_lock = Lock()
         self._workers = asyncio.Semaphore(2)
+
+    def _model_counter(self) -> ExactModelCounter | None:
+        guard = self._processing.native_model_guard
+        if not guard.enabled:
+            return None
+        with self._counter_lock:
+            if self._counter is None:
+                if guard.local_asset_directory is None:
+                    raise ChunkingError(ChunkingErrorCode.MODEL_COUNTER_UNAVAILABLE)
+                self._counter = LocalQwenTokenCounter(Path(guard.local_asset_directory))
+            try:
+                ModelTokenAdmission(counter_revision=self._counter.counter_revision, max_tokens=guard.max_tokens)
+                empty_length = self._counter.count_tokens("")
+            except Exception:
+                raise ChunkingError(ChunkingErrorCode.MODEL_COUNTER_UNAVAILABLE) from None
+            if type(empty_length) is not int or empty_length <= 0:
+                raise ChunkingError(ChunkingErrorCode.MODEL_COUNTER_UNAVAILABLE)
+            return self._counter
+
+    def processing_manifest(self) -> dict[str, Any]:
+        """Project effective operator policy without local asset paths or document text."""
+        manifest = self._processing.safe_manifest()
+        manifest["recursive_splitter"] = {
+            "split_length": self._profile.target_size,
+            "split_overlap": self._profile.overlap,
+            "split_unit": self._profile.unit,
+            "tokenizer_encoding": self._profile.tokenizer_encoding,
+            "separators": list(self._profile.separators),
+            "sentence_splitter_params": {
+                "language": self._language,
+                "keep_white_spaces": self._profile.sentence_keep_white_spaces,
+            },
+        }
+        if self._counter is not None and self._processing.native_model_guard.enabled:
+            manifest["native_model_guard"]["counter_revision"] = self._counter.counter_revision
+        return manifest
+
+    def _prepare(self, *, upload: UploadInput, parsed: ParsedDocument, job: IngestionJob) -> _Publication:
+        counter = self._model_counter()
+        guard = self._processing.native_model_guard
+        admission = (
+            ModelTokenAdmission(
+                counter_revision=counter.counter_revision,
+                max_tokens=guard.max_tokens,
+                prefix=guard.prefix,
+                suffix=guard.suffix,
+                include_heading_path=guard.include_heading_path,
+            )
+            if counter is not None
+            else None
+        )
+        return _prepare_publication(
+            upload=upload,
+            parsed=parsed,
+            job=job,
+            profile=self._profile,
+            language=self._language,
+            language_policy=self._language_policy,
+            configuration=self.processing_manifest(),
+            model_admission=admission,
+            model_counter=counter,
+        )
+
+    def _ready_processing(self) -> bool:
+        _processing_available(profile=self._profile, language=self._language)
+        self._model_counter()
+        return True
 
     async def ready(self, context: WorkspaceContext) -> bool:
         """Qualify migrated durable storage and installed processing resources without downloading assets."""
         try:
             if not await self._repository.ingestion_ready(context):
                 return False
-            return await asyncio.to_thread(_processing_available)
+            return await self._pure(self._ready_processing)
         except (PersistenceError, ParsingError, ChunkingError, OSError):
             return False
 
@@ -333,10 +463,7 @@ class IngestionService:
             partial(parse_source, upload.content, safe_basename=upload.filename, declared_type=upload.declared_mime),
         )
         publication = await self._stage(
-            context,
-            progress,
-            "chunking",
-            partial(_prepare_publication, upload=upload, parsed=parsed, job=progress.job, profile=self._profile),
+            context, progress, "chunking", partial(self._prepare, upload=upload, parsed=parsed, job=progress.job)
         )
         await self._transition(context, progress, "publishing")
         started = perf_counter()
@@ -355,6 +482,25 @@ class IngestionService:
             raise
         if job.status != "completed" or job.effective_version_id is None or job.chunk_count is None:
             raise IngestionError("INGESTION_FAILED", job_id=job.job_id)
+        log_event(
+            "ingestion_processing_completed",
+            trace_id=context.trace_id or "none",
+            workspace_id=context.workspace_id,
+            job_id=job.job_id,
+            profile_id=self._profile.profile_id,
+            profile_revision=self._profile.profile_revision,
+            split_length=self._profile.target_size,
+            split_overlap=self._profile.overlap,
+            split_unit=self._profile.unit,
+            tokenizer_encoding=self._profile.tokenizer_encoding,
+            sentence_language=self._profile.sentence_language or "none",
+            sentence_keep_white_spaces=int(self._profile.sentence_keep_white_spaces),
+            chunk_count=job.chunk_count,
+            native_guard_enabled=int(self._processing.native_model_guard.enabled),
+            model_counter_revision=self._counter.counter_revision
+            if self._processing.native_model_guard.enabled and self._counter is not None
+            else "none",
+        )
         return IngestionResult(job=job)
 
     async def _fail(self, context: WorkspaceContext, progress: _Progress, error: IngestionError) -> None:
@@ -414,6 +560,15 @@ class IngestionService:
                 if isinstance(original, TimeoutError)
                 else (_mapped_error(original, job_id=job.job_id))
             )
+            if error.code == "MODEL_TOKEN_LIMIT_EXCEEDED":
+                log_event(
+                    "ingestion_native_overflow",
+                    trace_id=context.trace_id or "none",
+                    workspace_id=context.workspace_id,
+                    job_id=job.job_id,
+                    max_tokens=self._processing.native_model_guard.max_tokens,
+                    code=error.code,
+                )
             await self._fail(context, progress, error)
             raise error from None
 

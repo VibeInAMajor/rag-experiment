@@ -455,6 +455,29 @@ textarea.input {
   color: #6c7b91;
   letter-spacing: 1px;
 }
+.confirmation-dialog {
+  width: min(440px, calc(100vw - 32px));
+  border: 1px solid var(--border-hairline);
+  border-radius: 10px;
+  padding: 24px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  box-shadow: 0 24px 64px #0f172a26;
+}
+.confirmation-dialog::backdrop {
+  background: #0f172a66;
+}
+.confirmation-dialog h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+.confirmation-dialog p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0 0 24px;
+}
 .main-content {
   flex: 1;
   min-width: 0;

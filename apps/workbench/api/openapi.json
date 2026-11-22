@@ -1380,6 +1380,321 @@
           }
         }
       }
+    },
+    "/api/v1/configuration": {
+      "get": {
+        "summary": "Configuration Read",
+        "description": "Load the authoritative YAML directly for the local application, without keys or sessions.",
+        "operationId": "configuration_read_api_v1_configuration_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationDocumentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Configuration Save",
+        "description": "Revalidate and atomically save against the loaded revision; activation remains explicit.",
+        "operationId": "configuration_save_api_v1_configuration_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigurationSaveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationSaveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/configuration/validate": {
+      "post": {
+        "summary": "Configuration Validate",
+        "description": "Return canonical diagnostics without modifying saved configuration.",
+        "operationId": "configuration_validate_api_v1_configuration_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigurationYamlRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationValidationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1638,6 +1953,301 @@
         ],
         "title": "CapabilitiesResponse"
       },
+      "ConfigurationDocumentResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "scope": {
+            "type": "string",
+            "const": "application",
+            "title": "Scope",
+            "default": "application"
+          },
+          "yaml": {
+            "type": "string",
+            "title": "Yaml"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "activation": {
+            "type": "string",
+            "enum": [
+              "active",
+              "requires_restart"
+            ],
+            "title": "Activation"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "const": 65536,
+            "title": "Max Bytes",
+            "default": 65536
+          },
+          "effective_default_language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ru"
+            ],
+            "title": "Effective Default Language"
+          },
+          "deployment_overrides": {
+            "items": {
+              "type": "string",
+              "const": "default_language"
+            },
+            "type": "array",
+            "title": "Deployment Overrides"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "yaml",
+          "revision",
+          "exists",
+          "activation",
+          "effective_default_language"
+        ],
+        "title": "ConfigurationDocumentResponse"
+      },
+      "ConfigurationIssueResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ConfigurationIssueResponse"
+      },
+      "ConfigurationSaveRequest": {
+        "properties": {
+          "yaml": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Yaml"
+          },
+          "expected_revision": {
+            "type": "string",
+            "pattern": "^config-(?:[0-9a-f]{64}|missing)$",
+            "title": "Expected Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "yaml",
+          "expected_revision"
+        ],
+        "title": "ConfigurationSaveRequest"
+      },
+      "ConfigurationSaveResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "scope": {
+            "type": "string",
+            "const": "application",
+            "title": "Scope",
+            "default": "application"
+          },
+          "yaml": {
+            "type": "string",
+            "title": "Yaml"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "activation": {
+            "type": "string",
+            "enum": [
+              "active",
+              "requires_restart"
+            ],
+            "title": "Activation"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "const": 65536,
+            "title": "Max Bytes",
+            "default": 65536
+          },
+          "effective_default_language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ru"
+            ],
+            "title": "Effective Default Language"
+          },
+          "deployment_overrides": {
+            "items": {
+              "type": "string",
+              "const": "default_language"
+            },
+            "type": "array",
+            "title": "Deployment Overrides"
+          },
+          "status": {
+            "type": "string",
+            "const": "saved",
+            "title": "Status",
+            "default": "saved"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "yaml",
+          "revision",
+          "exists",
+          "activation",
+          "effective_default_language"
+        ],
+        "title": "ConfigurationSaveResponse"
+      },
+      "ConfigurationValidationResponse": {
+        "properties": {
+          "contract_revision": {
+            "type": "string",
+            "const": "rag-api-v1.0",
+            "title": "Contract Revision",
+            "default": "rag-api-v1.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Request Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Trace Id"
+          },
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationIssueResponse"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "trace_id",
+          "valid"
+        ],
+        "title": "ConfigurationValidationResponse"
+      },
+      "ConfigurationYamlRequest": {
+        "properties": {
+          "yaml": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Yaml"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "yaml"
+        ],
+        "title": "ConfigurationYamlRequest"
+      },
       "DatabaseDependencyStatus": {
         "properties": {
           "status": {
@@ -1827,13 +2437,46 @@
             "anyOf": [
               {
                 "type": "string",
-                "const": "unqualified_source_locale"
+                "enum": [
+                  "unqualified_source_locale",
+                  "configured_sentence_language",
+                  "configured_structural_boundaries"
+                ]
               },
               {
                 "type": "null"
               }
             ],
             "title": "Language Policy"
+          },
+          "default_language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "en",
+                  "ru"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Language"
+          },
+          "document_processing": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Processing"
           },
           "source_content_sha256": {
             "anyOf": [

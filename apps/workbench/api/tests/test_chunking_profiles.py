@@ -46,8 +46,22 @@ def test_default_policy_combines_sentence_boundaries_with_500_50_encoding_tokens
     assert decision.profile.tokenizer_encoding == "o200k_base"
     assert decision.profile.separators == ("\n\n", "sentence", "\n", " ")
     assert decision.profile.sentence_language == "en"
+    assert decision.profile.sentence_keep_white_spaces is True
     assert decision.profile.sentence_resource_revision == dict(_RESOURCES.sentence_resource_revisions)["en"]
     assert decision.token_counter_revision == _RESOURCES.token_counter_revision
+
+
+@pytest.mark.parametrize("value", ["true", 1, None])
+def test_sentence_whitespace_requires_an_explicit_boolean(value: Any) -> None:
+    """Truthiness cannot silently change the fingerprinted sentence boundary policy."""
+    with pytest.raises(ChunkingError, match="^INVALID_PROFILE$"):
+        ChunkingProfile(sentence_keep_white_spaces=value)
+
+
+def test_configured_structural_separators_cannot_claim_required_sentences() -> None:
+    """A profile without the sentence sentinel cannot claim sentence-resource enforcement."""
+    with pytest.raises(ChunkingError, match="^INVALID_PROFILE$"):
+        ChunkingProfile(separator_profile_id="prose_token_configured", separators=("\n", " "), require_sentences=True)
 
 
 @pytest.mark.parametrize("language", ["en", "ru"])

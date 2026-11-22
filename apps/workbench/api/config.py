@@ -9,6 +9,11 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
 from apps.workbench.api.contracts import Identifier
+from apps.workbench.api.document_processing import (
+    DocumentProcessingSettings,
+    document_processing_configuration_path,
+    load_document_processing,
+)
 
 
 class ApiSettings(BaseModel):
@@ -20,12 +25,30 @@ class ApiSettings(BaseModel):
     database_dsn: SecretStr | None = None
     local_source_root: str | None = None
     ingestion_timeout_seconds: float = Field(default=30.0, gt=0, le=30)
+    document_processing: DocumentProcessingSettings = Field(default_factory=DocumentProcessingSettings)
+    configuration_file: str | None = Field(default=None, repr=False)
+    configuration_language_override: str | None = None
     allowed_origins: tuple[str, ...] = (
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:4173",
         "http://127.0.0.1:4173",
     )
+
+    @field_validator("configuration_file")
+    @classmethod
+    def _validate_configuration_path(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if (
+            not value
+            or len(value) > 2048
+            or not Path(value).is_absolute()
+            or value.startswith(("\\\\", "//"))
+            or any(ord(c) < 32 for c in value)
+        ):
+            raise ValueError("Configuration storage requires an absolute local file")
+        return str(Path(value).resolve())
 
     @field_validator("local_source_root")
     @classmethod
@@ -100,6 +123,9 @@ class ApiSettings(BaseModel):
         """Read only explicit API settings; readiness cannot be configured."""
         environment = os.environ if environ is None else environ
         values: dict[str, object] = {}
+        values["document_processing"] = load_document_processing(environment)
+        values["configuration_file"] = str(document_processing_configuration_path(environment))
+        values["configuration_language_override"] = environment.get("WORKBENCH_DEFAULT_LANGUAGE")
         fields = {"HOST": "host", "PORT": "port", "BACKEND_REVISION": "backend_revision"}
         for suffix, field in fields.items():
             value = environment.get(f"WORKBENCH_API_{suffix}")

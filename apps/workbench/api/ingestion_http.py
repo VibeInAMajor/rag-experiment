@@ -57,7 +57,13 @@ _CHUNK_METADATA = frozenset(
         "separator_profile_id",
         "separators",
         "sentence_language",
+        "sentence_keep_white_spaces",
         "sentence_resource_revision",
+        "length_model_token",
+        "model_counter_revision",
+        "model_minus_tiktoken",
+        "length_tiktoken_model_input",
+        "model_minus_tiktoken_model_input",
         "selection_reason",
         "fallback_reasons",
         "warnings",
@@ -68,6 +74,7 @@ _CHUNK_METADATA = frozenset(
         "header",
         "parent_headers",
         "language_policy",
+        "default_language",
         "ingestion_processing_fingerprint",
         "ingestion_policy_revision",
     }
@@ -228,6 +235,9 @@ class IngestionRoutes:
                 key: metadata[key] for key in ("parser_id", "parser_revision", "detector_revision") if key in metadata
             }
             warnings = metadata.get("warnings", [])
+            language_policy = metadata.get("language_policy")
+            default_language = metadata.get("default_language")
+            processing = metadata.get("document_processing")
             return DocumentDetail(
                 **request_meta(request).model_dump(),
                 workspace_id=context.workspace_id,
@@ -242,9 +252,15 @@ class IngestionRoutes:
                 processing_profile=profile if isinstance(profile, dict) else None,
                 processing_profile_fingerprint=_text_metadata(metadata, "processing_profile_fingerprint"),
                 ingestion_policy_revision=_text_metadata(metadata, "ingestion_policy_revision"),
-                language_policy="unqualified_source_locale"
-                if metadata.get("language_policy") == "unqualified_source_locale"
+                language_policy="configured_sentence_language"
+                if language_policy == "configured_sentence_language"
+                else "configured_structural_boundaries"
+                if language_policy == "configured_structural_boundaries"
+                else "unqualified_source_locale"
+                if language_policy == "unqualified_source_locale"
                 else None,
+                default_language="en" if default_language == "en" else "ru" if default_language == "ru" else None,
+                document_processing=processing if isinstance(processing, dict) else None,
                 source_content_sha256=_text_metadata(metadata, "source_sha256"),
                 source_bytes=_count_metadata(metadata, "source_bytes"),
                 parsed_element_count=_count_metadata(metadata, "parsed_element_count"),

@@ -1,5 +1,7 @@
 import {
   contractRevision,
+  type ConfigurationDocument,
+  type ConfigurationValidation,
   type ApiFailure,
   type ApiMeta,
   type BackendCapabilities,
@@ -424,5 +426,64 @@ export function decodeFailure(value: unknown, httpStatus: number): ApiFailure {
           : identifier(error.run_id),
       fields,
     },
+  };
+}
+
+export function decodeConfigurationDocument(
+  value: unknown,
+): ConfigurationDocument {
+  const item = object(value);
+  const yaml = documentText(item.yaml);
+  const revision = text(item.revision, 80);
+  if (
+    item.scope !== "application" ||
+    item.max_bytes !== 65536 ||
+    new TextEncoder().encode(yaml).length > 65536 ||
+    !/^config-(?:[0-9a-f]{64}|missing)$/.test(revision)
+  )
+    invalidResponse();
+  return {
+    ...meta(item),
+    scope: "application",
+    yaml,
+    revision,
+    exists: boolean(item.exists),
+    activation: choice(item.activation, ["active", "requires_restart"]),
+    max_bytes: 65536,
+    effective_default_language: choice(item.effective_default_language, [
+      "en",
+      "ru",
+    ]),
+    deployment_overrides: array(item.deployment_overrides, 1).map((value) =>
+      choice(value, ["default_language"]),
+    ),
+  };
+}
+
+export function decodeConfigurationSave(value: unknown): ConfigurationDocument {
+  if (object(value).status !== "saved") invalidResponse();
+  return decodeConfigurationDocument(value);
+}
+
+export function decodeConfigurationValidation(
+  value: unknown,
+): ConfigurationValidation {
+  const item = object(value);
+  const valid = boolean(item.valid);
+  const errors = array(item.errors, 20).map((value) => {
+    const issue = object(value);
+    return {
+      message: text(issue.message, 240),
+      path: issue.path === null ? null : text(issue.path, 512),
+      line: issue.line === null ? null : positiveInteger(issue.line),
+      column: issue.column === null ? null : positiveInteger(issue.column),
+    };
+  });
+  if (valid === errors.length > 0) invalidResponse();
+  return {
+    ...meta(item),
+    valid,
+    errors,
+    warnings: array(item.warnings, 10).map((value) => text(value, 512)),
   };
 }

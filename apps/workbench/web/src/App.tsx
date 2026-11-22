@@ -15,6 +15,7 @@ import {
   Keyboard,
   Play,
   Settings2,
+  Wrench,
   X,
 } from "lucide-react";
 import {
@@ -48,13 +49,20 @@ import {
   type RunEntry,
 } from "./domain/liveSearch";
 import { ExecutionControls } from "./components/ExecutionControls";
+import { useConfirmation } from "./components/ConfirmationDialog";
 import { PipelinesView } from "./views/PipelinesView";
 import { DocumentsView } from "./views/DocumentsView";
 import { RunsView } from "./views/RunsView";
 import { SettingsView } from "./views/SettingsView";
 import "./views/views.css";
 
-type Page = "editor" | "pipelines" | "documents" | "runs" | "settings";
+type Page =
+  "editor" | "pipelines" | "documents" | "runs" | "configuration" | "settings";
+const ConfigurationView = lazy(() =>
+  import("./views/ConfigurationView").then((module) => ({
+    default: module.ConfigurationView,
+  })),
+);
 const PipelineEditor = lazy(() =>
   import("./components/PipelineEditor").then((module) => ({
     default: module.PipelineEditor,
@@ -68,6 +76,7 @@ function retainSessionRuns(entries: RunEntry[]): RunEntry[] {
 }
 
 export function App() {
+  const { confirm, confirmationDialog } = useConfirmation();
   const [pipelines, setPipelines] = useState<Pipeline[]>(() =>
     structuredClone(initialPipelines),
   );
@@ -108,7 +117,13 @@ export function App() {
   const [mode, setMode] = useState<ExecutionMode>("preview");
   const discovery = useBackendDiscovery(mode);
   const [activeId, setActiveId] = useState(initialPipelines[0].id);
-  const [page, setPage] = useState<Page>("editor");
+  const [page, setPage] = useState<Page>(() =>
+    typeof window !== "undefined" && window.location.hash === "#configuration"
+      ? "configuration"
+      : "editor",
+  );
+  const [configurationDirty, setConfigurationDirty] = useState(false);
+  const [configurationSaving, setConfigurationSaving] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [issues, setIssues] = useState<GraphIssue[]>([]);
   const [showValidationIssues, setShowValidationIssues] = useState(false);
@@ -201,6 +216,28 @@ export function App() {
     setIssues([]);
     setShowValidationIssues(false);
     setResultsOpen(false);
+  };
+  const navigate = async (next: Page) => {
+    if (next === page) return;
+    if (page === "configuration") {
+      if (configurationSaving) {
+        notify("Wait for the configuration save to finish.");
+        return;
+      }
+      if (
+        configurationDirty &&
+        !(await confirm(
+          "Discard unsaved configuration changes and leave this page?",
+        ))
+      )
+        return;
+    }
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}${next === "configuration" ? "#configuration" : ""}`,
+    );
+    setPage(next);
   };
   const newPipeline = (template: TemplateId) => {
     const created = createPipeline(template);
@@ -331,6 +368,7 @@ export function App() {
                 { id: "pipelines", label: "Pipelines", icon: GitBranch },
                 { id: "documents", label: "Documents", icon: FileText },
                 { id: "runs", label: "Runs", icon: Play },
+                { id: "configuration", label: "Configuration", icon: Wrench },
               ] as const
             ).map((item) => (
               <button
@@ -342,7 +380,8 @@ export function App() {
                     ? "page"
                     : undefined
                 }
-                onClick={() => setPage(item.id)}
+                onClick={() => navigate(item.id)}
+                title={item.label}
               >
                 <item.icon size={21} strokeWidth={1.6} />
                 <span>{item.label}</span>
@@ -353,7 +392,7 @@ export function App() {
             <button
               className={`nav-item ${page === "settings" ? "active" : ""}`}
               aria-current={page === "settings" ? "page" : undefined}
-              onClick={() => setPage("settings")}
+              onClick={() => navigate("settings")}
             >
               <Settings2 size={21} strokeWidth={1.6} />
               <span>Settings</span>
@@ -362,6 +401,20 @@ export function App() {
           </div>
         </nav>
         <main id="main-content" className="main-content" tabIndex={-1}>
+          {page === "configuration" && (
+            <Suspense
+              fallback={
+                <div className="result-empty">
+                  Loading configuration editor…
+                </div>
+              }
+            >
+              <ConfigurationView
+                onDirtyChange={setConfigurationDirty}
+                onSavingChange={setConfigurationSaving}
+              />
+            </Suspense>
+          )}
           {page === "editor" && (
             <Suspense
               fallback={<div className="result-empty">Loading workspace…</div>}
@@ -559,6 +612,7 @@ export function App() {
           </button>
         </div>
       )}
+      {confirmationDialog}
       <dialog
         className="shortcuts-dialog"
         ref={help}

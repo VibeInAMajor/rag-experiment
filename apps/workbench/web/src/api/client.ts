@@ -1,5 +1,7 @@
 import type {
   ApiMeta,
+  ConfigurationDocument,
+  ConfigurationValidation,
   BackendCapabilities,
   LiveResponse,
   LocalSourceFile,
@@ -11,6 +13,9 @@ import type {
 } from "./contracts";
 import {
   decodeCapabilities,
+  decodeConfigurationDocument,
+  decodeConfigurationSave,
+  decodeConfigurationValidation,
   decodeFailure,
   decodeLive,
   decodeLocalSourceFile,
@@ -32,6 +37,16 @@ export type WorkspaceOptions = RequestOptions & {
   limit?: number;
 };
 export type WorkbenchApiClient = {
+  getConfiguration(options?: RequestOptions): Promise<ConfigurationDocument>;
+  validateConfiguration(
+    yaml: string,
+    options?: RequestOptions,
+  ): Promise<ConfigurationValidation>;
+  saveConfiguration(
+    yaml: string,
+    expectedRevision: string,
+    options?: RequestOptions,
+  ): Promise<ConfigurationDocument>;
   getLive(options?: RequestOptions): Promise<LiveResponse>;
   getReady(options?: RequestOptions): Promise<ReadyResponse>;
   getCapabilities(options?: RequestOptions): Promise<BackendCapabilities>;
@@ -119,7 +134,10 @@ export function createWorkbenchApiClient({
     decode: (value: unknown) => T,
     { signal }: RequestOptions = {},
     transport: {
-      body?: SearchRequest | Record<string, never>;
+      body?: object;
+      method?: "POST" | "PUT";
+      configuration?: boolean;
+      headers?: Record<string, string>;
       timeoutMs?: number;
       maxResponseChars?: number;
     } = {},
@@ -151,14 +169,32 @@ export function createWorkbenchApiClient({
     );
     try {
       const operation = async () => {
+        if (
+          transport.configuration &&
+          typeof window !== "undefined" &&
+          new URL(base, window.location.href).origin !== window.location.origin
+        ) {
+          throw new WorkbenchApiError(
+            "Configuration requires the application's same-origin API proxy.",
+            {
+              kind: "configuration",
+              code: "CONFIGURATION_SAME_ORIGIN_REQUIRED",
+            },
+          );
+        }
         if (signal?.aborted) {
           cancel(false);
           throw controller.signal.reason;
         }
         const response = await fetchImpl(`${base}${path}`, {
-          method: transport.body === undefined ? "GET" : "POST",
+          method:
+            transport.method ?? (transport.body === undefined ? "GET" : "POST"),
           headers: {
             Accept: "application/json",
+            ...(transport.configuration
+              ? { "X-Workbench-Request": "configuration" }
+              : {}),
+            ...transport.headers,
             ...(transport.body === undefined
               ? {}
               : { "Content-Type": "application/json" }),
@@ -248,6 +284,28 @@ export function createWorkbenchApiClient({
   };
 
   return {
+    getConfiguration: (options) =>
+      request("/configuration", decodeConfigurationDocument, options, {
+        configuration: true,
+        maxResponseChars: 400000,
+      }),
+    validateConfiguration: (yaml, options) =>
+      request(
+        "/configuration/validate",
+        decodeConfigurationValidation,
+        options,
+        {
+          configuration: true,
+          body: { yaml },
+        },
+      ),
+    saveConfiguration: (yaml, expectedRevision, options) =>
+      request("/configuration", decodeConfigurationSave, options, {
+        configuration: true,
+        method: "PUT",
+        body: { yaml, expected_revision: expectedRevision },
+        maxResponseChars: 400000,
+      }),
     search: async (workspaceId, body, options) => {
       const scope = validateResourceId(workspaceId);
       const submitted = decodeSearchRequest(body);

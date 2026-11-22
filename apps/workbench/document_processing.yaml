@@ -1,0 +1,22 @@
+document_processing:
+  default_language: en
+  recursive_splitter:
+    split_length: 500
+    split_overlap: 50
+    split_unit: token
+    tokenizer_encoding: o200k_base
+    separators:
+      - "\n\n"
+      - sentence
+      - "\n"
+      - " "
+    sentence_splitter_params:
+      language: en
+      keep_white_spaces: true
+  native_model_guard:
+    enabled: true
+    max_tokens: 32768
+    local_asset_directory: .cache/workbench-chunking/qwen3-embedding-4b
+    prefix: ""
+    suffix: ""
+    include_heading_path: false

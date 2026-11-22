@@ -1,6 +1,8 @@
 """Measure every curated ingestion case against real disposable PostgreSQL-backed HTTP."""
 
+import asyncio
 import json
+import os
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -30,7 +32,6 @@ from apps.workbench.api.tests.conftest import DisposableDatabase
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 _DIRECTORY = Path(__file__).resolve().parents[4]
 _FIXTURES = Path(__file__).parent / "fixtures/chunking/manifest.json"
-_EVIDENCE = _DIRECTORY / "tasks/evidence/ingestion-2026-11-22/stability.json"
 _DOCUMENTS = "/api/v1/workspaces/development/documents"
 
 
@@ -132,7 +133,7 @@ async def _failed_case(client: httpx.AsyncClient, response: httpx.Response) -> d
 
 
 async def test_curated_upload_stability_is_measured_in_a_disposable_database(
-    disposable_database: DisposableDatabase,
+    disposable_database: DisposableDatabase, tmp_path: Path
 ) -> None:
     """Keep all 25 uploads/refusals in the measured denominator without touching the development database."""
     manifest = json.loads(_FIXTURES.read_text(encoding="utf-8"))
@@ -143,7 +144,7 @@ async def test_curated_upload_stability_is_measured_in_a_disposable_database(
         "scope": "ASGI HTTP with fixture-owned real PostgreSQL",
         "fixture_sha256": sha256(_FIXTURES.read_bytes()).hexdigest(),
         "run_token": run_token,
-        "language_policy": "unqualified_source_locale",
+        "language_policy": "configured_sentence_language",
         "cases": [],
         "result": "RUNNING",
         "latency_scope": "sequential upload request elapsed; server stages separate; no throughput SLA",
@@ -214,5 +215,10 @@ async def test_curated_upload_stability_is_measured_in_a_disposable_database(
         await repository.close()
         if report["result"] != "PASS":
             report["result"] = "FAIL"
-        _EVIDENCE.parent.mkdir(parents=True, exist_ok=True)
-        _EVIDENCE.write_text(json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
+        evidence_directory = Path(os.environ.get("WORKBENCH_TEST_EVIDENCE_DIRECTORY", str(tmp_path)))
+        await asyncio.to_thread(evidence_directory.mkdir, parents=True, exist_ok=True)
+        await asyncio.to_thread(
+            (evidence_directory / "stability.json").write_text,
+            json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )

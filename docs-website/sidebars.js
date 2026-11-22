@@ -31,6 +31,11 @@ export default {
     },
     {
       type: 'doc',
+      id: 'architecture/document-processing-configuration',
+      label: 'Document Processing Configuration',
+    },
+    {
+      type: 'doc',
       id: 'architecture/durable-text-ingestion',
       label: 'Durable Text Ingestion',
     },

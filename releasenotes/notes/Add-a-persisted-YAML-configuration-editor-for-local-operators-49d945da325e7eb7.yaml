@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Open Configuration below Runs with its wrench icon to edit persisted application
+    YAML directly, without operator keys or an additional access screen. The editor
+    provides syntax highlighting, line numbers, validation, unsaved-change protection
+    and revision conflicts. Saves report actual API restart requirements.
+upgrade:
+  - |
+    Configuration uses the existing local loopback/same-origin application boundary
+    with non-secret request-intent headers and trusted-origin checks, without account
+    authentication. It edits the selected operator YAML and retains ten prior revisions.
+    Existing indexed versions require explicit re-ingestion to adopt changed settings.

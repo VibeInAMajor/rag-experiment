@@ -146,3 +146,27 @@ export type LocalSourceFile = ApiMeta & {
 export type SourceRevealResponse = ApiMeta & {
   status: "revealed";
 };
+
+export type ConfigurationDocument = ApiMeta & {
+  scope: "application";
+  yaml: string;
+  revision: string;
+  exists: boolean;
+  activation: "active" | "requires_restart";
+  max_bytes: 65536;
+  effective_default_language: "en" | "ru";
+  deployment_overrides: "default_language"[];
+};
+
+export type ConfigurationIssue = {
+  message: string;
+  path: string | null;
+  line: number | null;
+  column: number | null;
+};
+
+export type ConfigurationValidation = ApiMeta & {
+  valid: boolean;
+  errors: ConfigurationIssue[];
+  warnings: string[];
+};

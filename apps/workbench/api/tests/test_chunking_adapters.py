@@ -24,6 +24,7 @@ from apps.workbench.api.chunking_profiles import (
     DocumentFeatures,
     resolve_profile,
 )
+from apps.workbench.api.document_processing import DocumentProcessingSettings
 from apps.workbench.api.parser_registry import ElementKind, FormatId
 from haystack import Document
 from haystack.components.preprocessors import RecursiveDocumentSplitter
@@ -96,6 +97,61 @@ def test_sentence_and_token_modes_are_enabled_together(language: str) -> None:
     assert splitter.tiktoken_tokenizer is not None
     assert splitter.tiktoken_tokenizer.name == "o200k_base"
     assert splitter._is_warmed_up
+
+
+@pytest.mark.parametrize("language", ["en", "ru"])
+@pytest.mark.parametrize("keep_white_spaces", [True, False])
+def test_configured_constructor_values_reach_the_real_haystack_component(
+    language: str, keep_white_spaces: bool
+) -> None:
+    """Configured parameters reach both the public component and its provisioned sentence tokenizer."""
+    settings = DocumentProcessingSettings.model_validate(
+        {
+            "default_language": language,
+            "recursive_splitter": {
+                "split_length": 32,
+                "split_overlap": 5,
+                "separators": ["sentence", "\n\n", "\n", " "],
+                "sentence_splitter_params": {"language": language, "keep_white_spaces": keep_white_spaces},
+            },
+        }
+    )
+    decision = resolve_profile(
+        DocumentFeatures(FormatId.PLAIN_TEXT, False, (ElementKind.PARAGRAPH,), language=language),
+        profile=settings.to_profile(),
+        resources=inspect_chunking_resources(),
+    )
+    splitter = adapters._splitter(decision)
+    assert splitter.split_length == 32 and splitter.split_overlap == 5
+    assert splitter.split_units == settings.recursive_splitter.split_unit
+    assert splitter.tokenizer_encoding == settings.recursive_splitter.tokenizer_encoding
+    assert splitter.separators == ["sentence", "\n\n", "\n", " "]
+    assert splitter.sentence_splitter_params == {"language": language, "keep_white_spaces": keep_white_spaces}
+    assert splitter.nltk_tokenizer.language == language
+    assert splitter.nltk_tokenizer.keep_white_spaces is keep_white_spaces
+    text = (
+        "Dr. Smith arrived at 10 a.m. He read the report.\nThe second section follows. "
+        if language == "en"
+        else "Проф. Иванов прочитал доклад. Следующая глава готова.\nЭто проверка границ предложений. "
+    ) * 25
+    _assert_source_spans(text, decision)
+
+
+def test_configured_punctuation_uses_native_literal_separator_semantics() -> None:
+    """Pinned Haystack escapes punctuation internally; the adapter must not double-escape it."""
+    settings = DocumentProcessingSettings.model_validate(
+        {"recursive_splitter": {"split_length": 4, "split_overlap": 0, "separators": [".", "?", " "]}}
+    )
+    decision = resolve_profile(
+        DocumentFeatures(FormatId.PLAIN_TEXT, False, (ElementKind.PARAGRAPH,)),
+        profile=settings.to_profile(),
+        resources=inspect_chunking_resources(),
+    )
+    text = "alpha.beta?gamma.delta?epsilon zeta."
+    spans = split_prose(text, decision=decision)
+    assert [text[span.start : span.end] for span in spans] == ["alpha.", "beta?gamma.", "delta?", "epsilon zeta."]
+    assert all(not span.warning_codes for span in spans)
+    _assert_source_spans(text, decision)
 
 
 def test_counter_uses_ordinary_text_for_special_token_spellings() -> None:

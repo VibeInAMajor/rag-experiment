@@ -19,6 +19,7 @@ from starlette.responses import JSONResponse
 
 from apps.workbench.api.boundary import RequestBoundary, _ClientDisconnected, error_response, log_event, request_meta
 from apps.workbench.api.config import ApiSettings
+from apps.workbench.api.configuration_http import register_configuration_routes
 from apps.workbench.api.contracts import (
     CapabilitiesResponse,
     Dependencies,
@@ -517,7 +518,11 @@ def create_app(
     configuration = ApiSettings.from_env() if settings is None else settings
     database = create_database_dependency(configuration.database_dsn, persistence=persistence)
     service = lexical
-    ingestion = IngestionService(database.persistence) if database.persistence is not None else None
+    ingestion = (
+        IngestionService(database.persistence, processing=configuration.document_processing)
+        if database.persistence is not None
+        else None
+    )
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -618,4 +623,5 @@ def create_app(
             timeout_seconds=configuration.ingestion_timeout_seconds,
         ),
     )
+    register_configuration_routes(app, settings=configuration)
     return app

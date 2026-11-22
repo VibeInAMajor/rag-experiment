@@ -4,6 +4,14 @@ A pipeline editor with offline Preview, separate Haystack constructor validation
 
 An independent [Workbench API](../api/README.md) provides PostgreSQL lexical retrieval through Haystack. **Live** mode executes the approved Keyword search graph through that API. The initial Hybrid graph remains Preview. Live document listing is not connected yet.
 
+## Application configuration
+
+Select **Configuration**, the wrench directly below Runs, to open the server YAML immediately. No operator key, login or extra access screen is required. The Application-wide badge and Lock action are removed. This page uses the real same-origin API in either Preview or Live mode; browser preferences remain under Settings.
+
+The lazy CodeMirror editor supports multiline paste, indentation, syntax highlighting, line numbers, undo and virtualized scrolling. Tab indents; Escape followed by Tab moves focus out. Validate uses the canonical server schema and Save revalidates with the loaded revision. Conflicts retain edits. Reload/navigation ask before discarding unsaved work; refreshing warns too. In-flight saves cannot be duplicated. A timeout is unconfirmed: reload before retrying.
+
+The selected YAML is the only persisted source. Save reports whether settings already match the active process or require an **API restart**. Existing documents adopt a changed profile only through explicit guarded re-ingestion. The local API checks request intent and trusted origins without accounts/cookies. See the [operator reference](../../../docs-website/docs/architecture/document-processing-configuration.md#edit-configuration-in-workbench) for limits, persistence and recovery.
+
 ## Start
 
 For the complete local application after the [one-time database setup](../api/README.md#optional-persistent-development-database), run from the repository root:
