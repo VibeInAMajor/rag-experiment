@@ -1,0 +1,197 @@
+{
+  "scope": "Hand-labelled synthetic EN/RU/UK code-family identifiers; lexical only",
+  "queries": [
+    {
+      "query": "refundledgerproof",
+      "file": "ledger.py",
+      "qualified_symbol": "Ledger.refundledgerproof",
+      "context_marker": "refundledgerproofcontext"
+    },
+    {
+      "query": "settleledgerproof",
+      "file": "ledger.py",
+      "qualified_symbol": "Ledger.settleledgerproof",
+      "context_marker": "settleledgerproofcontext"
+    },
+    {
+      "query": "reserveinventoryproof",
+      "file": "inventory.py",
+      "qualified_symbol": "Inventory.reserveinventoryproof",
+      "context_marker": "reserveinventoryproofcontext"
+    },
+    {
+      "query": "releaseinventoryproof",
+      "file": "inventory.py",
+      "qualified_symbol": "Inventory.releaseinventoryproof",
+      "context_marker": "releaseinventoryproofcontext"
+    },
+    {
+      "query": "dispatchshippingproof",
+      "file": "shipping.py",
+      "qualified_symbol": "Shipping.dispatchshippingproof",
+      "context_marker": "dispatchshippingproofcontext"
+    },
+    {
+      "query": "trackshippingproof",
+      "file": "shipping.py",
+      "qualified_symbol": "Shipping.trackshippingproof",
+      "context_marker": "trackshippingproofcontext"
+    },
+    {
+      "query": "publishcatalogproof",
+      "file": "catalog.py",
+      "qualified_symbol": "Catalog.publishcatalogproof",
+      "context_marker": "publishcatalogproofcontext"
+    },
+    {
+      "query": "archivecatalogproof",
+      "file": "catalog.py",
+      "qualified_symbol": "Catalog.archivecatalogproof",
+      "context_marker": "archivecatalogproofcontext"
+    },
+    {
+      "query": "activateaccountsproof",
+      "file": "accounts.py",
+      "qualified_symbol": "Accounts.activateaccountsproof",
+      "context_marker": "activateaccountsproofcontext"
+    },
+    {
+      "query": "suspendaccountsproof",
+      "file": "accounts.py",
+      "qualified_symbol": "Accounts.suspendaccountsproof",
+      "context_marker": "suspendaccountsproofcontext"
+    },
+    {
+      "query": "capturepaymentsproof",
+      "file": "payments.py",
+      "qualified_symbol": "Payments.capturepaymentsproof",
+      "context_marker": "capturepaymentsproofcontext"
+    },
+    {
+      "query": "reversepaymentsproof",
+      "file": "payments.py",
+      "qualified_symbol": "Payments.reversepaymentsproof",
+      "context_marker": "reversepaymentsproofcontext"
+    },
+    {
+      "query": "appendauditproof",
+      "file": "audit.py",
+      "qualified_symbol": "Audit.appendauditproof",
+      "context_marker": "appendauditproofcontext"
+    },
+    {
+      "query": "verifyauditproof",
+      "file": "audit.py",
+      "qualified_symbol": "Audit.verifyauditproof",
+      "context_marker": "verifyauditproofcontext"
+    },
+    {
+      "query": "enqueueschedulerproof",
+      "file": "scheduler.py",
+      "qualified_symbol": "Scheduler.enqueueschedulerproof",
+      "context_marker": "enqueueschedulerproofcontext"
+    },
+    {
+      "query": "cancelschedulerproof",
+      "file": "scheduler.py",
+      "qualified_symbol": "Scheduler.cancelschedulerproof",
+      "context_marker": "cancelschedulerproofcontext"
+    },
+    {
+      "query": "russiantranslationproof",
+      "file": "translation.py",
+      "qualified_symbol": "Translation.russiantranslationproof",
+      "context_marker": "russiantranslationproofcontext"
+    },
+    {
+      "query": "ukrainiantranslationproof",
+      "file": "translation.py",
+      "qualified_symbol": "Translation.ukrainiantranslationproof",
+      "context_marker": "ukrainiantranslationproofcontext"
+    },
+    {
+      "query": "readstorageproof",
+      "file": "storage.py",
+      "qualified_symbol": "Storage.readstorageproof",
+      "context_marker": "readstorageproofcontext"
+    },
+    {
+      "query": "writestorageproof",
+      "file": "storage.py",
+      "qualified_symbol": "Storage.writestorageproof",
+      "context_marker": "writestorageproofcontext"
+    },
+    {
+      "query": "Ledger",
+      "file": "ledger.py",
+      "qualified_symbol": "Ledger",
+      "context_marker": "Bounded Ledger operations."
+    },
+    {
+      "query": "LedgerDecimal",
+      "file": "ledger.py",
+      "qualified_symbol": "import:LedgerDecimal",
+      "context_marker": "from decimal import Decimal as LedgerDecimal"
+    },
+    {
+      "query": "Inventory",
+      "file": "inventory.py",
+      "qualified_symbol": "Inventory",
+      "context_marker": "Bounded Inventory operations."
+    },
+    {
+      "query": "InventoryDecimal",
+      "file": "inventory.py",
+      "qualified_symbol": "import:InventoryDecimal",
+      "context_marker": "from decimal import Decimal as InventoryDecimal"
+    },
+    {
+      "query": "Shipping",
+      "file": "shipping.py",
+      "qualified_symbol": "Shipping",
+      "context_marker": "Bounded Shipping operations."
+    },
+    {
+      "query": "Catalog",
+      "file": "catalog.py",
+      "qualified_symbol": "Catalog",
+      "context_marker": "Bounded Catalog operations."
+    },
+    {
+      "query": "Accounts",
+      "file": "accounts.py",
+      "qualified_symbol": "Accounts",
+      "context_marker": "Bounded Accounts operations."
+    },
+    {
+      "query": "Payments",
+      "file": "payments.py",
+      "qualified_symbol": "Payments",
+      "context_marker": "Bounded Payments operations."
+    },
+    {
+      "query": "Audit",
+      "file": "audit.py",
+      "qualified_symbol": "Audit",
+      "context_marker": "Bounded Audit operations."
+    },
+    {
+      "query": "Scheduler",
+      "file": "scheduler.py",
+      "qualified_symbol": "Scheduler",
+      "context_marker": "Bounded Scheduler operations."
+    },
+    {
+      "query": "Translation",
+      "file": "translation.py",
+      "qualified_symbol": "Translation",
+      "context_marker": "Bounded Translation operations."
+    },
+    {
+      "query": "Storage",
+      "file": "storage.py",
+      "qualified_symbol": "Storage",
+      "context_marker": "Bounded Storage operations."
+    }
+  ]
+}

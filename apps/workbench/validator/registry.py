@@ -28,6 +28,14 @@ REGISTRY: dict[str, ComponentMapping] = {
     "files": ComponentMapping(None, {}, {}, ("source",), ("source",), "Workspace file source is UI-only."),
     "query": ComponentMapping(None, {}, {}, ("query",), ("query",), "Pipeline input is a UI-only source node."),
     "results": ComponentMapping(None, {}, {}, ("limit",), ("limit",), "Results projection is UI-only."),
+    "keyword-search": ComponentMapping(
+        None,
+        {},
+        {},
+        ("topK",),
+        ("topK",),
+        "Keyword search uses the approved Live API profile; constructor validation is unsupported.",
+    ),
     "parser": ComponentMapping(
         None, {}, {}, (), ("format",), "Docling integration is not an approved installed validation dependency."
     ),

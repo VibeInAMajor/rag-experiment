@@ -1,9 +1,11 @@
-"""Pure, revisioned token-budget and structural chunking policy."""
+"""Pure, revisioned prose-token and Python structural processing profiles."""
 
 import re
 from dataclasses import dataclass, replace
 from enum import StrEnum
-from typing import Literal
+from typing import Generic, Literal
+
+from typing_extensions import TypeVar
 
 from apps.workbench.api.parser_registry import ElementKind, FormatId
 
@@ -128,6 +130,23 @@ def structural_token_profile() -> ChunkingProfile:
     return ChunkingProfile(separator_profile_id="prose_token_structural_fallback", separators=_STRUCTURAL_SEPARATORS)
 
 
+@dataclass(frozen=True, init=False)
+class PythonChunkingProfile:
+    """Immutable application policy; effective lines are ceil(characters / 45), never tokens."""
+
+    profile_id: str = "python-ast"
+    profile_revision: str = "python-ast-r1"
+    unit: str = "effective_line"
+    target_size: int = 60
+    overlap: int = 0
+    expected_chars_per_line: int = 45
+    oversized_factor: int = 3
+    secondary_split_length: int = 60
+    secondary_split_overlap: int = 5
+    hard_character_limit: int = 32_768
+    max_chunks: int = 10_000
+
+
 @dataclass(frozen=True)
 class DocumentFeatures:
     """Metadata projected from a verified parser result, with an explicit declared locale."""
@@ -138,7 +157,11 @@ class DocumentFeatures:
     language: str = "en"
 
     def __post_init__(self) -> None:
-        if not isinstance(self.format_id, FormatId) or self.format_id not in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN):
+        if not isinstance(self.format_id, FormatId) or self.format_id not in (
+            FormatId.PLAIN_TEXT,
+            FormatId.MARKDOWN,
+            FormatId.PYTHON,
+        ):
             raise ChunkingError(ChunkingErrorCode.UNSUPPORTED_FORMAT)
         if (
             type(self.has_headings) is not bool
@@ -150,6 +173,7 @@ class DocumentFeatures:
                 self.format_id is FormatId.PLAIN_TEXT
                 and any(kind is not ElementKind.PARAGRAPH for kind in self.element_kinds)
             )
+            or (self.format_id is FormatId.PYTHON and self.element_kinds != (ElementKind.PYTHON_SOURCE,))
         ):
             raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE)
         if not isinstance(self.language, str) or _LANGUAGE.fullmatch(self.language) is None:
@@ -188,11 +212,16 @@ class ChunkingResources:
             languages.add(item[0])
 
 
+_Profile_co = TypeVar(
+    "_Profile_co", bound=ChunkingProfile | PythonChunkingProfile, default=ChunkingProfile, covariant=True
+)
+
+
 @dataclass(frozen=True)
-class ChunkingDecision:
+class ChunkingDecision(Generic[_Profile_co]):
     """One explainable strategy with effective, resource-bound token processing settings."""
 
-    profile: ChunkingProfile
+    profile: _Profile_co
     strategy: str
     selection_reason: str
     fallback_reasons: tuple[str, ...]
@@ -253,6 +282,8 @@ def resolve_profile(
         raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
     if not isinstance(resources, ChunkingResources):
         raise ChunkingError(ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE)
+    if features.format_id is FormatId.PYTHON:
+        raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE, reason="PYTHON_REQUIRES_AST_POLICY")
     effective, fallback_reasons = _resolve_sentence_profile(features, profile=profile, resources=resources)
     if features.format_id is FormatId.MARKDOWN and features.has_headings:
         strategy, reason = "markdown_sections", "markdown_with_usable_headings"

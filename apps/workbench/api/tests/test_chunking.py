@@ -77,6 +77,7 @@ def _assert_valid_chunks(source: ChunkingInput, chunks: tuple[PreparedChunk, ...
         assert not text[previous_end:start].strip()
         assert chunk.content_hash == hashlib.sha256(chunk.content.encode("utf-8")).hexdigest()
         assert chunk.effective_size == chunking_adapters.count_tokens(chunk.content) <= target
+        assert isinstance(chunk.decision.profile, ChunkingProfile)
         assert chunk.decision.profile.unit == "token"
         assert chunk.decision.profile.tokenizer_encoding == "o200k_base"
         assert len(chunk.content) <= chunk.decision.profile.hard_character_limit <= 32_768
@@ -134,6 +135,7 @@ def test_curated_parser_chunking_corpus(case: dict[str, Any], resources: Chunkin
     chunks = prepare_chunks(source, resources=resources)
     _assert_valid_chunks(source, chunks)
     assert prepare_chunks(source, resources=resources) == chunks
+    assert isinstance(chunks[0].decision.profile, ChunkingProfile)
     if case["language"] in ("en", "ru"):
         assert chunks[0].decision.profile.sentence_language == case["language"]
     else:

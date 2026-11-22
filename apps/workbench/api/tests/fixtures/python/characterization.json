@@ -1,0 +1,79 @@
+[
+  {
+    "content": "# source header\n\"\"\"Module documentation.\"\"\"\nfrom decimal import Decimal\n",
+    "metadata": {
+      "source_id": "d04d0eac3c708ce4ff6a5edbbbfe6a6a9df7e4ba615448388115303a8c5471f4",
+      "start_line": 2,
+      "end_line": 3,
+      "unit_kinds": [
+        "module_docstring",
+        "imports"
+      ],
+      "split_id": 0
+    }
+  },
+  {
+    "content": "\nclass Ledger:\n    \"\"\"Ledger documentation.\"\"\"\n",
+    "metadata": {
+      "source_id": "d04d0eac3c708ce4ff6a5edbbbfe6a6a9df7e4ba615448388115303a8c5471f4",
+      "start_line": 5,
+      "end_line": 6,
+      "unit_kinds": [
+        "class_header"
+      ],
+      "include_classes": [
+        "Ledger"
+      ],
+      "split_id": 1
+    }
+  },
+  {
+    "content": "    @staticmethod\n    async def refundledgerproof(amount):\n        \"\"\"Retain the method docstring.\"\"\"\n        return Decimal(amount)\n",
+    "metadata": {
+      "source_id": "d04d0eac3c708ce4ff6a5edbbbfe6a6a9df7e4ba615448388115303a8c5471f4",
+      "start_line": 7,
+      "end_line": 10,
+      "unit_kinds": [
+        "method"
+      ],
+      "include_classes": [
+        "Ledger"
+      ],
+      "decorators": [
+        "staticmethod"
+      ],
+      "split_id": 2
+    }
+  },
+  {
+    "content": "\n    class Nested:\n        def однакова(self):\n            return \"українська русский English\"\n",
+    "metadata": {
+      "source_id": "d04d0eac3c708ce4ff6a5edbbbfe6a6a9df7e4ba615448388115303a8c5471f4",
+      "start_line": 12,
+      "end_line": 14,
+      "unit_kinds": [
+        "nested_class"
+      ],
+      "include_classes": [
+        "Ledger"
+      ],
+      "split_id": 3
+    }
+  },
+  {
+    "content": "\nclass Other:\n    def однакова(self):\n        return \"same body\"\n\n# trailing comment\n",
+    "metadata": {
+      "source_id": "d04d0eac3c708ce4ff6a5edbbbfe6a6a9df7e4ba615448388115303a8c5471f4",
+      "start_line": 16,
+      "end_line": 20,
+      "unit_kinds": [
+        "class_header",
+        "method"
+      ],
+      "include_classes": [
+        "Other"
+      ],
+      "split_id": 4
+    }
+  }
+]

@@ -538,7 +538,7 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
             continue
         restricted = (
             forbidden - {"haystack"}
-            if source.name in {"lexical.py", "parsing_adapters.py", "chunking_adapters.py"}
+            if source.name in {"lexical.py", "parsing_adapters.py", "chunking_adapters.py", "python_code.py"}
             else forbidden
         )
         if source.name == "model_token_counter.py":

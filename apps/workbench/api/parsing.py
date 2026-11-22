@@ -1,6 +1,7 @@
-"""Bounded byte inspection and loss-aware, immutable text/Markdown projection."""
+"""Bounded inspection and loss-aware, immutable text, Markdown and Python projection."""
 
 import hashlib
+import io
 import logging
 import re
 import unicodedata
@@ -17,6 +18,7 @@ from apps.workbench.api.parser_registry import (
     select_parser,
 )
 from apps.workbench.api.parsing_adapters import extract_text as _extract_text
+from apps.workbench.api.python_code import PythonSymbol, inspect_python
 
 _logger = logging.getLogger(__name__)
 _DETECTOR_REVISION = "text-inspection-r1"
@@ -134,6 +136,7 @@ class ParsedDocument:
     warning_codes: tuple[str, ...]
     classification: ProcessingClassification
     contract_revision: str = "parsed-elements-v1"
+    code_symbols: tuple[PythonSymbol, ...] = ()
 
 
 def _check_deadline(started: float, limits: UploadLimits) -> None:
@@ -198,7 +201,7 @@ def inspect_format(
     :param safe_basename: Untrusted single filename, at most 255 UTF-8 bytes; paths are refused.
     :param declared_type: Optional reviewed MIME alias with an optional UTF-8 charset parameter.
     :param upload_limits: Positive limits capped at application ceilings; defaults to 1 MiB.
-    :returns: Immutable verified TXT/Markdown identity and byte digest.
+    :returns: Immutable verified TXT/Markdown/Python identity and byte digest.
     :raises ParsingError: Sanitized refusal for mismatches, unavailable formats or resource limits.
     """
     started = perf_counter()
@@ -220,7 +223,7 @@ def inspect_format(
         raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="MULTIPLE_FORMAT_EXTENSIONS")
     if declared_mime is not None and declared_mime not in rule.mime_aliases:
         raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="MIME_EXTENSION_CONFLICT")
-    if rule.format_id not in {FormatId.PLAIN_TEXT, FormatId.MARKDOWN}:
+    if rule.format_id not in {FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON}:
         raise ParsingError(ParseErrorCode.PARSER_UNAVAILABLE, reason="FORMAT_NOT_QUALIFIED")
     header = content.removeprefix(b"\xef\xbb\xbf").lstrip()[:512]
     if header.startswith(_BINARY_HEADERS) or header[4:8] == _ISO_MEDIA_HEADER:
@@ -435,7 +438,23 @@ def parse_source(
             raise
         except Exception:
             raise ParsingError(ParseErrorCode.PARSE_FAILED, reason="EXTRACTION_FAILED") from None
-        elements = _project_elements(text, source=source, limits=upload_limits, started=started)
+        code_symbols: tuple[PythonSymbol, ...] = ()
+        elements: tuple[ParsedElement, ...]
+        if source.format_id is FormatId.PYTHON:
+            code_symbols = inspect_python(text, limits=upload_limits)
+            elements = (
+                ParsedElement(
+                    element_id=f"{source.content_sha256}:0:{len(text)}:python_source",
+                    order=0,
+                    kind=ElementKind.PYTHON_SOURCE,
+                    text=text,
+                    source_span=SourceSpan(start=0, end=len(text)),
+                    line_start=1,
+                    line_end=len(io.StringIO(text, newline="").readlines()),
+                ),
+            )
+        else:
+            elements = _project_elements(text, source=source, limits=upload_limits, started=started)
         _check_deadline(started, upload_limits)
         warnings = tuple(dict.fromkeys(code for element in elements for code in element.warning_codes))
         classification = ProcessingClassification(
@@ -454,6 +473,7 @@ def parse_source(
             elements=elements,
             warning_codes=warnings,
             classification=classification,
+            code_symbols=code_symbols,
         )
     except ParsingError as error:
         _logger.info(

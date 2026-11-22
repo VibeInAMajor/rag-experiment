@@ -34,7 +34,7 @@ def test_catalog_covers_each_format_once_with_no_extension_collisions() -> None:
 @pytest.mark.parametrize("format_id", list(FormatId))
 def test_only_qualified_text_formats_can_select_a_parser(format_id: FormatId) -> None:
     """Each family resolves explicitly; planned adapters never execute."""
-    if format_id in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN):
+    if format_id in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON):
         descriptor = select_parser(format_id)
         assert descriptor.accepted_format_ids == (format_id,)
         assert descriptor.available and descriptor.qualified
@@ -126,7 +126,7 @@ def test_missing_or_unreviewed_dependency_disables_only_execution(
 
     monkeypatch.setattr(parser_registry.metadata, "version", package_version)
     assert not any(descriptor.available for descriptor in parser_descriptors())
-    assert sum(descriptor.qualified for descriptor in parser_descriptors()) == 2
+    assert sum(descriptor.qualified for descriptor in parser_descriptors()) == 3
     with pytest.raises(ParsingError, match="^PARSER_UNAVAILABLE$") as error:
         select_parser(FormatId.PLAIN_TEXT)
     assert error.value.code is ParseErrorCode.PARSER_UNAVAILABLE

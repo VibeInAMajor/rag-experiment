@@ -18,10 +18,12 @@ from apps.workbench.api.boundary import log_event
 from apps.workbench.api.chunking import ChunkingInput, ExactModelCounter, ModelTokenAdmission, prepare_chunks
 from apps.workbench.api.chunking_adapters import inspect_chunking_resources
 from apps.workbench.api.chunking_profiles import (
+    ChunkingDecision,
     ChunkingError,
     ChunkingErrorCode,
     ChunkingProfile,
     DocumentFeatures,
+    PythonChunkingProfile,
     resolve_profile,
 )
 from apps.workbench.api.document_processing import DocumentProcessingSettings
@@ -62,6 +64,7 @@ _NORMALIZATION_POLICY = "utf8-sig-exact-decoded-source-v1"
 _ERROR_POLICIES = {
     "INVALID_REQUEST": (400, False),
     "INVALID_DOCUMENT": (400, False),
+    "UNPARSEABLE_SOURCE": (400, False),
     "UNSUPPORTED_MEDIA_TYPE": (415, False),
     "PAYLOAD_TOO_LARGE": (413, False),
     "MODEL_TOKEN_LIMIT_EXCEEDED": (413, False),
@@ -147,6 +150,7 @@ class _Publication:
     source: Source
     version: SourceVersion
     chunks: tuple[Chunk, ...]
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile]
 
 
 def _request_fingerprint(upload: UploadInput, source_sha256: str) -> str:
@@ -186,14 +190,22 @@ def _prepare_publication(
         model_admission=model_admission,
         model_counter=model_counter,
     )
+    policy_revision = _INGESTION_POLICY_REVISION
+    if parsed.format_id is FormatId.PYTHON:
+        policy_revision = "python-ast-ingestion-v1"
+        language_policy = "python_source_language_independent"
+        configuration = {
+            "python_splitter": asdict(PythonChunkingProfile()),
+            "native_model_guard": configuration.get("native_model_guard", {}),
+        }
     warnings = tuple(
         dict.fromkeys(parsed.warning_codes + tuple(code for chunk in prepared for code in chunk.warning_codes))
     )
     processing = json.loads(json.dumps(asdict(prepared[0].decision)))
     ingestion_policy = {
-        "ingestion_policy_revision": _INGESTION_POLICY_REVISION,
+        "ingestion_policy_revision": policy_revision,
         "language_policy": language_policy,
-        "default_language": language,
+        "default_language": language if parsed.format_id is not FormatId.PYTHON else None,
         "normalization_policy": _NORMALIZATION_POLICY,
         "chunking_profile_fingerprint": prepared[0].processing_fingerprint,
         "document_processing": configuration,
@@ -224,9 +236,11 @@ def _prepare_publication(
     for item in prepared:
         chunk = item.to_chunk(title=parsed.inspected_source.safe_basename)
         chunk.metadata["ingestion_processing_fingerprint"] = fingerprint
-        chunk.metadata["ingestion_policy_revision"] = _INGESTION_POLICY_REVISION
+        chunk.metadata["ingestion_policy_revision"] = policy_revision
+        if parsed.format_id is FormatId.PYTHON:
+            chunk.metadata["source_file"] = parsed.inspected_source.safe_basename
         chunk.metadata["language_policy"] = language_policy
-        chunk.metadata["default_language"] = language
+        chunk.metadata["default_language"] = language if parsed.format_id is not FormatId.PYTHON else None
         chunks.append(chunk)
     return _Publication(
         source=Source(
@@ -244,10 +258,13 @@ def _prepare_publication(
             metadata=version_metadata,
         ),
         chunks=tuple(chunks),
+        decision=prepared[0].decision,
     )
 
 
 def _parse_failure_code(error: ParsingError) -> str:
+    if error.code is ParseErrorCode.UNPARSEABLE_SOURCE:
+        return "UNPARSEABLE_SOURCE"
     if error.reason == "DEADLINE_EXCEEDED":
         return "INGESTION_TIMEOUT"
     if error.code is ParseErrorCode.CONTENT_LIMIT_EXCEEDED:
@@ -482,19 +499,25 @@ class IngestionService:
             raise
         if job.status != "completed" or job.effective_version_id is None or job.chunk_count is None:
             raise IngestionError("INGESTION_FAILED", job_id=job.job_id)
+        effective = publication.decision.profile
         log_event(
             "ingestion_processing_completed",
             trace_id=context.trace_id or "none",
             workspace_id=context.workspace_id,
             job_id=job.job_id,
-            profile_id=self._profile.profile_id,
-            profile_revision=self._profile.profile_revision,
-            split_length=self._profile.target_size,
-            split_overlap=self._profile.overlap,
-            split_unit=self._profile.unit,
+            profile_id=effective.profile_id,
+            profile_revision=effective.profile_revision,
+            strategy=publication.decision.strategy,
+            split_length=effective.target_size,
+            split_overlap=effective.overlap,
+            split_unit=effective.unit,
             tokenizer_encoding=self._profile.tokenizer_encoding,
-            sentence_language=self._profile.sentence_language or "none",
-            sentence_keep_white_spaces=int(self._profile.sentence_keep_white_spaces),
+            sentence_language=(effective.sentence_language or "none")
+            if isinstance(effective, ChunkingProfile)
+            else "none",
+            sentence_keep_white_spaces=int(effective.sentence_keep_white_spaces)
+            if isinstance(effective, ChunkingProfile)
+            else 0,
             chunk_count=job.chunk_count,
             native_guard_enabled=int(self._processing.native_model_guard.enabled),
             model_counter_revision=self._counter.counter_revision

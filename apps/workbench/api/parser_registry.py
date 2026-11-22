@@ -40,6 +40,7 @@ class ElementKind(StrEnum):
     PARAGRAPH = "paragraph"
     HEADING = "heading"
     PROTECTED_RAW = "protected_raw"
+    PYTHON_SOURCE = "python_source"
 
 
 class ParseErrorCode(StrEnum):
@@ -52,6 +53,7 @@ class ParseErrorCode(StrEnum):
     EMPTY_EXTRACTION = "EMPTY_EXTRACTION"
     CONTENT_LIMIT_EXCEEDED = "CONTENT_LIMIT_EXCEEDED"
     STRUCTURE_LOSS = "STRUCTURE_LOSS"
+    UNPARSEABLE_SOURCE = "UNPARSEABLE_SOURCE"
 
 
 class ParsingError(ValueError):
@@ -146,7 +148,9 @@ _FORMAT_RULES = (
     ),
     FormatRule(FormatId.TOML, (".toml",), ("application/toml", "text/toml"), "application/toml"),
     FormatRule(FormatId.XML, (".xml",), ("application/xml", "text/xml"), "application/xml"),
-    FormatRule(FormatId.PYTHON, (".py",), ("text/x-python", "application/x-python-code"), "text/x-python"),
+    FormatRule(
+        FormatId.PYTHON, (".py",), ("text/x-python", "application/x-python-code", "text/plain"), "text/x-python"
+    ),
     FormatRule(
         FormatId.SOURCE_CODE,
         (".js", ".ts", ".tsx", ".jsx", ".java", ".c", ".cpp", ".h", ".rs", ".go", ".sh"),
@@ -178,13 +182,17 @@ _FORMAT_RULES = (
 
 
 def _descriptor(format_id: FormatId) -> ParserDescriptor:
-    qualified = format_id in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN)
-    parser_id = {FormatId.PLAIN_TEXT: "haystack-text", FormatId.MARKDOWN: "raw-markdown"}.get(
-        format_id, f"planned-{format_id.value}"
-    )
+    qualified = format_id in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON)
+    parser_id = {
+        FormatId.PLAIN_TEXT: "haystack-text",
+        FormatId.MARKDOWN: "raw-markdown",
+        FormatId.PYTHON: "python-source",
+    }.get(format_id, f"planned-{format_id.value}")
     kinds: tuple[ElementKind, ...] = (ElementKind.PARAGRAPH,)
     if format_id is FormatId.MARKDOWN:
         kinds += (ElementKind.HEADING, ElementKind.PROTECTED_RAW)
+    elif format_id is FormatId.PYTHON:
+        kinds = (ElementKind.PYTHON_SOURCE,)
     return ParserDescriptor(
         parser_id=parser_id,
         parser_revision=f"{parser_id}-r1" if qualified else "not-qualified",

@@ -169,7 +169,7 @@ def test_heading_only_markdown_has_a_real_section_policy() -> None:
 
 
 @pytest.mark.parametrize(
-    "format_id", [item for item in FormatId if item not in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN)]
+    "format_id", [item for item in FormatId if item not in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON)]
 )
 def test_nontext_formats_are_not_promoted_into_prose(format_id: FormatId) -> None:
     """Planned PDF, code, tables and media adapters remain unavailable to this resolver."""

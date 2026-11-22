@@ -16,6 +16,7 @@ from apps.workbench.api.chunking_profiles import (
     ChunkingProfile,
     ChunkingResources,
     DocumentFeatures,
+    PythonChunkingProfile,
     resolve_profile,
 )
 from apps.workbench.api.parser_registry import ElementKind, FormatId, ParsingError, UploadLimits, select_parser
@@ -27,6 +28,7 @@ from apps.workbench.api.parsing import (
     SourceSpan,
 )
 from apps.workbench.api.persistence import Chunk
+from apps.workbench.api.python_code import PythonSpan, split_python
 
 _logger = logging.getLogger(__name__)
 _ALGORITHM_REVISION = "structural-token-chunks-r1"
@@ -114,7 +116,7 @@ class PreparedChunk:
     effective_size: int
     overlap_tokens: int
     processing_fingerprint: str
-    decision: ChunkingDecision
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile]
     source_sha256: str
     parser_id: str
     parser_revision: str
@@ -123,6 +125,7 @@ class PreparedChunk:
     length_model_token: int | None = None
     length_tiktoken_model_input: int | None = None
     model_counter_revision: str | None = None
+    python_span: PythonSpan | None = None
 
     def metadata(self) -> dict[str, Any]:
         """Return a fresh, bounded JSON projection; native page defaults are deliberately absent."""
@@ -146,13 +149,8 @@ class PreparedChunk:
             "requested_overlap": profile.overlap,
             "actual_overlap_tokens": self.overlap_tokens,
             "length_tiktoken": self.effective_size,
-            "tokenizer_ref": f"tiktoken:{profile.tokenizer_encoding}",
+            "tokenizer_ref": "tiktoken:o200k_base",
             "token_counter_revision": self.decision.token_counter_revision,
-            "separator_profile_id": profile.separator_profile_id,
-            "separators": list(profile.separators),
-            "sentence_language": profile.sentence_language,
-            "sentence_keep_white_spaces": profile.sentence_keep_white_spaces,
-            "sentence_resource_revision": profile.sentence_resource_revision,
             "selection_reason": self.decision.selection_reason,
             "fallback_reasons": list(self.decision.fallback_reasons),
             "warnings": list(self.warning_codes),
@@ -161,6 +159,43 @@ class PreparedChunk:
             "split_id": self.ordinal,
             "split_idx_start": self.source_span.start,
         }
+        if isinstance(profile, ChunkingProfile):
+            metadata.update(
+                {
+                    "separator_profile_id": profile.separator_profile_id,
+                    "separators": list(profile.separators),
+                    "sentence_language": profile.sentence_language,
+                    "sentence_keep_white_spaces": profile.sentence_keep_white_spaces,
+                    "sentence_resource_revision": profile.sentence_resource_revision,
+                }
+            )
+        if self.python_span is not None:
+            span = self.python_span
+            metadata.update(
+                {
+                    "verified_document_type": "python_source",
+                    "start_line": span.start_line,
+                    "end_line": span.end_line,
+                    "unit_kinds": list(span.unit_kinds),
+                    "symbols": [{**asdict(symbol), "decorators": list(symbol.decorators)} for symbol in span.symbols],
+                    "secondary_split": span.secondary_split,
+                    "secondary_split_index": span.secondary_split_index,
+                    "secondary_split_total": span.secondary_split_total,
+                    "actual_overlap_lines": span.overlap_lines,
+                    "length_effective_line": (len(self.content) + 44) // 45,
+                }
+            )
+            innermost = [
+                symbol
+                for symbol in span.symbols
+                if not any(other.qualified_symbol.startswith(symbol.qualified_symbol + ".") for other in span.symbols)
+            ]
+            if len(innermost) == 1:
+                metadata["qualified_symbol"] = innermost[0].qualified_symbol
+                if innermost[0].class_name:
+                    metadata["class_name"] = innermost[0].class_name
+                if innermost[0].decorators:
+                    metadata["decorators"] = list(innermost[0].decorators)
         if self.length_model_token is not None:
             metadata.update(
                 {
@@ -315,17 +350,26 @@ def _validate_elements(text: str, elements: tuple[ParsedElement, ...]) -> None:
 
 def resolve_chunking(
     source: ChunkingInput, *, resources: ChunkingResources, profile: ChunkingProfile = ChunkingProfile()
-) -> ChunkingDecision:
+) -> ChunkingDecision[ChunkingProfile | PythonChunkingProfile]:
     """
-    Resolve a pure token-sized policy from a validated parser result and explicit resource identities.
+    Resolve a format-aware policy from a validated parser result and explicit resource identities.
 
     :param source: Server-owned scope, exact decoded text and immutable parser output.
     :param resources: Already inspected resource identities; this function performs no I/O.
-    :param profile: Reviewed processing settings, defaulting to 500/50 tiktoken tokens.
+    :param profile: Reviewed prose settings, defaulting to 500/50 tiktoken tokens; Python uses its fixed AST profile.
     :returns: One immutable strategy with explicit language/structure fallback reasons.
     :raises ChunkingError: If input provenance, the profile or required resources are invalid.
     """
-    return resolve_profile(_validate_source(source), profile=profile, resources=resources)
+    features = _validate_source(source)
+    if features.format_id is FormatId.PYTHON:
+        return ChunkingDecision(
+            profile=PythonChunkingProfile(),
+            strategy="python_ast",
+            selection_reason="verified_python_source",
+            fallback_reasons=(),
+            token_counter_revision=resources.token_counter_revision,
+        )
+    return resolve_profile(features, profile=profile, resources=resources)
 
 
 def _sections(source: ChunkingInput) -> tuple[_Section, ...]:
@@ -394,16 +438,21 @@ def _prepared(
     size: int,
     overlap: int,
     ordinal: int,
-    decision: ChunkingDecision,
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile],
     fingerprint: str,
     warnings: tuple[str, ...],
     admission: ModelTokenAdmission | None,
     counter: ExactModelCounter | None,
+    python_span: PythonSpan | None = None,
 ) -> PreparedChunk:
     from apps.workbench.api.chunking_adapters import count_tokens
 
     text = source.normalized_content[start:end]
-    if not text.strip() or len(text) > decision.profile.hard_character_limit or size > decision.profile.target_size:
+    if (
+        not text.strip()
+        or len(text) > decision.profile.hard_character_limit
+        or (isinstance(decision.profile, ChunkingProfile) and size > decision.profile.target_size)
+    ):
         raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="CHUNK_BUDGET")
     identity = (source.workspace_id, source.source_id, source.source_version_id)
     parent = _fingerprint((*identity, source.parsed_document.source_sha256, section.anchor))
@@ -432,6 +481,7 @@ def _prepared(
             count_tokens(admission.embedding_input(text, heading_path=section.heading_path)) if admission else None
         ),
         model_counter_revision=admission.counter_revision if admission else None,
+        python_span=python_span,
     )
     chunk.metadata()
     return chunk
@@ -441,7 +491,7 @@ def _processing_fingerprint(
     source: ChunkingInput,
     *,
     profile: ChunkingProfile,
-    decision: ChunkingDecision,
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile],
     resources: ChunkingResources,
     admission: ModelTokenAdmission | None,
 ) -> str:
@@ -452,9 +502,13 @@ def _processing_fingerprint(
             "parser": (source.parsed_document.parser_id, source.parsed_document.parser_revision),
             "detector": source.parsed_document.detector_revision,
             "elements": source.parsed_document.contract_revision,
-            "requested_profile": asdict(profile),
+            "requested_profile": asdict(
+                decision.profile if isinstance(decision.profile, PythonChunkingProfile) else profile
+            ),
             "decision": asdict(decision),
-            "resources": asdict(resources),
+            "resources": {"token_counter_revision": resources.token_counter_revision}
+            if isinstance(decision.profile, PythonChunkingProfile)
+            else asdict(resources),
             "structure": [
                 (
                     element.kind.value,
@@ -500,6 +554,58 @@ def _verify_output(source: ChunkingInput, chunks: list[PreparedChunk]) -> None:
         raise ChunkingError(ChunkingErrorCode.STRUCTURE_LOSS, reason="UNCOVERED_SOURCE")
 
 
+def _prepare_python(
+    source: ChunkingInput,
+    *,
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile],
+    fingerprint: str,
+    admission: ModelTokenAdmission | None,
+    counter: ExactModelCounter | None,
+    started: float,
+) -> tuple[PreparedChunk, ...]:
+    from apps.workbench.api import chunking_adapters as adapters
+
+    if not isinstance(decision.profile, PythonChunkingProfile):
+        raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
+    python_spans = split_python(
+        source.normalized_content, symbols=source.parsed_document.code_symbols, profile=decision.profile
+    )
+    code_chunks: list[PreparedChunk] = []
+    total_bytes = 0
+    covered = 0
+    for code_span in python_spans:
+        span = code_span
+        if len(code_chunks) >= decision.profile.max_chunks or perf_counter() - started > _DEADLINE_SECONDS:
+            raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PREPARATION_BUDGET")
+        text = source.normalized_content[span.start : span.end]
+        if not text.strip():
+            covered = span.end
+            continue
+        chunk = _prepared(
+            source,
+            section=_Section(span.parent_start, span.parent_end, (), f"python:{span.parent_start}:{span.parent_end}"),
+            start=span.start,
+            end=span.end,
+            size=adapters.count_tokens(text),
+            overlap=adapters.count_tokens(source.normalized_content[span.start : covered])
+            if span.start < covered
+            else 0,
+            ordinal=len(code_chunks),
+            decision=decision,
+            fingerprint=fingerprint,
+            warnings=("PYTHON_SECONDARY_LINE_SPLIT",) if span.secondary_split else (),
+            admission=admission,
+            counter=counter,
+            python_span=span,
+        )
+        total_bytes += len(chunk.content.encode("utf-8"))
+        if total_bytes > _MAX_PREPARED_BYTES:
+            raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PREPARED_BYTES")
+        code_chunks.append(chunk)
+        covered = span.end
+    return tuple(code_chunks)
+
+
 def _prepare(
     source: ChunkingInput,
     *,
@@ -526,6 +632,20 @@ def _prepare(
     if declared.token_counter_revision != actual.token_counter_revision:
         raise ChunkingError(ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE, reason="COUNTER_REVISION_MISMATCH")
     decision = resolve_chunking(source, profile=profile, resources=declared)
+    if isinstance(decision.profile, PythonChunkingProfile):
+        fingerprint = _processing_fingerprint(
+            source, profile=profile, decision=decision, resources=declared, admission=admission
+        )
+        return _prepare_python(
+            source, decision=decision, fingerprint=fingerprint, admission=admission, counter=counter, started=started
+        )
+    text_decision = ChunkingDecision(
+        profile=decision.profile,
+        strategy=decision.strategy,
+        selection_reason=decision.selection_reason,
+        fallback_reasons=decision.fallback_reasons,
+        token_counter_revision=decision.token_counter_revision,
+    )
     if decision.profile.sentence_language and (
         decision.profile.sentence_resource_revision
         != dict(actual.sentence_resource_revisions).get(decision.profile.sentence_language)
@@ -554,7 +674,7 @@ def _prepare(
                     raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PROTECTED_SPAN_OVERFLOW")
                 spans = (adapters.SplitSpan(start=0, end=len(text), token_count=size, overlap_tokens=0),)
             else:
-                spans = adapters.split_prose(text, decision=decision)
+                spans = adapters.split_prose(text, decision=text_decision)
             for span in spans:
                 if len(chunks) >= profile.max_chunks or perf_counter() - started > _DEADLINE_SECONDS:
                     raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PREPARATION_BUDGET")
@@ -589,10 +709,10 @@ def prepare_chunks(
     model_counter: ExactModelCounter | None = None,
 ) -> tuple[PreparedChunk, ...]:
     """
-    Prepare all chunks atomically in memory, preserving parser sections and protected raw spans.
+    Prepare all chunks atomically in memory, preserving prose sections or verified Python source slices.
 
     :param source: Exact parser text, verified elements and server-owned workspace/source/version IDs.
-    :param profile: Allowlisted token-sized profile, defaulting to 500 tokens and 50-token target overlap.
+    :param profile: Prose profile, defaulting to 500/50 tokens; Python selects its fixed effective-line profile.
     :param resources: Optional pre-inspected resource identities; execution revalidates actual assets.
     :param model_admission: Optional exact-model budget for the final prefixed/suffixed embedding input.
     :param model_counter: Pinned application counter required only for exact-model admission.

@@ -1,0 +1,18 @@
+---
+upgrade:
+  - |
+    Restart the local Workbench API to enable Python uploads. No database
+    migration or reprocessing of existing TXT/Markdown documents is required.
+features:
+  - |
+    The existing Workbench document upload API now accepts bounded UTF-8
+    ``.py`` files and reuses ``PythonCodeSplitter`` for syntax-aware chunks.
+    Stored chunks retain exact source lines and declaration metadata; oversized
+    units use explicit line-based secondary splitting. Invalid Python is rejected
+    without replacing the active version. Source is never executed, and search
+    retains PostgreSQL lexical scoring.
+issues:
+  - |
+    Indivisible Python lines exceeding the chunk limit are refused rather than
+    truncated. Python upload and line/symbol presentation in the Documents UI
+    remain separate work; HTTP chunk inspection exposes the real provenance.

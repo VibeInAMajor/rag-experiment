@@ -169,6 +169,7 @@ dependencies = [
   "PyYAML>=6.0,<7",
   "types-PyYAML",
   "filelock==4.2.12",
+  "typing_extensions>=4.12,<5",
   "psycopg[binary]==3.3.9",
   "psycopg-pool==3.3.3",
   "pgvector==0.5.1",

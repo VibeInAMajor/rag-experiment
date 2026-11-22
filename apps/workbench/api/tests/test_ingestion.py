@@ -450,18 +450,20 @@ async def test_failed_replay_is_terminal_without_reprocessing(monkeypatch: pytes
     assert len(repository.jobs) == 1
 
 
-async def test_failed_publication_keeps_old_active_version() -> None:
+@pytest.mark.parametrize("filename", ["notes.txt", "module.py"])
+async def test_failed_publication_keeps_old_active_version(filename: str) -> None:
     """No standalone source writer or job-success update can escape the atomic port failure."""
     repository = _Repository()
     service = IngestionService(repository)
-    first = await service.ingest(_CONTEXT, upload=_upload(b"old searchabletoken"))
+    first = await service.ingest(_CONTEXT, upload=_upload(b"# old searchabletoken", filename=filename))
     old_active = repository.active[first.job.source_id]
     repository.publication_failure = DatabaseUnavailable()
     with pytest.raises(IngestionError) as failure:
         await service.ingest(
             _CONTEXT,
             upload=_upload(
-                b"new searchabletoken",
+                b"# new searchabletoken",
+                filename=filename,
                 key="replacement-upload-key",
                 source_id=first.job.source_id,
                 expected_active_version_id=first.job.effective_version_id,

@@ -467,7 +467,7 @@
       },
       "post": {
         "summary": "Upload Document",
-        "description": "Return terminal success only after atomic source/job publication.",
+        "description": "Ingest bounded UTF-8 TXT, Markdown or Python; return success only after atomic source/job publication.",
         "operationId": "upload_document_api_v1_workspaces__workspace_id__documents_post",
         "parameters": [
           {

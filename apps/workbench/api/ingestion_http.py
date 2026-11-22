@@ -77,6 +77,20 @@ _CHUNK_METADATA = frozenset(
         "default_language",
         "ingestion_processing_fingerprint",
         "ingestion_policy_revision",
+        "verified_document_type",
+        "start_line",
+        "end_line",
+        "unit_kinds",
+        "symbols",
+        "qualified_symbol",
+        "class_name",
+        "decorators",
+        "secondary_split",
+        "secondary_split_index",
+        "secondary_split_total",
+        "actual_overlap_lines",
+        "length_effective_line",
+        "source_file",
     }
 )
 
@@ -157,7 +171,7 @@ class IngestionRoutes:
         return self.failure(request, error)
 
     async def upload(self, request: Request, workspace_id: str) -> IngestionResponse | JSONResponse:
-        """Return terminal success only after atomic source/job publication."""
+        """Ingest bounded UTF-8 TXT, Markdown or Python; return success only after atomic source/job publication."""
         work: asyncio.Task[IngestionResult] | None = None
         disconnected: asyncio.Task[None] | None = None
         try:
