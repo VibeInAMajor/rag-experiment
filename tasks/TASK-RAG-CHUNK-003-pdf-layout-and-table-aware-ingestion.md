@@ -1,11 +1,11 @@
 # TASK-RAG-CHUNK-003 — Paginated PDF layout- and table-aware ingestion
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21  
+**Updated:** 2026-11-23  
 **Status:** IN PROGRESS — source audit and bounded parser qualification  
 **Priority:** P1 · specialized paginated document family  
-**Dependencies:** TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; UI support follows through an approved TASK-UI-003 extension  
-**Repository snapshot reviewed:** `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`  
+**Dependencies:** TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; TASK-RAG-CONTENT-001 is a required integration gate for immutable original visual assets/evidence, but not a blocker for independent text-layer PDF parser qualification. Scanned OCR and VLM diagram understanding are separate successors TASK-RAG-CONTENT-002/003; evidence lookup is TASK-RAG-CONTENT-005.  
+**Repository snapshot reviewed:** original 6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77; source reinspection 4dd81abd4b34794edfcafabb623703c67f40be81  
 **Target path:** `tasks/TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md`  
 **Canonical decision:** [Content-aware chunking strategy](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
@@ -20,6 +20,14 @@ PDFs are visual layouts, not plain paragraphs. A blanket 500-word or 500-token s
 The current Workbench does **not** contain a qualified Docling PDF ingestion integration. The UI mentions Docling in a demonstration node, but that is only display metadata and the constructor validator marks the parser unsupported. This task integrates PDF parsing behind a reviewed app-owned adapter; it must not pretend Docling is already installed or that a scanned image PDF has usable text.
 
 ## C. Current Repository State
+
+**2026-11-23 repository reinspection (supersedes stale early discovery rows below):** application-owned PDF source files now exist in the working source snapshot, but the PDF parser is still NOT an approved public upload feature. [pdf_models.py](../apps/workbench/api/pdf_models.py) supplies validated PdfLimits/PdfBox/PdfCell/PdfBlock/PdfPage/PdfDocument; PdfBlock.kind currently allows **text, heading, caption, table** and does not model diagram/chart/image evidence. [pdf_parser.py](../apps/workbench/api/pdf_parser.py) starts a one-slot offline child, [pdf_worker.py](../apps/workbench/api/pdf_worker.py) performs strict PDF catalog checks and Docling text/layout/table projection, and [pdf_sandbox.py](../apps/workbench/api/pdf_sandbox.py) enforces process quotas. [pdf_assets.py](../apps/workbench/api/pdf_assets.py) validates the [pinned model manifest](../apps/workbench/api/pdf_asset_manifest.json) before worker use. [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) wraps Docling HybridChunker with distinct original_excerpt and retrieval text, including row-aware table projection. [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py) defines PdfChunkingProfile (512/64, 768/0 or 768/64). However [parser_registry.py](../apps/workbench/api/parser_registry.py) still declares FormatId.PDF **unqualified** in its registry; no new PDF-specific test suite was found among the inspected API test files. No success can be claimed on parser install/code presence alone.
+
+**Multimodal handoff decision:** [TASK-RAG-CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) defines source/version-scoped original assets, structured elements and representations. **This task remains responsible for text-layer PDF pages, tables, headings, accurate page provenance and explicit classification of unhandled image regions.** It must not pretend to OCR scans or understand causal arrows/charts. Scanned/mixed-page OCR belongs to [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), vision diagrams to [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), and original evidence resolution to [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md). A PDF with pictures may be correctly indexed for qualified text, but figure coverage must be marked incomplete unless original visual regions have independent evidence links. Do not silently skip a diagram then mark the entire source semantically complete.
+
+**Implementation state discipline:** preserve already-written PDF worker, manifest, sandbox, models and chunk adapter; first test their actual behavior and close the current IN PROGRESS gates. Do not rewrite or replace Docling with a new parser simply because earlier specification text described it as absent.
+
+
 
 **Current checkout audit, 2026-11-22, before implementation:** base `a0a353d5c5ab9504b9284008fcc1f67d1b0f9809` is clean and already has durable TXT/Markdown/Python ingestion, atomic job-coupled PostgreSQL publication, native Qwen token admission and a shared upload-policy owner. `upload_transport.py` and `boundary.py` reuse `upload_policy.py`; `parsing.py`/`parser_registry.py` own byte verification and typed parser results; `chunking.py` owns policy dispatch, common `PreparedChunk` and native admission. The original discovery table below predates those features. PDF is still unqualified. No upstream Haystack, applied SQL, Python AST adapter, validator semantics or Preview fixture changes are planned.
 
@@ -54,10 +62,13 @@ A multi-page, text-extractable PDF with sections and a table can be uploaded usi
 5. Keep pages as context/parent units and publish bounded retrievable children; oversized pages/tables get bounded structure-aware refinement and truthful warning codes.
 6. Persist actual `page`, `heading_path`, `table_id?`, row/header/caption and parent ID metadata using existing `Chunk`/`SourceVersion` and job-coupled atomic publication.
 7. Add table, numeric QA and page-citation evaluation and a negative security/recovery matrix.
+8. For mixed text-and-graphics PDFs, record visual element detection/coverage and distinguish indexed textual evidence from unprocessed picture/diagram/chart regions. **Do not infer** arrow conditions or chart numbers from text-only OCR/labels. If an original evidence asset cannot yet be stored, report visual_evidence_unavailable instead of fabricating an asset link.
+9. Once CONTENT-001 is implemented, map each observed page/block/table to DocumentElement and original source asset/representation IDs, using exactly the existing workspace/source/version identity. This is an integration gate after text-PDF parser qualification, not a reason to duplicate asset infrastructure.
+10. Guarantee that follow-on OCR/VLM processing can enrich a new processing version without rewriting immutable original PDF bytes or inventing relationships that the parser did not observe.
 
 ## F. Non-Goals
 
-No scanned-document OCR in this task, no PDF visual question answering, image embedding, handwriting recognition, DOCX/Excel parsing, web crawling, tree-sitter, semantic LLM chunker, arbitrarily large PDFs, external page retrieval, UI image viewer, automatic migration to a second vector store, or general-purpose arbitrary Haystack graph execution. OCR and DOCX require separate qualification; never call scanned PDF `Indexed` after empty extraction.
+No scanned-document OCR in this task, no **diagram edge/condition extraction or numerical chart understanding**, no PDF visual question answering, image embedding, handwriting recognition, DOCX/Excel parsing, web crawling, tree-sitter, semantic LLM chunker, arbitrarily large PDFs, external page retrieval, UI image viewer, automatic migration to a second vector store, or general-purpose arbitrary Haystack graph execution. Original asset storage is owned by CONTENT-001; do not implement an ad-hoc blob store inside this PDF task. OCR and DOCX require separate qualification; never call scanned PDF `Indexed` after empty extraction.
 
 ## G. Architecture / Boundaries
 
@@ -85,6 +96,12 @@ Shared authenticated/authorized upload + bounded PDF bytes
 
 ## H. Contracts / Interfaces / Data Model
 
+**Multimodal compatibility contract (new, not a claim of implementation):** Existing PdfDocument and PdfBlock remain the factual extraction boundary for text, heading, caption and table with 1-based PdfPage and bounded PdfBox. If a detectable diagram/image region appears, represent it as an **unprocessed visual region** with safe page/box, kind and warning, not as a new unsupported PdfBlock.kind without updating the app-owned typed schema and tests. Do not attach arbitrary picture bytes to Chunk.metadata or claim its caption is a diagram graph. After CONTENT-001 qualification, link page/block -> DocumentElement -> ContentRepresentation(observed_text/structured_table) -> original PDF asset + source_version -> searchable Chunk. Provide exact parent evidence IDs only if they exist. Keep native source text versus derived retrieval prefix separately hashed, and preserve the same original byte SHA256 across representations. Source version and asset IDs must be workspace-scoped.
+
+**Acceptance nuance:** a document with verified text and unprocessed figures can be text-searchable, but the public capability and job/detail record MUST disclose the visual-processing gap. A PDF page with no extractable text is NOT automatically successful; scanned/OCR_REQUIRED remains unavailable until CONTENT-002 passes. Coordinate conversion must explicitly define top-left PDF points, page rotation/crop and page dimensions; no dummy page number or bounding box.
+
+
+
 - PDF is a **separate** document class and only advertised after qualified parser installed and transport gates tested. Validate `%PDF-` signature, MIME allowlist, source basename, size and page count. Signature alone is not full security validation.
 - Parser result must carry `source_id`, verified pages with **1-based** page numbers, extraction warnings, ordered text blocks, headings, and table blocks with column headers/row order/caption. If a property cannot be extracted reliably, it is missing plus a warning, not invented.
 - Policy `page_layout` selects trustworthy page boundaries and applies per-page child splitting as needed. Optional `table_aware` overlay can repeat table heading/caption text for retrieval; maintain original excerpt separately from repeated context.
@@ -95,6 +112,10 @@ Shared authenticated/authorized upload + bounded PDF bytes
 - Jobs / status / upload and chunk GET APIs from TASK-RAG-002 are reused, not reimplemented. PDF-specific error codes include `PDF_ENCRYPTED`, `NO_EXTRACTABLE_TEXT`, `PDF_TOO_LARGE`, `PDF_PARSE_TIMEOUT`, `PDF_LAYOUT_UNCERTAIN`, `TABLE_OVERFLOW`, as appropriate after confirming existing error vocabulary.
 
 ## I. Repository Files / Components Impacted
+
+**Current code ownership (2026-11-23):** REVIEW/EXTEND existing apps/workbench/api/pdf_models.py, pdf_parser.py, pdf_worker.py, pdf_sandbox.py, pdf_assets.py, pdf_asset_manifest.json, pdf_chunking_adapter.py, chunking_profiles.py (these are **already present**). Format enablement remains in parser_registry.py and parsing.py / the approved ingestion path; no independent PDF API or SQL writer. Add PDF qualification tests and safe visual-coverage tests; connect CONTENT-001 later through its common representation and AssetStorePort, not PDF-specific asset tables. Maintain compatibility with current upload_policy.py, upload_transport.py, ingestion_http.py and postgres_ingestion.py. The following historical planned-path table must be interpreted against this current ownership inventory.
+
+
 
 | Path | Action / purpose |
 | --- | --- |
@@ -163,11 +184,27 @@ Shared authenticated/authorized upload + bounded PDF bytes
 
 **J5 gate:** benchmark and all negative tests pass; evidence demonstrates PDF page/table quality relative to baseline, not universal superiority.
 
+### J6. Multimodal evidence handoff and staged completion
+
+1. Reinspect existing PDF worker capabilities and fail-closed parser registry before enabling PDFs. Demonstrate real text-PDF and table parsing through the *current* Docling subprocess; code presence alone is not an acceptance pass. Maintain the reviewed pin/asset manifest and offline safeguards.
+2. Record the number and location of visual/image/chart-like areas when reliably detected. If the current worker cannot detect them accurately, emit an explicit document-level visual coverage warning. Do not drop unsupported areas without warning or assign semantic arrows from OCR labels.
+3. Before original-image evidence publishing, require CONTENT-001's immutable asset store, source-version/element/representation link and hash/RLS API contract. Reuse it with source PDF bytes and verified page/crop locators; no second asset service.
+4. Keep OCR_REQUIRED and VISUAL_UNDERSTANDING_UNAVAILABLE distinct. A normal PDF with 90% textual content can serve its verified text; no response may say all visual questions are supported. OCR only after CONTENT-002; model-derived diagram/chart descriptions only after CONTENT-003.
+5. Add an explicit parser-to-evidence producer contract for verified page numbers, PdfBox coordinate frame, block/table IDs, caption and structural heading path. Include processing revision in parent-child fingerprints so later enrichment never retroactively mutates old provenance.
+6. Keep independent gates: **Gate A** bounded text-layer PDF + table processing, **Gate B** immutable original asset/evidence linking (CONTENT-001), **Gate C** scanned OCR and visual semantics in successors. Gate A may complete without claiming B/C, but task status and capability surface MUST enumerate unsupported parts.
+7. Test a page with text+diagram, an image-only scanned page, two-column text and a table with numeric units; verify no indexable invented diagram relations and no silent success when only scans are present.
+
+**J6 gate:** accurate PDF text/table retrieval, explicit visual-coverage limitations, and only authorized original-asset refs where really persisted. Do not mark OCR or visual graph understanding DONE in this task.
+
 ## K. Security / Governance / Observability
 
 Uploaded PDFs are untrusted potentially hostile binary inputs. Parse only under bounded CPU/RAM/page/time quotas; never use unrestricted shell commands, extract embedded programs, follow external PDF links, or resolve paths outside protected temp areas. Isolate Docling runtime behind a dependency boundary with pinned/verified versions and license/security review. Enforce local-development scope, app-role forced RLS and existing source/version ownership. Log only stage, selected profile, page/table counts, warning codes, elapsed time, resource measures and correlation IDs; do NOT log raw text, vector payloads, credentials, binary pages or parser tracebacks. Do not silently enable OCR or ship scanned PDFs to a remote service. Published chunks remain subject to original source retention and access decisions.
 
 ## L. Testing / Evaluation / Runtime Verification
+
+**Additional multimodal regression matrix:** detect figures on mixed PDF where possible; assert Page/Box/source-version integrity and visual_processing_status=incomplete until CONTENT-003. For a page consisting only of scans, return safe OCR_REQUIRED/NO_EXTRACTABLE_TEXT instead of completing zero chunks. For a page with a diagram and normal text, search may return verified nearby text but MUST NOT return fabricated arrow edges/conditions. When CONTENT-001 is implemented, verify source bytes and page/crop SHA256 after database/API/asset restart and deny foreign-workspace asset access. Keep these as separate test categories so an unimplemented successor is **NOT TESTED**, not PASS.
+
+
 
 ```text
 hatch --version
@@ -179,6 +216,15 @@ hatch run workbench-api:types
 Use existing `httpx.AsyncClient` + app lifespan test patterns in `apps/workbench/api/tests/test_lexical_routes.py`. Container tests require **disposable** PostgreSQL setup and must record real PASS/SKIP separately. Add parser-only goldens and a PDF ingestion HTTP smoke with actual small non-sensitive file. If runtime dependency is optional, test absence produces an `UNSUPPORTED_FORMAT`/`PARSER_UNAVAILABLE` error and does not advertise PDF capability. Regression-test existing TXT/Markdown, lexical, auth, validator and UI flows when shared code changes. Record extraction page/table truth labels and associated metric definitions in reusable `.md` evidence summaries, not a success story from mock data.
 
 ## M. Acceptance Criteria
+
+- [ ] Reviewed PDF parser, sandbox, manifest and HybridChunker code is reused; no second document parser or writer was introduced for already-present components.
+- [ ] Parser registry/public capability remains false until qualifying integration tests pass; image-only scans cannot silently become an indexed success.
+- [ ] Pages/tables retain original page/box/row provenance; images/diagrams without understanding emit explicit incomplete-coverage warnings rather than invented relations.
+- [ ] Existing text-PDF qualification is not blocked on future OCR/VLM work, and no OCR/visual support is claimed by completing text-PDF checks.
+- [ ] After CONTENT-001 is completed, PDF text/figure/page objects use its source-version scoped asset/element/representation IDs; original image evidence is byte-verifiable, not inferred.
+- [ ] Cross-task tests prove missing asset/unverified diagram does not yield a false "original source" citation.
+
+
 
 - [ ] Versioned qualified PDF parser is installed only in the reviewed application environment and fails safely when unavailable.
 - [ ] All PDF chunks have real source/version provenance; where reliable pages exist, `Chunk.page` and page-range metadata match manually audited input.
@@ -193,9 +239,21 @@ Use existing `httpx.AsyncClient` + app lifespan test patterns in `apps/workbench
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
+**Cross-task boundaries:** original asset/element/representation schema belongs to CONTENT-001; scanned and mixed-page OCR to CONTENT-002; diagram/chart meaning to CONTENT-003; authorized evidence lookups to CONTENT-005. This task publishes only qualified PDF text/table/page capabilities and explicit incomplete-visual warnings. Do not make this task depend on a nonexistent OCR result to close its independent parser gate. A new processing/enrichment revision may reference the same immutable source, but must not rewrite already published evidence or the applied migration history.
+
+
+
 Document parser revision, accepted PDFs, page/table limitations, exact byte/page/time caps, layout confidence handling, tokenizer/profile identity and measured benchmark outcomes in architecture/operations docs. Existing TXT/Markdown upload shape and lexical `postgres_ts_rank_cd` semantics remain stable. **DB migration is not initially required** because `Chunk.page`/JSON metadata exist; if indexed parent/child constraints or compressed original PDF storage become required, stop and create a separate approved migration. Rollback disables PDF parsing policy and capability while preserving current DB volume and previously published source versions; do not auto-delete or rebuild unrelated data. OCR, DOCX, image embeddings and advanced layout/semantic reranking remain deferred to focused tasks.
 
 ## O. Mandatory Completion Checklist
+
+- [ ] 2026-11-23 PDF module inventory rechecked; existing worker/sandbox/asset manifest preserved.
+- [ ] Source-level text and table qualification results reported separately from visual/OCR feature availability.
+- [ ] Normal text PDF, mixed figure+text and image-only scan negative paths independently tested.
+- [ ] CONTENT-001 evidence storage integration used only when actually available; no fake source assets.
+- [ ] Visual/OCR/evidence successor dependencies and no-silent-coverage-loss policy documented.
+
+
 
 - [ ] Current source paths and task dependencies verified against working tree before code changes.
 - [ ] Parser installation/license/resource limits evaluated with actual PDF fixtures.
@@ -208,4 +266,4 @@ Document parser revision, accepted PDFs, page/table limitations, exact byte/page
 - [ ] Migration/rollback decisions explicit, no applied SQL overwritten and no data erased.
 - [ ] Measurable acceptance evidence and actual commands captured before marking COMPLETE.
 
-**Task remains PROPOSED until Section O and live extraction/search evidence pass.**
+**Task remains IN PROGRESS until all applicable text-PDF qualification gates in Section O have real extraction/search evidence. OCR, visual semantics and evidence-resolution are separately gated successors and cannot be claimed complete here.**
