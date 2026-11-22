@@ -4,7 +4,7 @@
 **Updated:** 2026-11-23  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P0  
-**Dependencies:** EMBED-001, EMBED-002, INDEX-001, PROFILE-001; completed RAG-001/DB-001  
+**Dependencies:** EMBED-001, EMBED-002, INDEX-001, PROFILE-001; completed RAG-001/DB-001  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
 **Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
 **Target:** tasks/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md
 
@@ -45,6 +45,21 @@ SearchRequest remains four fields and expected_profile_revision. Add profile kin
 
 CREATE apps/workbench/api/dense.py (or shared retrieval composition), tests/test_dense_routes.py and real model-gated tests/test_dense_model_smoke.py; MODIFY profiles.py, services.py, application.py, contracts.py, projection.py, optional client src/api and approved graph matcher in apps/workbench/web/src/domain/. REUSE postgres.py vector_search(), persistence.py, embeddings port and current v1 error boundary. NEVER mutate 0001/0002 or create a second store.
 
+### I.1. Concrete implementation ownership — source reinspection 2026-11-23
+
+| Existing file (direct link) | Symbol, contract and test reuse |
+| --- | --- |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | exact vector_search <=> and active-version filtering |
+| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | VectorHit and profile/dimension validation |
+| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | Haystack Pipeline.run_async structure |
+| [`apps/workbench/api/projection.py`](../apps/workbench/api/projection.py) | server-owned stage/run IDs |
+| [`apps/workbench/api/model_token_counter.py`](../apps/workbench/api/model_token_counter.py) | native admission and input instruction counts |
+| [`apps/workbench/web/src/hooks/useLiveSearch.ts`](../apps/workbench/web/src/hooks/useLiveSearch.ts) | Live AbortController and latest-run guard |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | approved graph allowlist |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | existing read-only retrieval benchmark |
+
+**Related project, pinned audit sources (architecture/test patterns only):** [`src/enterprise_ai_pipeline/providers/tei_embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/providers/tei_embeddings.py); [`tests/pipeline/test_tei_embedding_provider.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_tei_embedding_provider.py); [`src/enterprise_ai_pipeline/rag/embedding_dispatch.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_dispatch.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
+
 ## J. Implementation Requirements — ordered executable blueprint
 
 1. J1 — Reinspect exact vector_search filter and embedding-profile checks. Write API DTO contract tests for distance direction, model/generation, optional page and source_version_id. Preserve lexical response unchanged.
@@ -53,6 +68,24 @@ CREATE apps/workbench/api/dense.py (or shared retrieval composition), tests/test
 4. J4 — Extend API capabilities and fixed profile dispatch; add strict typed frontend Live Dense template behind capability. Existing default keyword Live and Preview remain identical; unsupported graph makes zero HTTP calls.
 5. J5 — Compare 10+ exact lexical and 30+ semantic/paraphrase questions with labelled evidence and persisted source IDs; benchmark exact top-k and timings. Measure query GPU p50/p95 separately from SQL and UI render time.
 6. J6 — Test 400 invalid, 404 workspace, 409 profile revision mismatch, 503 model/DB, 504 timeout, cancellation, source swap during query, wrong-dimension vectors and trace correlation. No fabricated per-node timings.
+
+### J7–J13. Executable, file-specific implementation sequence
+
+**J7.** Validate EMBED-002 reaches complete semantic index generation and query/document model digest match; otherwise capability remains off.
+
+**J8.** Implement typed Haystack QueryEmbedder and PostgresDenseRetriever that reuse current PersistencePort.vector_search and raw cosine distance, not a second vector DB.
+
+**J9.** Run every query embedding through the same TPM-001 controller as ingestion. Check query instruction, tokenizer, timeout, finite normalized output and exact dimensions before SQL.
+
+**J10.** Preserve source_id/version_id/chunk_id, index generation and score_type=cosine_distance (lower is better); raw distance must never become a percentage or BM25 label.
+
+**J11.** Add one approved Live dense template and capability; client sends existing four-field profile-fenced request, no raw vectors or canvas JSON.
+
+**J12.** Use SQL exact-distance oracle over at least 100 verified vectors, 30 labeled semantic queries and RU/UK/EN examples; report query GPU p95 and SQL p95 separately.
+
+**J13.** Inject local provider 429/503/504, query abort, stale version during run, unavailable index and workspace denial, verifying zero Preview fallback.
+
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
 ## K. Security / Governance / Observability
 
@@ -63,6 +96,13 @@ WorkspaceContext and RLS are required for every candidate and metadata lookup. N
 Unit/query transformer tests, fake provider and real gated local TEI smoke; PostgreSQL exact cosine oracle for 100+ vector rows, inactive version exclusion, mixed RU/UK/EN paraphrases, finite normalized embeddings, model down, version drift, profiles unset, concurrency, cancellation, UI session provenance and all existing lexical/validation/Preview regressions. Record true distances and latency.
 
 Run scoped Hatch workbench-api:check/test/types, PostgreSQL container integration tests and (if UI touched) web typecheck/test/build and existing Preview/validator smoke. Use disposable benchmark database; real measurements must be labeled separately from mocks.
+
+### L.1. Specialized test matrix / release gate
+
+- [ ] Execute primary owner-specific tests named in I.1 and new focused unit and disposable PostgreSQL integration tests for this stage; attach actual commands/output.
+- [ ] Prove 400/404/409/429/503/504 failure/cancellation, source-version drift, tenant RLS, safe trace IDs and absence of fixture fallback.
+- [ ] Compare real source/result identities with independently checked PostgreSQL response and report quality/latency sample counts; no synthetic numerical performance claims.
+- [ ] Re-run workbench-api Hatch check/test/types and (if browser touched) npm typecheck/test/build, Preview/validation/Live browser regression.
 
 ## M. Acceptance Criteria
 

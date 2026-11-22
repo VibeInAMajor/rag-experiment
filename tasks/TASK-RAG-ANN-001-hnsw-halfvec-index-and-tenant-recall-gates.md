@@ -45,6 +45,19 @@ AnnIndexProfile{index_profile_id,embedding_profile_id,dimensions=2560,index_kind
 
 CREATE next sequential additive SQL migration for ANN metadata and offline admin index DDL task, scripts under apps/workbench/postgres/ or reviewed ops folder, tests/test_ann_indexes.py; MODIFY postgres.py vector query adapter and profiles.py/profile registry, operator docs. REUSE migration guard in db_migrations.py. MUST NOT create 2560-dim HNSW on vector_cosine_ops, modify applied migrations or lie in SearchResult.score_type.
 
+### I.1. Concrete implementation ownership — source reinspection 2026-11-23
+
+| Existing file (direct link) | Symbol, contract and test reuse |
+| --- | --- |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | vector_search exact cosine oracle |
+| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | nullable vector + GIN but no ANN |
+| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | migration guards |
+| [`apps/workbench/api/tests/test_postgres_persistence.py`](../apps/workbench/api/tests/test_postgres_persistence.py) | source/version RLS and pgvector tests |
+| [`apps/workbench/api/tests/test_database_migrations.py`](../apps/workbench/api/tests/test_database_migrations.py) | schema compatibility checks |
+| [`docs-website/docs/architecture/postgresql-foundation.md`](../docs-website/docs/architecture/postgresql-foundation.md) | pinned pgvector version and backup/restart |
+
+**Related project, pinned audit sources (architecture/test patterns only):** [`docs/77-m39-scalable-rag-ingestion-and-serving.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/77-m39-scalable-rag-ingestion-and-serving.md); [`docs/63-progressive-repository-indexing-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/63-progressive-repository-indexing-architecture.md). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
+
 ## J. Implementation Requirements — ordered executable blueprint
 
 1. J1 — Reconfirm actual model dims and vector normalization; benchmark exact SQL on 10k, 100k, and up to 1M seeded synthetic distributions (subject available hardware) with different workspace sizes. Record EXPLAIN ANALYZE, read I/O and memory.
@@ -53,6 +66,24 @@ CREATE next sequential additive SQL migration for ANN metadata and offline admin
 4. J4 — Store ANN build state and qualified generation; ensure no search activation while index invalid/half-built. Validate actual pg_catalog index valid/ready, planner path and operator classes; new index must match compatible dimension and profile.
 5. J5 — Add runtime planned strategy exact versus hnsw controlled by profile, not user SQL parameter. If ANN fails recall gate for tenant/size, use qualified exact profile or partition plan explicitly and log selection.
 6. J6 — Stress concurrent ingestion/index build/reindex, slow queries, backups and restart; provide CONCURRENTLY drop/rebuild repair playbook and rollback without dropping vector data.
+
+### J7–J13. Executable, file-specific implementation sequence
+
+**J7.** Qualify actual model dimension (expected 2560) and normalize input; reject standard native vector HNSW when dims exceed 2000.
+
+**J8.** Create expression HNSW on `embedding::halfvec(2560)` with compatible cosine operator and retain full vector for exact rerank; use explicit reviewed CONCURRENTLY DDL.
+
+**J9.** Benchmark 10k/100k/optional 1M vectors under identical query set, record EXPLAIN planner usage, disk/VRAM/maintenance cost and p95 latency.
+
+**J10.** Simulate large and tiny workspaces; pgvector filter happens after approximate candidate selection, so test iterative_scan/ef_search and top-k underfill against exact oracle.
+
+**J11.** Gate ANN activation on valid ready index, correct model/profile/source generation, per-tenant recall@10 and source active-version filters.
+
+**J12.** Test failed build, oversized dimensions, model revision drift, disk-full, concurrent publication, upgrade, restart and explicit exact fallback without deleting vectors.
+
+**J13.** Publish index build, repair/rollback and SLO report with exact input queries, query labels and p50/p95/recall.
+
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
 ## K. Security / Governance / Observability
 
@@ -63,6 +94,13 @@ WorkspaceContext and RLS are required for every candidate and metadata lookup. N
 SQL negative unsupported index dimension, exact oracle hit comparison with 100+ labeled queries and 3 tenant sizes, active/historic version, profile dimension drift, ef_search sweep, partial recall, bloat, planner index usage, restart/reindex and DB lock contention. Record memory/disk size and p50/p95/p99; target suggested recall@10 >=0.97 on gated corpora and >25% p95 gain for >=100k case, but thresholds must be ratified from measured hardware baseline before approval.
 
 Run scoped Hatch workbench-api:check/test/types, PostgreSQL container integration tests and (if UI touched) web typecheck/test/build and existing Preview/validator smoke. Use disposable benchmark database; real measurements must be labeled separately from mocks.
+
+### L.1. Specialized test matrix / release gate
+
+- [ ] Execute primary owner-specific tests named in I.1 and new focused unit and disposable PostgreSQL integration tests for this stage; attach actual commands/output.
+- [ ] Prove 400/404/409/429/503/504 failure/cancellation, source-version drift, tenant RLS, safe trace IDs and absence of fixture fallback.
+- [ ] Compare real source/result identities with independently checked PostgreSQL response and report quality/latency sample counts; no synthetic numerical performance claims.
+- [ ] Re-run workbench-api Hatch check/test/types and (if browser touched) npm typecheck/test/build, Preview/validation/Live browser regression.
 
 ## M. Acceptance Criteria
 
