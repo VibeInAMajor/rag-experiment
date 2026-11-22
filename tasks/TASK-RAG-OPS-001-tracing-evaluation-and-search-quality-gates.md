@@ -4,7 +4,7 @@
 **Updated:** 2026-11-23  
 **Status:** PROPOSED — implementation blueprint, not implemented  
 **Priority:** P1  
-**Dependencies:** INDEX-001, PROFILE-001; integrate EMBED/DENSE/ANN/HYBRID and CONTENT pipelines as qualified  
+**Dependencies:** INDEX-001, PROFILE-001; integrate EMBED/DENSE/ANN/HYBRID and CONTENT pipelines as qualified  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
 **Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
 **Target:** tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md
 
@@ -50,6 +50,21 @@ CREATE apps/workbench/api/observability.py, tests/test_observability_redaction.p
 
 MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated Preview/validator implementations as a shortcut.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/boundary.py`](../apps/workbench/api/boundary.py) | request_meta and log_event safe correlation |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | database_operation duration, outcome, workspace_id, trace_id |
+| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | run_id and search_completed status |
+| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | tracing disabled in current local baseline; no per-stage OTEL |
+| [`apps/workbench/api/tests/test_http_contract.py`](../apps/workbench/api/tests/test_http_contract.py) | request/error correlation and safe envelope |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | verified score/latency cases |
+| [`apps/workbench/api/tests/test_ingestion_stability.py`](../apps/workbench/api/tests/test_ingestion_stability.py) | job/error paths |
+| [`docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md`](../docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) | historical complete lexical evaluation, not an enterprise p95 SLO |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`tasks/TASK-M39-030-embedding-TPM-smoothing-audit.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tasks/TASK-M39-030-embedding-TPM-smoothing-audit.md); [`tools/qualification/embedding_smoothing_report.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tools/qualification/embedding_smoothing_report.py); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Freeze current log schema and trace ID propagation; document SQL, HTTP, model and UI timelines without exposing PII. Mark each existing measured stage and missing metrics.
@@ -58,6 +73,24 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 4. J4 — Build evaluation runner for indexed corpus+profile generations; freeze labels, include misses and errors, compute source-hit@5/10, MRR, evidence/page accuracy, ANN recall vs exact and per-format/paraphrase cohorts.
 5. J5 — Configure alerts for generation drift, incomplete embeddings, failed OCR, stale jobs, 503/504, p95 regression, cross-workspace denial anomalies and missing original evidence. Include precise runbooks and ownership.
 6. J6 — Benchmark 100+ label-backed queries at multiple corpus sizes; record p50/p95, token/cost budgets, data retention and exporter load, and ensure Preview fake timings never enter Live observations.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Inventory current trace IDs, safe log payloads and where `disable_tracing()` is called. Define tracing port that does not modify Haystack core or log secrets.
+
+**J8.** Create standardized stage names for source parse/chunk, embedding capacity reserve/send/finish, vector upsert, lexical, query model, ANN, RRF and evidence with bounded trace fields.
+
+**J9.** Import [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) eligible-window metrics including target=0.92/hard=0.95, source-starved/not-measurable, estimated/reserved/actual or proxy separately.
+
+**J10.** Add local OpenTelemetry-compatible adapter behind app-owned port, export asynchronous bounded records, with overload/drop counters and fail-nonblocking semantics.
+
+**J11.** Create reproducible evaluation manifests pinned to corpus/index/profile generations: exact term, paraphrase, evidence source/page/crop, code symbol, table numeric accuracy.
+
+**J12.** Alert on stale embeddings, inconsistent index generation, unknown provider usage, 429/503/504, high p95 queue wait, missing asset and tenant authorization anomalies.
+
+**J13.** Run ≥100 real labeled queries and safe logs adversarial tests; include all errors in denominators, copy only historical local records as baseline not new PASS.
+
+**Cross-cutting constraints:** One shared capacity authority [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) enforces 0.92 desired and 0.95 hard; separate workers cannot bypass it.
 
 ## K. Security / Governance / Observability
 
@@ -68,6 +101,14 @@ Use server-derived WorkspaceContext and FORCE RLS across all source, asset and i
 Trace propagation concurrency and cancellation, logs with secret-bearing filenames/queries/URLs, OTel exporter down, metrics cardinality bounds, 100+ gold real query labels with all misses, p95 histogram validity, data generation mismatch, SOURCE RLS, fail-safe alerting and correlation to API 503 errors. Real vs mock evidence separated.
 
 Execute existing Hatch workbench-api:check/test/types, explicit disposable PostgreSQL integration; when UI changes run npm typecheck/test/build and Preview/validator smoke. Attach real command outcomes and mark unrun tests NOT TESTED.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] Trace ID propagation API→SQL→embedding queue→provider→generation publication, cancellation and cross-tenant separation.
+- [ ] No raw text/embeddings/credentials/asset bytes in logs under malicious input, OTel exporter down not fatal.
+- [ ] Eligible TPM 60s distributions, provider/proxy evidence and p95 interactive query under saturated ingest.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 

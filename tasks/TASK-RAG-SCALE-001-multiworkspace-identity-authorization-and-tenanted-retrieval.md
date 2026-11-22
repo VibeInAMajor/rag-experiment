@@ -51,6 +51,22 @@ MODIFY [persistence.py](../apps/workbench/api/persistence.py), [application.py](
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | resolve_development_workspace server boundary and WorkspaceContext |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | SET LOCAL workspace scope in transactions, no BYPASSRLS |
+| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | FORCE RLS workspaces/source_versions/chunks |
+| [`apps/workbench/api/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) | FORCE RLS and job identity |
+| [`apps/workbench/api/boundary.py`](../apps/workbench/api/boundary.py) | host/CORS security and API errors |
+| [`apps/workbench/api/config.py`](../apps/workbench/api/config.py) | local-mode host and secrets |
+| [`apps/workbench/api/local_sources.py`](../apps/workbench/api/local_sources.py) | local Windows Explorer reveal, must remain disabled for remote users |
+| [`apps/workbench/api/tests/test_postgres_persistence.py`](../apps/workbench/api/tests/test_postgres_persistence.py) | RLS/role tests |
+| [`apps/workbench/web/src/hooks/useBackendDiscovery.ts`](../apps/workbench/web/src/hooks/useBackendDiscovery.ts) | current authorized workspace capability handling |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/independent-multi-workspace-rag-service.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/independent-multi-workspace-rag-service.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. Inventory API, original evidence, query, model and worker entrypoints; freeze least-privilege matrix and security baselines.
@@ -59,6 +75,24 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 4. Require server-selected workspace for every read/write; add scoped UI listing and cancellation/clear history on switching.
 5. Enforce tenant quotas and resource usage, including HNSW filtered recall, embedding reuse and worker process queues.
 6. Harden remote deployment HTTPS, CORS, secret retrieval, audit; block local Explorer/open-file feature outside local mode. Run 2-workspace/3-role penetration-like tests before enabling remote listener.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Map every API route including source browse/reveal, ingestion, live SQL, Dense/ANN/asset evidence and admin operations; explicitly distinguish current single-local development from future remote auth.
+
+**J8.** Implement verified identity adapter (OIDC/JWT/mTLS after operator choice) and server membership/permissions check before accepting workspace_id from path; limit scope list to authorized only.
+
+**J9.** Add additive membership/quota schema and compound scope for all existing source/version/chunk/job and future assets/generations, keep app DB role non-owner non-superuser.
+
+**J10.** Test PostgreSQL pooled transaction reuse with A then B: no RLS residual scope, no BYPASSRLS. Security tests should prevent both data return and existence probing through 404.
+
+**J11.** Separate local source file reveal from remote evidence serving; deny remote Explorer access, untrusted path traversal and symlink/UNC.
+
+**J12.** Enforce model/GPU/TPM per-tenant quota and fair share with SCALE-002 and TPM-001 global model quota; no tenant may override 0.95 global guard.
+
+**J13.** Update UI selector and session state: switch workspace cancels in-flight query, clears private result/asset caches, revalidates profile and generation before next Live call.
+
+**Cross-cutting constraints:** Do not import model/converter/cloud or queue SDK into core, and do not change existing PostgreSQL authoritative source.
 
 ## K. Security / Governance / Observability
 
@@ -69,6 +103,14 @@ Server-derived WorkspaceContext and FORCE RLS are required. Never log original s
 JWT wrong audience/issuer/tampered/expired, forged workspace, same resource IDs in two tenants, connection pool RLS, tenant data over vector/ANN/evidence/embedding jobs, source update, forced cross-tenant cache read, UI switching, admin role escalation and worker quota. Measure zero leaked rows and original bytes.
 
 Run the existing Hatch app-specific check/test/types scripts on disposable test data, plus web typecheck/test/build for any UI changes. Distinguish mocked failures from real operator qualification; no invented timings.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] Two tenants 3+ roles, forged workspace/path/source ID, wrong JWT issuer/audience/expiry, SQL RLS owner/role tests and read-after-switch.
+- [ ] Asset/evidence/vector/ANN/cached embedding scope, administrative role escalation, worker scope and local file reveal remote denial.
+- [ ] Quota fairness and no unwanted model calls for forbidden workspace.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 

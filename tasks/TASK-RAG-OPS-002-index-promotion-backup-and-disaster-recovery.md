@@ -50,6 +50,21 @@ CREATE apps/workbench/api/index_lifecycle.py and tests/test_index_lifecycle.py, 
 
 MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated Preview/validator implementations as a shortcut.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | explicit checksum schema upgrades; no auto migrate |
+| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | source active constraints/GIN/vector |
+| [`apps/workbench/api/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) | job transactional lifecycle |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | _publish active source version and lexical/vector read |
+| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | idempotent terminal job commit and RLS |
+| [`docs-website/docs/architecture/postgresql-foundation.md`](../docs-website/docs/architecture/postgresql-foundation.md) | current backups/restart and local Docker |
+| [`apps/workbench/postgres/compose.yaml`](../apps/workbench/postgres/compose.yaml) | named persistent volume and pinned image |
+| [`apps/workbench/api/tests/test_database_migrations.py`](../apps/workbench/api/tests/test_database_migrations.py) | upgrade path tests |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/63-progressive-repository-indexing-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/63-progressive-repository-indexing-architecture.md); [`docs/64-document-versioned-rag-state-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/64-document-versioned-rag-state-architecture.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Document state machine, current backup process, RLS, source index and model generation ownership, and how SQL/blob backup consistency will be achieved. Identify incompatible schema changes before operator action.
@@ -58,6 +73,24 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 4. J4 — Execute quality/latency benchmark and mandatory gates before conditional promotion; use compare-and-set expected_active_generation to prevent racing operator actions.
 5. J5 — Recover from interrupted embedding job, invalid ANN, stale manifest, incomplete original asset, corrupt migration, DB restore and failed operator rollback. Never return half-built generation in capabilities.
 6. J6 — Rehearse database+asset restore in isolated environment, verify original bytes and source version IDs, recorded RPO/RTO, failover/rollback and no synthetic profile substitution.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Build explicit state machine for source/index/embedding generation and operator rebuild/promote/rollback. A physical ANN index is not the same as a validated semantic generation.
+
+**J8.** Define backup manifest tying PostgreSQL snapshot/LSN, schema revision, active source/index generations and CONTENT-001 original asset hashes. Verify restore consistency in isolated environment.
+
+**J9.** Implement operator dry-run and check-only commands, not direct unverified UI buttons; validate RLS, pg_catalog GIN/ANN index, model dimensions/profile, embedding coverage and asset availability.
+
+**J10.** Create next physical index CONCURRENTLY in separate administrative migration operation, keep existing qualified generation active; record DDL/lock/restart behavior.
+
+**J11.** Use compare-and-set active generation pointer promotion with optimistic expected ID. Prevent concurrent operator promotions or stale worker writes into new active source.
+
+**J12.** Test recovery from invalid ANN build, missing bytes, model endpoint outage, index-gen corruption, failed source publish and rollback to old profile; no data deletion/seed reset.
+
+**J13.** Perform database+asset restoration, run gold queries and original byte SHA comparisons, report measured RPO/RTO and sealed op runbook.
+
+**Cross-cutting constraints:** Do not import model/converter/cloud or queue SDK into core, and do not change existing PostgreSQL authoritative source.
 
 ## K. Security / Governance / Observability
 
@@ -68,6 +101,14 @@ Use server-derived WorkspaceContext and FORCE RLS across all source, asset and i
 Concurrent source publication during index build, invalid index, model digest mismatch, half-built generation, source-version race, stale compare-and-set, backup/restore source hashes, 3 workspace RLS, rollback after failed ANN promotion and storage unavailability. Repeat reproducible gold query sample and record actual outage windows/RPO/RTO.
 
 Execute existing Hatch workbench-api:check/test/types, explicit disposable PostgreSQL integration; when UI changes run npm typecheck/test/build and Preview/validator smoke. Attach real command outcomes and mark unrun tests NOT TESTED.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] Fault-injected DB and asset restore with 3 workspace data and exact source versions; no dangling evidence.
+- [ ] Invalid/half-created index, stale migration, wrong model, concurrent publication, preemption, client read pinned to old generation.
+- [ ] Backup/restore times and search quality measured on real disposable clone, not simulation.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 

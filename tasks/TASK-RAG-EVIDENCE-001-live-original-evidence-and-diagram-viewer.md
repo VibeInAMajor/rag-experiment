@@ -50,6 +50,22 @@ MODIFY web src/api typed client (existing UI-001), [ResultsPanel.tsx](../apps/wo
 
 MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated Preview/validator implementations as a shortcut.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/local_sources.py`](../apps/workbench/api/local_sources.py) | guarded registered original local Windows file reveal; NOT general asset serving |
+| [`apps/workbench/api/source_registration.py`](../apps/workbench/api/source_registration.py) | source registration/version identity |
+| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | current source metadata and API response |
+| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | readiness/capabilities and route owner |
+| [`apps/workbench/web/src/api/client.ts`](../apps/workbench/web/src/api/client.ts) | typed HTTP client and abort path |
+| [`apps/workbench/web/src/components/ResultsPanel.tsx`](../apps/workbench/web/src/components/ResultsPanel.tsx) | Live versus Preview result presentation |
+| [`apps/workbench/web/src/components/LiveRunDetails.tsx`](../apps/workbench/web/src/components/LiveRunDetails.tsx) | live provenance/run IDs and score metadata |
+| [`apps/workbench/web/src/views/DocumentsView.tsx`](../apps/workbench/web/src/views/DocumentsView.tsx) | current fixture-only documents list and tabs |
+| [`apps/workbench/api/tests/test_local_sources.py`](../apps/workbench/api/tests/test_local_sources.py) | existing local-source security tests |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/67-decision-grounding-and-provenance.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/67-decision-grounding-and-provenance.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Inspect actual CONTENT-005 API and schema, not merely the blueprint; validate that source version, evidence status, Content-Type and byte caps are explicit.
@@ -58,6 +74,24 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 4. J4 — Use server-approved workspace and per-run source_version context; cancel old requests, revoke object URLs and purge bytes on switching workspace/mode/logout.
 5. J5 — Test real PDF table/crop, a diagram asset and Mermaid source when respective producers qualify. Upstream unavailable must show Not available, not example image.
 6. J6 — Run browser E2E HTTP/source hash parity, adversarial media types, 404/409/503, slow network, RLS and existing Preview/validator/Live regression tests; document privacy and operator rollout.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Require real CONTENT-001 asset store and CONTENT-005 evidence resolver APIs; do not implement a frontend viewer against spec-only endpoints or fabricate pdf/source URI.
+
+**J8.** Extend single API client with typed evidence metadata/bounded original fetch. Validate workspace, source_version_id, asset sha and server-provided content types; no arbitrary URL fetch.
+
+**J9.** Build inert EvidencePanel for safe PDF page/crop, plain text Mermaid source and non-executable diagram image. Render model-derived graph and OCR confidence as **derived/unverified**, not original truth.
+
+**J10.** Attach evidence_id on actual SearchResult from backend after hydration/authorization; user clicking a chunk finds the correct immutable source page/version, not latest document by default.
+
+**J11.** Bound browser bytes, revoke Blob URLs, avoid localStorage/cache, cancel stale fetch when workspace/Run selection changes and never allow remote use of host-local Explorer reveal.
+
+**J12.** Exercise forged evidence ID, foreign workspace, missing asset, wrong hash, SVG/HTML/Mermaid XSS, 404/409/503; show explicit not available without Preview fallback.
+
+**J13.** Test at least 3 truly qualified source types with exact original SHA and source/page/line provenance, plus existing Live, Preview and validation regression.
+
+**Cross-cutting constraints:** Original assets and EvidenceResolver are separate BACKEND prerequisites, not existing sources merely because a UI link exists.
 
 ## K. Security / Governance / Observability
 
@@ -68,6 +102,14 @@ Use server-derived WorkspaceContext and FORCE RLS across all source, asset and i
 UI contract tests safe content type, oversized asset, invalid hash, wrong workspace/source version, stale request, missing bbox, script-like Mermaid, broken image, API 404/503, explicit Preview-only run. Real E2E for >=3 source types after upstream producer qualifies; do not report mock as real evidence.
 
 Execute existing Hatch workbench-api:check/test/types, explicit disposable PostgreSQL integration; when UI changes run npm typecheck/test/build and Preview/validator smoke. Attach real command outcomes and mark unrun tests NOT TESTED.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] Hash and exact original PDF/Mermaid byte parity through API; page/bbox/source-version consistency after restart.
+- [ ] Frontend security: no HTML/JS execution, private Blob URL cleanup, safe content type and size ceilings, cross-tenant denial.
+- [ ] Browser active source version changes while evidence modal open; must not show new version under old ID.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 

@@ -4,7 +4,7 @@
 **Updated:** 2026-11-23  
 **Status:** PROPOSED — implementation blueprint, no runtime claim  
 **Priority:** P1  
-**Dependencies:** INDEX-001, EMBED-002, SCALE-001, CONTENT-001; completed RAG-002  
+**Dependencies:** INDEX-001, EMBED-002, SCALE-001, CONTENT-001; completed RAG-002  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
 **Source reviewed:** cb7fe844084133b7e09a623e0e39767af1e0d9f1  
 **Target:** tasks/TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md
 
@@ -51,6 +51,22 @@ REUSE [ingestion.py](../apps/workbench/api/ingestion.py), [ingestion_http.py](..
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | _execute parse/chunk/publish is synchronous |
+| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | durable leased/owned ingestion job and terminal atomic commit |
+| [`apps/workbench/api/ingestion_http.py`](../apps/workbench/api/ingestion_http.py) | HTTP upload, jobs/status route semantics |
+| [`apps/workbench/api/upload_transport.py`](../apps/workbench/api/upload_transport.py) | bounded in-memory multipart |
+| [`apps/workbench/api/pdf_parser.py`](../apps/workbench/api/pdf_parser.py) | sandboxed expensive PDF stage, separate capacity |
+| [`apps/workbench/api/pdf_sandbox.py`](../apps/workbench/api/pdf_sandbox.py) | CPU/memory/time quotas |
+| [`apps/workbench/api/tests/test_ingestion_resilience.py`](../apps/workbench/api/tests/test_ingestion_resilience.py) | timeout and incomplete job recovery |
+| [`apps/workbench/api/tests/test_ingestion_process.py`](../apps/workbench/api/tests/test_ingestion_process.py) | process crash behavior |
+| [`apps/workbench/api/tests/test_ingestion_routes.py`](../apps/workbench/api/tests/test_ingestion_routes.py) | source upload HTTP contract |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/77-m39-scalable-rag-ingestion-and-serving.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/77-m39-scalable-rag-ingestion-and-serving.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. Freeze existing synchronous API and idempotent job semantics; design explicit 202 compatibility and retention.
@@ -59,6 +75,24 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 4. Add quotas, fair scheduling, per-stage CPU/GPU/Docling/OCR slots, token budgets and poison job deadletter.
 5. Implement real status/poll/cancel semantics with traces, and recover known job state after API/DB/worker restart.
 6. Benchmark >=1000 non-sensitive tasks across multiple tenants and process crash points; report queue lag, throughput, timeouts, memory, source integrity and safe rollback.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Design asynchronous behavior while preserving current bounded synchronous upload; use durable original AssetStorePort from CONTENT-001 and explicit job/outbox migration.
+
+**J8.** Implement acceptance transaction: exact raw source staged + committed job reservation before returning HTTP 202; SQL and blob store not atomic so define orphan/stage recovery.
+
+**J9.** Lease tasks to one owner with expiry/heartbeat and DB constraints; use existing Postgres `_publish` for terminal source version and index generation. Do not duplicate existing job state machine.
+
+**J10.** Add tenant-aware ready queue, priority and backpressure for parsing/OCR/TEI, and one shared TPM-001 governor across all embedding worker replicas or a central inference gateway.
+
+**J11.** Bound memory per packet, queue bytes, token budget, batch item count, retry count and admission delay, with correct cancellation and failure states.
+
+**J12.** Implement GET job polling only with confirmed stage counts and recovery; no fake percentage, no claimed cancellation after remote commit.
+
+**J13.** Test 1000+ synthetic jobs, source updated during worker crash, queued original surviving API/DB restart, late paid embedding result, 3-tenant fairness and all RAG-002 source-version regressions.
+
+**Cross-cutting constraints:** One shared capacity authority [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) enforces 0.92 desired and 0.95 hard; separate workers cannot bypass it.
 
 ## K. Security / Governance / Observability
 
@@ -69,6 +103,14 @@ Server-derived WorkspaceContext and FORCE RLS are required. Never log original s
 Crash before/after parse, after model inference before DB write, after DB write before ack, duplicate messages, wrong tenant, poisonous PDF, no source blob, missing model, 429/503, 1000 job load and restart. Include latency p95, jobs/s, resource usage, no duplicate source versions.
 
 Run the existing Hatch app-specific check/test/types scripts on disposable test data, plus web typecheck/test/build for any UI changes. Distinguish mocked failures from real operator qualification; no invented timings.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] Source bytes/job atomic acceptance and crash between them, duplicate event and idempotent commit, quota 429/backoff.
+- [ ] Source job recovered after restart without data loss; runtime no memory/worker explosion, queue lag p50/p95.
+- [ ] Tenant fairness and query p95 with saturation and shared 0.95 TPM hard quota; report provider usage provenance.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 

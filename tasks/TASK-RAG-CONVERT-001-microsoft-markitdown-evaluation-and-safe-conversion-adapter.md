@@ -51,6 +51,21 @@ Use [parsing.py](../apps/workbench/api/parsing.py), [parser_registry.py](../apps
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/parser_registry.py`](../apps/workbench/api/parser_registry.py) | trusted file classification and qualified parsers |
+| [`apps/workbench/api/parsing.py`](../apps/workbench/api/parsing.py) | ParsedDocument/ParsedElement and Markdown fences |
+| [`apps/workbench/api/pdf_worker.py`](../apps/workbench/api/pdf_worker.py) | existing isolated Docling text/table parser |
+| [`apps/workbench/api/pdf_models.py`](../apps/workbench/api/pdf_models.py) | page/box/table structure to compare against Markdown |
+| [`apps/workbench/api/pdf_chunking_adapter.py`](../apps/workbench/api/pdf_chunking_adapter.py) | Docling HybridChunker and structural retrieval text |
+| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | approved ingestion and source fingerprints |
+| [`apps/workbench/api/tests/test_parsing.py`](../apps/workbench/api/tests/test_parsing.py) | Markdown structure/fenced blocks tests |
+| [`apps/workbench/api/tests/test_pdf_chunking.py`](../apps/workbench/api/tests/test_pdf_chunking.py) | page/table golden test |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/20-implementation-step-03-parsing-and-chunking.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/20-implementation-step-03-parsing-and-chunking.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. Freeze current converter/version/license and security assumptions; test in a no-network sandbox with no enabled plugins and smallest dependency set.
@@ -59,6 +74,24 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 4. Compute source/evidence hit@5, nDCG where judgments exist, cell/numeric accuracy, heading preservation, lost-element rate, byte size, parse latency p50/p95 and memory.
 5. Review optional OCR plugin and Azure endpoints separately for data egress, recurring cost, model dependencies and restricted access. No silent remote calls.
 6. Publish per-format GO/NO-GO with deployment/license, precise limitations, rollback and approval. Do not install production plugin merely because it generated readable Markdown.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Pin Microsoft MarkItDown source/version/license. Run built-in converter in an isolated child with no network, no optional plugins, bounded I/O and safe local paths. Contrast optional Azure Document Intelligence and vision plugin (not assumed local).
+
+**J8.** Build ≥12 golden DOCX/PPTX/XLSX/PDF/HTML/Markdown docs with headings, numeric tables, merged cells, diagrams and source page/slide/sheet reference labels.
+
+**J9.** Run MarkItDown and current Docling/native parsers on identical bytes. Compare structural element coverage, page/cell location, code blocks, charts, image loss and parse warnings; do not use output length alone as a quality metric.
+
+**J10.** Treat Markdown as a derived ContentRepresentation with original immutable source hash and map to source spans when possible. If page references missing, disable precise citations for that format.
+
+**J11.** Evaluate ≥40 labeled retrieval/evidence questions, RAG quality and model-token/index cost with same embedding profile and source generation; report memory/CPU/p95.
+
+**J12.** Make format-specific GO/NO-GO; a PDF diagram or spreadsheet may need Docling/native even if Markdown is pretty; attach acceptance thresholds and user privacy decision.
+
+**J13.** Only after format GO add optional adapter to parser registry with new profile and safe fallback; preserve current HTML/ZIP/PDF security fences and original asset storage.
+
+**Cross-cutting constraints:** Do not import model/converter/cloud or queue SDK into core, and do not change existing PostgreSQL authoritative source.
 
 ## K. Security / Governance / Observability
 
@@ -69,6 +102,14 @@ Server-derived WorkspaceContext and FORCE RLS are required. Never log original s
 Compare >=12 files and 40 ground-truth queries, exact numeric/table/page citations, malicious Office/ZIP/PDF embedded references, invalid HTML, network-blocked conversion, image-only scan, Cyrillic, timeout, resource exhaustion. Record real outputs and all failures; maintain existing ingestion/search regression.
 
 Run the existing Hatch app-specific check/test/types scripts on disposable test data, plus web typecheck/test/build for any UI changes. Distinguish mocked failures from real operator qualification; no invented timings.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] 12+ source files, 40+ gold evidence pairs; original/reconstructed hash and table numeric exactness.
+- [ ] Dangerous Office/PDF/ZIP, embedded URL/HTTP, network disabled, plugin missing/unsupported, Cyrillic, huge input and timeout.
+- [ ] No auto-install `markitdown[all]`, no cloud egress, missing structural evidence is a visible error/warning.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 
