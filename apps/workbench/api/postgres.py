@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager, suppress
 from datetime import UTC
 from math import isfinite
 from time import monotonic
-from typing import Any
+from typing import Any, Literal
 
 from pgvector import Vector
 from psycopg import AsyncConnection, Error, errors
@@ -18,11 +18,14 @@ from psycopg_pool import AsyncConnectionPool, PoolClosed, PoolTimeout
 from pydantic import ValidationError
 
 from apps.workbench.api.persistence import (
+    ActiveChunkPage,
     Chunk,
     CorpusNotReady,
     CorpusSnapshot,
     DatabaseUnavailable,
     DocumentRecord,
+    IngestionJob,
+    IngestionTiming,
     InvalidEmbedding,
     LexicalHit,
     LexicalSearchSnapshot,
@@ -34,7 +37,9 @@ from apps.workbench.api.persistence import (
     SchemaIncompatible,
     SeedConflict,
     Source,
+    SourceDetail,
     SourceVersion,
+    UploadReservation,
     VectorHit,
     Workspace,
     WorkspaceContext,
@@ -85,6 +90,7 @@ class PostgresPersistence:
             raise ValueError("Invalid database pool bounds.")
         self._timeout = timeout
         self._statement_timeout_ms = statement_timeout_ms
+        self._ingestion_owners: dict[str, tuple[str, str, int]] = {}
         logging.getLogger("psycopg.pool").addFilter(_POOL_LOG_FILTER)
         self._pool = AsyncConnectionPool[AsyncConnection[dict[str, Any]]](
             conninfo=dsn,
@@ -180,8 +186,8 @@ class PostgresPersistence:
         if row is None:
             raise WorkspaceNotFound("Workspace is not available.")
 
-    async def _verify_schema(self, connection: AsyncConnection[dict[str, Any]]) -> None:
-        from apps.workbench.api.db_migrations import migration_checksum
+    async def _verify_schema(self, connection: AsyncConnection[dict[str, Any]]) -> str:
+        from apps.workbench.api.db_migrations import MigrationError, migration_ledger
 
         revision = await (await connection.execute("SELECT version_num FROM workbench.alembic_version")).fetchall()
         ledger = await (
@@ -199,9 +205,16 @@ class PostgresPersistence:
                 "AND c.relrowsecurity AND c.relforcerowsecurity ORDER BY c.relname"
             )
         ).fetchall()
+        applied = revision[0]["version_num"] if len(revision) == 1 else ""
+        try:
+            expected_ledger = [
+                dict(zip(("revision", "checksum", "tool_version"), row, strict=True))
+                for row in migration_ledger(applied)
+            ]
+        except MigrationError:
+            raise SchemaIncompatible("Required database revision or extension is unavailable.") from None
         if (
-            revision != [{"version_num": "0001"}]
-            or ledger != [{"revision": "0001", "checksum": migration_checksum(), "tool_version": "alembic-1.20.1"}]
+            ledger != expected_ledger
             or extension != {"extversion": "0.8.2"}
             or protected
             != [
@@ -212,11 +225,12 @@ class PostgresPersistence:
             ]
         ):
             raise SchemaIncompatible("Required database revision or extension is unavailable.")
+        return applied
 
     async def readiness(self, context: WorkspaceContext) -> PersistenceReady:
         """Verify exact migration/extension versions and an active persisted corpus."""
         async with self._transaction(context, operation="readiness") as connection:
-            await self._verify_schema(connection)
+            revision = await self._verify_schema(connection)
             await self._require_workspace(connection, context)
             counts = await (
                 await connection.execute(
@@ -228,7 +242,7 @@ class PostgresPersistence:
             ).fetchone()
             if counts is None or counts["chunk_count"] == 0:
                 raise DatabaseUnavailable("No committed active corpus is available.")
-            return PersistenceReady(schema_revision="0001", workspace_id=context.workspace_id, **counts)
+            return PersistenceReady(schema_revision=revision, workspace_id=context.workspace_id, **counts)
 
     async def create_workspace(self, context: WorkspaceContext, workspace: Workspace) -> None:
         """Create a workspace matching the server-resolved scope."""
@@ -472,6 +486,9 @@ class PostgresPersistence:
         version: SourceVersion,
         chunks: list[Chunk],
     ) -> None:
+        await connection.execute(
+            "SELECT workspace_id FROM workbench.workspaces WHERE workspace_id=%s FOR UPDATE", (context.workspace_id,)
+        )
         if source.workspace_id != context.workspace_id or version.workspace_id != context.workspace_id:
             raise WorkspaceNotFound("Workspace is not available.")
         if version.source_id != source.source_id or not 1 <= len(chunks) <= 10000:
@@ -540,6 +557,137 @@ class PostgresPersistence:
             "UPDATE workbench.source_versions SET status='active',updated_at=now() "
             "WHERE workspace_id=%s AND source_id=%s AND version_id=%s",
             (context.workspace_id, source.source_id, version.version_id),
+        )
+
+    async def ingestion_ready(self, context: WorkspaceContext) -> bool:
+        """Qualify additive ingestion independently from the compatible lexical-only schema."""
+        from apps.workbench.api.postgres_ingestion import ingestion_ready
+
+        return await ingestion_ready(self, context)
+
+    async def recover_ingestions(self, context: WorkspaceContext) -> int:
+        """Diagnose abandoned jobs without interrupting any live session owner."""
+        from apps.workbench.api.postgres_ingestion import recover_ingestions
+
+        return await recover_ingestions(self, context)
+
+    @asynccontextmanager
+    async def reserve_ingestion(
+        self,
+        context: WorkspaceContext,
+        *,
+        idempotency_key: str,
+        request_fingerprint: str,
+        source_content_sha256: str,
+        source_id: str | None = None,
+        expected_active_version_id: str | None = None,
+    ) -> AsyncIterator[UploadReservation]:
+        """Reserve once while holding crash-released exclusive ownership through publication or failure."""
+        from apps.workbench.api.postgres_ingestion import reserve_ingestion
+
+        async with reserve_ingestion(
+            self,
+            context,
+            idempotency_key=idempotency_key,
+            request_fingerprint=request_fingerprint,
+            source_content_sha256=source_content_sha256,
+            source_id=source_id,
+            expected_active_version_id=expected_active_version_id,
+        ) as reservation:
+            yield reservation
+
+    async def transition_ingestion(
+        self,
+        context: WorkspaceContext,
+        *,
+        job_id: str,
+        owner_token: str,
+        stage: Literal["parsing", "chunking", "publishing"],
+    ) -> IngestionJob:
+        """Commit one ordered processing checkpoint belonging to a live reservation."""
+        from apps.workbench.api.postgres_ingestion import transition_ingestion
+
+        return await transition_ingestion(self, context, job_id=job_id, owner_token=owner_token, stage=stage)
+
+    async def complete_ingestion_with_publication(
+        self,
+        context: WorkspaceContext,
+        *,
+        job_id: str,
+        owner_token: str,
+        source: Source,
+        version: SourceVersion,
+        chunks: list[Chunk],
+        stages: list[IngestionTiming],
+    ) -> IngestionJob:
+        """Publish a guarded version and COMPLETE atomically, preserving unchanged active content."""
+        from apps.workbench.api.postgres_ingestion import complete_ingestion_with_publication
+
+        return await complete_ingestion_with_publication(
+            self,
+            context,
+            job_id=job_id,
+            owner_token=owner_token,
+            source=source,
+            version=version,
+            chunks=chunks,
+            stages=stages,
+        )
+
+    async def fail_ingestion(
+        self,
+        context: WorkspaceContext,
+        *,
+        job_id: str,
+        owner_token: str,
+        error_code: str,
+        retryable: bool,
+        stages: list[IngestionTiming],
+    ) -> IngestionJob:
+        """Persist a safe terminal failure while retaining the last confirmed processing stage."""
+        from apps.workbench.api.postgres_ingestion import fail_ingestion
+
+        return await fail_ingestion(
+            self,
+            context,
+            job_id=job_id,
+            owner_token=owner_token,
+            error_code=error_code,
+            retryable=retryable,
+            stages=stages,
+        )
+
+    async def get_ingestion_job(self, context: WorkspaceContext, *, job_id: str) -> IngestionJob | None:
+        """Read a scoped durable job without exposing reservation keys or ownership tokens."""
+        from apps.workbench.api.postgres_ingestion import get_ingestion_job
+
+        return await get_ingestion_job(self, context, job_id=job_id)
+
+    async def get_source_detail(self, context: WorkspaceContext, *, source_id: str) -> SourceDetail | None:
+        """Read source metadata and its current active processing version in one snapshot."""
+        from apps.workbench.api.postgres_ingestion import get_source_detail
+
+        return await get_source_detail(self, context, source_id=source_id)
+
+    async def list_active_chunks(
+        self,
+        context: WorkspaceContext,
+        *,
+        source_id: str,
+        limit: int = 50,
+        after_chunk_id: str | None = None,
+        expected_corpus_revision: str | None = None,
+    ) -> ActiveChunkPage | None:
+        """Read only the active version through a bounded stable keyset page."""
+        from apps.workbench.api.postgres_ingestion import list_active_chunks
+
+        return await list_active_chunks(
+            self,
+            context,
+            source_id=source_id,
+            limit=limit,
+            after_chunk_id=after_chunk_id,
+            expected_corpus_revision=expected_corpus_revision,
         )
 
     async def lexical_search(self, context: WorkspaceContext, *, query: str, top_k: int = 10) -> list[LexicalHit]:

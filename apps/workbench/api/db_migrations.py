@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL, Connection
 from sqlalchemy.pool import NullPool
 
-HEAD_REVISION = "0001"
+HEAD_REVISION = "0002"
 EXPECTED_REVISION = HEAD_REVISION
 MIGRATION_TOOL_VERSION = "alembic-1.20.1"
 _EXTENSION_VERSION = "0.8.2"
@@ -22,6 +22,7 @@ _DIRECTORY = Path(__file__).resolve().parent / "migrations"
 _LOCK_KEY = 719342176213
 _TABLES = ("workspaces", "sources", "source_versions", "chunks", "embedding_profiles")
 _SCOPED_TABLES = ("workspaces", "sources", "source_versions", "chunks")
+_REVISIONS = (("0001", "0001_initial"), ("0002", "0002_ingestion_jobs"))
 
 
 class MigrationError(ValueError):
@@ -37,15 +38,29 @@ class MigrationStatus:
     reason: str = "NOT_MIGRATED"
 
 
-def migration_checksum() -> str:
-    """Fingerprint both reviewed directions of the initial SQL migration."""
+def migration_checksum(*, revision: str = "0001") -> str:
+    """Fingerprint one reviewed migration; the default preserves historical 0001 callers."""
+    stem = dict(_REVISIONS).get(revision)
+    if stem is None:
+        raise MigrationError("Unknown migration revision.")
     digest = sha256()
-    for filename in ("0001_initial.up.sql", "0001_initial.down.sql"):
+    for filename in (f"{stem}.up.sql", f"{stem}.down.sql"):
         digest.update(filename.encode("ascii"))
         digest.update(b"\0")
         # Git checkouts may use CRLF on Windows; line endings do not change SQL.
         digest.update((_DIRECTORY / filename).read_text(encoding="utf-8").encode("utf-8"))
     return digest.hexdigest()
+
+
+def migration_ledger(revision: str) -> list[tuple[str, str, str]]:
+    """Return the exact checksum ledger required by an applied supported revision."""
+    revisions = [item[0] for item in _REVISIONS]
+    if revision not in revisions:
+        raise MigrationError("Unknown migration revision.")
+    return [
+        (applied, migration_checksum(revision=applied), MIGRATION_TOOL_VERSION)
+        for applied in revisions[: revisions.index(revision) + 1]
+    ]
 
 
 @contextmanager
@@ -78,39 +93,45 @@ def _status(connection: Connection) -> MigrationStatus:
     if not revisions:
         return MigrationStatus(revision=None, extension_version=extension)
     revision = revisions[0]
-    if revisions != [HEAD_REVISION]:
+    if len(revisions) != 1 or revision not in dict(_REVISIONS):
         return MigrationStatus(revision=revision, extension_version=extension, reason="SCHEMA_INCOMPATIBLE")
     ledger_table = connection.execute(text("SELECT to_regclass('workbench.schema_migrations')")).scalar_one_or_none()
     if ledger_table is None:
         return MigrationStatus(revision=revision, extension_version=extension, reason="CHECKSUM_MISMATCH")
-    ledger = connection.execute(text("SELECT revision, checksum, tool_version FROM workbench.schema_migrations")).all()
-    if len(ledger) != 1 or tuple(ledger[0]) != (HEAD_REVISION, migration_checksum(), MIGRATION_TOOL_VERSION):
+    ledger = connection.execute(
+        text("SELECT revision, checksum, tool_version FROM workbench.schema_migrations ORDER BY revision")
+    ).all()
+    if [tuple(row) for row in ledger] != migration_ledger(revision):
         return MigrationStatus(revision=revision, extension_version=extension, reason="CHECKSUM_MISMATCH")
     if extension != _EXTENSION_VERSION:
         return MigrationStatus(revision=revision, extension_version=extension, reason="EXTENSION_INCOMPATIBLE")
+    required_tables = _TABLES + (("ingestion_jobs",) if revision == "0002" else ())
     tables_exist = all(
         connection.execute(text("SELECT to_regclass(:table)"), {"table": f"workbench.{table}"}).scalar_one_or_none()
         is not None
-        for table in _TABLES
-    ) and _scoping_enabled(connection)
+        for table in required_tables
+    ) and _scoping_enabled(connection, ingestion=revision == "0002")
     return MigrationStatus(
         revision=revision,
         extension_version=extension,
         compatible=tables_exist,
-        reason="COMPATIBLE" if tables_exist else "SCHEMA_INCOMPATIBLE",
+        reason=("COMPATIBLE" if revision == HEAD_REVISION else "UPGRADE_AVAILABLE")
+        if tables_exist
+        else "SCHEMA_INCOMPATIBLE",
     )
 
 
-def _scoping_enabled(connection: Connection) -> bool:
+def _scoping_enabled(connection: Connection, *, ingestion: bool = False) -> bool:
+    tables = _SCOPED_TABLES + (("ingestion_jobs",) if ingestion else ())
     rows = connection.execute(
         text(
             "SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity, pg_get_userbyid(c.relowner) "
             "FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
             "WHERE n.nspname='workbench' AND c.relname = ANY(:tables)"
         ),
-        {"tables": list(_SCOPED_TABLES)},
+        {"tables": list(tables)},
     ).all()
-    return len(rows) == len(_SCOPED_TABLES) and all(row[1] and row[2] and row[3] != "workbench_app" for row in rows)
+    return len(rows) == len(tables) and all(row[1] and row[2] and row[3] != "workbench_app" for row in rows)
 
 
 def migration_status(dsn: str) -> MigrationStatus:
@@ -161,6 +182,8 @@ def _grant_application(connection: Connection) -> None:
         "workbench.alembic_version TO workbench_app"
     )
     connection.exec_driver_sql("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
+    if connection.execute(text("SELECT to_regclass('workbench.ingestion_jobs')")).scalar_one_or_none() is not None:
+        connection.exec_driver_sql("GRANT SELECT,INSERT,UPDATE ON workbench.ingestion_jobs TO workbench_app")
 
 
 def _migrate(connection: Connection) -> MigrationStatus:
@@ -175,7 +198,7 @@ def _migrate(connection: Connection) -> MigrationStatus:
         if existing:
             raise MigrationError("An unversioned application schema already exists.")
         connection.exec_driver_sql("CREATE SCHEMA IF NOT EXISTS workbench")
-        command.upgrade(_configuration(connection), "head")
+    command.upgrade(_configuration(connection), "head")
     _grant_application(connection)
     after = _status(connection)
     if not after.compatible:

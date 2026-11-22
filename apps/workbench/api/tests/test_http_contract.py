@@ -115,7 +115,13 @@ def test_default_discovery_does_not_claim_an_execution_backend(monkeypatch: pyte
         assert payload["service_state"] == "running"
         assert payload["deployment_mode"] == "single_workspace_dev"
         assert payload["profiles"] == []
-        assert payload["features"] == {"documents": False, "search": False}
+        assert payload["features"] == {
+            "documents": False,
+            "search": False,
+            "upload": False,
+            "document_details": False,
+            "jobs": False,
+        }
         for path, response in [(_LIVE, live), (_READY, ready), (_CAPABILITIES, capabilities)]:
             _assert_openapi_response(app, response, path=path)
         _assert_error(
@@ -332,7 +338,13 @@ def test_qualified_executor_cannot_bypass_unconfigured_postgresql() -> None:
         payload = _assert_metadata(capabilities)
         assert payload["dependencies"]["database"]["status"] == "unconfigured"
         assert payload["profiles"] == []
-        assert payload["features"] == {"search": False, "documents": False}
+        assert payload["features"] == {
+            "search": False,
+            "documents": False,
+            "upload": False,
+            "document_details": False,
+            "jobs": False,
+        }
         _assert_openapi_response(app, capabilities, path=_CAPABILITIES)
 
 
@@ -516,14 +528,21 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
         "torch",
         "transformers",
         "sentence_transformers",
+        "tokenizers",
         "psycopg",
         "pgvector",
     }
     package = Path(__file__).resolve().parents[1]
     for source in package.glob("*.py"):
-        if source.name in {"postgres.py", "db_migrations.py", "db_admin.py"}:
+        if source.name in {"postgres.py", "postgres_ingestion.py", "db_migrations.py", "db_admin.py"}:
             continue
-        restricted = forbidden - {"haystack"} if source.name in {"lexical.py", "parsing_adapters.py"} else forbidden
+        restricted = (
+            forbidden - {"haystack"}
+            if source.name in {"lexical.py", "parsing_adapters.py", "chunking_adapters.py"}
+            else forbidden
+        )
+        if source.name == "model_token_counter.py":
+            restricted = restricted - {"tokenizers"}
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

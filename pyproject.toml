@@ -163,6 +163,7 @@ dependencies = [
   "fastapi==0.165.0",
   "haystack-ai @ {root:uri}",
   "starlette==1.10.0",
+  "python-multipart==0.0.34",
   "uvicorn==0.54.0",
   "pydantic==2.14.4",
   "psycopg[binary]==3.3.9",
@@ -171,6 +172,9 @@ dependencies = [
   "alembic==1.20.1",
   "sqlalchemy==2.1.9",
   "httpx==0.28.1",
+  "nltk==3.10.4",
+  "tiktoken==0.14.0",
+  "tokenizers==0.23.3",
   "pytest==9.2.0",
   "pytest-asyncio==1.5.0",
   "jsonschema>=4.26,<5",
@@ -193,6 +197,7 @@ db-migrate = "python -m apps.workbench.api.db_admin migrate"
 db-status = "python -m apps.workbench.api.db_admin status"
 db-seed = "python -m apps.workbench.api.db_seed"
 source-register = "python -m apps.workbench.api.source_registration {args}"
+chunking-setup = "python -m scripts.workbench_chunking_setup {args}"
 
 [tool.hatch.envs.workbench-db-compat]
 installer = "uv"

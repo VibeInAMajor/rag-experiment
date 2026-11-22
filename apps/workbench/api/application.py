@@ -38,6 +38,8 @@ from apps.workbench.api.contracts import (
     WorkspacePage,
 )
 from apps.workbench.api.database_dependency import DatabaseDependency, create_database_dependency
+from apps.workbench.api.ingestion import IngestionService
+from apps.workbench.api.ingestion_http import IngestionRoutes, register_ingestion_routes
 from apps.workbench.api.local_sources import (
     FileRevealFailed,
     LocalFileLauncher,
@@ -91,6 +93,13 @@ class _Cursors:
     def offset(self, token: str | None, *, kind: str, context: WorkspaceContext, revision: str, ids: list[str]) -> int:
         if token is None:
             return 0
+        cursor_revision, after = self.after(token, kind=kind, context=context)
+        if cursor_revision != revision or after not in ids:
+            raise _InvalidCursor("Expired cursor")
+        return ids.index(after) + 1
+
+    def after(self, token: str, *, kind: str, context: WorkspaceContext) -> tuple[str, str]:
+        """Verify a scoped keyset cursor; persistence checks its revision and position atomically."""
         if not 1 <= len(token) <= 512:
             raise _InvalidCursor("Invalid cursor")
         try:
@@ -98,12 +107,16 @@ class _Cursors:
             expected = base64.urlsafe_b64encode(hmac.digest(self._key, payload, "sha256")).rstrip(b"=")
             decoded = json.loads(base64.b64decode(payload + b"=" * (-len(payload) % 4), altchars=b"-_", validate=True))
         except (ValueError, UnicodeError, TypeError):
-            raise _InvalidCursor("Restart the list from its first page.") from None
-        if not hmac.compare_digest(expected, signature) or not isinstance(decoded, list) or len(decoded) != 4:
+            raise _InvalidCursor("Invalid cursor") from None
+        if (
+            not hmac.compare_digest(expected, signature)
+            or not isinstance(decoded, list)
+            or len(decoded) != 4
+            or decoded[:2] != [kind, context.workspace_id]
+            or not all(isinstance(value, str) and value for value in decoded[2:])
+        ):
             raise _InvalidCursor("Invalid cursor")
-        if decoded[:3] != [kind, context.workspace_id, revision] or decoded[3] not in ids:
-            raise _InvalidCursor("Expired cursor")
-        return ids.index(decoded[3]) + 1
+        return decoded[2], decoded[3]
 
 
 def _context(request: Request, workspace_id: str = "development") -> WorkspaceContext:
@@ -207,6 +220,7 @@ class _Routes:
         service: LexicalServicePort | None,
         readiness: ReadinessProbe | None,
         local_sources: LocalSources,
+        ingestion: IngestionService | None,
     ) -> None:
         self.app = app
         self.configuration = configuration
@@ -214,6 +228,7 @@ class _Routes:
         self.service = service
         self.readiness = readiness
         self.local_sources = local_sources
+        self.ingestion = ingestion
         self.cursors = _Cursors()
         self.active_searches = 0
 
@@ -294,12 +309,30 @@ class _Routes:
         available = (
             self.app.state.lifecycle == ServiceState.RUNNING and dependency.status == "ready" and bool(current.profiles)
         )
+        ingestion_available = False
+        details_available = False
+        if self.app.state.lifecycle == ServiceState.RUNNING and self.database.persistence is not None:
+            try:
+                async with asyncio.timeout(_READINESS_TIMEOUT_SECONDS):
+                    context = _context(request)
+                    details_available = bool(await self.database.persistence.ingestion_ready(context))
+                    ingestion_available = (
+                        details_available and self.ingestion is not None and await self.ingestion.ready(context)
+                    )
+            except Exception:
+                pass
         return CapabilitiesResponse(
             **request_meta(request).model_dump(),
             backend_revision=self.configuration.backend_revision,
             service_state=self.app.state.lifecycle,
             profiles=current.profiles if available else [],
-            features=Features(documents=available, search=available),
+            features=Features(
+                documents=available,
+                search=available,
+                upload=ingestion_available,
+                document_details=details_available,
+                jobs=details_available,
+            ),
             dependencies=Dependencies(database=dependency),
         )
 
@@ -484,10 +517,21 @@ def create_app(
     configuration = ApiSettings.from_env() if settings is None else settings
     database = create_database_dependency(configuration.database_dsn, persistence=persistence)
     service = lexical
+    ingestion = IngestionService(database.persistence) if database.persistence is not None else None
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         await database.start()
+        if database.persistence is not None:
+            try:
+                async with asyncio.timeout(_READINESS_TIMEOUT_SECONDS):
+                    context = resolve_development_workspace()
+                    if await database.persistence.ingestion_ready(context):
+                        await database.persistence.recover_ingestions(context)
+            except PersistenceError:
+                log_event("ingestion_recovery_unavailable", code="DEPENDENCY_UNAVAILABLE")
+            except TimeoutError:
+                log_event("ingestion_recovery_unavailable", code="DEPENDENCY_UNAVAILABLE")
         application.state.lifecycle = ServiceState.RUNNING
         log_event("service_state", state=ServiceState.RUNNING.value)
         try:
@@ -528,6 +572,7 @@ def create_app(
         service=service,
         readiness=readiness,
         local_sources=local_sources,
+        ingestion=ingestion,
     )
     app.add_api_route("/api/v1/health/live", routes._live, response_model=LiveResponse, name="live")
     app.add_api_route("/api/v1/health/ready", routes._ready, response_model=ReadyResponse, name="ready")
@@ -560,5 +605,17 @@ def create_app(
         response_model=RevealSourceResponse,
         name="reveal_local_file",
         responses={status: {"model": ErrorResponse} for status in (409, 413, 415)},
+    )
+    register_ingestion_routes(
+        app,
+        IngestionRoutes(
+            repository=database.persistence,
+            service=ingestion,
+            cursors=routes.cursors,
+            context=_context,
+            failure=_failure,
+            ensure_running=lambda: _ensure_running(app),
+            timeout_seconds=configuration.ingestion_timeout_seconds,
+        ),
     )
     return app

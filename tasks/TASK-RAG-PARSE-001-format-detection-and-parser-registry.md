@@ -1,8 +1,8 @@
 # TASK-RAG-PARSE-001 — Deterministic file/element type detection and qualified parser registry
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21  
-**Status:** IMPLEMENTED — internal parser qualified; downstream integration gates pending  
+**Updated:** 2026-11-22
+**Status:** COMPLETE — internal parser qualified; downstream consuming gates closed by CHUNK-001 and RAG-002
 **Priority:** P0 — before generalizable chunking/ingestion  
 **Dependencies:** TASK-ARCH-001, TASK-API-001, TASK-DB-001; coordinates with TASK-RAG-CHUNK-001 and TASK-RAG-002  
 **Repository snapshot reviewed:** implementation base `81e17e404014ed054736826868c775e4800f8fd3`; original blueprint reviewed `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`  
@@ -177,9 +177,17 @@ Exact command output and focused/full JUnit reports are in the [evidence directo
 
 Fixture coverage includes reviewed aliases, all planned registry families, known binary signatures and misleading names, corrupt/control/empty text, BOM/Cyrillic, deterministic spans/heading anchors, protected raw Markdown, converter cardinality/empty/changed/error outputs, missing dependencies, one-dispatch behavior, immutable contracts, safe logs and byte/element/deadline refusals. This is a scenario coverage summary; no numerical line/branch coverage is claimed.
 
-Real TXT/Markdown HTTP upload, consuming chunking policy, active-version publication and FTS findability remain unexecuted because those workflows are non-goals here and have no implementation at this base. The planned CHUNK-001/RAG-002 handoffs record those required future gates. Frontend/build/browser, full upstream Haystack suite and Docusaurus build were not run for this internal application change; relative links in the new task/architecture documents and `git diff --check` were checked.
+At the original parser qualification base, consuming chunking, upload, publication and FTS-after-ingestion were unexecuted. The 2026-11-22 [CHUNK-001 implementation](TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md) now consumes the immutable parser contract through `prepare_chunks(...)`, including actual diagnostic HTTP parser-to-chunk verification. Public TXT/Markdown upload, active-version publication and FTS findability after ingestion remain RAG-002 gates. Frontend/build/browser, full upstream Haystack suite and Docusaurus build were not run for this internal application change; relative links in the new task/architecture documents and scoped `git diff --check` were checked.
 
 ## M. Acceptance Criteria
+
+### Additional real HTTP verification — 2026-11-22
+
+Executed `hatch run workbench-api:python -m scripts.workbench_parser_smoke` against a real temporary loopback Uvicorn subprocess, using the existing application parser and Haystack converter without mocks. The run exercises 17 parser HTTP requests: four successful source cases with exact deterministic replays and nine explicit refusals. The real repository architecture Markdown file produces 29 ordered elements; the TXT file, controlled BOM/Cyrillic/CRLF Markdown with table/fence, and exact 1 MiB text also succeed. Incorrect signatures/MIME, traversal, invalid UTF-8, empty input, planned Office/archives, oversized bytes and excessive element counts are refused. Hashes and exact source spans/nonblank coverage are asserted.
+
+Evidence is recorded locally at `tasks/evidence/parser-runtime-2026-11-22.json` under the existing evidence ignore policy. The main API on `127.0.0.1:8011` is probed before/after: readiness, capabilities, database counts and corpus revision remain unchanged. The diagnostic process is stopped and its listener closure checked. The reusable script and API README describe the precise verification boundary.
+
+This is internal-parser integration over actual TCP/HTTP, not evidence of a parser/upload route on the main API or of ingestion/persistence/retrieval. Those downstream gates below remain open. Production application and parser implementation files are unchanged by this verification follow-up.
 
 - [x] At least 30 positive/negative format-identification cases cover aliases, corrupt text, misleading magic, over-size and unsupported Office/archives.
 - [x] Every successful TXT/Markdown parse has exactly one qualified parser descriptor and a revisioned `ParsedDocument` with nonempty ordered elements.
@@ -201,16 +209,21 @@ Markdown architecture matrix records **library/upstream/planned/qualified** inde
 - Use detector revision `text-inspection-r1`, structural contract `parsed-elements-v1`, byte SHA256 and deterministic decoded-character spans/anchors. The registry owns parser/dependency revisions; the future processing fingerprint also includes the contract and approved chunking policy.
 - Centralized default reviewed bounds are 1 MiB, 4,096 elements and a shared 2,000 ms cooperative deadline checked between synchronous stages/blocks. No worker/process isolation is claimed; a blocked library call or scan within one block cannot be preempted by cooperative checks. Heavier adapters require separate isolation qualification.
 - Signature checks deny reviewed binary/executable/archive patterns and misleading filename/MIME evidence. They do not guarantee universal executable/polyglot detection or classify all possible semantic content; valid accepted text remains inert and is never executed.
-- CHUNK-001/RAG-002 have no executable consumer to wire at this base. Their new planning documents require `ParsedDocument` intake and prohibit duplicated classifiers. Parser completion cannot serve as upload/storage/retrieval qualification.
+- CHUNK-001/RAG-002 had no executable consumer at the original parser base. As of 2026-11-22, CHUNK-001 consumes the verified `ParsedDocument` without a duplicated classifier and qualifies internal preparation; RAG-002 now consumes the same contract for durable upload/publication/retrieval; its local live gates and final independent artifact audit passed. See the [successor task](TASK-RAG-002-ingest-text-and-markdown.md). Internal parser/chunker completion cannot serve as upload/storage/retrieval qualification.
+
+### Successor integration qualification — 2026-11-22
+
+The original parser and diagnostic runtime observations above remain historical. The separate [RAG-002 workflow](TASK-RAG-002-ingest-text-and-markdown.md) now closes upload/publication/read/retrieval gates with real same-volume migration, two TXT/Markdown uploads, API/database recovery and visible browser searches. Its [independent audit](evidence/ingestion-2026-11-22/evidence-audit.json) passed; this successor evidence does not retroactively change the earlier parser test counts or advertise other formats.
 
 ## O. Mandatory Completion Checklist
 
 - [x] Section C reverified against actual files and migrations; protected runtime/storage contracts remain unchanged.
 - [x] Format aliases, known-signature checks, parser statuses, typed elements and explicit refusal states implemented.
 - [x] Security review/tests cover misleading format extensions, archive signatures, MIME injection, unsafe names and nonexecution; signature-detection limitations are explicit.
-- [ ] CHUNK-001 / RAG-002 executable consumers use the contract without duplicated classifiers. **Their planning handoffs are complete; workflows remain deferred by Section F.**
+- [x] CHUNK-001 consumes the verified parser contract without a duplicated classifier; its internal tests and diagnostic HTTP execution qualify the parser-to-chunk handoff.
+- [x] RAG-002 consumes the contract in a workspace-scoped upload/publication workflow. **Successor RAG-002 implemented this outside the original parser scope; local live gates and final independent artifact audit passed; see [RAG-002 evidence](evidence/ingestion-2026-11-22/evidence-audit.json).**
 - [x] Internal unit, negative, contract, static and application regression gates executed; exact evidence referenced.
-- [ ] Consuming parser → chunking → stored version → read/retrieval integration gate executed. **Deferred until CHUNK-001/RAG-002 exist; PostgreSQL test skips do not establish this evidence.**
+- [x] Consuming parser → chunking → stored version → read/retrieval integration gate executed. **Successor RAG-002 now supplies real same-volume upload/publication/read/retrieval and restart evidence; final independent artifact audit passed. Original parser test skips remain historical and do not establish these later gates.**
 - [x] Docs/capabilities report only real qualified behavior; no public upload/capability contract changed.
 - [x] Rollback/versioning and operational limitations documented.
 - [ ] All completion gates met before changing status to COMPLETE. **Internal implementation is qualified; the broader consumer checklist remains open.**

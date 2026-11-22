@@ -28,7 +28,13 @@ def test_database_readiness_does_not_enable_execution_profiles() -> None:
             "chunk_count": 8,
         }
         assert capabilities["profiles"] == []
-        assert capabilities["features"] == {"search": False, "documents": False}
+        assert capabilities["features"] == {
+            "search": False,
+            "documents": False,
+            "upload": False,
+            "document_details": False,
+            "jobs": False,
+        }
     assert database.closed == 1
 
 

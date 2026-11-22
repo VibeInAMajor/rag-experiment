@@ -1,7 +1,7 @@
 # Project Map — RAG Experiment
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-21
+**Updated:** 2026-11-22
 **Status:** Repository-verified navigation document; not a runtime architecture specification.  
 **Evidence:** GitHub recursive tree `5e7086364f62d4f15b7370e55767a8f84ed4dc14` (12,946 files; complete tree), plus relevant source and README files, inspected on 2026-11-20.
 
@@ -10,6 +10,10 @@
 **Application update:** PostgreSQL lexical HTTP implementation and real runtime evidence were checked on 2026-11-21 against working-tree base `7f19f4560012a47b812dfabe8f4b1fc53aa384e9` and the scoped retrieval changes. See the canonical contract and retrieval task for execution evidence rather than the historical tree snapshot above.
 
 **Parser update:** internal parser/format boundaries were inspected against base `81e17e404014ed054736826868c775e4800f8fd3` on 2026-11-21. See the [format matrix and handoff](docs/architecture/content-aware-chunking-strategy.md) and [parser task](../tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md). Internal qualification does not enable HTTP upload, chunking or ingestion.
+
+**Chunking update:** internal token policy work was inspected against base `deb9fb63dde97f68db6dd856d1fc2a13a2af2255` on 2026-11-22. [CHUNK-001](../tasks/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md) owns the `prepare_chunks(...)` seam, truthful 500/50 `tiktoken:o200k_base` sizing, EN/RU sentence resources and explicit Ukrainian token fallback. Only `en`/`ru`/`uk` hints are accepted; other languages are deferred/refused. The separate [durable ingestion workflow](docs/architecture/durable-text-ingestion.md) now consumes this seam using an explicit locale-unqualified structural profile; local same-volume migration/upload/search/API-and-database-restart gates passed; final independent artifact audit passed. Internal chunk preparation alone grants no public capability.
+
+**Live acceptance update:** [EVAL-001](../tasks/TASK-EVAL-001-prove-vertical-slice.md) completed on 2026-11-22 against the same base plus recorded working-tree/build hashes. Its [report](docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) records 39 canonical browser/HTTP/SQL parity cases, stable 8-source/8-chunk same-volume recovery and separate real/mock faults. The ten exact cases hit 10/10 in each phase; the three lexical paraphrase misses remain explicit. This qualifies local synthetic acceptance, not production/remote semantic performance.
 
 ## 1. Repository shape (verified)
 
@@ -168,6 +172,7 @@ Separate: useValidation → /api/pipelines/validate.
 | Python tests | `test/` and `e2e/` | Prefer focused suite before complete execution |
 | CI and checks | `.github/workflows/`, `.pre-commit-config.yaml` | Inspect actual configured checks |
 | Backend planning reference | `docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md` | Plan, **not evidence of implementation** |
+| Live lexical browser acceptance | [EVAL-001 task](../tasks/TASK-EVAL-001-prove-vertical-slice.md), [dated report/runbook](docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) | Canonical 10+3 labels, actual UI/HTTP/SQL parity and same-volume restarts; new execution evidence under `tasks/evidence/eval-vertical-2026-11-22/` |
 | General contribution guide | `CONTRIBUTING.md` | Release notes, review conventions |
 
 ## 5. Planned RAG capabilities vs checked-in implementation
@@ -181,7 +186,9 @@ Separate: useValidation → /api/pipelines/validate.
 | Workspace registry / storage scope | Implemented PostgreSQL composite FKs and forced RLS; single development resolver only | Production authentication/authorization remains future work |
 | Registered local originals | Version metadata registration and filename-only Live link implemented for same-machine interactive Windows | See [local originals](docs/architecture/local-source-reveal.md); no ingestion or demo originals are invented |
 | Internal format inspection and parser registry | Bounded byte-only TXT/Markdown adapters, immutable typed elements and planned-format refusals | `apps/workbench/api/parsing.py` and `parser_registry.py`; [format matrix](docs/architecture/content-aware-chunking-strategy.md); no public upload/format capability |
-| Chunk persistence / publication | Implemented app-owned PostgreSQL adapter and transactional source version publication | Ingestion and delta-detection workflows remain separate |
+| Internal chunk preparation | Pure versioned token-profile resolver plus bounded Haystack orchestration; only EN/RU/UK, with default 500/50 tiktoken tokens, EN/RU sentence boundaries and explicit UK/resource fallback | `apps/workbench/api/chunking.py`, `chunking_profiles.py` and reviewed adapters; [policy decision](docs/architecture/content-aware-chunking-strategy.md#token-budgeted-chunking-policy); other languages refused; no SQL writes/upload routes/served-model parity claim |
+| Chunk persistence / publication | Implemented PostgreSQL writer reused by atomic ingestion version/job publication | `postgres.py`, `postgres_ingestion.py`; delta detection remains separate |
+| Durable TXT/Markdown ingestion | Implemented synchronous multipart transport, parser/chunker orchestration, idempotent fenced jobs and additive migration 0002; local same-volume migration/upload/search/restart gates passed; final independent artifact audit passed | `ingestion.py`, `ingestion_http.py`, `upload_transport.py`, `upload_policy.py`, `postgres_ingestion.py`; [runbook](docs/architecture/durable-text-ingestion.md); upload UI separate |
 | PostgreSQL + pgvector | Dedicated Docker service, Alembic migrations, explicit seed and nullable synthetic-vector storage implemented | Follow the [PostgreSQL runbook](docs/architecture/postgresql-foundation.md); real TEI integration remains planned |
 | PostgreSQL lexical retrieval | Implemented SQL primitive and HTTP profile with `simple`, GIN and `postgres_ts_rank_cd` | Native FTS is not BM25; real semantic/hybrid retrieval remains separate |
 | BM25 + vector hybrid retrieval + RRF backend | UI template and simulation exist; **backend not verified** | Separate mock graph from real search |

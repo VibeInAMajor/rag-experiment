@@ -6,11 +6,11 @@ description: Run the approved read-only Haystack profile over the persisted deve
 # PostgreSQL lexical search
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21
+**Updated:** 2026-11-22
 
-The API executes **`postgres-fts-baseline`**, revision **`postgres-fts-baseline-r1`**, over the existing PostgreSQL development corpus. A fixed Haystack pipeline calls the application-owned persistence adapter and returns actual PostgreSQL full-text ranks. No second store, startup seed, embedding inference or generation is involved. The browser Workbench remains an independent Preview; connecting its UI is a separate task.
+The API executes **`postgres-fts-baseline`**, revision **`postgres-fts-baseline-r1`**, over the existing PostgreSQL development corpus. A fixed Haystack pipeline calls the application-owned persistence adapter and returns actual PostgreSQL full-text ranks. No second store, startup seed, embedding inference or generation is involved. The browser offers fixture Preview and approved Live keyword search; it never substitutes Preview after a Live failure.
 
-The [canonical runtime contract](rag-runtime-contract.md) owns API semantics. Follow the [PostgreSQL operations guide](postgresql-foundation.md) for the pinned database, explicit migrations, seed, backup and recovery. The seed remains eight synthetic technical sources in workspace `development`; it is not an upload workflow.
+The [canonical runtime contract](rag-runtime-contract.md) owns API semantics. Follow the [PostgreSQL operations guide](postgresql-foundation.md) for the pinned database, explicit migrations, seed, backup and recovery. The immutable seed is eight synthetic technical sources in workspace `development`. The separate [durable TXT/Markdown ingestion workflow](durable-text-ingestion.md) publishes into the same active-version corpus; legitimate uploads increase source/chunk counts and change corpus revision without changing this retrieval profile.
 
 ## Start and discover
 
@@ -104,4 +104,8 @@ A direct local probe on 2026-11-21 returned the eight stored documents, advertis
 
 The completed [retrieval task](../../../tasks/TASK-RAG-001-postgres-lexical-readonly-slice.md) records **144 passing tests**, including **57 real PostgreSQL integration cases**. All ten labeled exact-term/identifier queries found their expected source in the top five. All three paraphrase diagnostics missed their expected source; these are non-gated lexical limitations, not semantic-search evidence. Direct SQL parity, zero hits, tie order, scope/profile failures, cancellation and outages are tested. The [real HTTP evidence](../../../tasks/evidence/postgres-lexical-http-2026-11-21.json) records unchanged documents, corpus revision, ranked IDs, scores and content hashes after both API and database restarts. Fixture Preview and synthetic vectors do not establish retrieval quality.
 
-Application rollback disables the live profile/API integration while retaining PostgreSQL rows and its volume. Do not auto-seed on restart, delete the volume, or reinterpret the Preview BM25 node as executable for this profile. The standalone UI, constructor validation and live lexical API remain distinct paths until a separate frontend integration task.
+Application rollback disables the live profile/API integration while retaining PostgreSQL rows and its volume. Do not auto-seed on restart, delete the volume, or reinterpret the Preview BM25 node as executable for this profile. Fixture Preview and constructor validation retain their independent behavior; the approved Keyword search graph is connected to this Live API. Upload/document-management UI remains a separate task.
+
+## Compatibility after ingestion
+
+The additive ingestion routes do not change search request fields, native FTS scoring or active-version filtering. Atomic replacement makes only the committed new version searchable; failed processing preserves the old active version. The ingestion collector rechecks all ten canonical exact queries and three separate paraphrase diagnostics against the expanded corpus after upload and each restart. Historic [Live acceptance](../tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) retains its original eight-source/schema-0001 evidence; its fixed-corpus harness is not reused after legitimate ingestion changes. New ingestion evidence is collected separately.

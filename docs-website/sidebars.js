@@ -26,6 +26,16 @@ export default {
     },
     {
       type: 'doc',
+      id: 'tasks/RAG_Live_Lexical_Acceptance_2026-11-22',
+      label: 'Live Lexical Acceptance',
+    },
+    {
+      type: 'doc',
+      id: 'architecture/durable-text-ingestion',
+      label: 'Durable Text Ingestion',
+    },
+    {
+      type: 'doc',
       id: 'architecture/content-aware-chunking-strategy',
       label: 'Parser and Chunking Boundary',
     },

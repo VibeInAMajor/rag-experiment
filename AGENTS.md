@@ -146,3 +146,8 @@ Also see directory-specific guidelines:
 
 - Define package exports in `__init__.py` via `__all__`; avoid `__all__` in implementation modules — keeps public APIs intentional
 - Update `pyproject.toml` for new package APIs — declare deps and minimum versions used
+
+## Output after each task
+ 
+ - What have been done. Must provide checked checklist from the task
+ - Potential bugs that were found during implemetation

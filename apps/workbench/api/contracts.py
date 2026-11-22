@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, StringConstraints, field_validator, model_validator
 
 Identifier = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,128}$")]
 
@@ -29,6 +29,7 @@ class ApiError(ContractModel):
     retryable: bool
     http_status: int
     run_id: Identifier | None = None
+    job_id: Identifier | None = None
     fields: list[ErrorField] | None = None
 
 
@@ -101,6 +102,9 @@ class ReadyResponse(Meta):
 class Features(ContractModel):
     documents: bool = False
     search: bool = False
+    upload: bool = False
+    document_details: bool = False
+    jobs: bool = False
 
 
 class DatabaseDependencyStatus(ContractModel):
@@ -198,6 +202,83 @@ class DocumentPage(Meta):
     workspace_id: Identifier
     corpus_revision: Identifier
     items: list[DocumentItem]
+    next_cursor: str | None
+
+
+class IngestionStageTiming(ContractModel):
+    stage: Literal["parsing", "chunking", "publication"]
+    duration_ms: float = Field(ge=0, allow_inf_nan=False)
+
+
+class IngestionResponse(Meta):
+    workspace_id: Identifier
+    source_id: Identifier
+    source_version_id: Identifier
+    job_id: Identifier
+    outcome: Literal["created", "updated", "unchanged"]
+    status: Literal["completed"] = "completed"
+    chunk_count: int = Field(ge=1)
+    corpus_revision: Identifier
+    stages: list[IngestionStageTiming]
+    replayed: bool = False
+
+
+class IngestionJobResponse(Meta):
+    workspace_id: Identifier
+    job_id: Identifier
+    source_id: Identifier
+    source_version_id: Identifier | None
+    reserved_version_id: Identifier
+    status: Literal["pending", "parsing", "chunking", "publishing", "completed", "failed"]
+    stage: Literal["pending", "parsing", "chunking", "publishing", "completed", "failed"]
+    retryable: bool
+    error_code: str | None
+    chunk_count: int | None = Field(ge=0)
+    outcome: Literal["created", "updated", "unchanged"] | None
+    created_at: str
+    updated_at: str
+    finished_at: str | None
+    stages: list[IngestionStageTiming]
+
+
+class DocumentDetail(Meta):
+    workspace_id: Identifier
+    corpus_revision: Identifier
+    source_id: Identifier
+    title: str
+    media_type: str
+    status: Literal["ready", "processing", "error"]
+    active_version_id: Identifier | None
+    chunk_count: int = Field(ge=0)
+    updated_at: str
+    processing_profile: dict[str, JsonValue] | None = None
+    processing_profile_fingerprint: str | None = None
+    ingestion_policy_revision: str | None = None
+    language_policy: Literal["unqualified_source_locale"] | None = None
+    source_content_sha256: str | None = None
+    source_bytes: int | None = Field(default=None, ge=0)
+    parsed_element_count: int | None = Field(default=None, ge=0)
+    parser: dict[str, JsonValue] | None = None
+    warnings: list[str] = Field(default_factory=list)
+    original_content_available: Literal[False] = False
+
+
+class ActiveChunkItem(ContractModel):
+    chunk_id: Identifier
+    order: int = Field(ge=0)
+    content: str = Field(min_length=1, max_length=32768)
+    content_hash: str
+    page: int | None = Field(default=None, ge=1)
+    section_path: list[str] = Field(default_factory=list)
+    metadata: dict[str, JsonValue] = Field(default_factory=dict)
+
+
+class ActiveChunkPageResponse(Meta):
+    workspace_id: Identifier
+    source_id: Identifier
+    source_version_id: Identifier
+    corpus_revision: Identifier
+    items: list[ActiveChunkItem]
     next_cursor: str | None
 
 

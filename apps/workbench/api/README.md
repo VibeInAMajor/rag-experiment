@@ -1,6 +1,6 @@
-# Workbench PostgreSQL lexical API
+# Workbench RAG API
 
-An independent FastAPI process exposing the approved, read-only `postgres-fts-baseline` Haystack profile over persisted PostgreSQL records. The [canonical contract](../../../docs-website/docs/architecture/rag-runtime-contract.md) owns API semantics; the [lexical search guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) covers requests, scores and limits. The [PostgreSQL operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md) covers setup, migrations, backup and recovery.
+An independent FastAPI process with bounded durable TXT/Markdown ingestion and the approved, read-only `postgres-fts-baseline` Haystack profile over persisted PostgreSQL records. The [canonical contract](../../../docs-website/docs/architecture/rag-runtime-contract.md) owns API semantics; the [lexical search guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) covers requests, scores and limits. The [PostgreSQL operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md) covers setup, migrations, backup and recovery.
 
 ## Start
 
@@ -54,6 +54,22 @@ Start the API in a separate terminal with only application credentials:
 hatch run workbench-api:serve
 ```
 
+## Durable TXT/Markdown ingestion
+
+The [ingestion contract and upgrade guide](../../../docs-website/docs/architecture/durable-text-ingestion.md) owns multipart fields, job state, fingerprints and recovery. Explicitly upgrade an existing volume to migration `0002` using `db-status`, `db-migrate`, `db-status` with the existing administrator environment. Never reseed populated data. The updated API still supports `0001` lexical reads with upload disabled. Preparation assets require explicit `hatch run workbench-api:chunking-setup`; no model inference is needed.
+
+Upload accepts one UTF-8 `.txt`/`.md`/`.markdown` file and a required `Idempotency-Key`; optional `source_id` plus `expected_active_version_id` guard replacement. No language/model/profile field is accepted. The server uses 500/50 tiktoken structural preparation with `language_policy: unqualified_source_locale`, `sentence_language: null`; EN/RU/UK Unicode content does not imply guessed language or an English sentence model. The file is capped at 1 MiB plus 64 KiB transport overhead, two admitted uploads and 30 seconds. Completed jobs and source versions publish atomically; unchanged/replayed results retain truthful actual chunk counts. Reserved errors expose `error.job_id`.
+
+Local same-volume migration, real uploads, lexical search, visible browser checks and API/database restart qualification passed; final independent artifact audit passed. The opt-in collector intentionally creates two synthetic nonce documents only in its baseline phase, then performs read/search replay after operator-controlled restarts:
+
+```powershell
+hatch run workbench-api:python -m scripts.workbench_ingestion_smoke baseline
+hatch run workbench-api:python -m scripts.workbench_ingestion_smoke after-api
+hatch run workbench-api:python -m scripts.workbench_ingestion_smoke after-database
+```
+
+It does not migrate, seed or restart services. Existing Live keyword search can query uploaded content; upload/document-management UI remains separate.
+
 ## Routes and readiness
 
 | Route                                             | Purpose                                                             |
@@ -63,13 +79,17 @@ hatch run workbench-api:serve
 | `GET /api/v1/capabilities`                        | Approved profiles, actual feature availability and dependency state |
 | `GET /api/v1/workspaces`                          | Server-authorized development workspace metadata                    |
 | `GET /api/v1/workspaces/{workspace_id}/documents` | Persisted source/version/chunk metadata and corpus revision         |
+| `POST /api/v1/workspaces/{workspace_id}/documents` | Durable bounded TXT/Markdown upload and guarded replacement |
+| `GET /api/v1/workspaces/{workspace_id}/documents/{source_id}` | Current source/version processing metadata |
+| `GET /api/v1/workspaces/{workspace_id}/documents/{source_id}/chunks` | Actual active chunks and scoped cursor |
+| `GET /api/v1/workspaces/{workspace_id}/jobs/{job_id}` | Durable status and measured stages |
 | `POST /api/v1/workspaces/{workspace_id}/search`   | Actual PostgreSQL lexical retrieval through Haystack                |
 | `GET /api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file` | Registered original name and native reveal availability; no local path |
 | `POST /api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file/reveal` | Select the registered original in local Windows Explorer |
 
 A running process and an open connection are insufficient. Qualification verifies schema/checksum/extension, the restricted role, forced workspace RLS, valid GIN index, a complete bounded active corpus and the actual allowlisted pipeline. Capabilities separately exposes `dependencies.database.status`. Outages disable profile advertisement and produce truthful 503 responses, without Preview fallback.
 
-Capabilities uses `contract_revision: "rag-api-v1.0"`, `deployment_mode: "single_workspace_dev"` and a lifecycle `service_state`. A qualified configuration advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`, with document/search features true. Otherwise profiles are empty and those features false. All responses carry generated request/trace IDs and `X-Request-ID`; safe errors add code, message, retryability and HTTP status. The backend revision is independent of the constructor validator's revision.
+Capabilities uses `contract_revision: "rag-api-v1.0"`, `deployment_mode: "single_workspace_dev"` and a lifecycle `service_state`. A qualified configuration advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`, with document/search features true. Otherwise profiles are empty and those features false. All responses carry generated request/trace IDs and `X-Request-ID`; safe errors add code, message, retryability and HTTP status. Additive `features.upload`, `features.document_details` and `features.jobs` report their separately verified migration/resource requirements. The backend revision is independent of the constructor validator's revision.
 
 Inspect typed schemas in the checked-in [OpenAPI artifact](openapi.json), generated from `create_app(settings=ApiSettings()).openapi()`. A contract test checks application parity. OpenAPI is a repository artifact rather than another public route. Unknown routes and unexpected failures retain safe correlation envelopes without exception internals.
 
@@ -126,6 +146,20 @@ Operational diagnostics contain bounded IDs, operation/status metadata, counts a
 
 ## Checks
 
+### Real HTTP parser smoke
+
+With the local API already ready on port 8011, run from the repository root:
+
+```powershell
+hatch run workbench-api:python -m scripts.workbench_parser_smoke
+```
+
+This starts a temporary, token-protected loopback Uvicorn subprocess and sends real byte bodies to its diagnostic parser route. It calls the application `parse_source()` and the installed Haystack converter without mocks. The smoke reads a real repository Markdown document and TXT file, verifies BOM/Cyrillic/CRLF, headings and protected table/code spans, deterministic replay, the 1 MiB boundary, and explicit negative responses. It checks the main API's readiness, capabilities and corpus revision before/after, then stops its own server and verifies its listener is closed. Evidence contains hashes, counts and safe decisions rather than document bodies.
+
+The default evidence artifact is `tasks/evidence/parser-runtime-2026-11-22.json`; use `--evidence PATH` for another output and `--main-url http://127.0.0.1:PORT` for another local main API. Evidence remains local under the repository's existing ignore rule. This verifies the internal parser in a real HTTP server process. Internal parser-to-chunk preparation is now qualified separately; the main API now has the separate [durable ingestion workflow](../../../docs-website/docs/architecture/durable-text-ingestion.md), whose migration/live gates are independent of this historic diagnostic evidence. The diagnostic route is never installed in the main API or advertised through its capabilities.
+
+### API regression checks
+
 Run the focused application checks from the repository root:
 
 ```powershell
@@ -140,10 +174,12 @@ Tests cover HTTP/schema/security contracts, persistence and the lexical profile.
 
 - **API:** health/discovery, authorized workspace/document lists and Haystack-orchestrated PostgreSQL lexical search, with bounded admission and safe metadata/errors.
 - **Persistence:** pinned PostgreSQL + pgvector, explicit migrations/seed, forced workspace RLS, atomic publication and consistent active-version snapshots.
-- **Internal parsing boundary:** immutable static parser registry and bounded UTF-8 TXT/Markdown inspection/projection under `parsing.py` and `parser_registry.py`; no HTTP uploads or new public capabilities. See the [format matrix and parser/chunking handoff](../../../docs-website/docs/architecture/content-aware-chunking-strategy.md).
+- **Internal parsing boundary:** immutable static parser registry and bounded UTF-8 TXT/Markdown inspection/projection under `parsing.py` and `parser_registry.py`; consumed by the separate durable ingestion routes. See the [format matrix and parser/chunking handoff](../../../docs-website/docs/architecture/content-aware-chunking-strategy.md).
+- **Internal chunk preparation:** `prepare_chunks(...)` consumes the verified parser result and server-owned source/version identity; versioned default sizing is 500 tokens with target overlap 50, counted by `tiktoken:o200k_base`. Only English (`en`), Russian (`ru`) and Ukrainian (`uk`) hints are accepted. EN/RU combine their NLTK sentence boundaries with token sizing; UK uses explicit structural token fallback. Other languages return `UNSUPPORTED_LANGUAGE`. No upload route or SQL write is introduced.
 - **Existing independent validator:** real Haystack construction/connectivity checks, without execution; see [validator documentation](../validator/README.md).
-- **Existing UI:** fixture-only document/run displays and Preview; see [Workbench documentation](../web/README.md).
-- **Planned:** frontend Live integration, ingestion, genuine BM25 if separately justified, qualified embeddings, dense/hybrid retrieval and generation. Each needs its own qualification gate.
+- **Existing UI:** fixture document displays, Preview and approved Live keyword search; see [Workbench documentation](../web/README.md).
+- **Ingestion:** synchronous durable backend passed local migration/upload/search/restart gates; upload UI remains separate.
+- **Planned:** Live document-management UI, genuine BM25 if separately justified, qualified embeddings, dense/hybrid retrieval and generation. Each needs its own qualification gate.
 
 The initial database migration is explicit; no Haystack public API changes are introduced. Application rollback is stopping the optional API while preserving its database volume. Destructive schema rollback is restricted to explicitly confirmed disposable databases; the constructor validator and standalone UI remain independent.
 
@@ -152,6 +188,38 @@ The initial database migration is explicit; no Haystack public API changes are i
 The parser accepts in-memory bytes and an untrusted basename/MIME, not a path or URL. Qualified TXT/Markdown adapters reuse Haystack `TextFileToDocument` through `parsing_adapters.py` and require exactly one nonempty, source-preserving extraction. The conservative unindented single-line ATX/Setext heading subset retains hierarchy; fences, tables, multiline Setext titles and complex/container syntax remain protected raw spans with warnings. Known-signature checks do not claim universal executable/polyglot detection; no source code or content link is executed. Planned PDF/Office/code/media entries cannot dispatch even if an upstream converter is installed.
 
 Reviewed defaults are 1 MiB, 4,096 elements and a shared 2,000 ms cooperative deadline. These synchronous checks do not provide process isolation or preempt a blocked dependency. Safe failures and operational metadata omit content and raw filenames. Chunking and ingestion must consume the verified immutable result without a second MIME classifier; workspace resolution, version publication and public format advertisement remain consuming-workflow responsibilities.
+
+### Internal chunking contract
+
+The [chunking policy decision](../../../docs-website/docs/architecture/content-aware-chunking-strategy.md#token-budgeted-chunking-policy) owns profile/counter/resource identity, protected span handling and the ingestion handoff. The pure resolver lives in `chunking_profiles.py`; `chunking.py` orchestrates the reviewed Haystack/tokenizer adapter. Source text cannot select an executable strategy. Markdown headings and protected spans come from the verified parser, and overlap remains within a section/prose span. Oversized protected blocks fail safely; unpaginated sources do not gain fabricated page metadata.
+
+The baseline counter is independent of optional exact-model admission. `LocalQwenTokenCounter` qualifies the operator-configured `Qwen3-Embedding-4B` tokenizer revision and three JSON asset hashes without weights, downloads or inference. Its serialized NFC/postprocessor appends `<|endoftext|>` ID 151643, rather than guessing from config EOS 151645. This proves local counting, not served-TEI parity. `ModelTokenAdmission.embedding_input(content, heading_path=...)` composes prefix, optional per-chunk heading context, content and suffix; admission and the future embedding caller must use the same input. Configured exact overflow refuses with `MODEL_TOKEN_LIMIT_EXCEEDED`, without truncation or automatic rechunking. The separate [ingestion workflow](../../../tasks/TASK-RAG-002-ingest-text-and-markdown.md#j3-consume-prepared-chunks) publishes through the existing persistence port.
+
+The 25 curated inputs in `tests/fixtures/chunking/manifest.json` exercise EN/RU sentence segmentation, UK token fallback, real token budgets, Unicode/CRLF safety, repeated offsets, headings/protected blocks and refusal paths. Arbitrary Unicode characters do not qualify extra languages. Other language hints are tested as refusals. Actual baseline/local-Qwen HTTP measurements qualify internal preparation, not public upload readiness or retrieval-recall gains. Normal preparation must not download sentence/tokenizer assets unexpectedly; setup is explicit.
+
+Provision the reviewed EN/RU Punkt tables and offline `o200k_base` encoding once, explicitly:
+
+```powershell
+hatch run workbench-api:chunking-setup
+```
+
+The app-only dependencies pin NLTK 3.10.4 and tiktoken 0.14.0. Setup verifies fixed official-asset hashes and writes only allowlisted resources under ignored `.cache/workbench-chunking/`; runtime verifies those assets without downloads. Missing sentence resources yield a recorded token-based fallback or a required-sentence refusal; missing counter assets refuse token preparation. See the architecture guide for resource revision, pinned Haystack adapter and Unicode-safe native-output repair limitations.
+
+To exercise parser and chunker through actual diagnostic HTTP, with the main local API ready:
+
+```powershell
+hatch run workbench-api:python -m scripts.workbench_parser_smoke --chunking --evidence tasks/evidence/chunking-2026-11-22/runtime.json
+```
+
+The optional actual-counter run requires an operator-selected local asset directory; this example is the user's existing location, not an application default:
+
+```powershell
+hatch run workbench-api:python -m scripts.workbench_parser_smoke --chunking --qwen-tokenizer-dir 'A:\AI\TEI\qwen3-4b' --evidence tasks/evidence/chunking-2026-11-22/runtime-qwen.json
+```
+
+Final [recorded results](../../../tasks/evidence/chunking-2026-11-22/) show **255 focused tests passed** and **579 API tests passed, 69 database-DSN skips**. All 18 local-counter tests ran using explicit `WORKBENCH_TEST_QWEN_TOKENIZER_DIR`; those requiring assets skip when it is unset. Baseline and local-Qwen HTTP runs completed **142 requests**, each accepting 23 cases and producing 95 chunks sized 3–500 tiktoken tokens. Both preserved the ready main API/corpus/capabilities and closed their temporary listener.
+
+Same-formatted-input examples measure 500 tiktoken tokens versus **501 English / 745 Russian / 667 Ukrainian Qwen tokens**. The actual Qwen-budget refusal tests confirm that 500-tiktoken splitting does not guarantee a 500-Qwen budget. Diagnostic routes exist only in the subprocess; no public ingestion/database publication or served-model parity is claimed.
 
 ## Registered local originals
 

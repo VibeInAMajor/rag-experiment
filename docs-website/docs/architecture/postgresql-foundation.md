@@ -6,9 +6,9 @@ description: Local PostgreSQL and pgvector setup, explicit migrations, developme
 # PostgreSQL foundation operations
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21
+**Updated:** 2026-11-22
 
-The Workbench persistence foundation stores workspace, source, version and chunk records in PostgreSQL. The browser remains a standalone fixture Preview. The application now also exposes the separately qualified [PostgreSQL lexical profile](postgres-lexical-search.md), using these same records through Haystack. Storage connectivity alone does not establish execution readiness; follow the [runtime contract](rag-runtime-contract.md) for profile semantics.
+The Workbench persistence foundation stores workspace, source, version and chunk records in PostgreSQL. The browser supports fixture Preview and the approved Live keyword graph; upload UI remains separate. The application now also exposes the separately qualified [PostgreSQL lexical profile](postgres-lexical-search.md), using these same records through Haystack. Storage connectivity alone does not establish execution readiness; follow the [runtime contract](rag-runtime-contract.md) for profile semantics.
 
 ## Pinned components and ownership
 
@@ -40,11 +40,26 @@ hatch run workbench-api:db-seed
 
 `create-dev-env.ps1` generates separate administrator and application credentials in the ignored `apps/workbench/postgres/.env`; it refuses to overwrite an existing file. Preserve that file with its existing volume. Changing an initialization password in an environment file does not rotate a role inside an existing PostgreSQL volume. Treat the file as a local secret and restrict access to it.
 
-`db-bootstrap` provisions `workbench_app` using the separate administrator connection. `db-migrate` applies explicit, transactional Alembic migrations; startup never applies migrations. Current status is revision `0001`, tool `alembic-1.20.1`, vector extension `0.8.2`, and a matching SHA-256 checksum over the reviewed up/down SQL. CRLF/LF checkout differences are normalized; actual SQL changes still invalidate the checksum. An unknown head, checksum drift, missing extension, or unprotected scoped table makes the schema incompatible; do not edit an applied migration to repair it.
+`db-bootstrap` provisions `workbench_app` using the separate administrator connection. `db-migrate` applies explicit, transactional Alembic migrations; startup never applies migrations. The migration head is `0002`; the updated API certifies both lexical-only `0001` and ingestion-enabled `0002`. Status reports the actually applied revision, tool `alembic-1.20.1`, vector extension `0.8.2`, and a matching SHA-256 checksum over the reviewed up/down SQL. CRLF/LF checkout differences are normalized; actual SQL changes still invalidate the checksum. An unknown head, checksum drift, missing extension, or unprotected scoped table makes the schema incompatible; do not edit an applied migration to repair it.
 
 The seed is explicit and atomic. It inserts eight synthetic, non-sensitive technical sources into workspace `development`, each with deterministic source/version/chunk identity. The first command reports eight inserted sources; an unchanged repeat reports zero. Existing non-demo records or changed seed identities/content cause refusal rather than replacement. Startup never re-seeds. These passages are development data, not uploaded user documents.
 
 Seed records persist for the lifetime of this development volume; there is no automatic expiry or cleanup endpoint. Retiring seed data requires an explicitly reviewed operation against the identified development workspace, with a backup when other records coexist. Do not use the seed command to reset data or delete records by their display title.
+
+## Upgrade an existing populated volume
+
+Migration `0001` remains immutable. Apply the additive `0002` job migration explicitly using existing credentials and volume:
+
+```powershell
+. ./apps/workbench/postgres/use-dev-env.ps1 -IncludeAdmin
+hatch run workbench-api:db-status
+hatch run workbench-api:db-migrate
+hatch run workbench-api:db-status
+```
+
+Do not bootstrap or reseed as a recovery shortcut. Per-revision ledger/checksums validate applied migrations, including populated `0001` upgrades and no-op reruns. Updated API code preserves lexical reads at `0001`, with ingestion features disabled. `0002` adds workspace-scoped jobs, immutable terminal state, unique idempotency reservations and fenced advisory-lock ownership. Source/version/chunk publication and job completion share one transaction. Original upload bytes are not persisted. See the [ingestion runbook](durable-text-ingestion.md) for the exact route/policy contract and current qualification status.
+
+Startup and GET job inspection recover an interrupted job only after its owner lock is absent; lazy lookup handles database restart without relabeling another live API's work. The previous active version remains searchable on failed replacement. A migration upgrade is not reversed by reverting code: deploy an API compatible with `0002`, retain the volume and use a reviewed forward repair where required.
 
 ## Start and inspect the API
 
@@ -63,7 +78,7 @@ Invoke-RestMethod http://127.0.0.1:8011/api/v1/capabilities
 curl.exe -i http://127.0.0.1:8011/api/v1/health/ready
 ```
 
-Liveness returns 200 while the API runs. Capabilities separately reports database status, schema revision `0001` and actual committed counts. Readiness is 200 and `postgres-fts-baseline` is advertised only after schema, role, valid lexical index, complete bounded corpus and the real pipeline qualify. Otherwise readiness is 503 `NOT_READY`, profiles are empty and document/search features false. An unset connection reports `unconfigured`; unavailable, empty or incompatible storage cannot acquire executable capabilities. See the lexical guide for search/document routes and examples.
+Liveness returns 200 while the API runs. Capabilities separately reports database status, the actually certified schema revision and committed counts. Readiness is 200 and `postgres-fts-baseline` is advertised only after schema, role, valid lexical index, complete bounded corpus and the real pipeline qualify. Otherwise readiness is 503 `NOT_READY`, profiles are empty and document/search features false. An unset connection reports `unconfigured`; unavailable, empty or incompatible storage cannot acquire executable capabilities. See the lexical guide for search/document routes and examples.
 
 The default pool has one to four connections, at most 16 waiting acquisitions, a three-second acquisition timeout and three-second statement/lock timeouts. API dependency checks are also bounded. Each data transaction checks the unprivileged role and sets its server-resolved workspace context with transaction-local `set_config`; pooled connections cannot retain that context after transaction completion. Close the API with Ctrl+C to release its pool.
 
@@ -71,7 +86,7 @@ The default pool has one to four connections, at most 16 waiting acquisitions, a
 
 `workspaces`, `sources`, `source_versions` and `chunks` enforce composite workspace-scoped references. A partial unique index permits one active version per source. Publication stages a complete version and switches activation in the same transaction; failed writes roll back without publishing partial chunks. Source identity does not depend on a title or path.
 
-All four scoped tables use row-level security with `FORCE ROW LEVEL SECURITY`, tied to `current_setting('workbench.workspace_id', true)`. The application role is neither a superuser nor table owner, has no RLS bypass or schema creation privileges, and cannot modify migration or embedding-profile registries. The separate administrator is for explicit operations only. Server-resolved development scope and RLS are defense in depth; this local single-workspace setup is not production authentication or multi-tenant authorization.
+The original four scoped tables, plus `ingestion_jobs` at revision `0002`, use row-level security with `FORCE ROW LEVEL SECURITY`, tied to `current_setting('workbench.workspace_id', true)`. The application role is neither a superuser nor table owner, has no RLS bypass or schema creation privileges, and cannot modify migration or embedding-profile registries. The separate administrator is for explicit operations only. Server-resolved development scope and RLS are defense in depth; this local single-workspace setup is not production authentication or multi-tenant authorization.
 
 Chunk `search_vector` is generated with PostgreSQL's **`simple`** text-search configuration and indexed with GIN. The persistence adapter uses `plainto_tsquery('simple', ...)` and actual `ts_rank_cd`, reported as **`postgres_ts_rank_cd`**. It is not BM25, cosine similarity or a probability. `simple` avoids language-specific stemming; qualify identifiers and non-English vocabulary needed by the real corpus. The separately implemented lexical endpoint reuses this adapter and does not introduce another store.
 

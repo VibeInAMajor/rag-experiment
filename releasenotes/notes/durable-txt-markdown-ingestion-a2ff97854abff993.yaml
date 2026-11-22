@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Add bounded synchronous TXT/Markdown uploads to the local Workbench API,
+    with durable PostgreSQL jobs, idempotent retries, guarded version replacement
+    and atomic publication into the existing lexical corpus. Document detail and
+    active-chunk APIs expose actual processing and provenance metadata.
+upgrade:
+  - |
+    Existing Workbench database operators must explicitly run
+    ``hatch run workbench-api:db-migrate`` with the existing administrator
+    environment to apply revision ``0002`` before ingestion is available.
+    Revision ``0001`` remains supported for lexical reads by the updated API.
+    Preserve the database volume and credentials; do not reseed populated data.
+    Startup never applies migrations or seeds.

@@ -1,0 +1,11 @@
+enhancements:
+  - |
+    Add internal Workbench 500/50 tiktoken-token processing profiles for English,
+    Russian and Ukrainian. English/Russian use NLTK sentence boundaries;
+    Ukrainian uses an explicit token-based structural fallback. Preserve
+    Markdown sections and protected spans, and prepare provenance-preserving
+    records without database writes. Provision pinned tokenizer assets with
+    ``hatch run workbench-api:chunking-setup`` before use.
+    Optional admission can count the complete embedding input with the pinned,
+    locally provided Qwen3-Embedding-4B tokenizer, including its serialized special
+    token. HTTP upload and embedding execution remain separate integrations.

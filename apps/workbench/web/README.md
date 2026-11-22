@@ -38,17 +38,17 @@ npm run preview
 
 ### Optional application lexical API
 
-After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). The UI uses discovery only; execution remains a subsequent task.
+After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). The approved Keyword search graph already performs Live read-only execution; Live document listing remains separate future work.
 
 ### Execution modes and API discovery
 
 Start the API and optional validator in separate terminals, then start Vite. Select **Live** in the header and open Settings to inspect the server-returned workspace, database state, profile/revision and score type. **Refresh connection** starts a new check. The workspace display name remains a browser preference and never grants API access.
 
-| Service               | Local port              | Browser route             | Purpose                                         |
-| --------------------- | ----------------------- | ------------------------- | ----------------------------------------------- |
-| Vite                  | 5173 dev / 4173 preview | `/`                       | Interface                                       |
-| Constructor validator | 8010                    | `/api/pipelines/validate` | Haystack constructor/socket validation          |
-| Workbench API         | 8011                    | `/api/v1/...`             | Discovery; backend also supports lexical search |
+| Service               | Local port              | Browser route             | Purpose                                    |
+| --------------------- | ----------------------- | ------------------------- | ------------------------------------------ |
+| Vite                  | 5173 dev / 4173 preview | `/`                       | Interface                                  |
+| Constructor validator | 8010                    | `/api/pipelines/validate` | Haystack constructor/socket validation     |
+| Workbench API         | 8011                    | `/api/v1/...`             | Discovery and approved Live keyword search |
 
 Both Vite modes proxy `/api/v1` to port 8011, independently of the validator route. A static production deployment must provide equivalent trusted same-origin routing; Vite's development proxy is not part of the built assets. The optional public `VITE_WORKBENCH_API_BASE_URL` overrides the browser API origin/path at build time. Never put credentials, tokens or a database DSN in a `VITE_` value. Cross-origin deployment must also satisfy the API's allowed-origin policy.
 
@@ -215,6 +215,31 @@ npx --yes --package @playwright/cli playwright-cli -s=workbench run-code --filen
 ```
 
 The scenario captures actual POST responses for `retention`, `GIN` and a no-match query without replacing real search traffic. It compares DOM order, IDs, raw scores, passages, JSON and timings to those responses, checks the unchanged source registry, keyword import/export and explicit Preview refusal, then separately injects 400/404/409/429/503/504, gateway/network, malformed-success and delayed-Stop cases. It checks 1440px/1100px layouts and mixed Live session history. Negative injections are test arrangements, not observed backend incidents. Existing `browser-smoke.js` and `validation-smoke.js` remain unchanged and must pass separately. This smoke does not reset or seed the database.
+
+### Live lexical acceptance evaluation
+
+The completed [acceptance task](../../../tasks/TASK-EVAL-001-prove-vertical-slice.md) and [dated report/runbook](../../../docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) qualify the existing local browser → Haystack → persisted PostgreSQL edge. With the real qualified API and frontend running, open the dedicated session from this directory:
+
+```powershell
+npx --yes --package @playwright/cli playwright-cli -s=eval20261122 open http://127.0.0.1:4173
+```
+
+Then run the operator helpers from the repository root; the probe requires the existing app-only environment:
+
+```powershell
+. ./apps/workbench/postgres/use-dev-env.ps1
+hatch run workbench-api:python -m scripts.workbench_evaluation_probe baseline
+./scripts/run_workbench_live_evaluation.ps1 -Phase baseline
+./scripts/run_workbench_recovery_evaluation.ps1 -Service api
+./scripts/run_workbench_recovery_evaluation.ps1 -Service database
+./scripts/run_workbench_live_evaluation.ps1 -Phase mock-races -Harness resilience
+```
+
+The phase runner loads the **existing** canonical gold fixture, injects `window.__workbenchEvaluationInput`, saves sanitized reports and retains failed-harness evidence. The guarded recovery runner supervises verified API/database owners, restores services and repeats browser/SQL checks without seeding or deleting a volume. Do not invoke `live-evaluation-smoke.js` directly without its runner configuration.
+
+Each real phase runs ten exact questions, three diagnostic paraphrases and one explicit no-match query via actual UI actions, comparing DOM/JSON to actual HTTP results. Final observations: **10/10 exact hits and MRR@5=1.0**, **0/3 diagnostic hits and MRR@5=0.0**, in all three phases; **39 canonical browser/HTTP/SQL parity cases**, three extra browser/HTTP empty cases, stable 8-source/8-chunk corpus through API/database restarts, and zero false Live completion/fixture fallback. Backend tests: **38 passed, zero skips**; frontend tests: **259 passed**, with typecheck/format/build and independent Preview/validator smokes passing.
+
+Expected-source-hit-rate/MRR retain all attempts and their separate group denominators. Nearest-rank server/browser latencies state sample counts and warm-service conditions; observed coarse-clock zero-ms values are not missing samples. Actual 400/404/409 request arrangements and real API 502/database 503 outages are separate from nine mock error shapes, local Stop and strengthened query/mode history races. The browser finishes on a real unmocked Live search. New machine artifacts remain local under the existing `tasks/evidence/` ignore policy; the report documents commands, versions, automation incidents and limits. This qualifies the tested synthetic local lexical slice, not a remote server, semantic recall or production readiness.
 
 ## Local source names
 

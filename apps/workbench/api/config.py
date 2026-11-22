@@ -19,6 +19,7 @@ class ApiSettings(BaseModel):
     backend_revision: Identifier = "workbench-api-lexical-v1"
     database_dsn: SecretStr | None = None
     local_source_root: str | None = None
+    ingestion_timeout_seconds: float = Field(default=30.0, gt=0, le=30)
     allowed_origins: tuple[str, ...] = (
         "http://localhost:5173",
         "http://127.0.0.1:5173",

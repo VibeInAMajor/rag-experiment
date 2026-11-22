@@ -6,7 +6,7 @@ description: Canonical decisions and integration boundaries for the local RAG Wo
 # RAG runtime and API v1 contract
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-21
+**Updated:** 2026-11-22
 **Decision status:** Accepted implementation contract; PostgreSQL lexical HTTP retrieval implemented.
 **Contract revision:** `rag-api-v1.0`
 
@@ -14,11 +14,11 @@ This is the single source of truth for RAG runtime and Workbench integration. It
 
 ## Current runtime
 
-The independent [Workbench API](../../../apps/workbench/api/README.md) implements eight routes in section 4: health/discovery, authorized workspace/document listing, read-only search and optional local-original lookup/reveal. Its runtime uses this repository's Haystack source through a dedicated Hatch environment; application dependencies do not change the Haystack library's public dependency contract. Load the application database environment and run `hatch run workbench-api:serve`; the listener is `127.0.0.1:8011`. See the [lexical search guide](postgres-lexical-search.md) for complete commands and examples.
+The independent [Workbench API](../../../apps/workbench/api/README.md) implements the original eight routes in section 4 plus four additive ingestion routes: health/discovery, authorized workspace/document listing, read-only search and optional local-original lookup/reveal. Its runtime uses this repository's Haystack source through a dedicated Hatch environment; application dependencies do not change the Haystack library's public dependency contract. Load the application database environment and run `hatch run workbench-api:serve`; the listener is `127.0.0.1:8011`. See the [lexical search guide](postgres-lexical-search.md) for complete commands and examples.
 
 Liveness is independent of storage. Readiness is 200 and capabilities advertise `postgres-fts-baseline` only after the real PostgreSQL schema/index/corpus and allowlisted Haystack pipeline qualify. Without usable storage, readiness is 503 and profiles remain empty. `dependencies.database` reports storage state separately; setting `WORKBENCH_DB_DSN` alone cannot force readiness. The existing validator on port 8010 remains independent. The UI supports opt-in Live discovery and execution of the exact approved Keyword search graph. Follow the [PostgreSQL runbook](postgresql-foundation.md) for explicit migrations and seed; API startup performs neither.
 
-The [published OpenAPI schema](../../../apps/workbench/api/openapi.json) describes implemented routes and response models. Capabilities add `service_state` (`starting`, `running`, `stopping`, `stopped`), `features` (`documents`, `search` booleans), and a typed `dependencies.database` status with certified revision/counts when ready. These describe actual availability; constructor mappings are never executable profiles. Configuration, operational logging and startup details are in the API runbook.
+The [published OpenAPI schema](../../../apps/workbench/api/openapi.json) describes implemented routes and response models. Capabilities add `service_state` (`starting`, `running`, `stopping`, `stopped`), `features` (`documents`, `search`, `upload`, `document_details`, `jobs` booleans), and a typed `dependencies.database` status with certified revision/counts when ready. These describe actual availability; constructor mappings are never executable profiles. Configuration, operational logging and startup details are in the API runbook.
 
 ## 1. Evidence and resolved contradictions
 
@@ -35,7 +35,7 @@ Paths below are relative to the repository root; links identify the actual owner
 | [Persistence port](../../../apps/workbench/api/persistence.py), [PostgreSQL adapter](../../../apps/workbench/api/postgres.py) and [migrations](../../../apps/workbench/api/db_migrations.py) | Durable scoped records, forced RLS, native FTS and exact synthetic-vector storage are implemented | Only storage primitives are ready; HTTP retrieval and real embedding qualification remain separate |
 | [Splitter](../../../haystack/components/preprocessors/document_splitter.py) | Token splitting defaults to tiktoken `o200k_base` | Current token splitting is not evidence of Qwen-compatible token counts |
 
-The constructor validator and independent lexical API exist. Workspace/document/search HTTP routes use the PostgreSQL registry and persistence adapter; ingestion and model inference remain planned. The API v1 routes are separate from `/api/pipelines/validate`, which still checks constructors without execution.
+The constructor validator and independent lexical API exist. Workspace/document/search HTTP routes use the PostgreSQL registry and persistence adapter; synchronous durable ingestion passed local migration/upload/search/restart gates; model inference remains planned. The API v1 routes are separate from `/api/pipelines/validate`, which still checks constructors without execution.
 
 ## 2. Canonical runtime decisions
 
@@ -57,10 +57,11 @@ The first slice uses the explicitly seeded development corpus in PostgreSQL. A f
 
 ### Tokenization and embedding profile identity
 
-There are two different tokenizer responsibilities:
+Tokenizers have separate responsibilities:
 
 - **Native lexical search:** PostgreSQL `simple` configuration, with PostgreSQL parsing/lowercasing and no language-specific stemming promise. Identifier and Cyrillic token tests are recorded in the foundation suite. This is distinct from the framework BM25 tokenizer and from model tokens.
-- **Embeddings:** use the tokenizer files from the pinned Qwen model revision for chunk size and admission estimates, including instructions and special tokens. The current generic splitter configuration does not establish parity. Qualify the counting path against the served runtime before enabling embeddings; silent truncation is prohibited.
+- **Internal chunk preparation:** the [token policy](content-aware-chunking-strategy.md#token-budgeted-chunking-policy) accepts English (`en`), Russian (`ru`) and Ukrainian (`uk`) only, defaulting to 500 `tiktoken:o200k_base` tokens with target overlap 50. EN/RU combine their provisioned NLTK sentence boundaries with token sizing; UK uses an explicit structural token fallback. Missing EN/RU resources also trigger a declared fallback or required-sentence refusal. Other languages return `UNSUPPORTED_LANGUAGE`. These counts are not Qwen-native, and an absent exact Qwen counter does not block this lexical-ingestion preparation baseline. This internal seam adds no public API or publication capability.
+- **Embeddings:** use tokenizer files from the pinned Qwen model revision for exact admission/refinement estimates, including instructions and special tokens. The optional hash-pinned local `Qwen3-Embedding-4B` counter has been tested on actual operator-provided assets; admission counts the same final formatted input the embedding adapter will send. Its serialized NFC/postprocessor appends `<|endoftext|>` ID 151643. Actual local counts differ from tiktoken, so a 500-tiktoken chunk need not fit 500 Qwen tokens; exact overflow is refused without truncation. This local qualification does not establish served-TEI parity or enable embeddings; qualify the counter against that runtime before rollout.
 
 Proposed query instruction, to verify against the actual service configuration:
 
@@ -91,7 +92,7 @@ Query/result nodes remain API projections rather than invented Haystack pass-thr
 
 ## 4. API v1 types and protocol
 
-All eight endpoints below are implemented. JSON uses UTF-8 and snake_case. Unknown request fields are rejected. Identifiers are opaque server-issued ASCII strings matching `[A-Za-z0-9_-]{1,128}`; examples are illustrative. Times are RFC 3339 UTC, durations are finite nonnegative milliseconds. Counts/ranks/limits are integers, booleans cannot stand in for numbers. Responses include `contract_revision: "rag-api-v1.0"`, `request_id`, and `trace_id`. Every HTTP response also returns `X-Request-ID`; the server generates IDs and does not trust arbitrary caller IDs for logging. This local API disables Haystack telemetry, content tracing and external trace export. A completed client disconnect produces operational status 499 without an HTTP response or exception traceback; ordinary task cancellation still propagates after owned work is cleaned up.
+The eight endpoints below and four additive ingestion endpoints are implemented. JSON uses UTF-8 and snake_case. Unknown request fields are rejected. Identifiers are opaque server-issued ASCII strings matching `[A-Za-z0-9_-]{1,128}`; examples are illustrative. Times are RFC 3339 UTC, durations are finite nonnegative milliseconds. Counts/ranks/limits are integers, booleans cannot stand in for numbers. Responses include `contract_revision: "rag-api-v1.0"`, `request_id`, and `trace_id`. Every HTTP response also returns `X-Request-ID`; the server generates IDs and does not trust arbitrary caller IDs for logging. This local API disables Haystack telemetry, content tracing and external trace export. A completed client disconnect produces operational status 499 without an HTTP response or exception traceback; ordinary task cancellation still propagates after owned work is cleaned up.
 
 The service binds to loopback for the first development slice. All data endpoints require the server's development identity or later authenticated principal. Workspace listing grants no access by itself. Authorization precedes resource lookup, search and pagination. Health responses reveal no DSNs, filesystem paths, credentials or provider exceptions.
 
@@ -113,6 +114,7 @@ type ErrorBody = Meta & {
     retryable: boolean;
     http_status: number;
     run_id?: string;
+    job_id?: string;
     fields?: { field: string; code: string }[];
   };
 };
@@ -303,6 +305,16 @@ The historical Delta Detector/TPM references are design inputs; source-code reus
 
 ## 8. Compatibility and changes
 
-Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. Live discovery and approved keyword execution are integrated; document listing, ingestion and real embeddings remain separate tasks.
+Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. Live discovery and approved keyword execution are integrated; Live document-management UI and real embeddings remain separate tasks. The backend ingestion contract below adds no upload UI.
 
 Change this decision before dependent code/tasks when semantics change. Additive responses require clients to tolerate unknown response fields; request fields remain strict. Breaking request/response or score semantics require a new contract/API version or explicitly negotiated profile revision. Rollback is reverting these documentation edits; once dependent implementations exist, reconcile their contracts and migration obligations first.
+
+## Durable ingestion addition — 2026-11-22
+
+The [durable ingestion contract](durable-text-ingestion.md) owns the additive `POST /api/v1/workspaces/{workspace_id}/documents`, GET document detail, GET active chunks and GET job routes. It composes existing `parse_source()` and `prepare_chunks(...)`, publishes through the existing PostgreSQL writer and completes the job in the same transaction. Local same-volume migration/upload/search/restart and visible browser gates passed; final independent artifact audit passed. No remote deployment is implied.
+
+Multipart accepts only `file`, optional paired `source_id`/`expected_active_version_id`, and a required idempotency header. Unknown language/profile/model overrides are refused. The explicit server profile uses 500/50 `tiktoken:o200k_base` structural tokens, `language_policy: unqualified_source_locale` and `sentence_language: null`. It does not guess source language or apply English Punkt to unknown uploads. This composes the existing EN/RU/UK-tested text pipeline without claiming automatic language detection. No embedding counter/model is required for lexical publication.
+
+Success exposes committed source/version/job IDs, actual chunk count, corpus revision, outcome, measured stages and replay status. Raw source hash covers original bytes including BOM; the ingestion processing fingerprint additionally covers ingestion/language/normalization policy. Original bytes are not retained/downloadable; a new version cannot inherit an old local-original pointer. Durable failures expose `error.job_id` after reservation.
+
+Migration `0002` is explicit and adds RLS-protected fenced jobs; updated code retains lexical compatibility with `0001`, with ingestion flags false. Startup never migrates/seeds. Additive `features.upload`, `features.document_details`, `features.jobs` are dependency-qualified. Limits are 1 MiB file plus 64 KiB multipart overhead, two admitted uploads and a 30-second deadline. Ownerless interrupted jobs are recovered at startup or lazy job lookup after database restart; live owner locks prevent false recovery. Synchronous processing does not promise a durable queue or `202` background continuation.

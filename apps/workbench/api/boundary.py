@@ -1,9 +1,10 @@
 """HTTP transport policy and sanitized operational correlation."""
 
+import asyncio
 import json
 import logging
 import re
-from asyncio import CancelledError
+from asyncio import CancelledError, timeout
 from time import monotonic
 from urllib.parse import parse_qsl
 from uuid import uuid4
@@ -14,6 +15,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from apps.workbench.api.config import ApiSettings
 from apps.workbench.api.contracts import ApiError, ErrorResponse, Meta
+from apps.workbench.api.upload_policy import upload_request_byte_limit
 
 _logger = logging.getLogger("workbench.api")
 _ORIGIN = b"origin"
@@ -33,12 +35,21 @@ def request_meta(request: Request) -> Meta:
 
 
 def error_response(
-    meta: Meta, *, status: int, code: str, message: str, retryable: bool = False, run_id: str | None = None
+    meta: Meta,
+    *,
+    status: int,
+    code: str,
+    message: str,
+    retryable: bool = False,
+    run_id: str | None = None,
+    job_id: str | None = None,
 ) -> JSONResponse:
     """Serialize the common error contract without exception details."""
     payload = ErrorResponse(
         **meta.model_dump(),
-        error=ApiError(code=code, message=message, retryable=retryable, http_status=status, run_id=run_id),
+        error=ApiError(
+            code=code, message=message, retryable=retryable, http_status=status, run_id=run_id, job_id=job_id
+        ),
     )
     return JSONResponse(status_code=status, content=payload.model_dump(exclude_none=True))
 
@@ -67,10 +78,15 @@ def _reveal_path(scope: Scope) -> bool:
     )
 
 
+def _upload_path(scope: Scope) -> bool:
+    return re.fullmatch(r"/api/v1/workspaces/[^/]+/documents", scope["path"]) is not None
+
+
 def _list_path(scope: Scope) -> bool:
     return (
         scope["path"] == "/api/v1/workspaces"
         or re.fullmatch(r"/api/v1/workspaces/[^/]+/documents", scope["path"]) is not None
+        or re.fullmatch(r"/api/v1/workspaces/[^/]+/documents/[^/]+/chunks", scope["path"]) is not None
     )
 
 
@@ -91,6 +107,7 @@ class RequestBoundary:
     def __init__(self, app: ASGIApp, *, settings: ApiSettings) -> None:
         self.app = app
         self.settings = settings
+        self._active_uploads = 0
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Apply local transport policy and correlate every HTTP response."""
@@ -139,12 +156,10 @@ class RequestBoundary:
             if rejection is not None:
                 await rejection(scope, tracked_receive, correlated_send)
             elif scope["method"] == "OPTIONS" and origin is not None:
-                response = JSONResponse(content=meta.model_dump())
-                response.headers["Access-Control-Allow-Methods"] = (
-                    "POST" if _search_path(scope) or _reveal_path(scope) else "GET"
-                )
-                response.headers["Access-Control-Allow-Headers"] = "Accept, Content-Type"
+                response = self._preflight(scope, meta)
                 await response(scope, tracked_receive, correlated_send)
+            elif scope["method"] == "POST" and _upload_path(scope):
+                await self._bounded_upload(scope, tracked_receive, correlated_send, headers, meta)
             elif scope["method"] == "POST" and (_search_path(scope) or _reveal_path(scope)):
                 await self._search_request(scope, tracked_receive, correlated_send, headers, meta)
             else:
@@ -173,6 +188,55 @@ class RequestBoundary:
                 http_status=response_status,
                 duration_ms=round((monotonic() - started) * 1000, 3),
             )
+
+    def _preflight(self, scope: Scope, meta: Meta) -> JSONResponse:
+        response = JSONResponse(content=meta.model_dump())
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET, POST" if _upload_path(scope) else "POST" if _search_path(scope) or _reveal_path(scope) else "GET"
+        )
+        response.headers["Access-Control-Allow-Headers"] = (
+            "Accept, Content-Type, Idempotency-Key" if _upload_path(scope) else "Accept, Content-Type"
+        )
+        return response
+
+    async def _bounded_upload(
+        self, scope: Scope, receive: Receive, send: Send, headers: list[tuple[bytes, str]], meta: Meta
+    ) -> None:
+        if self._active_uploads >= 2:
+            response = error_response(
+                meta, status=429, code="INGESTION_BUSY", message="Upload capacity is busy.", retryable=True
+            )
+            response.headers["Retry-After"] = "1"
+            await response(scope, receive, send)
+            return
+        self._active_uploads += 1
+        scope["state"]["ingestion_deadline"] = (
+            asyncio.get_running_loop().time() + self.settings.ingestion_timeout_seconds
+        )
+        response_started = False
+
+        async def started_send(message: Message) -> None:
+            nonlocal response_started
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
+
+        try:
+            async with timeout(self.settings.ingestion_timeout_seconds):
+                await self._upload_request(scope, receive, started_send, headers, meta)
+        except TimeoutError:
+            if response_started:
+                raise
+            await error_response(
+                meta,
+                status=504,
+                code="INGESTION_TIMEOUT",
+                message="The upload deadline elapsed.",
+                retryable=True,
+                job_id=scope["state"].get("ingestion_job_id"),
+            )(scope, receive, send)
+        finally:
+            self._active_uploads -= 1
 
     def _reject(
         self, scope: Scope, headers: list[tuple[bytes, str]], origins: list[str], meta: Meta
@@ -205,9 +269,18 @@ class RequestBoundary:
             requested = dict(headers)
             method = requested.get(b"access-control-request-method", "")
             names = requested.get(b"access-control-request-headers", "")
-            permitted_method = "POST" if _search_path(scope) or _reveal_path(scope) else "GET"
-            if method != permitted_method or any(
-                name.strip().lower() not in {"accept", "content-type"} for name in names.split(",") if name.strip()
+            permitted_methods = (
+                {"GET", "POST"}
+                if _upload_path(scope)
+                else {"POST"}
+                if _search_path(scope) or _reveal_path(scope)
+                else {"GET"}
+            )
+            permitted_headers = {"accept", "content-type"}
+            if _upload_path(scope):
+                permitted_headers.add("idempotency-key")
+            if method not in permitted_methods or any(
+                name.strip().lower() not in permitted_headers for name in names.split(",") if name.strip()
             ):
                 return error_response(
                     meta, status=403, code="FORBIDDEN", message="The preflight request is not permitted."
@@ -226,6 +299,68 @@ class RequestBoundary:
         return len({key for key, _value in pairs}) == len(pairs) and all(
             key in {"limit", "cursor"} for key, _value in pairs
         )
+
+    async def _upload_request(
+        self, scope: Scope, receive: Receive, send: Send, headers: list[tuple[bytes, str]], meta: Meta
+    ) -> None:
+        content_types = [value for key, value in headers if key == _CONTENT_TYPE]
+        if len(content_types) != 1 or content_types[0].split(";", 1)[0].strip().lower() != "multipart/form-data":
+            await error_response(
+                meta, status=415, code="UNSUPPORTED_MEDIA_TYPE", message="This operation requires multipart form data."
+            )(scope, receive, send)
+            return
+        lengths = [value for key, value in headers if key == _CONTENT_LENGTH]
+        transfers = [value for key, value in headers if key == _TRANSFER_ENCODING]
+        if (
+            len(lengths) > 1
+            or len(transfers) > 1
+            or lengths
+            and transfers
+            or lengths
+            and (not lengths[0].isascii() or not lengths[0].isdigit() or len(lengths[0]) > 12)
+            or transfers
+            and transfers[0].strip().lower() != "chunked"
+        ):
+            await error_response(meta, status=400, code="INVALID_REQUEST", message="Invalid request framing.")(
+                scope, receive, send
+            )
+            return
+        limit = upload_request_byte_limit()
+        declared = int(lengths[0]) if lengths else None
+        if declared is not None and declared > limit:
+            await error_response(
+                meta, status=413, code="PAYLOAD_TOO_LARGE", message="Upload body exceeds the byte limit."
+            )(scope, receive, send)
+            return
+        body = bytearray()
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                return
+            incoming = message.get("body", b"")
+            if len(body) + len(incoming) > limit:
+                await error_response(
+                    meta, status=413, code="PAYLOAD_TOO_LARGE", message="Upload body exceeds the byte limit."
+                )(scope, receive, send)
+                return
+            body.extend(incoming)
+            if not message.get("more_body", False):
+                break
+        if declared is not None and declared != len(body):
+            await error_response(meta, status=400, code="INVALID_REQUEST", message="Invalid request framing.")(
+                scope, receive, send
+            )
+            return
+        consumed = False
+
+        async def bounded_receive() -> Message:
+            nonlocal consumed
+            if consumed:
+                return await receive()
+            consumed = True
+            return {"type": "http.request", "body": bytes(body), "more_body": False}
+
+        await self.app(scope, bounded_receive, send)
 
     async def _search_request(
         self, scope: Scope, receive: Receive, send: Send, headers: list[tuple[bytes, str]], meta: Meta

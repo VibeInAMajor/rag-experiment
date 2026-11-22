@@ -33,8 +33,17 @@ class _DatabaseProbe(PersistencePort):
             raise self.failure
         return PersistenceReady(schema_revision="0001", workspace_id="development", source_count=8, chunk_count=8)
 
+    async def ingestion_ready(self, _context: WorkspaceContext) -> bool:
+        return False
+
+    async def recover_ingestions(self, _context: WorkspaceContext) -> int:
+        return 0
+
     async def _unexpected(self, *_args: Any, **_kwargs: Any) -> Any:
         pytest.fail("Discovery must not invoke corpus data operations")
+
+    def _unexpected_reservation(self, *_args: Any, **_kwargs: Any) -> Any:
+        pytest.fail("Discovery must not reserve an ingestion job")
 
     async def corpus_snapshot(self, _context: WorkspaceContext) -> CorpusSnapshot:
         return CorpusSnapshot(corpus_revision="empty-test-corpus", documents=[], chunk_count=0, content_bytes=0)
@@ -49,6 +58,13 @@ class _DatabaseProbe(PersistencePort):
     lexical_search = _unexpected
     lexical_search_snapshot = _unexpected
     vector_search = _unexpected
+    reserve_ingestion = _unexpected_reservation
+    transition_ingestion = _unexpected
+    complete_ingestion_with_publication = _unexpected
+    fail_ingestion = _unexpected
+    get_ingestion_job = _unexpected
+    get_source_detail = _unexpected
+    list_active_chunks = _unexpected
 
 
 class _QualifiedLexical(LexicalServicePort):
