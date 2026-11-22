@@ -175,6 +175,35 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 - EXTEND only approved retrieval parent-expansion adapter after reviewing source/version parent metadata contract; possible **separate** migration.
 - UPDATE `docs-website/docs/architecture/content-aware-chunking-strategy.md` and per-cohort result `.md` summaries, not core Haystack.
 
+### I.1. Source-level reuse matrix — refreshed 2026-11-23
+
+**Recipient code anchors (real files, inspected):**
+
+| Repository file | Existing owner; exact integration role |
+| --- | --- |
+| [`apps/workbench/api/chunking.py`](../apps/workbench/api/chunking.py) | current approved recursive/heading-aware prepared chunk policies |
+| [`apps/workbench/api/chunking_adapters.py`](../apps/workbench/api/chunking_adapters.py) | semantic element-aware part building; avoid second chunker |
+| [`apps/workbench/api/chunking_profiles.py`](../apps/workbench/api/chunking_profiles.py) | token/section/policy revisions and PDF profile parameters |
+| [`apps/workbench/api/parsing.py`](../apps/workbench/api/parsing.py) | typed ParsedElement/SourceSpan |
+| [`apps/workbench/api/python_code.py`](../apps/workbench/api/python_code.py) | PythonCodeSplitter integration and symbol metadata |
+| [`apps/workbench/api/pdf_chunking_adapter.py`](../apps/workbench/api/pdf_chunking_adapter.py) | Docling HybridChunker for PDF page/table chunks |
+| [`apps/workbench/api/tests/test_chunking.py`](../apps/workbench/api/tests/test_chunking.py) | current invariant/golden tests |
+| [`apps/workbench/api/tests/test_pdf_chunking.py`](../apps/workbench/api/tests/test_pdf_chunking.py) | current page/cell/heading regressions |
+
+**Pinned previous-project candidates (do NOT copy unlicensed code or Qdrant/SQLite infrastructure):** donor commit `955fd049949d3fc462d555be14774e4b255aa15c`.
+
+| Pinned previous-project source | Targeted symbol/behavior |
+| --- | --- |
+| [`src/enterprise_ai_pipeline/rag/chunking.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/chunking.py) | StructuralChunker: element-aware, stable chunk occurrence, parent/child and span metadata |
+| [`src/enterprise_ai_pipeline/rag/json_structural_chunking.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/json_structural_chunking.py) | bounded JSON object/list boundaries, no silent truncation |
+| [`src/enterprise_ai_pipeline/rag/diagnostic_structural_chunking.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/diagnostic_structural_chunking.py) | diagnostic structural boundary measurements |
+| [`tests/pipeline/test_parsing_and_chunking.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_parsing_and_chunking.py) | baseline structural and parent/path regression scenarios |
+| [`tests/pipeline/test_json_structural_chunking.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_json_structural_chunking.py) | numeric/array/object JSON fidelity cases |
+| [`src/enterprise_ai_pipeline/rag/chunk_delta.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/chunk_delta.py) | partial/full chunk hash stability across versions |
+| [`LICENSE.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) | reuse rights; do not blindly transplant another app's parser |
+
+**Reuse decision gate:** compare current component to donor behavior, list reusable algorithm/contract, incompatibilities and the exact owner of PostgreSQL/model/tokenizer state. Code copying requires permission under [donor LICENSE](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md); otherwise independently implement compatible behavior and port test **scenarios**. Existing completed Workbench components must not be replaced without a measurable reason.
+
 ## J. Implementation Requirements
 
 **Extended executable blueprint (preserve the original J1–J5 gates below):**
@@ -229,6 +258,26 @@ Reuse `EmbeddingBasedDocumentSplitter` with a qualified embedding provider; no n
 
 Report metric definitions and denominators, per-cohort paired bootstrap confidence intervals, bad-case examples without private data, index cost, delta update churn, p95 query changes. Proposed admission gate: +3 points Recall@5 or +0.03 MRR with <=20% index cost increase (or separately justified tradeoff); safety remains absolute. Publish a reversible versioned decision before changing any default.
 
+### J7–J14. Detailed, source-grounded implementation handoff — 2026-11-23
+
+**Step J7 —** Before adding new code, compare current `PreparedChunk`/Haystack parser to donor StructuralChunker on same JSON, Markdown, fenced code and AST Python fixtures. Produce a **gap table**: elements lost, headings/parents detached, occurrence ID drift and ingestion speed. If current engine already covers a case, reuse it.
+
+**Step J8 —** Treat donor StructuralChunker as a source of structural boundary and parent/child **invariants**, not as a replacement for current `ChunkingPolicyResolver`. Current profile identity and tokenizer unit must remain authoritative; do not reset existing committed source versions for benchmark runs.
+
+**Step J9 —** Add source-safe JSON/YAML/CSV structural cohorts only if an authorized parser registry supports format; compare donor json_structural_chunking's duplicate key, nesting depth, unknown scalar, oversized array and record chunk handling. Do not silently import donor runtime classes.
+
+**Step J10 —** Define normalized map `(workspace,source,version,element_id,source_span,heading_path,structural_parent,processing_revision)` across both strategies; verify read source offsets and preserved tables/method signatures, especially in mixed documents.
+
+**Step J11 —** Run equal-token-budget evaluation across 384/0, 500/50, 512/64 and 768/96 for prose, headings, JSON records and 100–350-token AST units. Distinguish native Qwen guard versus `o200k_base` chunk sizing, and compare under same model/index generation.
+
+**Step J12 —** Port donor parsing/JSON test fixtures **as independent small cases**, not tests coupled to Qdrant/Root/SQLite. Add human-labelled source/line/table/parent citation accuracy, plus no-loss checks.
+
+**Step J13 —** Decision gate: if donor semantics improve per-format recall/structural fidelity without unacceptable parse/embedding overhead, extend current strategy adapter via small code change and new profile revision; otherwise record NO-GO and retain current splitter.
+
+**Step J14 —** With DELTA-001 coordinate embedding-input hash changes; even if split text stays unchanged, new representation prefix/parent policy may require reembedding. Record cache invalidation and cross-workspace isolation.
+
+**Mandatory dependency handshake:** Current [CHUNK-001](completed/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md) is COMPLETE; treat source donor chunker as a measured policy candidate, not already integrated.
+
 ## K. Security / Governance / Observability
 
 **Multimodal trust and retention requirements:** untrusted PDF images, Markdown Mermaid code, OCR labels and VLM descriptions must never be executed or used to choose a model/provider. For benchmark gold/evidence files, use non-sensitive or explicitly approved content with license and retention recorded; do not persist original customer scans in public evaluation fixtures. Evaluate using a server-resolved test workspace, protected original asset reads and forced RLS; all child-parent-evidence joins must enforce the *same* workspace/source/version. Treat SHA256 as byte-integrity only, not proof of diagram semantics. Distinguish direct_source, deterministic_parse, observed_OCR and model_inferred in metrics and logs; never promote inferred relation to verified merely because a model provides a confidence number. Redact raw file bytes, OCR transcripts, images, prompts, personal data and credentials from logs/reports. Account separately for OCR/VLM token/image costs, staging/retention of original assets and deletion of evaluation copies. No automatic use of remote models or hidden fallback that changes test population.
@@ -266,6 +315,14 @@ Run the repository's actual app targets from root: `hatch run workbench-api:chec
 - Regression preservation of `postgres_ts_rank_cd` and basic TXT/Markdown reference results.
 - Run focused Hatch checks and materialize benchmark JSON/MD evidence with environment/corpus hashes and PASS/FAIL/SKIP.
 
+### L.1. Reuse-specific test migration and verification
+
+- [ ] At least 20 per-cohort source/evidence queries, absolute source-span coverage, parent/child correctness, repeated identical text occurrences, JSON nested structures/duplicate keys, Markdown Mermaid fences, table headers, AST method bounds and no blank chunks.
+- [ ] Compare current and donor-derived policy in isolated disposable profiles, never training/eval leakage; use same retrieval top-k and max evidence token budget.
+- [ ] Record processing cost, embedding calls by profile, Recall@5/MRR/nDCG (only with labels) and no-indexed-original claims for unsupported PDF/OCR/visual cases.
+
+**Proof requirements:** record donor behavior source commit, recipient code and exact executed test commands. Donor unit tests **do not** demonstrate recipient functionality; recipient CI evidence must exercise the actual PostgreSQL/TEI/client paths. Capture a fixture-vs-runtime result matrix, error correlation and no-secrets logs.
+
 ## M. Acceptance Criteria
 
 **Additional must-pass gates for the expanded content/evidence architecture:**
@@ -288,6 +345,10 @@ Run the repository's actual app targets from root: `hatch run workbench-api:chec
 - [ ] Zero unapproved model invocation or silent semantic/agentic fallback; unavailable embeddings remain explicit.
 - [ ] Parent expansion returns only authorized active parent and respects bounded context; zero cross-workspace leaks.
 - [ ] No default strategy is promoted solely by the supplied decision tree; documented gate, evidence and rollback must exist.
+
+- [ ] Donor StructuralChunker and json_structural_chunking reuse or rejection decision is explicitly justified against existing Haystack adapters
+- [ ] Donor parsing/JSON golden scenarios are integrated as independent source-format tests
+- [ ] No duplicate chunker or new data store introduced when current structured logic already covers a case
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
