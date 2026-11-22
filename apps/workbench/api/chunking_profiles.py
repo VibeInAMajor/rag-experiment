@@ -148,6 +148,28 @@ class PythonChunkingProfile:
 
 
 @dataclass(frozen=True)
+class PdfChunkingProfile:
+    """Reviewed HybridChunker child budgets; tables always retain whole rows without overlap."""
+
+    target_size: int = 768
+    overlap: int = 0
+    profile_id: str = "pdf-page-layout"
+    profile_revision: str = "pdf-page-layout-r1"
+    unit: Literal["token"] = "token"
+    hard_character_limit: int = 32_768
+    max_chunks: int = 10_000
+    table_aware: bool = True
+
+    def __post_init__(self) -> None:
+        if ((self.target_size, self.overlap) not in {(512, 64), (768, 0), (768, 64)}
+                or type(self.target_size) is not int or type(self.overlap) is not int
+                or self.profile_id != "pdf-page-layout" or self.profile_revision != "pdf-page-layout-r1"
+                or self.unit != "token" or self.hard_character_limit != 32_768 or self.max_chunks != 10_000
+                or self.table_aware is not True):
+            raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
+
+
+@dataclass(frozen=True)
 class DocumentFeatures:
     """Metadata projected from a verified parser result, with an explicit declared locale."""
 
@@ -213,7 +235,7 @@ class ChunkingResources:
 
 
 _Profile_co = TypeVar(
-    "_Profile_co", bound=ChunkingProfile | PythonChunkingProfile, default=ChunkingProfile, covariant=True
+    "_Profile_co", bound=ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile, default=ChunkingProfile, covariant=True
 )
 
 
