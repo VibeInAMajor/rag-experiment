@@ -29,6 +29,7 @@ from apps.workbench.api.contracts import (
     Features,
     LiveResponse,
     LocalSourceFileResponse,
+    PdfIngestionCapabilities,
     ReadyResponse,
     RevealSourceRequest,
     RevealSourceResponse,
@@ -49,6 +50,7 @@ from apps.workbench.api.local_sources import (
     SourceNotFound,
     WindowsExplorer,
 )
+from apps.workbench.api.parser_registry import FormatId, parser_descriptors
 from apps.workbench.api.persistence import (
     DatabaseUnavailable,
     LexicalSearchSnapshot,
@@ -322,6 +324,10 @@ class _Routes:
                     )
             except Exception:
                 pass
+        pdf_available = ingestion_available and any(
+            item.qualified and item.available and FormatId.PDF in item.accepted_format_ids
+            for item in parser_descriptors()
+        )
         return CapabilitiesResponse(
             **request_meta(request).model_dump(),
             backend_revision=self.configuration.backend_revision,
@@ -335,6 +341,12 @@ class _Routes:
                 jobs=details_available,
             ),
             dependencies=Dependencies(database=dependency),
+            pdf_ingestion=PdfIngestionCapabilities(
+                available=pdf_available,
+                text_layer=pdf_available,
+                page_provenance=pdf_available,
+                table_rows=pdf_available,
+            ),
         )
 
     def _unavailable(self, request: Request) -> JSONResponse:
@@ -621,6 +633,7 @@ def create_app(
             failure=_failure,
             ensure_running=lambda: _ensure_running(app),
             timeout_seconds=configuration.ingestion_timeout_seconds,
+            pdf_timeout_seconds=configuration.pdf_ingestion_timeout_seconds,
         ),
     )
     register_configuration_routes(app, settings=configuration)

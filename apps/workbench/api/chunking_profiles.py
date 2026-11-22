@@ -161,11 +161,17 @@ class PdfChunkingProfile:
     table_aware: bool = True
 
     def __post_init__(self) -> None:
-        if ((self.target_size, self.overlap) not in {(512, 64), (768, 0), (768, 64)}
-                or type(self.target_size) is not int or type(self.overlap) is not int
-                or self.profile_id != "pdf-page-layout" or self.profile_revision != "pdf-page-layout-r1"
-                or self.unit != "token" or self.hard_character_limit != 32_768 or self.max_chunks != 10_000
-                or self.table_aware is not True):
+        if (
+            (self.target_size, self.overlap) not in {(512, 64), (768, 0), (768, 64)}
+            or type(self.target_size) is not int
+            or type(self.overlap) is not int
+            or self.profile_id != "pdf-page-layout"
+            or self.profile_revision != "pdf-page-layout-r1"
+            or self.unit != "token"
+            or self.hard_character_limit != 32_768
+            or self.max_chunks != 10_000
+            or self.table_aware is not True
+        ):
             raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
 
 
@@ -183,6 +189,7 @@ class DocumentFeatures:
             FormatId.PLAIN_TEXT,
             FormatId.MARKDOWN,
             FormatId.PYTHON,
+            FormatId.PDF,
         ):
             raise ChunkingError(ChunkingErrorCode.UNSUPPORTED_FORMAT)
         if (
@@ -196,6 +203,7 @@ class DocumentFeatures:
                 and any(kind is not ElementKind.PARAGRAPH for kind in self.element_kinds)
             )
             or (self.format_id is FormatId.PYTHON and self.element_kinds != (ElementKind.PYTHON_SOURCE,))
+            or (self.format_id is FormatId.PDF and self.element_kinds != (ElementKind.PDF_LAYOUT,))
         ):
             raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE)
         if not isinstance(self.language, str) or _LANGUAGE.fullmatch(self.language) is None:
@@ -235,7 +243,10 @@ class ChunkingResources:
 
 
 _Profile_co = TypeVar(
-    "_Profile_co", bound=ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile, default=ChunkingProfile, covariant=True
+    "_Profile_co",
+    bound=ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile,
+    default=ChunkingProfile,
+    covariant=True,
 )
 
 
@@ -304,8 +315,9 @@ def resolve_profile(
         raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
     if not isinstance(resources, ChunkingResources):
         raise ChunkingError(ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE)
-    if features.format_id is FormatId.PYTHON:
-        raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE, reason="PYTHON_REQUIRES_AST_POLICY")
+    if features.format_id in (FormatId.PYTHON, FormatId.PDF):
+        reason = "PDF_REQUIRES_LAYOUT_POLICY" if features.format_id is FormatId.PDF else "PYTHON_REQUIRES_AST_POLICY"
+        raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE, reason=reason)
     effective, fallback_reasons = _resolve_sentence_profile(features, profile=profile, resources=resources)
     if features.format_id is FormatId.MARKDOWN and features.has_headings:
         strategy, reason = "markdown_sections", "markdown_with_usable_headings"

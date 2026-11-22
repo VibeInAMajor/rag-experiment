@@ -114,8 +114,8 @@ async def test_streamed_body_limit_and_deadline_need_no_content_length() -> None
     app = create_app(settings=ApiSettings(ingestion_timeout_seconds=0.1))
 
     async def oversized() -> AsyncIterator[bytes]:
-        yield b"x" * 600_000
-        yield b"y" * 600_000
+        yield b"x" * 5_000_000
+        yield b"y" * 5_000_000
 
     async def stalled() -> AsyncIterator[bytes]:
         yield b"--boundary\r\n"

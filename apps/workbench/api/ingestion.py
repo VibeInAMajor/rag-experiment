@@ -23,19 +23,13 @@ from apps.workbench.api.chunking_profiles import (
     ChunkingErrorCode,
     ChunkingProfile,
     DocumentFeatures,
+    PdfChunkingProfile,
     PythonChunkingProfile,
     resolve_profile,
 )
 from apps.workbench.api.document_processing import DocumentProcessingSettings
 from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
-from apps.workbench.api.parser_registry import (
-    ElementKind,
-    FormatId,
-    ParseErrorCode,
-    ParsingError,
-    UploadLimits,
-    select_parser,
-)
+from apps.workbench.api.parser_registry import ElementKind, FormatId, ParseErrorCode, ParsingError, select_parser
 from apps.workbench.api.parsing import ParsedDocument, parse_source
 from apps.workbench.api.persistence import (
     Chunk,
@@ -55,6 +49,7 @@ from apps.workbench.api.persistence import (
     WorkspaceContext,
     WorkspaceNotFound,
 )
+from apps.workbench.api.upload_policy import pdf_upload_candidate, upload_file_byte_limit
 
 _T = TypeVar("_T")
 _OPAQUE_ID = re.compile(r"[A-Za-z0-9_-]+")
@@ -65,6 +60,17 @@ _ERROR_POLICIES = {
     "INVALID_REQUEST": (400, False),
     "INVALID_DOCUMENT": (400, False),
     "UNPARSEABLE_SOURCE": (400, False),
+    "PDF_ENCRYPTED": (400, False),
+    "NO_EXTRACTABLE_TEXT": (400, False),
+    "PDF_TOO_LARGE": (413, False),
+    "PDF_PARSE_TIMEOUT": (504, True),
+    "PDF_LAYOUT_UNCERTAIN": (400, False),
+    "PDF_CORRUPT": (400, False),
+    "PDF_UNSAFE_CONTENT": (400, False),
+    "PDF_RESOURCE_LIMIT": (413, False),
+    "TABLE_STRUCTURE_UNCERTAIN": (400, False),
+    "TABLE_OVERFLOW": (413, False),
+    "PDF_BUSY": (429, True),
     "UNSUPPORTED_MEDIA_TYPE": (415, False),
     "PAYLOAD_TOO_LARGE": (413, False),
     "MODEL_TOKEN_LIMIT_EXCEEDED": (413, False),
@@ -104,7 +110,7 @@ class UploadInput:
     def __post_init__(self) -> None:
         if not isinstance(self.content, bytes) or not isinstance(self.filename, str):
             raise IngestionError("INVALID_REQUEST")
-        if len(self.content) > UploadLimits().max_bytes:
+        if len(self.content) > upload_file_byte_limit(filename=self.filename, declared_mime=self.declared_mime):
             raise IngestionError("PAYLOAD_TOO_LARGE")
         if (
             not self.filename
@@ -150,7 +156,7 @@ class _Publication:
     source: Source
     version: SourceVersion
     chunks: tuple[Chunk, ...]
-    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile]
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile]
 
 
 def _request_fingerprint(upload: UploadInput, source_sha256: str) -> str:
@@ -180,7 +186,9 @@ def _prepare_publication(
     prepared = prepare_chunks(
         ChunkingInput(
             parsed_document=parsed,
-            normalized_content=upload.content.decode("utf-8-sig"),
+            normalized_content=parsed.extracted_text
+            if parsed.extracted_text is not None
+            else upload.content.decode("utf-8-sig"),
             workspace_id=job.workspace_id,
             source_id=job.source_id,
             source_version_id=job.reserved_version_id,
@@ -198,6 +206,13 @@ def _prepare_publication(
             "python_splitter": asdict(PythonChunkingProfile()),
             "native_model_guard": configuration.get("native_model_guard", {}),
         }
+    elif parsed.format_id is FormatId.PDF:
+        policy_revision = "pdf-page-layout-ingestion-v1"
+        language_policy = "pdf_source_locale_unqualified"
+        configuration = {
+            "pdf_profile": asdict(PdfChunkingProfile()),
+            "native_model_guard": configuration.get("native_model_guard", {}),
+        }
     warnings = tuple(
         dict.fromkeys(parsed.warning_codes + tuple(code for chunk in prepared for code in chunk.warning_codes))
     )
@@ -205,7 +220,7 @@ def _prepare_publication(
     ingestion_policy = {
         "ingestion_policy_revision": policy_revision,
         "language_policy": language_policy,
-        "default_language": language if parsed.format_id is not FormatId.PYTHON else None,
+        "default_language": language if parsed.format_id not in (FormatId.PYTHON, FormatId.PDF) else None,
         "normalization_policy": _NORMALIZATION_POLICY,
         "chunking_profile_fingerprint": prepared[0].processing_fingerprint,
         "document_processing": configuration,
@@ -232,6 +247,25 @@ def _prepare_publication(
         "warnings": list(warnings),
         "original_content_available": False,
     }
+    if parsed.pdf_document is not None:
+        pdf = parsed.pdf_document
+        version_metadata.update(
+            {
+                "pdf_pages": len(pdf.pages),
+                "pdf_tables": sum(b.kind == "table" for b in pdf.blocks),
+                "pdf_parser_seconds": pdf.parser_seconds,
+                "pdf_peak_memory_bytes": pdf.peak_memory_bytes,
+                "pdf_cpu_seconds": pdf.cpu_seconds,
+                "pdf_assets_revision": pdf.assets_revision,
+                "pdf_ocr_enabled": False,
+                "visual_region_count": len(pdf.visual_regions),
+                "visual_regions": [region.model_dump(mode="json") for region in pdf.visual_regions],
+                "visual_processing_status": pdf.visual_processing_status,
+                "visual_detection_coverage": pdf.visual_detection_coverage,
+                "original_evidence_status": pdf.original_evidence_status,
+                "evidence_processing_revision": pdf.processing_revision,
+            }
+        )
     chunks = []
     for item in prepared:
         chunk = item.to_chunk(title=parsed.inspected_source.safe_basename)
@@ -240,7 +274,9 @@ def _prepare_publication(
         if parsed.format_id is FormatId.PYTHON:
             chunk.metadata["source_file"] = parsed.inspected_source.safe_basename
         chunk.metadata["language_policy"] = language_policy
-        chunk.metadata["default_language"] = language if parsed.format_id is not FormatId.PYTHON else None
+        chunk.metadata["default_language"] = (
+            language if parsed.format_id not in (FormatId.PYTHON, FormatId.PDF) else None
+        )
         chunks.append(chunk)
     return _Publication(
         source=Source(
@@ -263,6 +299,8 @@ def _prepare_publication(
 
 
 def _parse_failure_code(error: ParsingError) -> str:
+    if error.code.value in _ERROR_POLICIES:
+        return error.code.value
     if error.code is ParseErrorCode.UNPARSEABLE_SOURCE:
         return "UNPARSEABLE_SOURCE"
     if error.reason == "DEADLINE_EXCEEDED":
@@ -282,6 +320,10 @@ def _parse_failure_code(error: ParsingError) -> str:
 
 
 def _chunk_failure_code(error: ChunkingError) -> str:
+    if error.reason == "TABLE_OVERFLOW":
+        return "TABLE_OVERFLOW"
+    if error.reason.startswith("PDF_TABLE_"):
+        return "TABLE_STRUCTURE_UNCERTAIN"
     if error.code is ChunkingErrorCode.MODEL_TOKEN_LIMIT_EXCEEDED:
         return "MODEL_TOKEN_LIMIT_EXCEEDED"
     if error.code is ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED:
@@ -618,7 +660,9 @@ class IngestionService:
             not isinstance(upload, UploadInput)
             or type(timeout_seconds) not in (int, float)
             or not isfinite(timeout_seconds)
-            or not 0 < timeout_seconds <= 30
+            or not 0
+            < timeout_seconds
+            <= (210 if pdf_upload_candidate(upload.filename, upload.declared_mime, upload.content) else 30)
         ):
             raise IngestionError("INVALID_REQUEST")
         source_sha256 = hashlib.sha256(upload.content).hexdigest()

@@ -119,6 +119,21 @@ class Dependencies(ContractModel):
     database: DatabaseDependencyStatus = Field(default_factory=lambda: DatabaseDependencyStatus(status="unconfigured"))
 
 
+class PdfIngestionCapabilities(ContractModel):
+    """Text-layer availability is independent from original evidence, OCR and visual semantics."""
+
+    available: bool = False
+    text_layer: bool = False
+    page_provenance: bool = False
+    table_rows: bool = False
+    original_evidence: Literal[False] = False
+    ocr: Literal[False] = False
+    visual_understanding: Literal[False] = False
+    visual_detection_coverage: Literal["unverified"] = "unverified"
+    max_bytes: Literal[8_388_608] = 8_388_608
+    max_pages: Literal[32] = 32
+
+
 class CapabilitiesResponse(Meta):
     backend_revision: Identifier
     deployment_mode: Literal["single_workspace_dev"] = "single_workspace_dev"
@@ -126,6 +141,7 @@ class CapabilitiesResponse(Meta):
     profiles: list[ExecutionProfile]
     features: Features = Field(default_factory=Features)
     dependencies: Dependencies = Field(default_factory=Dependencies)
+    pdf_ingestion: PdfIngestionCapabilities = Field(default_factory=PdfIngestionCapabilities)
 
 
 class SearchRequest(ContractModel):

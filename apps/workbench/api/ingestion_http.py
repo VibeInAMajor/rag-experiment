@@ -29,6 +29,7 @@ from apps.workbench.api.persistence import (
     SchemaIncompatible,
     WorkspaceContext,
 )
+from apps.workbench.api.upload_policy import pdf_upload_candidate
 from apps.workbench.api.upload_transport import UploadTransportError, read_upload
 
 _IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}")
@@ -91,6 +92,36 @@ _CHUNK_METADATA = frozenset(
         "actual_overlap_lines",
         "length_effective_line",
         "source_file",
+        "page_number",
+        "page_start",
+        "page_end",
+        "bbox",
+        "bbox_scope",
+        "coordinate_frame",
+        "page_width",
+        "page_height",
+        "block_id",
+        "block_kind",
+        "source_span_basis",
+        "source_span_scope",
+        "source_block_sha256",
+        "original_excerpt",
+        "original_excerpt_sha256",
+        "retrieval_sha256",
+        "table_aware",
+        "table_id",
+        "table_row_start",
+        "table_row_end",
+        "table_row_index_basis",
+        "table_header_repeated",
+        "table_headers",
+        "table_caption",
+        "original_cells",
+        "parse_warning_codes",
+        "visual_processing_status",
+        "visual_detection_coverage",
+        "original_evidence_status",
+        "evidence_processing_revision",
     }
 )
 
@@ -139,6 +170,7 @@ class IngestionRoutes:
         failure: Callable[[Request, Exception], JSONResponse],
         ensure_running: Callable[[], None],
         timeout_seconds: float,
+        pdf_timeout_seconds: float = 210.0,
     ) -> None:
         self.repository = repository
         self.service = service
@@ -147,6 +179,7 @@ class IngestionRoutes:
         self.failure = failure
         self.ensure_running = ensure_running
         self.timeout_seconds = timeout_seconds
+        self.pdf_timeout_seconds = pdf_timeout_seconds
 
     async def _repository(self, context: WorkspaceContext) -> PersistencePort:
         self.ensure_running()
@@ -180,8 +213,13 @@ class IngestionRoutes:
             if self.service is None:
                 return self._error(request, SchemaIncompatible())
             parts = await read_upload(request)
+            operation_limit = self.timeout_seconds
+            if pdf_upload_candidate(parts.filename, parts.declared_mime, parts.content):
+                operation_limit = self.pdf_timeout_seconds
+                request.state.ingestion_deadline += operation_limit - self.timeout_seconds
+                request.state.upload_timeout.reschedule(request.state.ingestion_deadline)
             await self._repository(context)
-            remaining = min(self.timeout_seconds, request.state.ingestion_deadline - asyncio.get_running_loop().time())
+            remaining = min(operation_limit, request.state.ingestion_deadline - asyncio.get_running_loop().time())
             if remaining <= 0:
                 return self._error(request, IngestionError("INGESTION_TIMEOUT"))
 
@@ -246,7 +284,26 @@ class IngestionRoutes:
             metadata = detail.version.metadata if detail.version else {}
             profile = metadata.get("processing_profile")
             parser = {
-                key: metadata[key] for key in ("parser_id", "parser_revision", "detector_revision") if key in metadata
+                key: metadata[key]
+                for key in (
+                    "parser_id",
+                    "parser_revision",
+                    "detector_revision",
+                    "pdf_pages",
+                    "pdf_tables",
+                    "pdf_parser_seconds",
+                    "pdf_peak_memory_bytes",
+                    "pdf_cpu_seconds",
+                    "pdf_assets_revision",
+                    "pdf_ocr_enabled",
+                    "visual_region_count",
+                    "visual_regions",
+                    "visual_processing_status",
+                    "visual_detection_coverage",
+                    "original_evidence_status",
+                    "evidence_processing_revision",
+                )
+                if key in metadata
             }
             warnings = metadata.get("warnings", [])
             language_policy = metadata.get("language_policy")

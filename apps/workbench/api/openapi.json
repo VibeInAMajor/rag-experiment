@@ -1940,6 +1940,9 @@
           },
           "dependencies": {
             "$ref": "#/components/schemas/Dependencies"
+          },
+          "pdf_ingestion": {
+            "$ref": "#/components/schemas/PdfIngestionCapabilities"
           }
         },
         "additionalProperties": false,
@@ -3218,6 +3221,70 @@
           "can_reveal"
         ],
         "title": "LocalSourceFileResponse"
+      },
+      "PdfIngestionCapabilities": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": false
+          },
+          "text_layer": {
+            "type": "boolean",
+            "title": "Text Layer",
+            "default": false
+          },
+          "page_provenance": {
+            "type": "boolean",
+            "title": "Page Provenance",
+            "default": false
+          },
+          "table_rows": {
+            "type": "boolean",
+            "title": "Table Rows",
+            "default": false
+          },
+          "original_evidence": {
+            "type": "boolean",
+            "const": false,
+            "title": "Original Evidence",
+            "default": false
+          },
+          "ocr": {
+            "type": "boolean",
+            "const": false,
+            "title": "Ocr",
+            "default": false
+          },
+          "visual_understanding": {
+            "type": "boolean",
+            "const": false,
+            "title": "Visual Understanding",
+            "default": false
+          },
+          "visual_detection_coverage": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Visual Detection Coverage",
+            "default": "unverified"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "const": 8388608,
+            "title": "Max Bytes",
+            "default": 8388608
+          },
+          "max_pages": {
+            "type": "integer",
+            "const": 32,
+            "title": "Max Pages",
+            "default": 32
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PdfIngestionCapabilities",
+        "description": "Text-layer availability is independent from original evidence, OCR and visual semantics."
       },
       "ProfileLimits": {
         "properties": {

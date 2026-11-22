@@ -18,6 +18,8 @@ from apps.workbench.api.parser_registry import (
     select_parser,
 )
 from apps.workbench.api.parsing_adapters import extract_text as _extract_text
+from apps.workbench.api.pdf_models import PdfDocument, PdfLimits
+from apps.workbench.api.pdf_parser import extract_pdf
 from apps.workbench.api.python_code import PythonSymbol, inspect_python
 
 _logger = logging.getLogger(__name__)
@@ -137,6 +139,9 @@ class ParsedDocument:
     classification: ProcessingClassification
     contract_revision: str = "parsed-elements-v1"
     code_symbols: tuple[PythonSymbol, ...] = ()
+    pdf_document: PdfDocument | None = None
+    extracted_text: str | None = None
+    projection_sha256: str | None = None
 
 
 def _check_deadline(started: float, limits: UploadLimits) -> None:
@@ -197,18 +202,21 @@ def inspect_format(
     """
     Verify the initial allowlist without filesystem access or parser invocation.
 
-    :param content: Already bounded upload bytes; only UTF-8 with an optional BOM is accepted.
+    :param content: Already bounded upload bytes; UTF-8 text or a PDF signature candidate.
     :param safe_basename: Untrusted single filename, at most 255 UTF-8 bytes; paths are refused.
     :param declared_type: Optional reviewed MIME alias with an optional UTF-8 charset parameter.
     :param upload_limits: Positive limits capped at application ceilings; defaults to 1 MiB.
-    :returns: Immutable verified TXT/Markdown/Python identity and byte digest.
+    :returns: Immutable text/PDF-candidate identity and original byte digest; PDF safety follows in its worker.
     :raises ParsingError: Sanitized refusal for mismatches, unavailable formats or resource limits.
     """
     started = perf_counter()
     if not isinstance(content, bytes):
         raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="INVALID_BYTES")
-    if len(content) > upload_limits.max_bytes:
-        raise ParsingError(ParseErrorCode.CONTENT_LIMIT_EXCEEDED, reason="MAX_BYTES")
+    pdf_hint = isinstance(safe_basename, str) and safe_basename.lower().endswith(".pdf")
+    if len(content) > (PdfLimits().max_bytes if pdf_hint else upload_limits.max_bytes):
+        raise ParsingError(
+            ParseErrorCode.PDF_TOO_LARGE if pdf_hint else ParseErrorCode.CONTENT_LIMIT_EXCEEDED, reason="MAX_BYTES"
+        )
     basename = _basename(safe_basename)
     declared_mime = _declared_mime(declared_type)
     parts = basename.lower().split(".")
@@ -223,8 +231,22 @@ def inspect_format(
         raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="MULTIPLE_FORMAT_EXTENSIONS")
     if declared_mime is not None and declared_mime not in rule.mime_aliases:
         raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="MIME_EXTENSION_CONFLICT")
-    if rule.format_id not in {FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON}:
+    if rule.format_id not in {FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON, FormatId.PDF}:
         raise ParsingError(ParseErrorCode.PARSER_UNAVAILABLE, reason="FORMAT_NOT_QUALIFIED")
+    if rule.format_id is FormatId.PDF:
+        if not content.startswith(b"%PDF-"):
+            raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="PDF_SIGNATURE_MISMATCH")
+        return InspectedSource(
+            original_name=safe_basename,
+            safe_basename=basename,
+            declared_mime=declared_mime,
+            verified_mime=rule.verified_mime,
+            format_id=FormatId.PDF,
+            content_sha256=hashlib.sha256(content).hexdigest(),
+            bytes_count=len(content),
+            detector_revision="pdf-inspection-r1",
+            evidence_codes=("REVIEWED_EXTENSION", "MIME_AGREES" if declared_mime else "MIME_ABSENT", "PDF_SIGNATURE"),
+        )
     header = content.removeprefix(b"\xef\xbb\xbf").lstrip()[:512]
     if header.startswith(_BINARY_HEADERS) or header[4:8] == _ISO_MEDIA_HEADER:
         raise ParsingError(ParseErrorCode.FORMAT_MISMATCH, reason="BINARY_SIGNATURE")
@@ -402,6 +424,12 @@ def _project_elements(
     return tuple(elements)
 
 
+def _pdf_text(document: PdfDocument, source: InspectedSource) -> str:
+    if document.source_sha256 != source.content_sha256:
+        raise ParsingError(ParseErrorCode.STRUCTURE_LOSS)
+    return "\n\n".join(block.text for block in document.blocks)
+
+
 def parse_source(
     content: bytes,
     *,
@@ -430,17 +458,34 @@ def parse_source(
         descriptor = select_parser(source.format_id)
         parser_id, parser_revision = descriptor.parser_id, descriptor.parser_revision
         _check_deadline(started, upload_limits)
-        try:
-            text = _extract_text(content)
-        except ImportError:
-            raise ParsingError(ParseErrorCode.PARSER_UNAVAILABLE, reason="DEPENDENCY_MISSING") from None
-        except ParsingError:
-            raise
-        except Exception:
-            raise ParsingError(ParseErrorCode.PARSE_FAILED, reason="EXTRACTION_FAILED") from None
+        pdf_document = extract_pdf(content) if source.format_id is FormatId.PDF else None
+        if pdf_document is not None:
+            text = _pdf_text(pdf_document, source)
+        else:
+            try:
+                text = _extract_text(content)
+            except ImportError:
+                raise ParsingError(ParseErrorCode.PARSER_UNAVAILABLE, reason="DEPENDENCY_MISSING") from None
+            except ParsingError:
+                raise
+            except Exception:
+                raise ParsingError(ParseErrorCode.PARSE_FAILED, reason="EXTRACTION_FAILED") from None
         code_symbols: tuple[PythonSymbol, ...] = ()
         elements: tuple[ParsedElement, ...]
-        if source.format_id is FormatId.PYTHON:
+        if pdf_document is not None:
+            elements = (
+                ParsedElement(
+                    element_id=f"{source.content_sha256}:pdf-layout",
+                    order=0,
+                    kind=ElementKind.PDF_LAYOUT,
+                    text=text,
+                    source_span=SourceSpan(start=0, end=len(text)),
+                    line_start=1,
+                    line_end=len(text.splitlines()),
+                    warning_codes=pdf_document.warning_codes,
+                ),
+            )
+        elif source.format_id is FormatId.PYTHON:
             code_symbols = inspect_python(text, limits=upload_limits)
             elements = (
                 ParsedElement(
@@ -455,7 +500,8 @@ def parse_source(
             )
         else:
             elements = _project_elements(text, source=source, limits=upload_limits, started=started)
-        _check_deadline(started, upload_limits)
+        if pdf_document is None:
+            _check_deadline(started, upload_limits)
         warnings = tuple(dict.fromkeys(code for element in elements for code in element.warning_codes))
         classification = ProcessingClassification(
             format_id=source.format_id,
@@ -474,6 +520,9 @@ def parse_source(
             warning_codes=warnings,
             classification=classification,
             code_symbols=code_symbols,
+            pdf_document=pdf_document,
+            extracted_text=text if pdf_document is not None else None,
+            projection_sha256=hashlib.sha256(text.encode("utf-8")).hexdigest() if pdf_document is not None else None,
         )
     except ParsingError as error:
         _logger.info(

@@ -17,6 +17,8 @@ _PACKAGES = (
     ("transformers", "5.24.0"),
     ("pypdfium2", "5.15.2"),
     ("pypdf", "7.1.1"),
+    ("psutil", "7.2.2"),
+    ("huggingface-hub", "1.33.0"),
 )
 
 

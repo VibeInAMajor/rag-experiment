@@ -220,7 +220,7 @@ async def test_replay_unchanged_and_guarded_replacement_keep_identity(
         (b" \n\t", "empty.txt", "text/plain", 400),
         (b"", "zero.txt", "text/plain", 400),
         (b"%PDF-fake", "fake.txt", "text/plain", 415),
-        (b"hello", "file.pdf", "application/pdf", 415),
+        (b"hello", "file.pdf", "application/pdf", 400),
         (b"hello", "file.md", "application/pdf", 415),
         (b"hello", "../escape.txt", "text/plain", 400),
         (b"hello", "C:\\escape.txt", "text/plain", 400),

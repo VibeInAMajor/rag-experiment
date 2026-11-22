@@ -4,7 +4,7 @@ import hashlib
 import io
 import logging
 import math
-import os
+import re
 import socket
 import sys
 import time
@@ -12,11 +12,13 @@ import unicodedata
 import warnings
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import ValidationError
 
 from apps.workbench.api.parser_registry import ParseErrorCode, ParsingError
 from apps.workbench.api.pdf_assets import PdfAssetsUnavailable, pdf_assets_revision, verify_pdf_assets
-from apps.workbench.api.pdf_models import PdfBlock, PdfBox, PdfCell, PdfDocument, PdfLimits, PdfPage
+from apps.workbench.api.pdf_models import PdfBlock, PdfBox, PdfCell, PdfDocument, PdfLimits, PdfPage, PdfVisualRegion
 
 _FORBIDDEN = frozenset(
     {
@@ -41,11 +43,11 @@ def _no_network(*_args: Any, **_kwargs: Any) -> Any:
 def _restrict_runtime(limits: PdfLimits) -> None:
     logging.disable(logging.CRITICAL)
     warnings.filterwarnings("ignore")
-    socket.socket.connect = _no_network
-    socket.socket.connect_ex = _no_network
+    for method in ("connect", "connect_ex"):
+        setattr(socket.socket, method, _no_network)
     socket.create_connection = _no_network
     socket.getaddrinfo = _no_network
-    if os.name != "nt":
+    if sys.platform != "win32":
         import resource
 
         resource.setrlimit(resource.RLIMIT_AS, (limits.memory_bytes, limits.memory_bytes))
@@ -93,6 +95,8 @@ def _preflight(content: bytes, limits: PdfLimits) -> tuple[list[PdfPage], list[s
     texts: list[str] = []
     notices: list[str] = []
     for number, page in enumerate(reader.pages, 1):
+        if page.rotation != 0 or page.cropbox != page.mediabox or tuple(page.mediabox.lower_left) != (0, 0):
+            raise ParsingError(ParseErrorCode.PDF_LAYOUT_UNCERTAIN, reason="PDF_PAGE_COORDINATES_UNSUPPORTED")
         pages.append(PdfPage(number=number, width=float(page.mediabox.width), height=float(page.mediabox.height)))
         stream = page.get_contents()
         if stream is not None and len(stream.get_data()) > 8_388_608:
@@ -101,8 +105,10 @@ def _preflight(content: bytes, limits: PdfLimits) -> tuple[list[PdfPage], list[s
         if len(text) > limits.max_characters:
             raise ParsingError(ParseErrorCode.PDF_TOO_LARGE)
         if not text.strip():
-            resources = page.get("/Resources", {}).get_object()
-            objects = resources.get("/XObject", {}).get_object() if "/XObject" in resources else {}
+            resource_reference = page.get("/Resources")
+            resources = resource_reference.get_object() if resource_reference is not None else {}
+            object_reference = resources.get("/XObject")
+            objects = object_reference.get_object() if object_reference is not None else {}
             if any(obj.get_object().get("/Subtype") == "/Image" for obj in objects.values()):
                 raise ParsingError(ParseErrorCode.NO_EXTRACTABLE_TEXT)
             notices.append("PDF_PAGE_WITHOUT_TEXT")
@@ -138,6 +144,15 @@ def _table(item: Any, *, common: dict[str, Any], document: Any) -> PdfBlock:
     caption = " ".join(reference.resolve(document).text for reference in item.captions) or None
     if item.data.num_rows < 2 or item.data.num_cols < 2:
         raise ParsingError(ParseErrorCode.TABLE_STRUCTURE_UNCERTAIN)
+    date_headers = [
+        cell
+        for cell in cells
+        if cell.column_header and re.fullmatch(r"\d{1,4}[./-]\d{1,2}[./-]\d{1,4}", cell.text.strip())
+    ]
+    if len(date_headers) >= 2:
+        # Continuation pages can mislabel a complete data row as column headers.
+        # Without qualified cross-page header evidence, do not manufacture that relationship.
+        raise ParsingError(ParseErrorCode.TABLE_STRUCTURE_UNCERTAIN, reason="PDF_TABLE_HEADER_ROLES_UNCERTAIN")
     text = "\n".join(cell.text for cell in sorted(cells, key=lambda cell: (cell.row_start, cell.column_start)))
     return PdfBlock(
         **common,
@@ -166,20 +181,52 @@ def _project(document: Any, pages: list[PdfPage], limits: PdfLimits) -> tuple[Pd
         if isinstance(item, TextItem) and label in {"section_header", "title"}:
             level = min(6, max(1, getattr(item, "level", 1)))
             headings = headings[: level - 1] + [item.text]
-        common = dict(
-            block_id=item.self_ref, page=page.number, bbox=_box(item.prov[0], page), heading_path=tuple(headings)
-        )
+        common = {
+            "block_id": item.self_ref,
+            "page": page.number,
+            "bbox": _box(item.prov[0], page),
+            "heading_path": tuple(headings),
+        }
         if isinstance(item, TableItem):
             block = _table(item, common=common, document=document)
         else:
             if not item.text.strip():
                 continue
-            kind = "heading" if label in {"section_header", "title"} else "caption" if label == "caption" else "text"
+            kind: Literal["heading", "caption", "text"] = (
+                "heading" if label in {"section_header", "title"} else "caption" if label == "caption" else "text"
+            )
             block = PdfBlock(**common, kind=kind, text=item.text)
         blocks.append(block)
-        if len(blocks) > limits.max_blocks or sum(len(b.text) for b in blocks) > limits.max_characters:
+        if (
+            len(blocks) > limits.max_blocks
+            or sum(len(b.text) for b in blocks) > limits.max_characters
+            or sum(len(b.cells) for b in blocks) > limits.max_cells
+        ):
             raise ParsingError(ParseErrorCode.PDF_TOO_LARGE)
     return tuple(blocks)
+
+
+def _visual_regions(document: Any, pages: list[PdfPage], limits: PdfLimits) -> tuple[PdfVisualRegion, ...]:
+    from docling_core.types.doc import ContentLayer, PictureItem
+
+    regions: list[PdfVisualRegion] = []
+    for item, _depth in document.iterate_items(included_content_layers=set(ContentLayer)):
+        if not isinstance(item, PictureItem):
+            continue
+        for index, provenance in enumerate(item.prov):
+            if not 1 <= provenance.page_no <= len(pages):
+                raise ParsingError(ParseErrorCode.PDF_LAYOUT_UNCERTAIN)
+            regions.append(
+                PdfVisualRegion(
+                    region_id=f"{item.self_ref}:{index}",
+                    page=provenance.page_no,
+                    bbox=_box(provenance, pages[provenance.page_no - 1]),
+                    caption=" ".join(ref.resolve(document).text for ref in item.captions) or None,
+                )
+            )
+            if len(regions) > limits.max_blocks:
+                raise ParsingError(ParseErrorCode.PDF_TOO_LARGE)
+    return tuple(regions)
 
 
 def _digits(text: str) -> Counter[str]:
@@ -200,7 +247,7 @@ def _convert(content: bytes, root: Path, limits: PdfLimits) -> PdfDocument:
     import psutil
     from docling.datamodel.accelerator_options import AcceleratorOptions
     from docling.datamodel.base_models import ConversionStatus, DocumentStream, InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
+    from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode, TableStructureOptions
     from docling.document_converter import DocumentConverter, PdfFormatOption
 
     options = PdfPipelineOptions(
@@ -215,8 +262,8 @@ def _convert(content: bytes, root: Path, limits: PdfLimits) -> PdfDocument:
         do_picture_description=False,
         do_code_enrichment=False,
         do_formula_enrichment=False,
+        table_structure_options=TableStructureOptions(mode=TableFormerMode.ACCURATE),
     )
-    options.table_structure_options.mode = TableFormerMode.FAST
     converter = DocumentConverter(format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=options)})
     result = converter.convert(
         DocumentStream(name="input.pdf", stream=io.BytesIO(content)),
@@ -238,33 +285,49 @@ def _convert(content: bytes, root: Path, limits: PdfLimits) -> PdfDocument:
         source_sha256=hashlib.sha256(content).hexdigest(),
         pages=tuple(pages),
         blocks=blocks,
-        warning_codes=notices,
+        warning_codes=tuple(
+            dict.fromkeys(
+                (
+                    *notices,
+                    "PDF_VISUAL_COVERAGE_UNVERIFIED",
+                    "VISUAL_UNDERSTANDING_UNAVAILABLE",
+                    "VISUAL_EVIDENCE_UNAVAILABLE",
+                )
+            )
+        ),
         parser_seconds=time.perf_counter() - started,
         peak_memory_bytes=getattr(memory, "peak_wset", memory.rss),
         cpu_seconds=cpu.user + cpu.system,
         assets_revision=pdf_assets_revision(),
+        visual_regions=_visual_regions(result.document, pages, limits),
     )
+
+
+def _payload(content: bytes, root: Path, limits: PdfLimits) -> bytes:
+    if len(content) > limits.max_bytes or not content.startswith(b"%PDF-"):
+        raise ParsingError(ParseErrorCode.PDF_CORRUPT)
+    document = _convert(content, root, limits)
+    payload = document.model_dump_json().encode("utf-8")
+    if len(payload) > 8_388_608:
+        raise ParsingError(ParseErrorCode.PDF_TOO_LARGE)
+    return payload
 
 
 def main() -> None:
     """Consume only a bounded PDF stream after the parent has installed OS quotas."""
-    limits = PdfLimits()
+    limits = PdfLimits.model_validate_json(sys.argv[2])
     _restrict_runtime(limits)
     try:
         content = sys.stdin.buffer.read(limits.max_bytes + 1)
-        if len(content) > limits.max_bytes or not content.startswith(b"%PDF-"):
-            raise ParsingError(ParseErrorCode.PDF_CORRUPT)
-        document = _convert(content, Path(sys.argv[1]), limits)
-        payload = document.model_dump_json().encode("utf-8")
-        if len(payload) > 8_388_608:
-            raise ParsingError(ParseErrorCode.PDF_TOO_LARGE)
-        sys.stdout.buffer.write(payload)
+        sys.stdout.buffer.write(_payload(content, Path(sys.argv[1]), limits))
     except ParsingError as error:
         sys.stdout.buffer.write(b"ERROR:" + error.code.value.encode("ascii"))
     except PdfAssetsUnavailable:
         sys.stdout.buffer.write(b"ERROR:PARSER_UNAVAILABLE")
     except MemoryError:
         sys.stdout.buffer.write(b"ERROR:PDF_RESOURCE_LIMIT")
+    except ValidationError:
+        sys.stdout.buffer.write(b"ERROR:PDF_LAYOUT_UNCERTAIN")
     except Exception:
         sys.stdout.buffer.write(b"ERROR:PDF_CORRUPT")
 

@@ -97,6 +97,21 @@ class PdfPage(BaseModel):
     number: int = Field(ge=1, le=32)
     width: float = Field(gt=0, le=14_400)
     height: float = Field(gt=0, le=14_400)
+    coordinate_frame: Literal["top-left-unrotated-mediabox-points"] = "top-left-unrotated-mediabox-points"
+
+
+class PdfVisualRegion(BaseModel):
+    """Observed geometry only; captions do not imply diagram or chart understanding."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+    region_id: str = Field(min_length=1, max_length=128)
+    page: int = Field(ge=1, le=32)
+    bbox: PdfBox
+    kind: Literal["unprocessed_visual"] = "unprocessed_visual"
+    caption: str | None = Field(default=None, max_length=2048)
+    heading_path: tuple[str, ...] = Field(default=(), max_length=6)
+    processing_status: Literal["incomplete"] = "incomplete"
+    evidence_status: Literal["visual_evidence_unavailable"] = "visual_evidence_unavailable"
 
 
 class PdfDocument(BaseModel):
@@ -111,6 +126,11 @@ class PdfDocument(BaseModel):
     peak_memory_bytes: int = Field(ge=0)
     cpu_seconds: float = Field(ge=0)
     assets_revision: str = Field(min_length=1, max_length=128)
+    visual_regions: tuple[PdfVisualRegion, ...] = Field(default=(), max_length=4096)
+    visual_detection_coverage: Literal["unverified"] = "unverified"
+    visual_processing_status: Literal["incomplete"] = "incomplete"
+    original_evidence_status: Literal["unavailable"] = "unavailable"
+    processing_revision: Literal["pdf-layout-evidence-r1"] = "pdf-layout-evidence-r1"
 
     @model_validator(mode="after")
     def _page_bounds(self) -> "PdfDocument":
@@ -122,7 +142,8 @@ class PdfDocument(BaseModel):
             raise ValueError("Oversized PDF extraction")
         if sum(len(block.cells) for block in self.blocks) > PdfLimits().max_cells:
             raise ValueError("Oversized PDF cell allocation")
-        for block in self.blocks:
+        regions: tuple[PdfBlock | PdfVisualRegion, ...] = (*self.blocks, *self.visual_regions)
+        for block in regions:
             if block.page > len(self.pages):
                 raise ValueError("Unverified PDF page")
             page = self.pages[block.page - 1]

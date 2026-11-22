@@ -16,6 +16,7 @@ from apps.workbench.api.chunking_profiles import (
     ChunkingProfile,
     ChunkingResources,
     DocumentFeatures,
+    PdfChunkingProfile,
     PythonChunkingProfile,
     resolve_profile,
 )
@@ -116,7 +117,7 @@ class PreparedChunk:
     effective_size: int
     overlap_tokens: int
     processing_fingerprint: str
-    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile]
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile]
     source_sha256: str
     parser_id: str
     parser_revision: str
@@ -126,6 +127,8 @@ class PreparedChunk:
     length_tiktoken_model_input: int | None = None
     model_counter_revision: str | None = None
     python_span: PythonSpan | None = None
+    pdf_metadata: dict[str, Any] | None = None
+    page: int | None = None
 
     def metadata(self) -> dict[str, Any]:
         """Return a fresh, bounded JSON projection; native page defaults are deliberately absent."""
@@ -196,6 +199,8 @@ class PreparedChunk:
                     metadata["class_name"] = innermost[0].class_name
                 if innermost[0].decorators:
                     metadata["decorators"] = list(innermost[0].decorators)
+        if self.pdf_metadata is not None:
+            metadata.update(self.pdf_metadata)
         if self.length_model_token is not None:
             metadata.update(
                 {
@@ -224,6 +229,7 @@ class PreparedChunk:
             title=title,
             content=self.content,
             content_hash=self.content_hash,
+            page=self.page,
             metadata=self.metadata(),
         )
 
@@ -259,7 +265,11 @@ def _validate_source(source: ChunkingInput) -> DocumentFeatures:
         encoded = text.encode("utf-8")
     except UnicodeEncodeError:
         raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE, reason="INVALID_TEXT") from None
-    if len(encoded) > UploadLimits().max_bytes:
+    is_pdf = parsed.format_id is FormatId.PDF
+    from apps.workbench.api.pdf_models import PdfLimits
+
+    byte_limit = PdfLimits().max_bytes if is_pdf else UploadLimits().max_bytes
+    if len(encoded) > byte_limit:
         raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="INPUT_BYTES")
     inspected = parsed.inspected_source
     if not isinstance(inspected, InspectedSource) or not isinstance(parsed.classification, ProcessingClassification):
@@ -267,7 +277,7 @@ def _validate_source(source: ChunkingInput) -> DocumentFeatures:
     if (
         parsed.contract_revision != "parsed-elements-v1"
         or type(inspected.bytes_count) is not int
-        or not 0 < inspected.bytes_count <= UploadLimits().max_bytes
+        or not 0 < inspected.bytes_count <= byte_limit
         or inspected.ambiguous
         or parsed.format_id != inspected.format_id
         or parsed.format_id != parsed.classification.format_id
@@ -275,12 +285,26 @@ def _validate_source(source: ChunkingInput) -> DocumentFeatures:
         or parsed.source_sha256 != inspected.content_sha256
         or _SHA256.fullmatch(parsed.source_sha256) is None
         or parsed.detector_revision != inspected.detector_revision
-        or not any(
-            len(candidate) == inspected.bytes_count and hashlib.sha256(candidate).hexdigest() == parsed.source_sha256
-            for candidate in (encoded, b"\xef\xbb\xbf" + encoded)
+        or (
+            not is_pdf
+            and not any(
+                len(candidate) == inspected.bytes_count
+                and hashlib.sha256(candidate).hexdigest() == parsed.source_sha256
+                for candidate in (encoded, b"\xef\xbb\xbf" + encoded)
+            )
         )
     ):
         raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE, reason="PARSER_SOURCE_CONFLICT")
+    if is_pdf:
+        pdf = parsed.pdf_document
+        if (
+            pdf is None
+            or pdf.source_sha256 != parsed.source_sha256
+            or parsed.extracted_text != text
+            or parsed.projection_sha256 != hashlib.sha256(encoded).hexdigest()
+            or text != "\n\n".join(block.text for block in pdf.blocks)
+        ):
+            raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE, reason="PDF_PROJECTION_CONFLICT")
     _validate_elements(text, parsed.elements)
     kinds = tuple(dict.fromkeys(element.kind for element in parsed.elements))
     if kinds != parsed.classification.element_kinds or parsed.classification.has_protected_spans != (
@@ -349,18 +373,33 @@ def _validate_elements(text: str, elements: tuple[ParsedElement, ...]) -> None:
 
 
 def resolve_chunking(
-    source: ChunkingInput, *, resources: ChunkingResources, profile: ChunkingProfile = ChunkingProfile()
-) -> ChunkingDecision[ChunkingProfile | PythonChunkingProfile]:
+    source: ChunkingInput,
+    *,
+    resources: ChunkingResources,
+    profile: ChunkingProfile = ChunkingProfile(),
+    pdf_profile: PdfChunkingProfile = PdfChunkingProfile(),
+) -> ChunkingDecision[ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile]:
     """
     Resolve a format-aware policy from a validated parser result and explicit resource identities.
 
     :param source: Server-owned scope, exact decoded text and immutable parser output.
     :param resources: Already inspected resource identities; this function performs no I/O.
     :param profile: Reviewed prose settings, defaulting to 500/50 tiktoken tokens; Python uses its fixed AST profile.
+    :param pdf_profile: Reviewed PDF child target; page/table provenance is retained independently of this target.
     :returns: One immutable strategy with explicit language/structure fallback reasons.
     :raises ChunkingError: If input provenance, the profile or required resources are invalid.
     """
     features = _validate_source(source)
+    if features.format_id is FormatId.PDF:
+        if not isinstance(pdf_profile, PdfChunkingProfile):
+            raise ChunkingError(ChunkingErrorCode.INVALID_PROFILE)
+        return ChunkingDecision(
+            profile=pdf_profile,
+            strategy="page_layout",
+            selection_reason="verified_pdf_pages_and_tables",
+            fallback_reasons=(),
+            token_counter_revision=resources.token_counter_revision,
+        )
     if features.format_id is FormatId.PYTHON:
         return ChunkingDecision(
             profile=PythonChunkingProfile(),
@@ -438,7 +477,7 @@ def _prepared(
     size: int,
     overlap: int,
     ordinal: int,
-    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile],
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile],
     fingerprint: str,
     warnings: tuple[str, ...],
     admission: ModelTokenAdmission | None,
@@ -491,7 +530,7 @@ def _processing_fingerprint(
     source: ChunkingInput,
     *,
     profile: ChunkingProfile,
-    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile],
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile],
     resources: ChunkingResources,
     admission: ModelTokenAdmission | None,
 ) -> str:
@@ -557,7 +596,7 @@ def _verify_output(source: ChunkingInput, chunks: list[PreparedChunk]) -> None:
 def _prepare_python(
     source: ChunkingInput,
     *,
-    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile],
+    decision: ChunkingDecision[ChunkingProfile | PythonChunkingProfile | PdfChunkingProfile],
     fingerprint: str,
     admission: ModelTokenAdmission | None,
     counter: ExactModelCounter | None,
@@ -614,6 +653,7 @@ def _prepare(
     admission: ModelTokenAdmission | None,
     counter: ExactModelCounter | None,
     started: float,
+    pdf_profile: PdfChunkingProfile,
 ) -> tuple[PreparedChunk, ...]:
     from apps.workbench.api import chunking_adapters as adapters
 
@@ -631,7 +671,23 @@ def _prepare(
     declared = resources or actual
     if declared.token_counter_revision != actual.token_counter_revision:
         raise ChunkingError(ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE, reason="COUNTER_REVISION_MISMATCH")
-    decision = resolve_chunking(source, profile=profile, resources=declared)
+    decision = resolve_chunking(source, profile=profile, resources=declared, pdf_profile=pdf_profile)
+    if isinstance(decision.profile, PdfChunkingProfile):
+        from apps.workbench.api.pdf_chunk_preparation import prepare_pdf_chunks
+
+        return prepare_pdf_chunks(
+            source,
+            decision=ChunkingDecision(
+                profile=decision.profile,
+                strategy=decision.strategy,
+                selection_reason=decision.selection_reason,
+                fallback_reasons=decision.fallback_reasons,
+                token_counter_revision=decision.token_counter_revision,
+            ),
+            admission=admission,
+            counter=counter,
+            started=started,
+        )
     if isinstance(decision.profile, PythonChunkingProfile):
         fingerprint = _processing_fingerprint(
             source, profile=profile, decision=decision, resources=declared, admission=admission
@@ -707,6 +763,7 @@ def prepare_chunks(
     resources: ChunkingResources | None = None,
     model_admission: ModelTokenAdmission | None = None,
     model_counter: ExactModelCounter | None = None,
+    pdf_profile: PdfChunkingProfile = PdfChunkingProfile(),
 ) -> tuple[PreparedChunk, ...]:
     """
     Prepare all chunks atomically in memory, preserving prose sections or verified Python source slices.
@@ -716,6 +773,7 @@ def prepare_chunks(
     :param resources: Optional pre-inspected resource identities; execution revalidates actual assets.
     :param model_admission: Optional exact-model budget for the final prefixed/suffixed embedding input.
     :param model_counter: Pinned application counter required only for exact-model admission.
+    :param pdf_profile: Allowlisted PDF child target, default 768 tokens and zero overlap.
     :returns: Deterministic immutable chunks; no partial result or database write is produced on refusal.
     :raises ChunkingError: If source structure, resources, protected spans or processing budgets fail.
     """
@@ -728,6 +786,7 @@ def prepare_chunks(
             admission=model_admission,
             counter=model_counter,
             started=started,
+            pdf_profile=pdf_profile,
         )
     except ChunkingError as error:
         _logger.info("Chunk preparation refused", extra={"code": error.code.value, "reason": error.reason})

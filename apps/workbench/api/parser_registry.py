@@ -41,6 +41,7 @@ class ElementKind(StrEnum):
     HEADING = "heading"
     PROTECTED_RAW = "protected_raw"
     PYTHON_SOURCE = "python_source"
+    PDF_LAYOUT = "pdf_layout"
 
 
 class ParseErrorCode(StrEnum):
@@ -193,6 +194,34 @@ _FORMAT_RULES = (
 
 
 def _descriptor(format_id: FormatId) -> ParserDescriptor:
+    if format_id is FormatId.PDF:
+        return ParserDescriptor(
+            parser_id="docling-pdf",
+            parser_revision="docling-pdf-r1",
+            accepted_format_ids=(FormatId.PDF,),
+            available=True,
+            qualified=True,
+            dependency_revisions=(
+                "docling==2.151.1",
+                "docling-core==2.108.0",
+                "docling-ibm-models==4.0.4",
+                "docling-parse==7.27.0",
+            ),
+            max_bytes=8_388_608,
+            max_elements=4096,
+            deadline_ms=180_000,
+            emitted_element_kinds=(ElementKind.PDF_LAYOUT,),
+            required_provenance=("source_sha256", "page_number", "bbox", "source_span_basis"),
+            constraints=(
+                "TEXT_LAYER_ONLY",
+                "NO_OCR",
+                "NO_NETWORK",
+                "PROCESS_QUOTAS",
+                "PINNED_MODEL_ASSETS",
+                "VISUAL_COVERAGE_INCOMPLETE",
+                "ORIGINAL_EVIDENCE_UNAVAILABLE",
+            ),
+        )
     qualified = format_id in (FormatId.PLAIN_TEXT, FormatId.MARKDOWN, FormatId.PYTHON)
     parser_id = {
         FormatId.PLAIN_TEXT: "haystack-text",
@@ -241,7 +270,17 @@ def _dependency_available() -> bool:
 def parser_descriptors() -> tuple[ParserDescriptor, ...]:
     """Return reviewed descriptors with current installed-dependency availability."""
     available = _dependency_available()
-    return tuple(replace(descriptor, available=descriptor.available and available) for descriptor in _PARSER_REGISTRY)
+    from apps.workbench.api.pdf_assets import pdf_runtime_available
+
+    return tuple(
+        replace(
+            descriptor,
+            available=descriptor.available
+            and available
+            and (descriptor.accepted_format_ids != (FormatId.PDF,) or pdf_runtime_available()),
+        )
+        for descriptor in _PARSER_REGISTRY
+    )
 
 
 def select_parser(format_id: FormatId) -> ParserDescriptor:

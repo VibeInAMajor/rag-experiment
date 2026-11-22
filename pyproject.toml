@@ -176,6 +176,7 @@ dependencies = [
   "docling-parse==7.27.0",
   "torch==2.15.0",
   "transformers==5.24.0",
+  "huggingface-hub==1.33.0",
   "pypdfium2==5.15.2",
   "pdfplumber==0.11.11",
   "pypdf==7.1.1",
@@ -213,6 +214,7 @@ db-status = "python -m apps.workbench.api.db_admin status"
 db-seed = "python -m apps.workbench.api.db_seed"
 source-register = "python -m apps.workbench.api.source_registration {args}"
 chunking-setup = "python -m scripts.workbench_chunking_setup {args}"
+pdf-setup = "python -m scripts.setup_workbench_pdf {args}"
 
 [tool.hatch.envs.workbench-db-compat]
 installer = "uv"

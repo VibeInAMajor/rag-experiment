@@ -4,7 +4,7 @@ title: Content-aware parser and chunking boundary
 
 # Content-aware parser and chunking boundary
 
-**Updated:** 2026-11-22\
+**Updated:** 2026-11-23\
 **Scope:** Workbench application policy; separate from the Haystack converter catalog and public HTTP capabilities.
 
 The application boundary is **bounded source bytes → verified format → qualified parser → ordered structural elements → chunking policy**. Filename, declared MIME and Workbench component labels are untrusted hints. Classification does not authorize a workspace or publish a source version. The [runtime contract](rag-runtime-contract.md) continues to own API, retrieval and persistence semantics.
@@ -23,7 +23,7 @@ The revisioned static registry in `apps/workbench/api/parser_registry.py` is the
 | --- | --- | --- | --- | --- |
 | `plain_text` | Reviewed `.txt` and MIME pair, valid UTF-8 with optional BOM, no forbidden controls or conflicting signature | `TextFileToDocument`, `RecursiveDocumentSplitter` | Qualified byte-only parser and internal token chunker, subject to dependency/resources | Consuming upload/storage/retrieval workflow |
 | `markdown` | Reviewed Markdown extension and MIME pair, same text checks | `TextFileToDocument`, `MarkdownHeaderSplitter`, `RecursiveDocumentSplitter`; flattening converter examined | Qualified conservative raw Markdown projection and internal section-bounded token chunker | Broader syntax, structured tables/code and consuming workflow |
-| `pdf` | Future bounded PDF verifier | `PyPDFToDocument`; no OCR in `MultiFileConverter` | Planned; unavailable to application dispatcher | PDF inspection, extraction fidelity, scanned pages and mixed elements |
+| `pdf` | Signature/MIME gates and bounded offline Docling 2.151.1 worker | App-owned layout/table projection and qualified HybridChunker Markdown table serialization | Qualified text-layer `page_layout`; capability requires installed runtime/assets | Scans/OCR, visual semantics and original evidence storage remain unavailable; ambiguous layouts fail closed |
 | `word_document` | Future approved Office manifest inspector | `DOCXToDocument` | Planned; unavailable | Manifest and resource limits, structure, macros and embedded objects |
 | `presentation` | Future approved Office manifest inspector | `PPTXToDocument` | Planned; unavailable | Slides, order, notes, media and provenance |
 | `workbook` | Future approved Office manifest inspector | `XLSXToDocument` | Planned; unavailable | Sheets/cells/ranges, formulas and resource limits |

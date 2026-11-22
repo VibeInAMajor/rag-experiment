@@ -248,7 +248,8 @@ class RequestBoundary:
             await send(message)
 
         try:
-            async with timeout(self.settings.ingestion_timeout_seconds):
+            async with timeout(self.settings.ingestion_timeout_seconds) as upload_timeout:
+                scope["state"]["upload_timeout"] = upload_timeout
                 await self._upload_request(scope, receive, started_send, headers, meta)
         except TimeoutError:
             if response_started:

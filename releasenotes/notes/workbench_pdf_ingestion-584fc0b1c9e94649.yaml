@@ -1,0 +1,25 @@
+---
+upgrade:
+  - |
+    Workbench operators enabling PDF ingestion must install the application Hatch
+    environment and explicitly provision the pinned local models with
+    ``hatch run workbench-api:python -m scripts.setup_workbench_pdf --download``.
+    PDF capability remains unavailable without its installed runtime and assets.
+    TXT, Markdown and Python files retain their existing 1 MiB limit.
+features:
+  - |
+    Workbench accepts bounded text-layer PDF uploads through its existing jobs
+    and PostgreSQL publication workflow. Page-aware children preserve table rows,
+    observed headings, column context, page coordinates and separate original
+    excerpts; parsing failures leave the previous active source version intact.
+issues:
+  - |
+    PDF support is restricted to qualified text and table layouts. Scans require
+    a separately qualified OCR implementation. Visual coverage is explicitly
+    incomplete; detected pictures do not imply diagram/chart understanding or
+    persisted original evidence. Ambiguous continuation headers, unsupported
+    page coordinate transforms and extraction loss are refused.
+security:
+  - |
+    PDF parsing runs in a quota-limited local child with offline model assets,
+    disabled OCR/plugins/remote services and bounded source/result sizes.

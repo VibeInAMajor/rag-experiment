@@ -1,6 +1,29 @@
 # Workbench RAG API
 
-An independent FastAPI process with bounded durable TXT/Markdown ingestion and the approved, read-only `postgres-fts-baseline` Haystack profile over persisted PostgreSQL records. The [canonical contract](../../../docs-website/docs/architecture/rag-runtime-contract.md) owns API semantics; the [lexical search guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) covers requests, scores and limits. The [PostgreSQL operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md) covers setup, migrations, backup and recovery.
+An independent FastAPI process with bounded durable TXT/Markdown/Python and text-layer PDF ingestion, plus the approved, read-only `postgres-fts-baseline` Haystack profile over persisted PostgreSQL records. The [canonical contract](../../../docs-website/docs/architecture/rag-runtime-contract.md) owns API semantics; the [lexical search guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) covers requests, scores and limits. The [PostgreSQL operations runbook](../../../docs-website/docs/architecture/postgresql-foundation.md) covers setup, migrations, backup and recovery.
+
+## Text-layer PDF setup and limits
+
+The application Hatch environment declares Docling 2.151.1 and its reviewed runtime pins. Provision the fixed layout/TableFormer assets explicitly; uploads never download them:
+
+```powershell
+hatch run workbench-api:pdf-setup --download
+hatch run workbench-api:pdf-setup --verify-only
+```
+
+For offline deployment, copy a verified installation with `--from-directory PATH`. `WORKBENCH_PDF_MODEL_DIRECTORY` is a trusted deployment setting, defaulting to `.cache/workbench-pdf/models`. The committed `pdf_asset_manifest.json` fixes model repository revisions, byte sizes and SHA256 values; each worker verifies the required local files before loading weights. Missing packages/assets disable `capabilities.pdf_ingestion.available`; upload failures remain explicit.
+
+PDF files require a safe `.pdf` basename, compatible `application/pdf` MIME when supplied, and `%PDF-` bytes. The separate PDF ceiling is 8 MiB / 32 pages; the multipart ceiling is 8 MiB + 64 KiB. Each TXT/Markdown/Python file retains its 1 MiB cap. The parser uses one child at a time, 180 seconds wall time, 640 CPU seconds and 6 GiB process memory; the HTTP operation ceiling is 210 seconds. Parser concurrency returns `PDF_BUSY`, rather than queuing unbounded model work.
+
+Only text-layer layouts are qualified. Encrypted documents, embedded active content, image-only scans, unsupported rotations/crops, uncertain tables and detected numeric extraction loss are refused without replacing the old active version. Dense documents can hit the runtime cap below the page limit. This is local development qualification, not a promise to parse every 32-page PDF.
+
+`page_layout` selects bounded `pdf-page-layout-r1` children (768 `tiktoken:o200k_base` tokens, zero overlap) with the table-aware overlay. Original rows remain intact, column context repeats and an indivisible oversized row returns `TABLE_OVERFLOW`. The existing independently configured native Qwen counter counts the final embedding input; no embedding generation or LLM chunking is implied. Original excerpts and retrieval strings have separate SHA256 values. Table cell metadata omits default `false` header flags; missing flags mean `false` under `PdfCell`.
+
+GET document details exposes actual page/table/resource counts and visual regions. GET chunks exposes 1-based page numbers, block geometry, row ranges, headings, captions, original excerpts and warning codes. Coordinates are top-left PDF points on an unrotated, zero-origin MediaBox; transformed pages are refused. A table child's source span covers its original table block (`source_span_scope=source_block`); its exact excerpt is identified by row/cell locators and its separate hash. Prose spans identify their exact original excerpts.
+
+Visual detection is incomplete and explicitly `unverified`; every accepted PDF reports `visual_processing_status=incomplete`, `VISUAL_UNDERSTANDING_UNAVAILABLE` and `VISUAL_EVIDENCE_UNAVAILABLE`. A detected region is geometry, never an inferred arrow, chart value or evidence link. CONTENT-001 original assets/representations, CONTENT-002 OCR, CONTENT-003 visual interpretation and CONTENT-005 evidence resolution remain separately gated. There is no PDF-specific blob store or fabricated asset ID. Rollback disables PDF qualification/capability and restarts the API, preserving existing versions and the database volume.
+
+See the [PDF qualification record](../../../docs-website/docs/tasks/pdf-layout-qualification-2026-11-23.md) for measured scope and known refusals.
 
 ## Start
 

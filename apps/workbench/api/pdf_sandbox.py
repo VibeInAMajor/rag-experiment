@@ -41,6 +41,11 @@ class _ExtendedLimits(ctypes.Structure):
     ]
 
 
+def _require_sandbox(failed: bool) -> None:
+    if failed:
+        raise RuntimeError("PDF_SANDBOX_UNAVAILABLE")
+
+
 class PdfProcessBudget(AbstractContextManager["PdfProcessBudget"]):
     """Attach the already-owned child before supplying source bytes; closing its job kills descendants."""
 
@@ -73,12 +78,11 @@ class PdfProcessBudget(AbstractContextManager["PdfProcessBudget"]):
         settings.process_memory = self._limits.memory_bytes
         handle = kernel.OpenProcess(0x00000001 | 0x00000100 | 0x00000200 | 0x00100000, False, self._process_id)
         try:
-            if (
+            _require_sandbox(
                 not handle
                 or not kernel.SetInformationJobObject(job, 9, ctypes.byref(settings), ctypes.sizeof(settings))
                 or not kernel.AssignProcessToJobObject(job, handle)
-            ):
-                raise RuntimeError("PDF_SANDBOX_UNAVAILABLE")
+            )
         except BaseException:
             kernel.CloseHandle(job)
             self._job = None

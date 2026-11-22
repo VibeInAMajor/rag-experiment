@@ -25,6 +25,7 @@ class ApiSettings(BaseModel):
     database_dsn: SecretStr | None = None
     local_source_root: str | None = None
     ingestion_timeout_seconds: float = Field(default=30.0, gt=0, le=30)
+    pdf_ingestion_timeout_seconds: float = Field(default=210.0, gt=0, le=210)
     document_processing: DocumentProcessingSettings = Field(default_factory=DocumentProcessingSettings)
     configuration_file: str | None = Field(default=None, repr=False)
     configuration_language_override: str | None = None

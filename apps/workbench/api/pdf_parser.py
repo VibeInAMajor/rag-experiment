@@ -17,7 +17,7 @@ _ROOT = Path(__file__).resolve().parents[3]
 _MAX_RESULT_BYTES = 8_388_608
 
 
-def _worker_command() -> list[str]:
+def _worker_command(limits: PdfLimits) -> list[str]:
     # Windows venv launchers spawn an uncontained descendant. Start the base interpreter
     # directly and inject only the reviewed Hatch site-packages and repository roots.
     bootstrap = (
@@ -33,6 +33,7 @@ def _worker_command() -> list[str]:
         str(_ROOT),
         "pdf-worker",
         str(pdf_assets_directory()),
+        limits.model_dump_json(),
     ]
 
 
@@ -52,6 +53,18 @@ def _worker_environment() -> dict[str, str]:
     return environment
 
 
+def _decode_result(output: bytes, returncode: int | None) -> PdfDocument:
+    if returncode != 0 or len(output) > _MAX_RESULT_BYTES:
+        raise ParsingError(ParseErrorCode.PDF_RESOURCE_LIMIT)
+    if output.startswith(b"ERROR:"):
+        try:
+            code = ParseErrorCode(output[6:].decode("ascii"))
+        except (ValueError, UnicodeError):
+            code = ParseErrorCode.PDF_CORRUPT
+        raise ParsingError(code)
+    return PdfDocument.model_validate_json(output)
+
+
 def extract_pdf(content: bytes, *, limits: PdfLimits = PdfLimits()) -> PdfDocument:
     """Run installed Docling offline; timeout, crash and quota failures produce no partial result."""
     if not isinstance(content, bytes) or len(content) > limits.max_bytes:
@@ -63,7 +76,7 @@ def extract_pdf(content: bytes, *, limits: PdfLimits = PdfLimits()) -> PdfDocume
     process: subprocess.Popen[bytes] | None = None
     try:
         process = subprocess.Popen(
-            _worker_command(),
+            _worker_command(limits),
             cwd=_ROOT,
             env=_worker_environment(),
             stdin=subprocess.PIPE,
@@ -73,15 +86,7 @@ def extract_pdf(content: bytes, *, limits: PdfLimits = PdfLimits()) -> PdfDocume
         )
         with PdfProcessBudget(process.pid, limits=limits):
             output, _ = process.communicate(input=content, timeout=limits.wall_seconds)
-            if process.returncode != 0 or len(output) > _MAX_RESULT_BYTES:
-                raise ParsingError(ParseErrorCode.PDF_RESOURCE_LIMIT)
-            if output.startswith(b"ERROR:"):
-                try:
-                    code = ParseErrorCode(output[6:].decode("ascii"))
-                except (ValueError, UnicodeError):
-                    code = ParseErrorCode.PDF_CORRUPT
-                raise ParsingError(code)
-            return PdfDocument.model_validate_json(output)
+            return _decode_result(output, process.returncode)
     except subprocess.TimeoutExpired:
         raise ParsingError(ParseErrorCode.PDF_PARSE_TIMEOUT) from None
     except ParsingError:

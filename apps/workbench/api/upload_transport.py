@@ -120,7 +120,11 @@ class _MultipartUpload:
             raise UploadTransportError() from None
 
     def on_part_data(self, data: bytes, start: int, end: int) -> None:
-        limit = upload_file_byte_limit() if self._name == "file" else 128
+        limit = (
+            upload_file_byte_limit(filename=self.filename or "", declared_mime=self.mime)
+            if self._name == "file"
+            else 128
+        )
         if len(self._part) + end - start > limit:
             raise UploadTransportError(status=413, code="PAYLOAD_TOO_LARGE")
         self._part.extend(data[start:end])

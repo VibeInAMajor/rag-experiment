@@ -412,7 +412,7 @@ async def test_empty_converter_output_cannot_complete_an_ingestion(monkeypatch: 
         (b" \t\r\n", "notes.md", None, 400, "INVALID_DOCUMENT"),
         (b"text", "../notes.txt", None, 400, "INVALID_DOCUMENT"),
         (b"text", "notes.md", "application/pdf", 415, "UNSUPPORTED_MEDIA_TYPE"),
-        (b"%PDF-1.7", "notes.pdf", "application/pdf", 415, "UNSUPPORTED_MEDIA_TYPE"),
+        (b"%PDF-1.7", "notes.pdf", "application/pdf", 400, "PDF_CORRUPT"),
         (b"PK\x03\x04", "notes.zip", None, 415, "UNSUPPORTED_MEDIA_TYPE"),
     ],
 )
