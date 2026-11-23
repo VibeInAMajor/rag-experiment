@@ -8,6 +8,8 @@
 **Source reviewed:** cb7fe844084133b7e09a623e0e39767af1e0d9f1  
 **Target:** tasks/TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md
 
+**Decomposition update 2026-11-23:** [Large-document asynchronous ingestion map](LARGE_DOCUMENT_ASYNC_INGESTION_PLAN_2026-11-23.md) links seven atomic A–O specifications for streamed assets, durable 202 jobs, leased workers, PDF windows, index staging, Live UI and performance qualification. This parent stays PROPOSED; specification files are not implementation evidence.
+
 ## A. Title
 
 Enterprise durable ingestion workers, queue and tenant resource fairness
