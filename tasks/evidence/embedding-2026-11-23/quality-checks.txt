@@ -1,0 +1,54 @@
+Workbench local embedding qualification checks, 2026-11-23
+Inspected base: d9f629ff1d95d1b2c6585e788a09d55849d209f3 plus working-tree changes
+
+hatch --version
+PASS: Hatch, version 1.18.2
+
+hatch run workbench-api:check
+PASS: All checks passed; 110 files already formatted (final rerun after deployment-attestation regressions).
+
+hatch run workbench-api:types
+PASS: Success: no issues found in 110 source files (final rerun).
+
+hatch run workbench-api:ruff check scripts/workbench_embedding_qualify.py
+PASS: All checks passed.
+
+hatch run workbench-api:ruff format --check scripts/workbench_embedding_qualify.py
+PASS: 1 file already formatted.
+
+hatch run workbench-api:mypy --explicit-package-bases --follow-imports=silent scripts/workbench_embedding_qualify.py
+PASS: Success: no issues found in 1 source file.
+
+hatch run workbench-api:python -m pytest -q apps/workbench/api/tests/test_embedding_adapter.py apps/workbench/api/tests/test_embedding_domain.py apps/workbench/api/tests/test_embedding_dispatch.py apps/workbench/api/tests/test_embedding_configuration.py --override-ini addopts='' --override-ini console_output_style=count
+PASS: 101 passed in 3.90s, after final profile/adapter contract changes.
+
+Final focused run additionally tested dtype/pooling mismatch refusal:
+hatch run workbench-api:python -m pytest -q apps/workbench/api/tests/test_embedding_adapter.py apps/workbench/api/tests/test_embedding_domain.py apps/workbench/api/tests/test_embedding_dispatch.py apps/workbench/api/tests/test_embedding_configuration.py --override-ini addopts='' --junitxml=tasks/evidence/embedding-2026-11-23/embedding-tests.xml
+PASS: 103 passed in 4.09s.
+
+Deployment attestation regression suite after independent review:
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_embedding_attestation.py -q --junitxml=tasks/evidence/embedding-2026-11-23/attestation-tests.xml
+PASS: 20 passed in 3.59s; XML suite time 3.464s.
+
+$env:WORKBENCH_TEST_EMBEDDING_LIVE = '1'
+$env:WORKBENCH_TEST_QWEN_TOKENIZER_DIR = 'A:/AI/TEI/qwen3-4b'
+$env:WORKBENCH_TEST_EMBEDDING_REPORT = 'tasks/evidence/embedding-2026-11-23/runtime.json'
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_embedding_model_smoke.py -q --junitxml=tasks/evidence/embedding-2026-11-23/live-tests.xml
+PASS: final deployment-attestation-corrected live run, 1 passed in 26.98s. 50 successful real model requests, 30 texts in both purposes, zero additional inference requests from negative diagnostics.
+
+hatch run workbench-api:test --override-ini addopts='' --junitxml=tasks/evidence/embedding-2026-11-23/api-tests.xml
+PASS: 869 passed, 198 skipped in 88.92s.
+This collection preceded the final configuration tests; the final focused run above covers those additions.
+Database/live skips are not runtime evidence; separate database and explicit GPU runs are recorded in report.md.
+
+. ./apps/workbench/postgres/use-dev-env.ps1 -IncludeAdmin
+$env:WORKBENCH_TEST_ADMIN_DSN = $env:WORKBENCH_DB_ADMIN_DSN
+$env:WORKBENCH_TEST_APP_DSN = $env:WORKBENCH_DB_DSN
+hatch run workbench-api:test apps/workbench/api/tests/test_database_migrations.py apps/workbench/api/tests/test_postgres_persistence.py apps/workbench/api/tests/test_index_generations.py apps/workbench/api/tests/test_index_reconciliation.py apps/workbench/api/tests/test_profile_registry.py apps/workbench/api/tests/test_profile_routes.py apps/workbench/api/tests/test_lexical_routes.py apps/workbench/api/tests/test_ingestion_persistence.py --override-ini addopts='' --junitxml=tasks/evidence/embedding-2026-11-23/database-tests.xml
+PASS: 1085 passed, 17 skipped in 248.23s. The configured test script includes the application test root, so this executed the full application collection with real disposable PostgreSQL fixtures.
+Fixtures create and drop UUID-named rag_test_ databases; the configured user database is never reset.
+
+git diff --check
+PASS. Git emitted only existing LF/CRLF conversion notices.
+
+Not run: frontend checks/browser smoke (no UI changes), full upstream Haystack suite (application-only scope), Docusaurus production build (website dependencies not installed).

@@ -1,0 +1,8 @@
+{
+  "mode": "prepared",
+  "volume": "rag-workbench-embedding-qwen3-4b-5cf2132abc99",
+  "model_revision": "5cf2132abc99cad020ac570b19d031efec650f2b",
+  "preparation_ms": 69688.0000000001,
+  "model_files_converted": false,
+  "inference_requests_sent": false
+}

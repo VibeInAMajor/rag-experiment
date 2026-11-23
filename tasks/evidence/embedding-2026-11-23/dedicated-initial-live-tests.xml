@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="9.019" timestamp="2026-11-23T23:58:05.352182+02:00" hostname="3DM">
+    <testcase classname="apps.workbench.api.tests.test_embedding_model_smoke" name="test_real_local_qwen_query_and_document_qualification" time="5.531">
+      <failure message="EmbeddingError: RATE_LIMITED (HTTP 429)">Initial dedicated deployment rejected the eight-item request because its TEI item-permit limit was one. Request payload and traceback locals removed from evidence. This is a failed trial, not a qualified result.</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,11 +1,11 @@
 # TASK-RAG-EMBED-001 — Qualify local Qwen3-Embedding-4B provider and model-neutral embedding port
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
-**Status:** PROPOSED — detailed implementation blueprint; no code changes or runtime tests in this task publication  
+**Updated:** 2026-11-24
+**Status:** COMPLETE — internal provider, bounded qualification admission, corrected deployment attestation and real RTX 4090 smoke passed; production TPM and vector ingestion remain separate tasks
 **Priority:** P0  
-**Dependencies:** Completed DB-001, parser/chunking profiles; coordinate PROFILE-001 and EMBED-002  
-**Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
+**Dependencies:** Completed DB-001, INDEX-001 and PROFILE-001, parser/chunking profiles; TPM-001 qualification exception; durable vector publication remains EMBED-002
+**Repository snapshot inspected:** d9f629ff1d95d1b2c6585e788a09d55849d209f3 plus this task's working-tree implementation
 **Target location:** tasks/TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md
 
 ## A. Title
@@ -17,6 +17,8 @@ Qualify local Qwen3-Embedding-4B provider and model-neutral embedding port
 The current database accepts nullable vectors and a synthetic-test-v1 embedding profile; actual ingestion never calls a model and currently blocks non-null embeddings in the durable publication path. Before changing storage, qualify the intended local TEI Qwen3-Embedding-4B runtime and its real I/O contract on the RTX 4090 24GB; prior discussions also considered Ollama. Never infer model identity from a URL, JSON field label or a generic tokenizer.
 
 ## C. Current Repository State
+
+**Implementation reinspection (2026-11-23):** INDEX-001 now owns persisted workspace generations and consistent lexical snapshots through migration 0003. PROFILE-001 owns immutable policy definitions and mutable rollout through migration 0004; only qualified lexical compositions execute. Both migrations were already applied before this task. The existing native tokenizer remains the input-counting owner. No production embedding governor was present at implementation start: TPM-001's explicit J1 qualification exception supplies the bounded bootstrap mode below. No migration, vector publication, active-corpus change or semantic HTTP capability is added here. See the [provider guide](../docs-website/docs/architecture/local-embedding-provider.md) and [evidence](evidence/embedding-2026-11-23/report.md).
 
 **Source inspection (2026-11-23):** [SQL migration 0001](../apps/workbench/api/migrations/0001_initial.up.sql) contains workbench.sources, source_versions, chunks and nullable public.vector embeddings, generated tsvector and GIN; [migration 0002](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) adds transactional durable jobs. [PostgresPersistence](../apps/workbench/api/postgres.py) owns _publish(), _corpus_snapshot(), lexical_search_snapshot() and vector_search(). [Postgres ingestion](../apps/workbench/api/postgres_ingestion.py) calls _publish in the same transaction as terminal job completion. [FastAPI contracts](../apps/workbench/api/contracts.py), [API route owner](../apps/workbench/api/application.py), [Haystack lexical profile](../apps/workbench/api/lexical.py) and [runtime decision](../docs-website/docs/architecture/rag-runtime-contract.md) are the current authority. The local only workspace resolver is not production multi-tenancy.
 [model_token_counter.py](../apps/workbench/api/model_token_counter.py) counts actual tokens for admission but is not an embedding transport. [document_processing.yaml](../apps/workbench/document_processing.yaml) uses o200k_base split and a native model guard. The [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) currently selects local TEI at 127.0.0.1:8081 and Qwen3-Embedding-4B up to 2560 dimensions, but explicitly requires runtime verification. vector_search exists for exact cosine; no model output is recorded. External Qwen model card reports up to 2560 output dimensions with MRL support.
@@ -51,6 +53,12 @@ All new externally exposed fields require exact Pydantic/OpenAPI agreement and a
 
 CREATE apps/workbench/api/embedding.py (port/types), embedding_adapters.py (local TEI adapter or task-approved path), tests/test_embedding_adapter.py, tests/test_embedding_model_smoke.py (gated); MODIFY profiles.py, config.py and ops docs only for qualified model profile and reference; update dedicated configuration e.g. apps/workbench/embedding_profiles.yaml with placeholders only. Read model_token_counter.py and current token profile; MUST NOT change SQL 0001/0002, current PostgreSQL index/scoring or Preview fixtures.
 
+**Reviewed implementation boundary:** add `embedding_dispatch.py` as the TPM-owned qualification admission boundary, plus its recipient tests and an explicit qualification script. Reuse the existing native counter, configuration validation and installed file-lock dependency. Do not add a second tokenizer, adapter limiter, inferred quota or SQL migration. Internal profile registration does not alter `profiles.py` HTTP executability or registry rollout. The exact delivered paths and commands are recorded in the evidence rather than requiring speculative files above.
+
+**Dedicated deployment follow-up boundary:** add project-owned `apps/workbench/embedding/compose.yaml` and `start.ps1`, select loopback 8082 in disabled embedding settings, and adapt the existing qualifier/attestation tests to this project/service. Startup uses confirmed existing local assets and the pinned installed image with no download or missing-directory creation. Measure new-process readiness separately from inference; preserve original shared-service artifacts and the untouched 8081 container. TEI server batch compatibility is 40960 tokens; application qualification remains 8192 tokens, eight items and one in-flight request. No second model client, limiter, tokenizer or database ownership is added.
+
+**Root-launcher/performance follow-up boundary:** root `start.ps1` ensures the owned model container runs in the background, with no reconciliation/restart for an already running container. Reuse the project helper and ignored local source-path setting; never require a repeated model path for normal launch. A verified Linux model-asset cache may replace the slow Windows bind only with unchanged pinned bytes, atomic publication, explicit project ownership and actual startup/model requalification. Preserve the accepted bind-mount artifacts and separate one-time provisioning, process startup, warm reuse and inference measurements.
+
 **MUST NOT:** duplicate source registry, migration ownership, transport adapters, file ingestion jobs or framework components. If another component is materially affected, revise this section and its tests before coding.
 
 ### I.1. Source-level reuse matrix — refreshed 2026-11-23
@@ -76,9 +84,11 @@ CREATE apps/workbench/api/embedding.py (port/types), embedding_adapters.py (loca
 | [`src/enterprise_ai_pipeline/rag/embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embeddings.py) | EmbeddingRequest/Batch/Provider contracts and FakeEmbeddingProvider |
 | [`src/enterprise_ai_pipeline/rag/embedding_capacity.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_capacity.py) | capacity policy; must not duplicate TPM-001 |
 | [`tests/pipeline/test_tei_embedding_provider.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_tei_embedding_provider.py) | model/response, request batching, tokenizer/gated test scenarios |
-| [`LICENSE.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) | PolyForm Strict: explicit cross-product permission before literal copy |
 
-**Reuse decision gate:** compare current component to donor behavior, list reusable algorithm/contract, incompatibilities and the exact owner of PostgreSQL/model/tokenizer state. Code copying requires permission under [donor LICENSE](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md); otherwise independently implement compatible behavior and port test **scenarios**. Existing completed Workbench components must not be replaced without a measurable reason.
+
+**Reuse decision gate:** compare current component to donor behavior, list reusable algorithm/contract, incompatibilities and the exact owner of PostgreSQL/model/tokenizer state. otherwise independently implement compatible behavior and port test **scenarios**. Existing completed Workbench components must not be replaced without a measurable reason.
+
+**Inspected decision (2026-11-23):** the pinned TEI adapter, profile and neutral contract were fetched and inspected. No donor implementation is copied; apply the recipient contract and test scenarios independently. The donor's Qwen profile selects a 1536-dimensional prefix/L2 transform and code-repository instruction, incompatible with the Workbench's full-2560 web-search input policy. Its locally tokenized usage must remain a proxy. Existing PostgreSQL, profile registry and `LocalQwenTokenCounter` retain ownership. See the [decision table](evidence/embedding-2026-11-23/report.md#source-to-recipient-decision).
 
 ## J. Implementation Requirements — ordered blueprint
 
@@ -109,6 +119,8 @@ All implementation methods use descriptive domain names (not task identifiers); 
 
 **Mandatory dependency handshake:** [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) owns 0.92 desired / 0.95 hard admission and all query/document model calls; do not implement an independent limiter.
 
+**Qualification bootstrap clarification:** TPM-001 J1 explicitly permits a conservative single-test request through a separate qualification profile while sustainable TPM is unknown. Here that means at most one controlled request at a time in an exclusive, finite-budget run, through the same `reserve → mark_sent → finish` owner for queries and documents. Cross-process ownership, cumulative request/token bounds and deadlines are enforced. Charges remain after sent/canceled/timeout/ambiguous attempts. This qualifies model I/O only; ordinary production dispatch remains `NOT_QUALIFIED`, `Q_TPM` stays unknown, and TPM-001's adaptive/rolling-window/fairness/0.92–0.95 acceptance remains open. The exception is not a production governor or an independent adapter limiter.
+
 ## K. Security / Governance / Observability
 
 Enforce server-resolved WorkspaceContext and database RLS on each operation. Never trust client-supplied scope, source/file paths, graph JSON or model IDs as authorization. Protect secrets through runtime secret references; redact input text, original assets, embeddings, DSNs, API keys and model prompts from traces. Log only safe opaque IDs, profile/generation/revision, status/error category, counts, timings and trace_id. Handle prompt-injected document text as untrusted data. Bound request/token/GPU/SQL memory and concurrency; record retention and cross-workspace negative tests. Do not equate quality-confidence with authorization.
@@ -121,25 +133,25 @@ Provider fake and optional real TEI smoke; 30 mixed texts, Unicode, empty, over 
 
 ### L.1. Reuse-specific test migration and verification
 
-- [ ] test_embedding_adapter.py: invalid model digest, missing/changed tokenizer, unsupported request dimension, NaN/zero norm, row count mismatch, order reversal, TEI 429/timeout/redirects, invalid UTF-8 and missing usage.
-- [ ] test_embedding_model_smoke.py (explicitly enabled): 30 texts with an actual local model, query/doc instruction parity, normalized vector lengths and no cloud network.
-- [ ] Model/TPM integration: with TPM-001 no simultaneous query+document reservations over hard 0.95; if capacity unknown, fail safely and report NOT_QUALIFIED, not a fake quota.
+- [x] test_embedding_adapter.py: invalid model digest, missing/changed tokenizer, unsupported request dimension, NaN/zero norm, row count mismatch, order reversal, TEI 429/timeout/redirects, invalid UTF-8 and missing usage.
+- [x] test_embedding_model_smoke.py (explicitly enabled): 30 texts with an actual local model, query/doc instruction parity, normalized vector lengths and no cloud network.
+- [x] Qualification/TPM bootstrap: query/document requests share one exclusive finite admission owner; unknown production capacity remains NOT_QUALIFIED. TPM-001's production 0.95 rolling ceiling is explicitly unimplemented and unclaimed; this task verifies its J1 qualification exception, including no send without an owner and no dispatch after uncertain execution.
 
 **Proof requirements:** record donor behavior source commit, recipient code and exact executed test commands. Donor unit tests **do not** demonstrate recipient functionality; recipient CI evidence must exercise the actual PostgreSQL/TEI/client paths. Capture a fixture-vs-runtime result matrix, error correlation and no-secrets logs.
 
 ## M. Acceptance Criteria
 
-- [ ] One model-neutral EmbeddingPort with fake tests and verified local TEI adapter
-- [ ] Actual served model digest/tokenizer/output dimensions recorded; no assumption that 2560 is observed before probe
-- [ ] Real 30-text query/doc smoke returns finite properly normalized vectors with correct ordering and task formatting
-- [ ] Runtime failure/identity drift disables provider capability without synthetic fallback
-- [ ] Measured tokens/s, memory and latency are recorded on actual target GPU or explicitly NOT TESTED
-- [ ] No raw texts in logs or cloud requests enabled by default
-- [ ] Existing FTS, token chunking and DB regression checks pass
+- [x] One model-neutral EmbeddingPort with fake tests and verified local TEI adapter
+- [x] Actual served model digest/tokenizer/output dimensions recorded; no assumption that 2560 is observed before probe
+- [x] Real 30-text query/doc smoke returns finite properly normalized vectors with correct ordering and task formatting
+- [x] Runtime failure/identity drift disables provider capability without synthetic fallback
+- [x] Measured tokens/s, memory and latency are recorded on actual target GPU or explicitly NOT TESTED
+- [x] No raw texts in logs or cloud requests enabled by default
+- [x] Existing FTS, token chunking and DB regression checks pass
 
-- [ ] A pinned donor source-to-recipient decision table records whether exact TEI adapter can be reused and why
-- [ ] Observed usage provenance is never conflated with provider billed/actual tokens
-- [ ] Real provider requests are quota-governed by one TPM-001 owner; a separate ungoverned embedding client cannot pass tests
+- [x] A pinned donor source-to-recipient decision table records whether exact TEI adapter can be reused and why
+- [x] Observed usage provenance is never conflated with provider billed/actual tokens
+- [x] Real provider requests use one TPM-owned qualification allowance and exclusive deployment owner; ungoverned inference is refused. Production sustainable TPM and 0.92/0.95 control remain open under TPM-001.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -147,15 +159,29 @@ Preserve provider-neutral API and keep model disabled if unqualified; no DB migr
 
 Update [API README](../apps/workbench/api/README.md), architecture and this task with exact evidence and compatibility details before marking ready.
 
+**Delivered evidence:** [final report](evidence/embedding-2026-11-23/report.md), [actual GPU results](evidence/embedding-2026-11-23/runtime.json), [103 focused regressions](evidence/embedding-2026-11-23/embedding-tests.xml), [20 attestation tests](evidence/embedding-2026-11-23/attestation-tests.xml), [real-model gated test](evidence/embedding-2026-11-23/live-tests.xml), [1085 passing database-enabled application tests](evidence/embedding-2026-11-23/database-tests.xml) and [quality checks](evidence/embedding-2026-11-23/quality-checks.txt). Final smoke embedded 30 texts for both purposes with actual 2560-dimensional unit vectors, 50 governed successful calls and preserved model assets. Warm adapter p50/p95 were 141/719 ms; sampled device peak was 12054 MiB. Cold load, maximum sustainable concurrency and production capacity remain explicitly NOT TESTED / NOT QUALIFIED. No migration or semantic HTTP capability was added.
+
 ## O. Mandatory Completion Checklist
 
-- [ ] Section C revalidated against actual repository and completed tasks; gaps identified with source evidence.
-- [ ] Existing ports/services reused without duplicate SQL, tokenizer, registry or provider coupling.
-- [ ] Contracts, state machine and failure/retry/rollback conditions tested.
-- [ ] Tenant isolation, secret hygiene, input bounds and negative scenarios verified.
-- [ ] Real performance/quality baseline and release gate metrics recorded where applicable.
-- [ ] Unit, contract, integration, security and applicable browser tests actually executed.
-- [ ] API/capabilities/documentation reflect only working qualified features.
-- [ ] Non-destructive rollback and data preservation proven.
-- [ ] Actual modified paths, commit, revision and sanitized evidence linked.
-- [ ] Status changed to COMPLETE only with all measurable criteria supported.
+**Dedicated deployment follow-up COMPLETE (2026-11-24):** the project-owned container on `127.0.0.1:8082` passed separate [startup/inference acceptance](evidence/embedding-2026-11-23/dedicated-report.md). Actual new-process metadata startup took 242.17 seconds; the subsequent governed model test passed 50 requests over 30 texts for both purposes. Dedicated warm adapter p50/p95 were 141/813 ms. The original `runtime.json` and report retain shared-service provenance; earlier latency/VRAM figures were not reused as proof. Production TPM remains unqualified.
+
+- [x] Dedicated container command/image/mount/project identity, metadata-only probe and actual loopback port are attested.
+- [x] Newly launched process metadata readiness and subsequent governed model readiness/first client request are measured separately, with OS-cache and shared-GPU limits explicit.
+- [x] Dedicated 30-text query/document qualification, 203 focused regressions, unchanged shared-service state, hostile ambient-project reuse proof and safe rollback commands are recorded.
+
+**Root-launcher/performance follow-up COMPLETE:** [separate optimization evidence](evidence/embedding-2026-11-23/optimized-report.md) preserves the accepted 242.17-second bind baseline. Verified Linux-cache startup measured 30.705 seconds on the first optimized process and 17.376 seconds on a repeat with caches not cleared. Root launch returned in 1.427 seconds for a stopped model and 0.748 seconds for an already running model, with other services already healthy. One-time cache preparation was separately 69.688 seconds. Real optimized GPU qualification and 235 final regressions passed; no production TPM or exclusive-GPU claim is added.
+
+- [x] Root launcher reuses running containers and starts stopped/missing owned containers in the background without waiting for model readiness.
+- [x] Local source-path persistence, verified/atomic Linux asset-cache provisioning and project-only ownership pass their checks.
+- [x] Separate optimized process startup, actual governed query/document output, provisioning cost, 235 final regressions and rollback are recorded from real runs.
+
+- [x] Section C revalidated against actual repository and completed tasks; gaps identified with source evidence.
+- [x] Existing ports/services reused without duplicate SQL, tokenizer, registry or provider coupling.
+- [x] Contracts, state machine and failure/retry/rollback conditions tested.
+- [x] Tenant isolation, secret hygiene, input bounds and negative scenarios verified.
+- [x] Real performance/quality baseline and release gate metrics recorded where applicable.
+- [x] Unit, contract, integration, security and applicable browser tests actually executed.
+- [x] API/capabilities/documentation reflect only working qualified features.
+- [x] Non-destructive rollback and data preservation proven.
+- [x] Actual modified paths, commit, revision and sanitized evidence linked.
+- [x] Status changed to COMPLETE only with all measurable criteria supported.

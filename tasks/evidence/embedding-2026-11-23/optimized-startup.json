@@ -1,0 +1,43 @@
+{
+  "project": "rag-workbench-embedding",
+  "container_id": "5cd3b936fc05f977b00bfe4e0b11d47e5821039793fc3ef82398e65c69889043",
+  "endpoint": "http://127.0.0.1:8082",
+  "image_id": "sha256:d139efce84ee1d23405d64e4dc0b82d583c463fce3ff707eb65c47a8a1b7f69c",
+  "model_directory": "A:\\AI\\TEI\\qwen3-4b",
+  "model_cache_volume": "rag-workbench-embedding-qwen3-4b-5cf2132abc99",
+  "cache_mode": "reused",
+  "cache_preparation_ms": 891.0000000005311,
+  "started_at_utc": "2026-11-23T22:19:47.7658505Z",
+  "container_created_at": "2026-11-23T22:19:47.944064311Z",
+  "container_started_at": "2026-11-23T22:19:49.387435795Z",
+  "restart_count": 0,
+  "new_model_process": true,
+  "startup_observed_in_progress": true,
+  "first_observed_healthy_at": "2026-11-23T22:20:20.0923919+00:00",
+  "launcher_elapsed_ms": 32459.5778,
+  "startup_to_health_ms": 30704.9561,
+  "startup_measurement": "container process StartedAt through successful Docker health probe; OS cache may be warm",
+  "os_file_cache": "not cleared; may be warm",
+  "runtime_warm_up": "TEI may warm up model before health becomes ready",
+  "inference_requests_sent_by_launcher": 0,
+  "sampled_device_peak_mib": 23693.0,
+  "gpu_memory_scope": "shared physical device; separate model process does not reserve exclusive GPU capacity",
+  "configured_port_bindings": {
+    "80/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "8082"
+      }
+    ]
+  },
+  "actual_port_bindings": {
+    "80/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "8082"
+      }
+    ]
+  },
+  "compose_project": "rag-workbench-embedding",
+  "compose_service": "embedding"
+}

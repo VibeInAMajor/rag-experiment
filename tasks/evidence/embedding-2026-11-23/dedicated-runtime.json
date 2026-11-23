@@ -1,0 +1,1981 @@
+{
+  "mode": "live",
+  "identity": {
+    "deployment_id": "tei-bafcd45ee694b71461c0ba8e",
+    "adapter_id": "tei-openai",
+    "model_digest": "cd97e9cb507f62c0b69e6540ecabbb877508ba71437d2d227f25cd611b8ae67d",
+    "tokenizer_digest": "3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+    "tokenizer_revision": "qwen3-embedding-4b:5cf2132abc99cad020ac570b19d031efec650f2b:tokenizers-0.23.3:sha256:3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+    "served_model_id": "Qwen/Qwen3-Embedding-4B",
+    "info_digest": "aa6b6ac3ca8877c34db0982cc7e99b5190c4d2968a99365b8a3739fb3ff17283",
+    "runtime_revision": "tei-1.9.4",
+    "evidence_digest": "a8e3c7b3789059b6c9cabcdb52bed8bbf3746ca3d0b483021d8dd0d0598feac1"
+  },
+  "profile": {
+    "profile_id": "qwen3-embedding-4b-local",
+    "profile_revision": "qwen3-4b-web-r1",
+    "provider_adapter_id": "tei-openai",
+    "model_id": "Qwen/Qwen3-Embedding-4B",
+    "model_revision": "5cf2132abc99cad020ac570b19d031efec650f2b",
+    "model_digest": "cd97e9cb507f62c0b69e6540ecabbb877508ba71437d2d227f25cd611b8ae67d",
+    "tokenizer_digest": "3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+    "tokenizer_revision": "qwen3-embedding-4b:5cf2132abc99cad020ac570b19d031efec650f2b:tokenizers-0.23.3:sha256:3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+    "input_format_revision": "qwen-instruct-r1",
+    "dimensions": 2560,
+    "normalized": true,
+    "pooling": "last_token",
+    "inference_dtype": "float16",
+    "output_encoding": "float",
+    "max_tokens": 8192,
+    "max_batch_tokens": 8192,
+    "max_batch_items": 8,
+    "timeout_seconds": 30.0,
+    "retry_attempts": 0
+  },
+  "profile_fingerprint": "b43c64ffe7d2511e0ffd2c15e5458d0651fbf65b57b4f9194998bcb352366f3e",
+  "attestation": {
+    "deployment": {
+      "container_id": "bafcd45ee694b71461c0ba8e745c0da6a2ee35662f008473285a11544e17c3c3",
+      "container_name": "/rag-workbench-embedding-1",
+      "compose_project": "rag-workbench-embedding",
+      "compose_service": "embedding",
+      "endpoint": "http://127.0.0.1:8082",
+      "image_id": "sha256:d139efce84ee1d23405d64e4dc0b82d583c463fce3ff707eb65c47a8a1b7f69c",
+      "started_at": "2026-11-23T22:04:35.811074456Z",
+      "command": [
+        "--disable-spans",
+        "--model-id",
+        "/models/5cf2132abc99cad020ac570b19d031efec650f2b",
+        "--served-model-name",
+        "Qwen/Qwen3-Embedding-4B",
+        "--pooling",
+        "last-token",
+        "--dtype",
+        "float16",
+        "--max-concurrent-requests",
+        "8",
+        "--max-client-batch-size",
+        "8",
+        "--max-batch-tokens",
+        "40960",
+        "--payload-limit",
+        "1048576",
+        "--auto-truncate",
+        "false"
+      ],
+      "entrypoint": [
+        "./entrypoint.sh"
+      ],
+      "healthcheck_test": [
+        "CMD",
+        "curl",
+        "--fail",
+        "--silent",
+        "--max-time",
+        "2",
+        "http://127.0.0.1/info"
+      ],
+      "configured_port_bindings": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8082"
+          }
+        ]
+      },
+      "actual_port_bindings": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8082"
+          }
+        ]
+      },
+      "model_mount": {
+        "Source": "A:/AI/TEI/qwen3-4b",
+        "Destination": "/models/5cf2132abc99cad020ac570b19d031efec650f2b",
+        "RW": false
+      }
+    },
+    "assets": {
+      "model-00001-of-00002.safetensors": {
+        "size": 4965826464,
+        "sha256": "e70bfe3c970523fb7ef4eddffed2254ce3f1e7150c3de2af4342de129dd756f8"
+      },
+      "model-00002-of-00002.safetensors": {
+        "size": 3077765624,
+        "sha256": "ed1b87c8e9eb7e535a1a155e4fd00d9f4dba80e58a6db48a4c9f82cede7079c1"
+      },
+      "tokenizer.json": {
+        "size": 11422947,
+        "sha256": "83cdf8c3a34f68862319cb1810ee7b1e2c0a44e0864ae930194ddb76bb7feb8d"
+      },
+      "tokenizer_config.json": {
+        "size": 7256,
+        "sha256": "2f58f4bbd7bbce15d683f525954ef3a92cd82f5e06415a9c513859bf8ab72436"
+      },
+      "config.json": {
+        "size": 727,
+        "sha256": "78d2861cbbfd80eee05839200c5a3b7ed64c789f6c1cab4fbb84cc4eae33eaf5"
+      },
+      "model.safetensors.index.json": {
+        "size": 30431,
+        "sha256": "9d130c7f24fa1f9a2a7e19fad42c7d6d2d6fea31b180bdf3e8aac1924c26c39a"
+      },
+      "modules.json": {
+        "size": 349,
+        "sha256": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf"
+      },
+      "config_sentence_transformers.json": {
+        "size": 215,
+        "sha256": "10667c72ddb772627bf1780cb7f86af8e2ae0032b8c243c731172064105c6961"
+      },
+      "1_Pooling/config.json": {
+        "size": 313,
+        "sha256": "0f0ed3380602b252fced3fab6d07c76752c32ffca818ccc61afaf17ae8edd96f"
+      }
+    },
+    "info": {
+      "model_id": "/models/5cf2132abc99cad020ac570b19d031efec650f2b",
+      "model_sha": null,
+      "model_dtype": "float16",
+      "served_model_name": "Qwen/Qwen3-Embedding-4B",
+      "model_type": {
+        "embedding": {
+          "pooling": "last_token"
+        }
+      },
+      "max_concurrent_requests": 8,
+      "max_input_length": 40960,
+      "max_batch_tokens": 40960,
+      "max_batch_requests": null,
+      "max_client_batch_size": 8,
+      "auto_truncate": false,
+      "tokenization_workers": 15,
+      "version": "1.9.4",
+      "sha": "e80ef225ed0e6cb1717ce632a6a84b6cf211bb67",
+      "docker_label": "sha-e80ef22"
+    }
+  },
+  "tokenizer_manifest": {
+    "model_id": "Qwen/Qwen3-Embedding-4B",
+    "model_revision": "5cf2132abc99cad020ac570b19d031efec650f2b",
+    "counter_adapter_revision": "qwen-local-token-counter-r1",
+    "tokenizer_dependency": "tokenizers:0.23.3",
+    "asset_sha256": {
+      "tokenizer.json": "83cdf8c3a34f68862319cb1810ee7b1e2c0a44e0864ae930194ddb76bb7feb8d",
+      "tokenizer_config.json": "2f58f4bbd7bbce15d683f525954ef3a92cd82f5e06415a9c513859bf8ab72436",
+      "config.json": "78d2861cbbfd80eee05839200c5a3b7ed64c789f6c1cab4fbb84cc4eae33eaf5"
+    },
+    "input_policy": {
+      "normalization": "NFC",
+      "add_special_tokens": true,
+      "post_processor": "serialized-embedding-template",
+      "appended_special_token": "<|endoftext|>",
+      "appended_special_token_id": 151643,
+      "automatic_bos": false,
+      "chat_template_applied": false,
+      "padding": false,
+      "truncation": false
+    }
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4090",
+    "uuid": "GPU-f72a55db-4995-d323-7f02-b2ab24b53b26",
+    "total_mib": 24564,
+    "used_mib": 18740,
+    "driver": "617.42",
+    "sampled_device_peak_used_mib": 19555,
+    "memory_scope": "device-wide observed samples; unrelated clients may contribute; not allocation-exclusive"
+  },
+  "attestation_limit": "trusted operator deployment chain and mounted assets; no GPU-memory attestation",
+  "tokenizer_parity": [
+    {
+      "item_id": "en-0",
+      "token_count": 11,
+      "exact_ids_match": true,
+      "ids_sha256": "2dea99708a0b8c784164b65454317196ad0b8e5b20249877deebb4ecddb807bb"
+    },
+    {
+      "item_id": "en-5",
+      "token_count": 21,
+      "exact_ids_match": true,
+      "ids_sha256": "1e07773a61badceeaaab58cf00f0b0599d3bbffa6e1e3139805279123ccd1f5a"
+    },
+    {
+      "item_id": "ru-0",
+      "token_count": 17,
+      "exact_ids_match": true,
+      "ids_sha256": "20ac96f99cd405fb54b68ed3c41ad297880d949c7a40d396ccdd01290ee7bfb2"
+    },
+    {
+      "item_id": "uk-0",
+      "token_count": 27,
+      "exact_ids_match": true,
+      "ids_sha256": "68fe046528714f05b05d88fcead585ec988ad37cb214e5b11bf0306baaad8ff1"
+    },
+    {
+      "item_id": "code-0",
+      "token_count": 17,
+      "exact_ids_match": true,
+      "ids_sha256": "043290771d959d99324c4734946f79b2b0c0cab444242ea1f31c605aeae177e8"
+    },
+    {
+      "item_id": "query-format",
+      "token_count": 22,
+      "exact_ids_match": true,
+      "ids_sha256": "30fb87cb674c1da91b8293d392de1d208b1d2950eb903ffe88bf0000b931b39a"
+    }
+  ],
+  "inference": {
+    "status": "PASS",
+    "representative_texts": 30,
+    "purposes": [
+      "document",
+      "query"
+    ],
+    "records": [
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-0",
+          "en-1",
+          "en-2",
+          "en-3",
+          "en-4",
+          "en-5",
+          "ru-0",
+          "ru-1"
+        ],
+        "source_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a",
+          "1ec6cbadb7a4f409152566bb45621a0a02ce838becd5b0391fa8a8190610c4a8",
+          "3954a252f4d39ddb4915d809a19c047ea8b9c3dec3be119cd212406f0532ea96",
+          "3cbefd2e564ebadba32d4775fbabe13e820f37cd280a3255fa262755336ac386",
+          "a488d2db473c69a287c53e2e45a2dc1ad51d91ff5ab406c3698c3ac717cc43eb",
+          "d710fadaa649c0a9e84b58ac5b53bf726c75b95be54f68eb77e1341b88db49fa",
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d",
+          "1c23cedb0b6d2e0c4b6874e1ee839dd1489fdd067b02d1eed9c0cc48f203aa09"
+        ],
+        "sent_input_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a",
+          "1ec6cbadb7a4f409152566bb45621a0a02ce838becd5b0391fa8a8190610c4a8",
+          "3954a252f4d39ddb4915d809a19c047ea8b9c3dec3be119cd212406f0532ea96",
+          "3cbefd2e564ebadba32d4775fbabe13e820f37cd280a3255fa262755336ac386",
+          "a488d2db473c69a287c53e2e45a2dc1ad51d91ff5ab406c3698c3ac717cc43eb",
+          "660decc980b7b66ce2799cf648eca04c043dfd4d84fa82b091ef64835266e880",
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d",
+          "1c23cedb0b6d2e0c4b6874e1ee839dd1489fdd067b02d1eed9c0cc48f203aa09"
+        ],
+        "token_counts": [
+          11,
+          14,
+          11,
+          11,
+          12,
+          21,
+          17,
+          22
+        ],
+        "usage_tokens": 119,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 453.0000000004293,
+        "attested_wall_ms": 453.0000000004293,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999698782288,
+          0.9999999939428638,
+          1.0000000251136822,
+          1.0000000264195705,
+          0.9999999700696355,
+          0.9999999993706318,
+          0.9999999844370261,
+          1.000000010051388
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-2",
+          "ru-3",
+          "ru-4",
+          "ru-5",
+          "uk-0",
+          "uk-1",
+          "uk-2",
+          "uk-3"
+        ],
+        "source_hashes": [
+          "583d8f28f9a1b56d164680ab595a8006586b8ff96c04c73361b84969e6dfe577",
+          "5b6a19054b3407c837af216d49825c277ea24b6fe072ef9301cbc26b8d99a0a7",
+          "716ce9902bdfe8013383e13d2b76056931cc5dda2bd347c2077d04600e87f44a",
+          "03fb69db4ff1dc568280ab4208c258a1d388875455fdd3583df92e51389c58b9",
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d",
+          "9ee73b65b203a3d6c2647fe54d298d153de3a09c5cd7adf668d2cf75312db775",
+          "6437bbbefe0f7cbf8943145f3478a247e7113ac846fa69648af745ddef85760d",
+          "fc047ec70b2a07065685202a1d052eb29b31e63c1c01273dcbd9b7b81aa73164"
+        ],
+        "sent_input_hashes": [
+          "583d8f28f9a1b56d164680ab595a8006586b8ff96c04c73361b84969e6dfe577",
+          "5b6a19054b3407c837af216d49825c277ea24b6fe072ef9301cbc26b8d99a0a7",
+          "716ce9902bdfe8013383e13d2b76056931cc5dda2bd347c2077d04600e87f44a",
+          "03fb69db4ff1dc568280ab4208c258a1d388875455fdd3583df92e51389c58b9",
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d",
+          "9ee73b65b203a3d6c2647fe54d298d153de3a09c5cd7adf668d2cf75312db775",
+          "6437bbbefe0f7cbf8943145f3478a247e7113ac846fa69648af745ddef85760d",
+          "fc047ec70b2a07065685202a1d052eb29b31e63c1c01273dcbd9b7b81aa73164"
+        ],
+        "token_counts": [
+          26,
+          22,
+          23,
+          32,
+          27,
+          29,
+          27,
+          31
+        ],
+        "usage_tokens": 217,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 188.00000000010186,
+        "attested_wall_ms": 188.00000000010186,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999870332964,
+          1.0000000095839892,
+          0.9999999837354623,
+          0.9999999962480618,
+          1.0000000138974243,
+          0.9999999925814934,
+          1.0000000050368574,
+          0.9999999816055193
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-4",
+          "uk-5",
+          "code-0",
+          "code-1",
+          "code-2",
+          "code-3",
+          "code-4",
+          "code-5"
+        ],
+        "source_hashes": [
+          "c6388ac0033c404257b815d20f21c73ad8c4747c2bc4d654fc822f2478f2d662",
+          "71c01aaa7cd8cef38a7a614d3698286cccbf0b7f6250b8ebcb38f13a4337ad54",
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506",
+          "d62476d42eadbf7427e1bc78ad02fac8c502c7d2c013f110b632e255a7fce404",
+          "c51d9af5e9b4fcdfeb7b8ca9467e5f49daa7101bdcf4fca15022be852fde3693",
+          "13901783c46043fd20dc85b445f134fa39f4a4a90fe4e17670db0ac2d6aefcf4",
+          "a66c9c0ed7c2fb9b04c0b7ac00470b7948a5d9cbe80d6cfe23fb7dab76240b2d",
+          "e407c8f8a62cb8d7e67ae037d88c356046644c6f51bc31ee8e09ad9b6df0eb70"
+        ],
+        "sent_input_hashes": [
+          "c6388ac0033c404257b815d20f21c73ad8c4747c2bc4d654fc822f2478f2d662",
+          "71c01aaa7cd8cef38a7a614d3698286cccbf0b7f6250b8ebcb38f13a4337ad54",
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506",
+          "d62476d42eadbf7427e1bc78ad02fac8c502c7d2c013f110b632e255a7fce404",
+          "c51d9af5e9b4fcdfeb7b8ca9467e5f49daa7101bdcf4fca15022be852fde3693",
+          "13901783c46043fd20dc85b445f134fa39f4a4a90fe4e17670db0ac2d6aefcf4",
+          "a66c9c0ed7c2fb9b04c0b7ac00470b7948a5d9cbe80d6cfe23fb7dab76240b2d",
+          "e407c8f8a62cb8d7e67ae037d88c356046644c6f51bc31ee8e09ad9b6df0eb70"
+        ],
+        "token_counts": [
+          31,
+          39,
+          17,
+          17,
+          20,
+          16,
+          18,
+          19
+        ],
+        "usage_tokens": 177,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 202.9999999995198,
+        "attested_wall_ms": 202.9999999995198,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999818831734,
+          1.0000000231280999,
+          0.9999999940297243,
+          1.0000000213471383,
+          0.999999984171981,
+          0.9999999751041984,
+          0.9999999882676313,
+          0.9999999875324996
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-0",
+          "long-1",
+          "long-2",
+          "long-3",
+          "long-4",
+          "long-5"
+        ],
+        "source_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333",
+          "68b0358fe7e2c35421e483295ed742e9e0225e9479c5b7f0195f977ddf66924d",
+          "3a81ad6735a6042e1d268886d15e62d41e505e078298b83529f9de61ec46c702",
+          "13a8a07e0786ad4ff1c8c9730cca3e527542d4b1eccdb5becdd3513de55abc53",
+          "024e795619d598f3daba6fc7b3c1010c0701c6b5e9efe7a3ea6b1dbaaa247c6f",
+          "95225f21e7dbca9f7d8d4348269a293a641316549d894f285582134d78417a9c"
+        ],
+        "sent_input_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333",
+          "68b0358fe7e2c35421e483295ed742e9e0225e9479c5b7f0195f977ddf66924d",
+          "3a81ad6735a6042e1d268886d15e62d41e505e078298b83529f9de61ec46c702",
+          "13a8a07e0786ad4ff1c8c9730cca3e527542d4b1eccdb5becdd3513de55abc53",
+          "024e795619d598f3daba6fc7b3c1010c0701c6b5e9efe7a3ea6b1dbaaa247c6f",
+          "95225f21e7dbca9f7d8d4348269a293a641316549d894f285582134d78417a9c"
+        ],
+        "token_counts": [
+          322,
+          1058,
+          1490,
+          385,
+          2562,
+          2002
+        ],
+        "usage_tokens": 7819,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 719.0000000000509,
+        "attested_wall_ms": 719.0000000000509,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999955342788,
+          1.0000000060181349,
+          0.9999999866363086,
+          0.9999999852071827,
+          1.0000000119103485,
+          1.0000000175712578
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "en-0",
+          "en-1",
+          "en-2",
+          "en-3",
+          "en-4",
+          "en-5",
+          "ru-0",
+          "ru-1"
+        ],
+        "source_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a",
+          "1ec6cbadb7a4f409152566bb45621a0a02ce838becd5b0391fa8a8190610c4a8",
+          "3954a252f4d39ddb4915d809a19c047ea8b9c3dec3be119cd212406f0532ea96",
+          "3cbefd2e564ebadba32d4775fbabe13e820f37cd280a3255fa262755336ac386",
+          "a488d2db473c69a287c53e2e45a2dc1ad51d91ff5ab406c3698c3ac717cc43eb",
+          "d710fadaa649c0a9e84b58ac5b53bf726c75b95be54f68eb77e1341b88db49fa",
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d",
+          "1c23cedb0b6d2e0c4b6874e1ee839dd1489fdd067b02d1eed9c0cc48f203aa09"
+        ],
+        "sent_input_hashes": [
+          "61bb4f5be2c8374bff51b1f64dcc4bb5044f3c93f2395a0f1795c61e9db40f53",
+          "0f59288437c4d2508b7ca0c1de0a6949f3e8632ba12fbe493bf91d9a21fa6f44",
+          "772e6be549d89fd7198539a61868e8758cff277158f47ff15f9d133b04b9e313",
+          "7afaaa0e06e5a5daca306f983a7647ad52bfb1ecae51c7664658aea1175cf53f",
+          "bc5395fdd1fedc2e693070e22eecb54d2296aad68391718df631ee0af4ed969d",
+          "b3ef2a9de62f11492e510a4860a5f119328a5e380bcc75781c847430085da9f5",
+          "bc9fd0dd5aac16a5ab0827a5c2f3e0237158cd5a26c9cdcebcbe6b9bd471489d",
+          "e52e8de91fc6ee7dec57e9882e945edf4d33fa2d345f9e63896c33c2db918620"
+        ],
+        "token_counts": [
+          30,
+          33,
+          30,
+          30,
+          31,
+          38,
+          36,
+          41
+        ],
+        "usage_tokens": 269,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 234.99999999967258,
+        "attested_wall_ms": 234.99999999967258,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000108171465,
+          1.0000000034904317,
+          0.9999999963112916,
+          0.999999982185284,
+          1.0000000107046152,
+          1.000000028503896,
+          1.0000000235894164,
+          0.9999999889106757
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "ru-2",
+          "ru-3",
+          "ru-4",
+          "ru-5",
+          "uk-0",
+          "uk-1",
+          "uk-2",
+          "uk-3"
+        ],
+        "source_hashes": [
+          "583d8f28f9a1b56d164680ab595a8006586b8ff96c04c73361b84969e6dfe577",
+          "5b6a19054b3407c837af216d49825c277ea24b6fe072ef9301cbc26b8d99a0a7",
+          "716ce9902bdfe8013383e13d2b76056931cc5dda2bd347c2077d04600e87f44a",
+          "03fb69db4ff1dc568280ab4208c258a1d388875455fdd3583df92e51389c58b9",
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d",
+          "9ee73b65b203a3d6c2647fe54d298d153de3a09c5cd7adf668d2cf75312db775",
+          "6437bbbefe0f7cbf8943145f3478a247e7113ac846fa69648af745ddef85760d",
+          "fc047ec70b2a07065685202a1d052eb29b31e63c1c01273dcbd9b7b81aa73164"
+        ],
+        "sent_input_hashes": [
+          "4faeecbb0c43de7564b49235734d301d12d280390f0caddadbafaab03c5da7dd",
+          "a91e81501f3e157f56a1f19b7dd3529ac3c39956a440c01bad29d5866d8621de",
+          "0095c0b2fa36e55588c3dfc27a087141544dbe99103581abd4a63005a4f9cdf1",
+          "d0ec15f5324f93a9a3cf997771bd9bdfe0476d0f4d8ce7f88b040b05cf844249",
+          "731237f78f404104099f2ec019f44a47408159064d784ed33029eda9c591c797",
+          "3d744fca3359f1bcbe2a14511b2e7175a8b68ae0b5c8e3f315a97ff81e6b4bb1",
+          "59548b08e47d05a825261404040683e34af398495a055a8cd060129abe2f67e7",
+          "207f3fd1a5abb5b594b3a88fe821303e698682bff7d3fe53b921313da1bccba7"
+        ],
+        "token_counts": [
+          45,
+          40,
+          40,
+          51,
+          46,
+          48,
+          46,
+          51
+        ],
+        "usage_tokens": 367,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 203.00000000042928,
+        "attested_wall_ms": 203.00000000042928,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999992780202,
+          1.0000000064202892,
+          0.9999999715081347,
+          0.9999999967634959,
+          1.000000007977264,
+          0.9999999442870631,
+          1.000000011306342,
+          1.0000000227422006
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "uk-4",
+          "uk-5",
+          "code-0",
+          "code-1",
+          "code-2",
+          "code-3",
+          "code-4",
+          "code-5"
+        ],
+        "source_hashes": [
+          "c6388ac0033c404257b815d20f21c73ad8c4747c2bc4d654fc822f2478f2d662",
+          "71c01aaa7cd8cef38a7a614d3698286cccbf0b7f6250b8ebcb38f13a4337ad54",
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506",
+          "d62476d42eadbf7427e1bc78ad02fac8c502c7d2c013f110b632e255a7fce404",
+          "c51d9af5e9b4fcdfeb7b8ca9467e5f49daa7101bdcf4fca15022be852fde3693",
+          "13901783c46043fd20dc85b445f134fa39f4a4a90fe4e17670db0ac2d6aefcf4",
+          "a66c9c0ed7c2fb9b04c0b7ac00470b7948a5d9cbe80d6cfe23fb7dab76240b2d",
+          "e407c8f8a62cb8d7e67ae037d88c356046644c6f51bc31ee8e09ad9b6df0eb70"
+        ],
+        "sent_input_hashes": [
+          "4652cb33bd66f307de6626b0cd9ee847aa65788081af840b7a62d3ec0f898ced",
+          "a34c13b27fb29e3ac8d0e6851c24f14e1f8f8ac6e38eb2379f15de097ed97db0",
+          "85e35e3a3b654899d3269c07bc12a9b3d8f7f03572ecf0bea25b18122b278ef5",
+          "78f1ee875c9e0224b86139b169778a2d5de5ac43785fd3917a02533c0b8b5188",
+          "30e5c690fed810a17fb227d8ec842872eac9f25d546c1f03091ffe83b308a939",
+          "a8a1bc9d996e21220cd895ca873ab80e126127ba79f14a08b815fab80106fb1d",
+          "72ba3415e8f3e954c0a09143792b589db13e4f1b224ff16b58f72957f4e81092",
+          "71430c975a74a32691a6a17b5a37e72cdb7afa5de09e100aa64287fedd884046"
+        ],
+        "token_counts": [
+          50,
+          58,
+          36,
+          36,
+          39,
+          35,
+          37,
+          38
+        ],
+        "usage_tokens": 329,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 217.9999999998472,
+        "attested_wall_ms": 217.9999999998472,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999764506388,
+          0.9999999982318803,
+          1.0000000168236673,
+          1.0000000003932699,
+          1.0000000127968989,
+          1.0000000123125201,
+          1.0000000148446113,
+          0.999999996337722
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "long-0",
+          "long-1",
+          "long-2",
+          "long-3",
+          "long-4",
+          "long-5"
+        ],
+        "source_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333",
+          "68b0358fe7e2c35421e483295ed742e9e0225e9479c5b7f0195f977ddf66924d",
+          "3a81ad6735a6042e1d268886d15e62d41e505e078298b83529f9de61ec46c702",
+          "13a8a07e0786ad4ff1c8c9730cca3e527542d4b1eccdb5becdd3513de55abc53",
+          "024e795619d598f3daba6fc7b3c1010c0701c6b5e9efe7a3ea6b1dbaaa247c6f",
+          "95225f21e7dbca9f7d8d4348269a293a641316549d894f285582134d78417a9c"
+        ],
+        "sent_input_hashes": [
+          "a62f3b7c6935a607f102a7887c6326698d38a1d8a2579a9533697afc63168b5b",
+          "873c06717cf288a9afd7a3137c3d3961c0a8356662b02ed54d384c62fda8eb4c",
+          "aaf6adb0ca96d93c37c9dc95986986da460436e38fa51d3ff1ea78ddfed449d7",
+          "2ac3c506beff3b26c8e15a5bc8b0f019ba75fc425a2d97e44f2f6029d0307675",
+          "7ba865fc7a28dd812112f108eba4944890b52e65b3a3cd1c3e8b43330ac0bc9d",
+          "3ae9b186f00b1545bea65f8c06a3853d372920d9f8cafa9f4e56507990a4a2af"
+        ],
+        "token_counts": [
+          341,
+          1077,
+          1509,
+          404,
+          2581,
+          2021
+        ],
+        "usage_tokens": 7933,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 813.0000000001019,
+        "attested_wall_ms": 813.0000000001019,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000093985393,
+          1.0000000086209961,
+          1.0000000231546482,
+          1.0000000010640349,
+          1.0000000307751582,
+          1.0000000280915222
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-0"
+        ],
+        "source_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a"
+        ],
+        "sent_input_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a"
+        ],
+        "token_counts": [
+          11
+        ],
+        "usage_tokens": 11,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          0.999999990199977
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-1"
+        ],
+        "source_hashes": [
+          "1ec6cbadb7a4f409152566bb45621a0a02ce838becd5b0391fa8a8190610c4a8"
+        ],
+        "sent_input_hashes": [
+          "1ec6cbadb7a4f409152566bb45621a0a02ce838becd5b0391fa8a8190610c4a8"
+        ],
+        "token_counts": [
+          14
+        ],
+        "usage_tokens": 14,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 109.00000000037835,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999746971324
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-2"
+        ],
+        "source_hashes": [
+          "3954a252f4d39ddb4915d809a19c047ea8b9c3dec3be119cd212406f0532ea96"
+        ],
+        "sent_input_hashes": [
+          "3954a252f4d39ddb4915d809a19c047ea8b9c3dec3be119cd212406f0532ea96"
+        ],
+        "token_counts": [
+          11
+        ],
+        "usage_tokens": 11,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999725504629
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-3"
+        ],
+        "source_hashes": [
+          "3cbefd2e564ebadba32d4775fbabe13e820f37cd280a3255fa262755336ac386"
+        ],
+        "sent_input_hashes": [
+          "3cbefd2e564ebadba32d4775fbabe13e820f37cd280a3255fa262755336ac386"
+        ],
+        "token_counts": [
+          11
+        ],
+        "usage_tokens": 11,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.00000000032742,
+        "attested_wall_ms": 140.00000000032742,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999754622815
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-4"
+        ],
+        "source_hashes": [
+          "a488d2db473c69a287c53e2e45a2dc1ad51d91ff5ab406c3698c3ac717cc43eb"
+        ],
+        "sent_input_hashes": [
+          "a488d2db473c69a287c53e2e45a2dc1ad51d91ff5ab406c3698c3ac717cc43eb"
+        ],
+        "token_counts": [
+          12
+        ],
+        "usage_tokens": 12,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000312664123
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "en-5"
+        ],
+        "source_hashes": [
+          "d710fadaa649c0a9e84b58ac5b53bf726c75b95be54f68eb77e1341b88db49fa"
+        ],
+        "sent_input_hashes": [
+          "660decc980b7b66ce2799cf648eca04c043dfd4d84fa82b091ef64835266e880"
+        ],
+        "token_counts": [
+          21
+        ],
+        "usage_tokens": 21,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000297576352
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-0"
+        ],
+        "source_hashes": [
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d"
+        ],
+        "sent_input_hashes": [
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d"
+        ],
+        "token_counts": [
+          17
+        ],
+        "usage_tokens": 17,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 155.99999999994907,
+        "attested_wall_ms": 155.99999999994907,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999844150584
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-1"
+        ],
+        "source_hashes": [
+          "1c23cedb0b6d2e0c4b6874e1ee839dd1489fdd067b02d1eed9c0cc48f203aa09"
+        ],
+        "sent_input_hashes": [
+          "1c23cedb0b6d2e0c4b6874e1ee839dd1489fdd067b02d1eed9c0cc48f203aa09"
+        ],
+        "token_counts": [
+          22
+        ],
+        "usage_tokens": 22,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          1.000000007485163
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-2"
+        ],
+        "source_hashes": [
+          "583d8f28f9a1b56d164680ab595a8006586b8ff96c04c73361b84969e6dfe577"
+        ],
+        "sent_input_hashes": [
+          "583d8f28f9a1b56d164680ab595a8006586b8ff96c04c73361b84969e6dfe577"
+        ],
+        "token_counts": [
+          26
+        ],
+        "usage_tokens": 26,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 141.00000000053114,
+        "attested_wall_ms": 141.00000000053114,
+        "dimensions": 2560,
+        "norms": [
+          1.00000001262712
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-3"
+        ],
+        "source_hashes": [
+          "5b6a19054b3407c837af216d49825c277ea24b6fe072ef9301cbc26b8d99a0a7"
+        ],
+        "sent_input_hashes": [
+          "5b6a19054b3407c837af216d49825c277ea24b6fe072ef9301cbc26b8d99a0a7"
+        ],
+        "token_counts": [
+          22
+        ],
+        "usage_tokens": 22,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 139.99999999941792,
+        "attested_wall_ms": 139.99999999941792,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999836011404
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-4"
+        ],
+        "source_hashes": [
+          "716ce9902bdfe8013383e13d2b76056931cc5dda2bd347c2077d04600e87f44a"
+        ],
+        "sent_input_hashes": [
+          "716ce9902bdfe8013383e13d2b76056931cc5dda2bd347c2077d04600e87f44a"
+        ],
+        "token_counts": [
+          23
+        ],
+        "usage_tokens": 23,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 141.00000000053114,
+        "attested_wall_ms": 141.00000000053114,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999732073012
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "ru-5"
+        ],
+        "source_hashes": [
+          "03fb69db4ff1dc568280ab4208c258a1d388875455fdd3583df92e51389c58b9"
+        ],
+        "sent_input_hashes": [
+          "03fb69db4ff1dc568280ab4208c258a1d388875455fdd3583df92e51389c58b9"
+        ],
+        "token_counts": [
+          32
+        ],
+        "usage_tokens": 32,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999866054293
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-0"
+        ],
+        "source_hashes": [
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d"
+        ],
+        "sent_input_hashes": [
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d"
+        ],
+        "token_counts": [
+          27
+        ],
+        "usage_tokens": 27,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999692221421
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-1"
+        ],
+        "source_hashes": [
+          "9ee73b65b203a3d6c2647fe54d298d153de3a09c5cd7adf668d2cf75312db775"
+        ],
+        "sent_input_hashes": [
+          "9ee73b65b203a3d6c2647fe54d298d153de3a09c5cd7adf668d2cf75312db775"
+        ],
+        "token_counts": [
+          29
+        ],
+        "usage_tokens": 29,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999787255025
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-2"
+        ],
+        "source_hashes": [
+          "6437bbbefe0f7cbf8943145f3478a247e7113ac846fa69648af745ddef85760d"
+        ],
+        "sent_input_hashes": [
+          "6437bbbefe0f7cbf8943145f3478a247e7113ac846fa69648af745ddef85760d"
+        ],
+        "token_counts": [
+          27
+        ],
+        "usage_tokens": 27,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.00000000032742,
+        "attested_wall_ms": 140.00000000032742,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999784911185
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-3"
+        ],
+        "source_hashes": [
+          "fc047ec70b2a07065685202a1d052eb29b31e63c1c01273dcbd9b7b81aa73164"
+        ],
+        "sent_input_hashes": [
+          "fc047ec70b2a07065685202a1d052eb29b31e63c1c01273dcbd9b7b81aa73164"
+        ],
+        "token_counts": [
+          31
+        ],
+        "usage_tokens": 31,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999927254516
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-4"
+        ],
+        "source_hashes": [
+          "c6388ac0033c404257b815d20f21c73ad8c4747c2bc4d654fc822f2478f2d662"
+        ],
+        "sent_input_hashes": [
+          "c6388ac0033c404257b815d20f21c73ad8c4747c2bc4d654fc822f2478f2d662"
+        ],
+        "token_counts": [
+          31
+        ],
+        "usage_tokens": 31,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.00000000032742,
+        "attested_wall_ms": 140.00000000032742,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999818831734
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "uk-5"
+        ],
+        "source_hashes": [
+          "71c01aaa7cd8cef38a7a614d3698286cccbf0b7f6250b8ebcb38f13a4337ad54"
+        ],
+        "sent_input_hashes": [
+          "71c01aaa7cd8cef38a7a614d3698286cccbf0b7f6250b8ebcb38f13a4337ad54"
+        ],
+        "token_counts": [
+          39
+        ],
+        "usage_tokens": 39,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          1.000000030396551
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "code-0"
+        ],
+        "source_hashes": [
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506"
+        ],
+        "sent_input_hashes": [
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506"
+        ],
+        "token_counts": [
+          17
+        ],
+        "usage_tokens": 17,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 141.00000000053114,
+        "attested_wall_ms": 141.00000000053114,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999907117266
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "code-1"
+        ],
+        "source_hashes": [
+          "d62476d42eadbf7427e1bc78ad02fac8c502c7d2c013f110b632e255a7fce404"
+        ],
+        "sent_input_hashes": [
+          "d62476d42eadbf7427e1bc78ad02fac8c502c7d2c013f110b632e255a7fce404"
+        ],
+        "token_counts": [
+          17
+        ],
+        "usage_tokens": 17,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 155.99999999994907,
+        "attested_wall_ms": 155.99999999994907,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000222115109
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "code-2"
+        ],
+        "source_hashes": [
+          "c51d9af5e9b4fcdfeb7b8ca9467e5f49daa7101bdcf4fca15022be852fde3693"
+        ],
+        "sent_input_hashes": [
+          "c51d9af5e9b4fcdfeb7b8ca9467e5f49daa7101bdcf4fca15022be852fde3693"
+        ],
+        "token_counts": [
+          20
+        ],
+        "usage_tokens": 20,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999944850478
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "code-3"
+        ],
+        "source_hashes": [
+          "13901783c46043fd20dc85b445f134fa39f4a4a90fe4e17670db0ac2d6aefcf4"
+        ],
+        "sent_input_hashes": [
+          "13901783c46043fd20dc85b445f134fa39f4a4a90fe4e17670db0ac2d6aefcf4"
+        ],
+        "token_counts": [
+          16
+        ],
+        "usage_tokens": 16,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 171.0000000002765,
+        "attested_wall_ms": 171.0000000002765,
+        "dimensions": 2560,
+        "norms": [
+          1.000000011966586
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "code-4"
+        ],
+        "source_hashes": [
+          "a66c9c0ed7c2fb9b04c0b7ac00470b7948a5d9cbe80d6cfe23fb7dab76240b2d"
+        ],
+        "sent_input_hashes": [
+          "a66c9c0ed7c2fb9b04c0b7ac00470b7948a5d9cbe80d6cfe23fb7dab76240b2d"
+        ],
+        "token_counts": [
+          18
+        ],
+        "usage_tokens": 18,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000285616029
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "code-5"
+        ],
+        "source_hashes": [
+          "e407c8f8a62cb8d7e67ae037d88c356046644c6f51bc31ee8e09ad9b6df0eb70"
+        ],
+        "sent_input_hashes": [
+          "e407c8f8a62cb8d7e67ae037d88c356046644c6f51bc31ee8e09ad9b6df0eb70"
+        ],
+        "token_counts": [
+          19
+        ],
+        "usage_tokens": 19,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 155.99999999994907,
+        "attested_wall_ms": 155.99999999994907,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000290346773
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-0"
+        ],
+        "source_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333"
+        ],
+        "sent_input_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333"
+        ],
+        "token_counts": [
+          322
+        ],
+        "usage_tokens": 322,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 203.00000000042928,
+        "attested_wall_ms": 203.00000000042928,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999955342788
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-1"
+        ],
+        "source_hashes": [
+          "68b0358fe7e2c35421e483295ed742e9e0225e9479c5b7f0195f977ddf66924d"
+        ],
+        "sent_input_hashes": [
+          "68b0358fe7e2c35421e483295ed742e9e0225e9479c5b7f0195f977ddf66924d"
+        ],
+        "token_counts": [
+          1058
+        ],
+        "usage_tokens": 1058,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 313.00000000010186,
+        "attested_wall_ms": 313.00000000010186,
+        "dimensions": 2560,
+        "norms": [
+          1.00000002875969
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-2"
+        ],
+        "source_hashes": [
+          "3a81ad6735a6042e1d268886d15e62d41e505e078298b83529f9de61ec46c702"
+        ],
+        "sent_input_hashes": [
+          "3a81ad6735a6042e1d268886d15e62d41e505e078298b83529f9de61ec46c702"
+        ],
+        "token_counts": [
+          1490
+        ],
+        "usage_tokens": 1490,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 219.00000000005093,
+        "attested_wall_ms": 219.00000000005093,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000083497838
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-3"
+        ],
+        "source_hashes": [
+          "13a8a07e0786ad4ff1c8c9730cca3e527542d4b1eccdb5becdd3513de55abc53"
+        ],
+        "sent_input_hashes": [
+          "13a8a07e0786ad4ff1c8c9730cca3e527542d4b1eccdb5becdd3513de55abc53"
+        ],
+        "token_counts": [
+          385
+        ],
+        "usage_tokens": 385,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 155.99999999994907,
+        "attested_wall_ms": 155.99999999994907,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999852071827
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-4"
+        ],
+        "source_hashes": [
+          "024e795619d598f3daba6fc7b3c1010c0701c6b5e9efe7a3ea6b1dbaaa247c6f"
+        ],
+        "sent_input_hashes": [
+          "024e795619d598f3daba6fc7b3c1010c0701c6b5e9efe7a3ea6b1dbaaa247c6f"
+        ],
+        "token_counts": [
+          2562
+        ],
+        "usage_tokens": 2562,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 296.9999999995707,
+        "attested_wall_ms": 296.9999999995707,
+        "dimensions": 2560,
+        "norms": [
+          1.000000000654659
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "long-5"
+        ],
+        "source_hashes": [
+          "95225f21e7dbca9f7d8d4348269a293a641316549d894f285582134d78417a9c"
+        ],
+        "sent_input_hashes": [
+          "95225f21e7dbca9f7d8d4348269a293a641316549d894f285582134d78417a9c"
+        ],
+        "token_counts": [
+          2002
+        ],
+        "usage_tokens": 2002,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 265.0000000003274,
+        "attested_wall_ms": 265.0000000003274,
+        "dimensions": 2560,
+        "norms": [
+          1.000000030210977
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "en-0"
+        ],
+        "source_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a"
+        ],
+        "sent_input_hashes": [
+          "61bb4f5be2c8374bff51b1f64dcc4bb5044f3c93f2395a0f1795c61e9db40f53"
+        ],
+        "token_counts": [
+          30
+        ],
+        "usage_tokens": 30,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000053431433
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "en-0"
+        ],
+        "source_hashes": [
+          "837abee78e8e39af7d255905374278b24f7442f55c6fc342a568c9e4367aa39a"
+        ],
+        "sent_input_hashes": [
+          "61bb4f5be2c8374bff51b1f64dcc4bb5044f3c93f2395a0f1795c61e9db40f53"
+        ],
+        "token_counts": [
+          30
+        ],
+        "usage_tokens": 30,
+        "usage_provenance": "tokenizer_counted_proxy",
+        "route": "native-diagnostic",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000053431433
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "ru-0"
+        ],
+        "source_hashes": [
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d"
+        ],
+        "sent_input_hashes": [
+          "bc9fd0dd5aac16a5ab0827a5c2f3e0237158cd5a26c9cdcebcbe6b9bd471489d"
+        ],
+        "token_counts": [
+          36
+        ],
+        "usage_tokens": 36,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999963898065
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "ru-0"
+        ],
+        "source_hashes": [
+          "ff2a175d37ca8d8b268e9d2abf4b2426db61bd4ae27da5778030317765108a1d"
+        ],
+        "sent_input_hashes": [
+          "bc9fd0dd5aac16a5ab0827a5c2f3e0237158cd5a26c9cdcebcbe6b9bd471489d"
+        ],
+        "token_counts": [
+          36
+        ],
+        "usage_tokens": 36,
+        "usage_provenance": "tokenizer_counted_proxy",
+        "route": "native-diagnostic",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999963898065
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "uk-0"
+        ],
+        "source_hashes": [
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d"
+        ],
+        "sent_input_hashes": [
+          "731237f78f404104099f2ec019f44a47408159064d784ed33029eda9c591c797"
+        ],
+        "token_counts": [
+          46
+        ],
+        "usage_tokens": 46,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          1.000000017287305
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "uk-0"
+        ],
+        "source_hashes": [
+          "8d6043a401f22fbeac6e13c067651ff36d5a7c03f17751abac2202d62d3e319d"
+        ],
+        "sent_input_hashes": [
+          "731237f78f404104099f2ec019f44a47408159064d784ed33029eda9c591c797"
+        ],
+        "token_counts": [
+          46
+        ],
+        "usage_tokens": 46,
+        "usage_provenance": "tokenizer_counted_proxy",
+        "route": "native-diagnostic",
+        "adapter_duration_ms": 125.0,
+        "attested_wall_ms": 125.0,
+        "dimensions": 2560,
+        "norms": [
+          1.000000017287305
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "code-0"
+        ],
+        "source_hashes": [
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506"
+        ],
+        "sent_input_hashes": [
+          "85e35e3a3b654899d3269c07bc12a9b3d8f7f03572ecf0bea25b18122b278ef5"
+        ],
+        "token_counts": [
+          36
+        ],
+        "usage_tokens": 36,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 109.00000000037835,
+        "attested_wall_ms": 109.00000000037835,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000121861525
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "code-0"
+        ],
+        "source_hashes": [
+          "3d5a36fd76508777a1cc97f062d06e1f1121b6fc72a08ae5289df5265c270506"
+        ],
+        "sent_input_hashes": [
+          "85e35e3a3b654899d3269c07bc12a9b3d8f7f03572ecf0bea25b18122b278ef5"
+        ],
+        "token_counts": [
+          36
+        ],
+        "usage_tokens": 36,
+        "usage_provenance": "tokenizer_counted_proxy",
+        "route": "native-diagnostic",
+        "adapter_duration_ms": 140.99999999962165,
+        "attested_wall_ms": 140.99999999962165,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000121861525
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "long-0"
+        ],
+        "source_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333"
+        ],
+        "sent_input_hashes": [
+          "a62f3b7c6935a607f102a7887c6326698d38a1d8a2579a9533697afc63168b5b"
+        ],
+        "token_counts": [
+          341
+        ],
+        "usage_tokens": 341,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 155.99999999994907,
+        "attested_wall_ms": 155.99999999994907,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000093985393
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "long-0"
+        ],
+        "source_hashes": [
+          "7a722f1db2fff0726f45940314634566f38095e2941516d954db5e6cffd9e333"
+        ],
+        "sent_input_hashes": [
+          "a62f3b7c6935a607f102a7887c6326698d38a1d8a2579a9533697afc63168b5b"
+        ],
+        "token_counts": [
+          341
+        ],
+        "usage_tokens": 341,
+        "usage_provenance": "tokenizer_counted_proxy",
+        "route": "native-diagnostic",
+        "adapter_duration_ms": 157.0000000001528,
+        "attested_wall_ms": 157.0000000001528,
+        "dimensions": 2560,
+        "norms": [
+          1.0000000093985393
+        ]
+      },
+      {
+        "purpose": "document",
+        "item_ids": [
+          "boundary"
+        ],
+        "source_hashes": [
+          "a492906860b4ab0d32d8bc77276a3c430ddef15f3a6a2a7922439354e51efa16"
+        ],
+        "sent_input_hashes": [
+          "a492906860b4ab0d32d8bc77276a3c430ddef15f3a6a2a7922439354e51efa16"
+        ],
+        "token_counts": [
+          8192
+        ],
+        "usage_tokens": 8192,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 875.0,
+        "attested_wall_ms": 875.0,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999964479833
+        ]
+      },
+      {
+        "purpose": "query",
+        "item_ids": [
+          "boundary"
+        ],
+        "source_hashes": [
+          "7a5684f671ce77f47e4007208dd18171dedeb718336cde7fd82fdaba6b8f6224"
+        ],
+        "sent_input_hashes": [
+          "5f486629da5a9c9a01e04091d82381ddc6fcb47edcf28e8f47862fa58b9d8372"
+        ],
+        "token_counts": [
+          8192
+        ],
+        "usage_tokens": 8192,
+        "usage_provenance": "provider_reported",
+        "route": "openai",
+        "adapter_duration_ms": 858.9999999994689,
+        "attested_wall_ms": 858.9999999994689,
+        "dimensions": 2560,
+        "norms": [
+          0.9999999924325783
+        ]
+      }
+    ],
+    "ordering_batch_vs_all_document_singles": [
+      {
+        "item_id": "en-0",
+        "cosine": 0.9999979761086565,
+        "max_absolute_difference": 0.00030930499999999583
+      },
+      {
+        "item_id": "en-1",
+        "cosine": 0.9999931903325114,
+        "max_absolute_difference": 0.0002799307000000001
+      },
+      {
+        "item_id": "en-2",
+        "cosine": 0.9999975994328671,
+        "max_absolute_difference": 0.0002018517999999997
+      },
+      {
+        "item_id": "en-3",
+        "cosine": 0.999998057693696,
+        "max_absolute_difference": 0.00024110000000000797
+      },
+      {
+        "item_id": "en-4",
+        "cosine": 0.9999980182911431,
+        "max_absolute_difference": 0.00017623999999999765
+      },
+      {
+        "item_id": "en-5",
+        "cosine": 0.9999968867276311,
+        "max_absolute_difference": 0.0002094600000000016
+      },
+      {
+        "item_id": "ru-0",
+        "cosine": 0.9999976656392526,
+        "max_absolute_difference": 0.00022732500000000044
+      },
+      {
+        "item_id": "ru-1",
+        "cosine": 0.9999974931573156,
+        "max_absolute_difference": 0.0004069290000000003
+      },
+      {
+        "item_id": "ru-2",
+        "cosine": 0.9999969352898561,
+        "max_absolute_difference": 0.0003762230000000002
+      },
+      {
+        "item_id": "ru-3",
+        "cosine": 0.9999977328025057,
+        "max_absolute_difference": 0.00017564999999999942
+      },
+      {
+        "item_id": "ru-4",
+        "cosine": 0.9999976133942767,
+        "max_absolute_difference": 0.00022513000000000394
+      },
+      {
+        "item_id": "ru-5",
+        "cosine": 0.99999705686521,
+        "max_absolute_difference": 0.00019154700000000024
+      },
+      {
+        "item_id": "uk-0",
+        "cosine": 0.9999975471854372,
+        "max_absolute_difference": 0.0001793000000000003
+      },
+      {
+        "item_id": "uk-1",
+        "cosine": 0.9999974447760371,
+        "max_absolute_difference": 0.0002456079999999996
+      },
+      {
+        "item_id": "uk-2",
+        "cosine": 0.9999975308693881,
+        "max_absolute_difference": 0.00022630400000000356
+      },
+      {
+        "item_id": "uk-3",
+        "cosine": 0.9999979709752694,
+        "max_absolute_difference": 0.0003368774999999999
+      },
+      {
+        "item_id": "uk-4",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "uk-5",
+        "cosine": 0.9999974019085751,
+        "max_absolute_difference": 0.000196234999999996
+      },
+      {
+        "item_id": "code-0",
+        "cosine": 0.9999978910860009,
+        "max_absolute_difference": 0.00025651700000000124
+      },
+      {
+        "item_id": "code-1",
+        "cosine": 0.9999974993743143,
+        "max_absolute_difference": 0.00019682000000000033
+      },
+      {
+        "item_id": "code-2",
+        "cosine": 0.9999962979532168,
+        "max_absolute_difference": 0.000231195
+      },
+      {
+        "item_id": "code-3",
+        "cosine": 0.9999979711119396,
+        "max_absolute_difference": 0.00022106399999999998
+      },
+      {
+        "item_id": "code-4",
+        "cosine": 0.9999980725001735,
+        "max_absolute_difference": 0.00019622250000000084
+      },
+      {
+        "item_id": "code-5",
+        "cosine": 0.9999982076359287,
+        "max_absolute_difference": 0.00021658199999999989
+      },
+      {
+        "item_id": "long-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "long-1",
+        "cosine": 0.9999978931077337,
+        "max_absolute_difference": 0.00022628199999999432
+      },
+      {
+        "item_id": "long-2",
+        "cosine": 0.9999979453102208,
+        "max_absolute_difference": 0.00022168000000000188
+      },
+      {
+        "item_id": "long-3",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "long-4",
+        "cosine": 0.9999978440917727,
+        "max_absolute_difference": 0.00023567399999999822
+      },
+      {
+        "item_id": "long-5",
+        "cosine": 0.9999979906612614,
+        "max_absolute_difference": 0.0002135374999999995
+      }
+    ],
+    "repeatability_query_batch_vs_singles": [
+      {
+        "item_id": "en-0",
+        "cosine": 0.9999978467780455,
+        "max_absolute_difference": 0.0002522270000000007
+      },
+      {
+        "item_id": "ru-0",
+        "cosine": 0.9999973354963291,
+        "max_absolute_difference": 0.00022114400000000645
+      },
+      {
+        "item_id": "uk-0",
+        "cosine": 0.999997265242858,
+        "max_absolute_difference": 0.00023354999999999904
+      },
+      {
+        "item_id": "code-0",
+        "cosine": 0.9999966867183715,
+        "max_absolute_difference": 0.00022340200000000102
+      },
+      {
+        "item_id": "long-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      }
+    ],
+    "native_openai_parity": [
+      {
+        "item_id": "en-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "ru-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "uk-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "code-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      },
+      {
+        "item_id": "long-0",
+        "cosine": 1.0,
+        "max_absolute_difference": 0.0
+      }
+    ],
+    "boundary": [
+      {
+        "purpose": "document",
+        "accepted_tokens": 8192,
+        "next_repeat_refused_before_dispatch": true
+      },
+      {
+        "purpose": "query",
+        "accepted_tokens": 8192,
+        "next_repeat_refused_before_dispatch": true
+      }
+    ],
+    "cross_language_matched_document_cosine": {
+      "en-ru": {
+        "min": 0.6428174800877895,
+        "p50": 0.694713705932107,
+        "p95": 0.9159776171284015,
+        "max": 0.9159776171284015
+      },
+      "en-uk": {
+        "min": 0.5530904999010753,
+        "p50": 0.6412655087388354,
+        "p95": 0.8891910341185268,
+        "max": 0.8891910341185268
+      },
+      "ru-uk": {
+        "min": 0.8903903447940764,
+        "p50": 0.9271795901515568,
+        "p95": 0.9404261664859299,
+        "max": 0.9404261664859299
+      }
+    },
+    "quality_claim": "descriptive synthetic diagnostics only; no relevance-quality acceptance claim",
+    "first_observed_adapter_ms": 453.0000000004293,
+    "warm_adapter_latency_ms": {
+      "min": 109.00000000037835,
+      "p50": 141.00000000053114,
+      "p95": 813.0000000001019,
+      "max": 875.0
+    },
+    "warm_request_count": 44,
+    "provider_reported_tokens": 42435,
+    "adapter_token_throughput_tokens_per_second": 4166.012173571322,
+    "throughput_denominator": "sum of adapter call durations including input preparation and pre/post attestation",
+    "cold_start": "not measured by this harness; first-observed is the first inference in this run",
+    "qualified_concurrency": 1,
+    "maximum_sustainable_concurrency": "NOT TESTED",
+    "retries": 0,
+    "production_sustainable_tpm": "NOT_QUALIFIED"
+  },
+  "negative_diagnostics": {
+    "model_digest_mismatch": "IDENTITY_MISMATCH",
+    "tokenizer_digest_mismatch": "IDENTITY_MISMATCH",
+    "simulated_trusted_attestation_drift": "IDENTITY_MISMATCH",
+    "after_drift_provider_disabled": "NOT_QUALIFIED",
+    "simulated_client_unreachable_endpoint": "MODEL_UNAVAILABLE",
+    "scope": "real adapter and attestation; injected identity/client outage; dedicated TEI was not stopped or reloaded",
+    "inference_attempts_added": 0
+  },
+  "governor": {
+    "mode": "qualification_only",
+    "production_capacity_status": "NOT_QUALIFIED",
+    "global_external_share_confirmed": false,
+    "max_in_flight": 1,
+    "uncertain_execution": false,
+    "attempts_reserved": 50,
+    "attempts_sent": 50,
+    "attempts_finished": 50,
+    "attempts_successful": 50,
+    "admitted_token_estimates": 42924,
+    "provider_reported_tokens": 42435,
+    "tokenizer_counted_proxy_tokens": 489,
+    "unknown_usage_attempts": 0
+  },
+  "live_elapsed_seconds": 14.57799999999952,
+  "full_asset_hashes_unchanged_after_run": true
+}

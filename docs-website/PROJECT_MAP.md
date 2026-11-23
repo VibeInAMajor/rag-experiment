@@ -1,7 +1,7 @@
 # Project Map — RAG Experiment
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-23
+**Updated:** 2026-11-24
 **Status:** Repository-verified navigation document; not a runtime architecture specification.  
 **Evidence:** GitHub recursive tree `5e7086364f62d4f15b7370e55767a8f84ed4dc14` (12,946 files; complete tree), plus relevant source and README files, inspected on 2026-11-20.
 
@@ -18,6 +18,10 @@
 **Configuration update:** [CONFIG-001](../tasks/completed/TASK-CONFIG-001-document-splitting-and-default-language.md) owns strict external document-processing settings and their mapping to the existing splitter/native-counter seams. See the [operator reference](docs/architecture/document-processing-configuration.md). Implementation, offline/native-counter and local live/restart gates passed; 854 backend tests passed with zero skips. Prior metrics remain historical, with the [overwritten stability artifact limitation](docs/architecture/document-processing-configuration.md#test-artifact-isolation-and-historical-limitation) explicitly recorded.
 
 ## 1. Repository shape (verified)
+
+**Embedding qualification update (2026-11-23):** [EMBED-001](../tasks/TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md) adds the internal model-neutral embedding boundary, local TEI adapter and bounded shared qualification admission owner. The [operator guide](docs/architecture/local-embedding-provider.md) separates local model qualification from production TPM, durable vector ingestion and executable retrieval profiles. No new database migration or semantic HTTP capability follows from the provider boundary; see its evidence for actual live gate status.
+
+**Dedicated deployment follow-up (2026-11-24):** the project target is its own `rag-workbench-embedding-1` TEI service on loopback `8082`. Its [startup and inference record](../tasks/evidence/embedding-2026-11-23/dedicated-report.md) is separate from the original shared-service `8081` evidence. The container still shares the physical GPU; production TPM remains unqualified.
 
 **Generation update (2026-11-23):** inspected working-tree base `44866bb7e7dc01993bbaefefdec1ab1985951cc7`. [Persisted corpus generations](docs/architecture/persisted-index-generations.md) now establish lexical snapshots from a workspace manifest; publication and terminal jobs commit generations atomically. [INDEX-001](../tasks/TASK-RAG-INDEX-001-persisted-revision-and-consistent-search-snapshots.md) links real disposable PostgreSQL, 100k synthetic metadata and isolated restart evidence. Semantic coverage and ANN remain separate qualification work.
 
@@ -105,6 +109,9 @@ rag-experiment/
 | User story / concern | Existing owner | Reuse / inspect first |
 | --- | --- | --- |
 | Start local site, API, validator and PostgreSQL | `start.ps1` | Existing Compose/environment helper and service entry points; see `apps/workbench/api/README.md`; no automatic migration or seeding |
+| Qualify local query/document embeddings | `apps/workbench/api/embedding.py`, `embedding_adapters.py`, `embedding_dispatch.py`, `embedding_config.py`; `scripts/workbench_embedding_qualify.py` | Immutable neutral requests/profile, existing exact native counter, default-disabled `apps/workbench/embedding_profiles.yaml`, explicit runtime verifier and one exclusive bounded qualification owner; no executable semantic HTTP profile |
+| Start/reuse the dedicated Workbench TEI process | Root `start.ps1`, `apps/workbench/embedding/compose.yaml`, `apps/workbench/embedding/start.ps1` | Running containers stay untouched; stopped/missing model loads in background. Ignored local `.env` persists first-time source location; project endpoint 8082 and pinned project ownership |
+| Provision/verify Linux model-asset cache | `scripts/workbench_embedding_cache.py`, `scripts/workbench_embedding_qualify.py` | Nine approved source assets, project-owned read-only runtime volume, atomic verified revision publication; measured startup/qualification in the separate optimization record; no model conversion or download |
 | Application navigation, local pipeline/run/settings state, imports/exports | `apps/workbench/web/src/App.tsx` | Existing state and UI event handlers; avoid duplicate stores |
 | Node definitions, component labels, port schemas, defaults | `apps/workbench/web/src/domain/catalog.ts` | `catalog`, `createNode`, `getDefinition` |
 | Graph templates and mutations, validation, cycle/port checks | `apps/workbench/web/src/domain/graph.ts` | `createPipeline`, `validateGraph`, `validateConnection`, `topologicalNodeIds` |

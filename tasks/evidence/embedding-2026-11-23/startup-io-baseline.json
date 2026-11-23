@@ -1,0 +1,71 @@
+{
+  "scope": "Read-only CPU and storage diagnostics on the dedicated RAG TEI container; no model calls, copies or restarts",
+  "container_id": "bafcd45ee694b71461c0ba8e745c0da6a2ee35662f008473285a11544e17c3c3",
+  "model_revision": "5cf2132abc99cad020ac570b19d031efec650f2b",
+  "host_source": "A:/AI/TEI/qwen3-4b",
+  "host_storage": {"filesystem": "NTFS", "device": "KINGSTON SKC3000D2048G", "bus": "NVMe"},
+  "container_mount": {"filesystem": "9p/v9fs", "read_only": true, "msize": 65536, "mmap": true},
+  "startup_logs": {
+    "command": "docker logs --timestamps --tail 130 rag-workbench-embedding-1",
+    "flash_qwen3_start_utc": "2026-11-23T22:04:36.880558817Z",
+    "warmup_start_utc": "2026-11-23T22:08:25.450134103Z",
+    "http_ready_utc": "2026-11-23T22:08:35.059325237Z",
+    "model_load_wall_seconds": 228.569575286,
+    "warmup_wall_seconds": 9.609191134
+  },
+  "sequential_container_reads": [
+    {
+      "command": "docker exec rag-workbench-embedding-1 dd if=/models/5cf2132abc99cad020ac570b19d031efec650f2b/model-00001-of-00002.safetensors of=/dev/null bs=16M",
+      "bytes": 4965826464,
+      "seconds": 15.398,
+      "reported_megabytes_per_second": 322
+    },
+    {
+      "command": "docker exec rag-workbench-embedding-1 dd if=/models/5cf2132abc99cad020ac570b19d031efec650f2b/model-00002-of-00002.safetensors of=/dev/null bs=16M",
+      "bytes": 3077765624,
+      "seconds": 9.61516,
+      "reported_megabytes_per_second": 320
+    }
+  ],
+  "sequential_weight_read_total_seconds": 25.01316,
+  "host_sha256": {
+    "command": "$clock = [Diagnostics.Stopwatch]::StartNew(); Get-FileHash -LiteralPath 'A:\\AI\\TEI\\qwen3-4b\\model-00001-of-00002.safetensors' -Algorithm SHA256; Get-FileHash -LiteralPath 'A:\\AI\\TEI\\qwen3-4b\\model-00002-of-00002.safetensors' -Algorithm SHA256; $clock.Stop()",
+    "bytes": 8043592088,
+    "seconds": 7.0710605,
+    "official_pinned_hashes_match": true
+  },
+  "linux_overlay_control": {
+    "command": "docker exec rag-workbench-embedding-1 dd if=/usr/local/bin/text-embeddings-router of=/dev/null bs=16M",
+    "bytes": 1121673736,
+    "seconds": 0.526947,
+    "reported_gigabytes_per_second": 2.1,
+    "caveat": "Different existing Linux-native binary and cache state; this is not a controlled model startup or a predicted speedup"
+  },
+  "tei_pid1_cumulative": {
+    "command": "docker exec rag-workbench-embedding-1 perl -e 'open(my $fh,\"<\",\"/proc/1/stat\") or die \"stat unavailable\"; my @f=split(/\\s+/,<$fh>); print \"minflt=$f[9] majflt=$f[11] utime_ticks=$f[13] stime_ticks=$f[14] threads=$f[19]\\n\"; open(my $io,\"<\",\"/proc/1/io\") or die \"io unavailable\"; while(<$io>) { print if /^(rchar|syscr|read_bytes):/; }'",
+    "minor_page_faults": 399419,
+    "major_page_faults": 61696,
+    "user_cpu_ticks": 2674,
+    "system_cpu_ticks": 2144,
+    "clock_ticks_per_second": 100,
+    "clock_ticks_command": "docker exec rag-workbench-embedding-1 getconf CLK_TCK",
+    "read_bytes": 8053039104,
+    "rchar": 29178397,
+    "syscr": 388,
+    "threads": 37,
+    "caveat": "Cumulative after startup and the preceding qualification; CPU/fault counters are not an isolated startup profile"
+  },
+  "cached_scattered_read_control": {
+    "perl_probe": "open(my $fh,\"<\",$ARGV[0]) or die \"open failed\"; binmode($fh); my $size=-s $fh; my $bytes=0; for my $i (0..4095) { my $at=(($i*104729)%int($size/4096))*4096; sysseek($fh,$at,0); my $count=sysread($fh,my $buffer,4096); die \"read failed\" unless defined($count); $bytes+=$count; } print \"reads=4096 bytes=$bytes\\n\";",
+    "command_template": "docker exec rag-workbench-embedding-1 perl -e PROBE FILE; elapsed measured with PowerShell Stopwatch",
+    "bytes_per_file": 16777216,
+    "windows_bind_wall_seconds": 0.5798418,
+    "linux_overlay_wall_seconds": 0.6802943,
+    "caveat": "Already-cached samples; no meaningful Windows/Linux advantage observed in this microprobe"
+  },
+  "interpretation": "A Linux-native cache is a justified experiment: mmap over 9p can incur page-fault overhead. Sequential read and cumulative counters do not prove the full startup cause; only a subsequent controlled model reload can establish the improvement.",
+  "sources": [
+    "https://raw.githubusercontent.com/huggingface/text-embeddings-inference/e80ef225ed0e6cb1717ce632a6a84b6cf211bb67/backends/candle/src/lib.rs",
+    "https://docs.docker.com/desktop/features/wsl/best-practices/"
+  ]
+}

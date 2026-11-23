@@ -187,6 +187,7 @@ uv.lock
 
 # Workbench database credentials and local backups
 apps/workbench/postgres/.env
+apps/workbench/embedding/.env
 apps/workbench/postgres/backups/
 
 tasks/evidence/*
@@ -211,3 +212,34 @@ tasks/evidence/profile-2026-11-23/*
 !tasks/evidence/profile-2026-11-23/profile-selected-1440.png
 !tasks/evidence/profile-2026-11-23/profile-selected-1100.png
 !tasks/evidence/profile-2026-11-23/profile-recovered-1440.png
+!tasks/evidence/embedding-2026-11-23/
+tasks/evidence/embedding-2026-11-23/*
+!tasks/evidence/embedding-2026-11-23/report.md
+!tasks/evidence/embedding-2026-11-23/dispatch-tests.xml
+!tasks/evidence/embedding-2026-11-23/runtime.json
+!tasks/evidence/embedding-2026-11-23/metadata.json
+!tasks/evidence/embedding-2026-11-23/live-tests.xml
+!tasks/evidence/embedding-2026-11-23/api-tests.xml
+!tasks/evidence/embedding-2026-11-23/database-tests.xml
+!tasks/evidence/embedding-2026-11-23/quality-checks.txt
+!tasks/evidence/embedding-2026-11-23/embedding-tests.xml
+!tasks/evidence/embedding-2026-11-23/attestation-tests.xml
+!tasks/evidence/embedding-2026-11-23/dedicated-report.md
+!tasks/evidence/embedding-2026-11-23/dedicated-runtime.json
+!tasks/evidence/embedding-2026-11-23/dedicated-startup.json
+!tasks/evidence/embedding-2026-11-23/dedicated-attestation-tests.xml
+!tasks/evidence/embedding-2026-11-23/dedicated-regressions.xml
+!tasks/evidence/embedding-2026-11-23/dedicated-initial-live-tests.xml
+!tasks/evidence/embedding-2026-11-23/dedicated-live-tests.xml
+!tasks/evidence/embedding-2026-11-23/dedicated-quality-checks.txt
+!tasks/evidence/embedding-2026-11-23/dedicated-reuse.json
+!tasks/evidence/embedding-2026-11-23/optimized-report.md
+!tasks/evidence/embedding-2026-11-23/optimized-cache.json
+!tasks/evidence/embedding-2026-11-23/optimized-startup.json
+!tasks/evidence/embedding-2026-11-23/optimized-runtime.json
+!tasks/evidence/embedding-2026-11-23/optimized-live-tests.xml
+!tasks/evidence/embedding-2026-11-23/optimized-regressions.xml
+!tasks/evidence/embedding-2026-11-23/startup-launcher.json
+!tasks/evidence/embedding-2026-11-23/startup-io-baseline.json
+!tasks/evidence/embedding-2026-11-23/optimized-attestation-tests.xml
+!tasks/evidence/embedding-2026-11-23/optimized-quality-checks.txt

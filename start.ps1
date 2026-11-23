@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-Starts the local Workbench, API, validator and existing PostgreSQL container.
+Starts the local Workbench, API, validator, PostgreSQL and project embedding container.
 .DESCRIPTION
 Run .\start.ps1 from the repository root. Existing healthy services are reused.
 Database setup, migrations and seeding remain explicit operations.
@@ -75,7 +75,7 @@ function Start-LocalPostgres([string]$Executable) {
             Start-Sleep -Seconds 2
         }
     }
-    $compose = @('compose', '--env-file', $environmentFile, '-f', (Join-Path $projectRoot 'apps/workbench/postgres/compose.yaml'))
+    $compose = @('compose', '--project-name', 'rag-workbench', '--env-file', $environmentFile, '-f', (Join-Path $projectRoot 'apps/workbench/postgres/compose.yaml'))
     $container = & $Executable @compose ps --all --quiet postgres
     if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect the Workbench PostgreSQL service.' }
     if ($container) {
@@ -175,6 +175,7 @@ try {
     if ($LASTEXITCODE -ne 0 -or [version]$nodeVersion.TrimStart('v') -lt [version]'22.12.0') { throw 'Node.js 22.12.0 or later is required.' }
     New-Item -ItemType Directory -Path $logRoot -Force | Out-Null
     Start-LocalPostgres -Executable (Get-RequiredCommand -Name 'docker.exe')
+    & (Join-Path $projectRoot 'apps/workbench/embedding/start.ps1') -StartOnly
     foreach ($service in @(
         @{ Name = 'API'; Kind = 'api'; Port = 8011; Url = 'http://127.0.0.1:8011/api/v1/health/live' },
         @{ Name = 'Validator'; Kind = 'validator'; Port = 8010; Url = 'http://127.0.0.1:8010/health' },
@@ -186,6 +187,7 @@ try {
     Write-Host ''
     Write-Host 'Workbench: http://127.0.0.1:4173/'
     Write-Host 'API:       http://127.0.0.1:8011/api/v1/health/ready'
+    Write-Host 'Embedding: http://127.0.0.1:8082/info (model readiness is independent of lexical search)'
     Write-Host "Logs:      $logRoot"
 }
 finally {

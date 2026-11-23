@@ -1,0 +1,5 @@
+# Runtime qualification supplies the pinned profile; this file makes no readiness claim.
+embedding:
+  mode: disabled
+  endpoint: http://127.0.0.1:8082
+  profile: null

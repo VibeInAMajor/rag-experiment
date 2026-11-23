@@ -12,6 +12,8 @@
 
 ## A. Title
 
+**EMBED-001 bootstrap boundary (2026-11-23):** this task remains open for production admission. Its J1 exception for an explicit conservative single-test qualification profile is implemented by the app-owned `embedding_dispatch.py` boundary: one in-flight request, exclusive deployment file lock, bounded cumulative requests/native-token estimates and deadlines, shared query/document `reserve → mark_sent → finish`, with no post-send charge refund. This is a finite model-I/O qualification run, not calibrated sustainable capacity. Normal production dispatch remains refused with unknown capacity; no rolling 0.95 ceiling, adaptive 0.92 target, saturation/fairness or steady-window performance acceptance is claimed. See [EMBED-001 evidence](evidence/embedding-2026-11-23/report.md) and its [operator guide](../docs-website/docs/architecture/local-embedding-provider.md).
+
 Implement an application-owned **shared deployment capacity governor** for text embeddings with desired utilization `0.92` and independent hard **rolling-60-second admission ceiling `0.95`**, reusing/adapting vetted donor components and test scenarios without importing Qdrant, its runtime or an unapproved code license.
 
 ## B. Context / Problem

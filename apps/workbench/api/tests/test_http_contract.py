@@ -544,6 +544,7 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
         "tokenizers",
         "psycopg",
         "pgvector",
+        "httpx",
     }
     package = Path(__file__).resolve().parents[1]
     for source in package.glob("*.py"):
@@ -563,6 +564,8 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
         )
         if source.name == "model_token_counter.py":
             restricted = restricted - {"tokenizers"}
+        if source.name == "embedding_adapters.py":
+            restricted = restricted - {"httpx"}
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

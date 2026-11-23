@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "ambient_compose_project": "foreign-project-guard-test",
+  "stopped": {
+    "root_launcher_ms": 1426.8144,
+    "container_id_unchanged": true,
+    "process_start_changed": true,
+    "selected_project": "rag-workbench-embedding",
+    "container_started_at": "2026-11-23T22:21:27.936963967Z",
+    "first_info_observed_at": "2026-11-23T22:21:45.3134453+00:00",
+    "container_to_info_ms": 17376.4813
+  },
+  "already_running": {
+    "root_launcher_ms": 747.6769,
+    "container_id_unchanged": true,
+    "model_process_start_unchanged": true
+  },
+  "foreign_project_container_count": 0
+}

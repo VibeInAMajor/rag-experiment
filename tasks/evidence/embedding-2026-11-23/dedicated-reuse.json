@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "ambient_compose_project": "foreign-project-guard-test",
+  "selected_project": "rag-workbench-embedding",
+  "container_id_unchanged": true,
+  "process_start_unchanged": true,
+  "restart_count_unchanged": true,
+  "foreign_project_container_count": 0,
+  "foreign_project_query": "docker ps -a --filter label=com.docker.compose.project=foreign-project-guard-test --format '{{.ID}}'",
+  "foreign_project_query_exit_code": 0
+}

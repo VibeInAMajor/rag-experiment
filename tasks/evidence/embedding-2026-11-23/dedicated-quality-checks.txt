@@ -1,0 +1,55 @@
+Dedicated Workbench TEI follow-up, 2026-11-24 Europe/Kyiv
+The original runtime.json/report.md remain historical evidence for the other project's service.
+
+hatch --version
+PASS: Hatch, version 1.18.2
+
+hatch run workbench-api:check
+PASS: All checks passed; 110 files already formatted.
+
+hatch run workbench-api:types
+PASS: no issues found in 110 source files.
+
+hatch run workbench-api:ruff check scripts/workbench_embedding_qualify.py
+hatch run workbench-api:ruff format --check scripts/workbench_embedding_qualify.py
+hatch run workbench-api:mypy --explicit-package-bases --follow-imports=silent scripts/workbench_embedding_qualify.py
+PASS: lint, formatting and script typing.
+
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_configuration.py apps/workbench/api/tests/test_embedding_configuration.py apps/workbench/api/tests/test_embedding_adapter.py apps/workbench/api/tests/test_embedding_attestation.py apps/workbench/api/tests/test_embedding_domain.py apps/workbench/api/tests/test_embedding_dispatch.py apps/workbench/api/tests/test_http_contract.py -q --override-ini addopts='' --junitxml=tasks/evidence/embedding-2026-11-23/dedicated-regressions.xml
+PASS: 203 passed in 5.97s after the final metadata-only healthcheck attestation.
+
+& ./apps/workbench/embedding/start.ps1 -ModelDirectory 'A:\AI\TEI\qwen3-4b' -StartupEvidence tasks/evidence/embedding-2026-11-23/dedicated-startup.json
+PASS: final newly recreated process became metadata-ready in 242170.5956ms from Docker StartedAt; launcher elapsed 243809.4585ms. Restart count 0. The TEI startup warm-up is included; OS caches were not cleared.
+
+$env:WORKBENCH_TEST_EMBEDDING_LIVE = '1'
+$env:WORKBENCH_TEST_QWEN_TOKENIZER_DIR = 'A:/AI/TEI/qwen3-4b'
+$env:WORKBENCH_TEST_EMBEDDING_REPORT = 'tasks/evidence/embedding-2026-11-23/dedicated-runtime.json'
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_embedding_model_smoke.py -q --junitxml=tasks/evidence/embedding-2026-11-23/dedicated-live-tests.xml
+PASS: 1 passed in 30.03s. Actual dedicated deployment: 50 successful governed calls, all 30 representative texts for query/document, exact 8192-token boundaries, full 2560-dimensional normalized vectors. Negative diagnostics added zero inference calls.
+
+Idempotent reuse with COMPOSE_PROJECT_NAME=foreign-project-guard-test:
+& ./apps/workbench/embedding/start.ps1 -ModelDirectory 'A:\AI\TEI\qwen3-4b' -StartupEvidence .cache/workbench-embedding/reused-process.json
+PASS: selected project rag-workbench-embedding; container ID, process StartedAt and restart count unchanged.
+docker ps -a --filter label=com.docker.compose.project=foreign-project-guard-test --format '{{.ID}}'
+PASS: native exit 0, no foreign-project containers. See dedicated-reuse.json.
+
+docker inspect portable-tei-local-quality-1 --format '{{.Id}} {{.State.StartedAt}} {{.RestartCount}}'
+PASS: old service retained ID 62f5ec15acb6fdc8bab7b856ffc7ec555ff373b0ad1a45b2f43fedf527b918d6, StartedAt 2026-11-23T20:33:36.236588027Z and restart count 0 after final qualification.
+
+PowerShell Parser.ParseFile(apps/workbench/embedding/start.ps1)
+PASS: no parsing errors after explicit Compose project-name isolation.
+
+With WORKBENCH_EMBEDDING_MODEL_DIRECTORY=A:/AI/TEI/qwen3-4b:
+docker compose -f apps/workbench/embedding/compose.yaml config --format json
+PASS: local pinned image; read-only existing mount; loopback port; explicit GPU reservation.
+The launcher now explicitly adds --project-name rag-workbench-embedding to every Compose operation.
+Final explicit-project check, with the same model-directory environment:
+docker compose -p rag-workbench-embedding -f apps/workbench/embedding/compose.yaml config --quiet
+PASS.
+
+Both Get-FileHash SHA256 weight results matched the original official pinned shard hashes before startup.
+Strict UTF-8 decoding of changed files: PASS.
+node --check docs-website/sidebars.js: PASS.
+git diff --check: PASS (only existing LF/CRLF conversion notices).
+
+Not rerun: full PostgreSQL suite, frontend/browser, upstream Haystack suite, Docusaurus build. This follow-up changes the isolated model deployment and its endpoint/attestation; no database or UI code changed.

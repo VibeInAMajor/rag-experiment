@@ -6,7 +6,7 @@ description: Canonical decisions and integration boundaries for the local RAG Wo
 # RAG runtime and API v1 contract
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-23
+**Updated:** 2026-11-24
 **Decision status:** Accepted implementation contract; PostgreSQL lexical HTTP retrieval implemented.
 **Contract revision:** `rag-api-v1.0`
 
@@ -37,7 +37,7 @@ Paths below are relative to the repository root; links identify the actual owner
 | [Persistence port](../../../apps/workbench/api/persistence.py), [PostgreSQL adapter](../../../apps/workbench/api/postgres.py) and [migrations](../../../apps/workbench/api/db_migrations.py) | Durable scoped records, forced RLS, native FTS and exact synthetic-vector storage are implemented | Only storage primitives are ready; HTTP retrieval and real embedding qualification remain separate |
 | [Splitter](../../../haystack/components/preprocessors/document_splitter.py) | Token splitting defaults to tiktoken `o200k_base` | Current token splitting is not evidence of Qwen-compatible token counts |
 
-The constructor validator and independent lexical API exist. Workspace/document/search HTTP routes use the PostgreSQL registry and persistence adapter; synchronous durable ingestion passed local migration/upload/search/restart gates; model inference remains planned. The API v1 routes are separate from `/api/pipelines/validate`, which still checks constructors without execution.
+The constructor validator and independent lexical API exist. Workspace/document/search HTTP routes use the PostgreSQL registry and persistence adapter; synchronous durable ingestion passed local migration/upload/search/restart gates. The separate [local provider qualification](local-embedding-provider.md) executes explicit bounded model probes; vector ingestion and semantic HTTP search remain deferred. The API v1 routes are separate from `/api/pipelines/validate`, which still checks constructors without execution.
 
 ## 2. Canonical runtime decisions
 
@@ -47,9 +47,9 @@ The constructor validator and independent lexical API exist. Workspace/document/
 | Metadata/version registry | PostgreSQL relational workspace/source/version/chunk records, composite FKs and forced RLS | Job/cache extensions and production authorization remain future work |
 | First lexical backend | PostgreSQL `simple`, stored `tsvector`, GIN and raw `ts_rank_cd`; executable profile `postgres-fts-baseline` / `postgres-fts-baseline-r1` | Ten labeled exact-query tests and real HTTP/restart evidence qualify the development slice; semantic paraphrase quality is not claimed |
 | Genuine BM25 | Deferred; `bm25-v1` remains reserved for actual BM25 semantics | No Live in-memory corpus/fallback; any PostgreSQL BM25 extension needs a separate deployment/licensing decision |
-| Embedding transport | Existing local TEI service; deployment target `http://127.0.0.1:8081` | Recheck health, server schema, runtime revision and served model before integration; this task performs no inference |
+| Embedding transport | Project-owned TEI container `rag-workbench-embedding-1` on `http://127.0.0.1:8082`, verified read-only Linux asset cache and root-launcher background start/reuse; see the [operator guide](local-embedding-provider.md) | Separate baseline/optimized process and governed inference proof; reattest deployment changes; no production dispatch or semantic HTTP activation |
 | Embedding model | Qwen3-Embedding-4B, full **2560** dimensions, normalized vectors and cosine search | Pin model/tokenizer revisions and prove actual output shape, finite values and normalization with a logged probe |
-| Embedding API | Prefer TEI's OpenAI-compatible `/v1/embeddings`, isolated behind an adapter | Verify served model identifier, instruction handling, usage and error payloads. Native TEI transport may replace it behind the same port after equivalent tests |
+| Embedding API | OpenAI-compatible `POST /v1/embeddings` behind the model-neutral port; native `/embed` is qualification-diagnostic only | The [qualification evidence](../../../tasks/evidence/embedding-2026-11-23/report.md) records actual model identity, ordering and usage; a response model field cannot independently attest weights |
 | Dense representation | Nullable dimensionless `vector`, registry-enforced profile dimensions, exact cosine storage primitive; no ANN index | Synthetic 3/2560 tests prove storage only. Actual model dimension and any halfvec/ANN design need later qualification; never truncate vectors |
 | Generation | Deferred until retrieval MVP; agreed later local model `qwen3.8:27b` | No chat, generator, Ollama dependency or generation endpoint in the first slice |
 
@@ -65,7 +65,7 @@ Tokenizers have separate responsibilities:
 - **Internal chunk preparation:** the [token policy](content-aware-chunking-strategy.md#token-budgeted-chunking-policy) accepts English (`en`), Russian (`ru`) and Ukrainian (`uk`) only, defaulting to 500 `tiktoken:o200k_base` tokens with target overlap 50. EN/RU combine their provisioned NLTK sentence boundaries with token sizing; UK uses an explicit structural token fallback. Missing EN/RU resources also trigger a declared fallback or required-sentence refusal. Other languages return `UNSUPPORTED_LANGUAGE`. These counts are not Qwen-native, and an absent exact Qwen counter does not block this lexical-ingestion preparation baseline. This internal seam adds no public API or publication capability.
 - **Embeddings:** use tokenizer files from the pinned Qwen model revision for exact admission/refinement estimates, including instructions and special tokens. The optional hash-pinned local `Qwen3-Embedding-4B` counter has been tested on actual operator-provided assets; admission counts the same final formatted input the embedding adapter will send. Its serialized NFC/postprocessor appends `<|endoftext|>` ID 151643. Actual local counts differ from tiktoken, so a 500-tiktoken chunk need not fit 500 Qwen tokens; exact overflow is refused without truncation. This local qualification does not establish served-TEI parity or enable embeddings; qualify the counter against that runtime before rollout.
 
-Proposed query instruction, to verify against the actual service configuration:
+Versioned query instruction for local provider qualification:
 
 ```text
 Instruct: Given a web search query, retrieve relevant passages that answer the query
@@ -301,13 +301,13 @@ Deployment owner defines retention and deletion before enabling persistent logs/
 | pgvector representation | Confirm adapter/extension compatibility for 2560 dimensions, cosine HNSW using qualified representation, round-trip precision and recall evaluation; retain open status until proven |
 | Scaling and hybrid | Corpus/memory/rebuild limits, genuine durable BM25 decision, dense/BM25/RRF baselines, shared endpoint admission and measured completed throughput; reranker only after comparison |
 
-The original architecture reconciliation ran no database, model, benchmark or API execution. Subsequent bootstrap and PostgreSQL tasks record their own HTTP/schema, storage, synthetic-vector and restart evidence. These checks do not qualify real embeddings, ANN or HTTP retrieval. No provider or integration version is certified solely by upstream docs or by constructor validation. Python commands must use Hatch from the repository root and actual implementation paths; do not copy a generic `src tests` command. Existing validator checks are described in its README and prove only that boundary.
+The original architecture reconciliation ran no database, model, benchmark or API execution. Subsequent bootstrap and PostgreSQL tasks record their own HTTP/schema, storage, synthetic-vector and restart evidence; EMBED-001 records its separate bounded real-model proof. Storage-only checks do not qualify model inference or ANN. No provider or integration version is certified solely by upstream docs or by constructor validation. Python commands must use Hatch from the repository root and actual implementation paths; do not copy a generic `src tests` command. Existing validator checks are described in its README and prove only that boundary.
 
 The historical Delta Detector/TPM references are design inputs; source-code reuse requires license/permission review and a pinned source revision. Preserve source/version/chunk semantics, staged publication, cache compatibility, recovery, query-priority admission and honest throughput measurement. Do not copy the external runtime or its benchmark numbers as local evidence.
 
 ## 8. Compatibility and changes
 
-Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. Live discovery and approved keyword execution are integrated; Live document-management UI and real embeddings remain separate tasks. The backend ingestion contract below adds no upload UI.
+Workbench export remains `schemaVersion: 1`, including nodes, parameters, connections, coordinates and viewport. This retrieval slice introduces no migration or frontend design change. The validation route/revision is unchanged. API v1 health/discovery and read-only workspace/document/search are implemented. The task-selected executable profile replaces an unimplemented reserved name; canonical envelope, field names and 400/409 error semantics are preserved. Live discovery and approved keyword execution are integrated; Live document-management UI and durable embedding ingestion remain separate tasks. Internal provider qualification does not change API capabilities. The backend ingestion contract below adds no upload UI.
 
 Change this decision before dependent code/tasks when semantics change. Additive responses require clients to tolerate unknown response fields; request fields remain strict. Breaking request/response or score semantics require a new contract/API version or explicitly negotiated profile revision. Rollback is reverting these documentation edits; once dependent implementations exist, reconcile their contracts and migration obligations first.
 

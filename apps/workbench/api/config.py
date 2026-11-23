@@ -14,6 +14,7 @@ from apps.workbench.api.document_processing import (
     document_processing_configuration_path,
     load_document_processing,
 )
+from apps.workbench.api.embedding_config import EmbeddingSettings, load_embedding_settings
 from apps.workbench.api.profile_registry import ProfileRegistry, default_profile_registry, load_profile_registry
 
 
@@ -30,6 +31,7 @@ class ApiSettings(BaseModel):
     ingestion_timeout_seconds: float = Field(default=30.0, gt=0, le=30)
     pdf_ingestion_timeout_seconds: float = Field(default=210.0, gt=0, le=210)
     document_processing: DocumentProcessingSettings = Field(default_factory=DocumentProcessingSettings)
+    embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     configuration_file: str | None = Field(default=None, repr=False)
     configuration_language_override: str | None = None
     allowed_origins: tuple[str, ...] = (
@@ -129,6 +131,7 @@ class ApiSettings(BaseModel):
         values: dict[str, object] = {}
         values["document_processing"] = load_document_processing(environment)
         values["profile_registry"] = load_profile_registry(environment)
+        values["embedding"] = load_embedding_settings(environment)
         values["configuration_file"] = str(document_processing_configuration_path(environment))
         values["configuration_language_override"] = environment.get("WORKBENCH_DEFAULT_LANGUAGE")
         fields = {"HOST": "host", "PORT": "port", "BACKEND_REVISION": "backend_revision"}

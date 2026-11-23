@@ -1,0 +1,36 @@
+Workbench embedding startup optimization, 2026-11-24 Europe/Kyiv
+Accepted dedicated bind-mount baseline artifacts remain unchanged.
+
+hatch run workbench-api:check
+PASS: All checks passed; 111 files already formatted.
+hatch run workbench-api:types
+PASS: no issues found in 111 source files.
+hatch run workbench-api:ruff check scripts/workbench_embedding_cache.py scripts/workbench_embedding_qualify.py
+hatch run workbench-api:ruff format --check scripts/workbench_embedding_cache.py scripts/workbench_embedding_qualify.py
+hatch run workbench-api:mypy --explicit-package-bases --follow-imports=silent scripts/workbench_embedding_cache.py scripts/workbench_embedding_qualify.py
+PASS: both scripts linted, formatted and typechecked.
+
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_configuration.py apps/workbench/api/tests/test_embedding_configuration.py apps/workbench/api/tests/test_embedding_adapter.py apps/workbench/api/tests/test_embedding_attestation.py apps/workbench/api/tests/test_embedding_cache.py apps/workbench/api/tests/test_embedding_domain.py apps/workbench/api/tests/test_embedding_dispatch.py apps/workbench/api/tests/test_http_contract.py -q --override-ini addopts='' --junitxml=tasks/evidence/embedding-2026-11-23/optimized-regressions.xml
+PASS: 235 passed in 6.91s, including real isolated POSIX-shell negative guards in cache tests.
+
+hatch run workbench-api:python -m scripts.workbench_embedding_cache --model-directory 'A:\AI\TEI\qwen3-4b' --output tasks/evidence/embedding-2026-11-23/optimized-cache.json
+PASS: prepared exact nine-asset Linux volume in 69688ms; no network/GPU/model conversion. All copied assets SHA-verified before atomic publication.
+
+& ./apps/workbench/embedding/start.ps1 -ModelDirectory 'A:\AI\TEI\qwen3-4b' -StartupEvidence tasks/evidence/embedding-2026-11-23/optimized-startup.json
+PASS: cache reuse 891ms; newly recreated process StartedAt to first successful metadata probe 30704.9561ms, launcher 32459.5778ms, automatic restart count 0.
+
+Root launcher lifecycle test, with COMPOSE_PROJECT_NAME=foreign-project-guard-test:
+After stopping only the verified owned container: & ./start.ps1
+PASS: 1426.8144ms, same container ID, new model process loads in background, metadata ready after 17376.4813ms from process StartedAt.
+Repeated: & ./start.ps1
+PASS: 747.6769ms, same container ID and model process StartedAt. Other application services were already healthy in both measurements. No foreign-project containers created.
+See startup-launcher.json. PostgreSQL and embedding Compose operations explicitly select their owned projects.
+
+$env:WORKBENCH_TEST_EMBEDDING_LIVE = '1'
+$env:WORKBENCH_TEST_QWEN_TOKENIZER_DIR = 'A:/AI/TEI/qwen3-4b'
+$env:WORKBENCH_TEST_EMBEDDING_REPORT = 'tasks/evidence/embedding-2026-11-23/optimized-runtime.json'
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_embedding_model_smoke.py -q --junitxml=tasks/evidence/embedding-2026-11-23/optimized-live-tests.xml
+PASS: 1 passed in 54.12s, 50 real governed inference calls, 30 representative texts for query and document, actual 2560 components, exact 8192-token bounds. Host and actual cached asset full hashes unchanged. Original profile fingerprint unchanged.
+Per-call qualification now additionally inspects actual volume and cached-file metadata; adapter timing includes that extra overhead and is recorded honestly in optimized-runtime.json.
+
+Not rerun: full PostgreSQL suite, frontend/browser, upstream Haystack suite and Docusaurus build. No database or UI code changed; earlier database proof remains separate historical evidence.

@@ -1,0 +1,21 @@
+---
+upgrade:
+  - |
+      The root ``start.ps1`` launcher now also starts the project embedding
+      container. Before its first creation, configure the local model directory
+      through ``apps/workbench/embedding/.env`` using the committed template, and
+      provide the pinned local TEI image and NVIDIA-capable Docker runtime.
+      Existing running models are reused; direct API startup remains independent.
+features:
+  - |
+      Add an opt-in local Qwen embedding qualification boundary for the Workbench,
+      with pinned model/tokenizer identity, bounded shared query/document admission
+      and explicit token-usage provenance. It preserves lexical search and requires
+      separate qualification for production capacity and durable vector ingestion.
+      A dedicated project TEI deployment uses a separate loopback endpoint and
+      read-only local model assets; its startup and inference evidence remain
+      separate from historical qualification against an existing shared service.
+      The root ``start.ps1`` launcher starts a stopped or missing project model
+      in the background and reuses an already running container without a restart.
+      A verified Linux Docker model cache reuses the pinned local assets without
+      downloads or weight conversion; cache provisioning is separate from startup.

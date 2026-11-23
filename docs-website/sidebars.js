@@ -36,6 +36,11 @@ export default {
     },
     {
       type: 'doc',
+      id: 'architecture/local-embedding-provider',
+      label: 'Local Embedding Qualification',
+    },
+    {
+      type: 'doc',
       id: 'tasks/RAG_Live_Lexical_Acceptance_2026-11-22',
       label: 'Live Lexical Acceptance',
     },

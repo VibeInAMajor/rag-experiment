@@ -1,0 +1,60 @@
+name: rag-workbench-embedding
+
+services:
+  embedding:
+    container_name: rag-workbench-embedding-1
+    image: ghcr.io/huggingface/text-embeddings-inference@sha256:d139efce84ee1d23405d64e4dc0b82d583c463fce3ff707eb65c47a8a1b7f69c
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8082:80"
+    volumes:
+      - type: volume
+        source: model_cache
+        target: /models
+        read_only: true
+        volume:
+          nocopy: true
+    environment:
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      DO_NOT_TRACK: "1"
+    command:
+      - --disable-spans
+      - --model-id
+      - /models/5cf2132abc99cad020ac570b19d031efec650f2b
+      - --served-model-name
+      - Qwen/Qwen3-Embedding-4B
+      - --pooling
+      - last-token
+      - --dtype
+      - float16
+      - --max-concurrent-requests
+      - "8"
+      - --max-client-batch-size
+      - "8"
+      - --max-batch-tokens
+      - "40960"
+      - --payload-limit
+      - "1048576"
+      - --auto-truncate
+      - "false"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "2", "http://127.0.0.1/info"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+      start_period: 300s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  model_cache:
+    name: rag-workbench-embedding-qwen3-4b-5cf2132abc99
+    external: true

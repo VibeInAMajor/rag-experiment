@@ -37,6 +37,8 @@ For the complete local application, after the one-time database setup below, run
 
 Requires Windows PowerShell 5.1 or PowerShell 7, Hatch, Node.js >=22.12, npm and Docker Desktop with Compose. The launcher checks Hatch, starts Docker Desktop if necessary (standard installation location), waits for the existing PostgreSQL container, starts the API and constructor validator, and builds/starts the site at <http://127.0.0.1:4173/>. It installs locked frontend dependencies only when Vite is absent. Healthy services are reused; an occupied unhealthy port produces an error without stopping its owner. API readiness is checked through the website proxy. No migrations, seeds, credential regeneration or database resets run automatically.
 
+It also ensures the owned TEI container is running. Running models stay untouched; stopped/missing models start in the background without waiting for model readiness; UI/API readiness stays independent. First-time model setup needs the installed pinned image, NVIDIA-capable Docker and the local model path in ignored `apps/workbench/embedding/.env`; the confirmed host is already configured. Approved assets are cached in a read-only Linux Docker volume. See the [model setup and measured startup guide](../../../docs-website/docs/architecture/local-embedding-provider.md) for separate provisioning/startup costs.
+
 If Windows blocks script execution, allow this invocation only:
 
 ```powershell
@@ -216,6 +218,12 @@ Tests cover HTTP/schema/security contracts, persistence and the lexical profile.
 
 ## Implemented versus planned
 
+The internal [local embedding qualification](../../../docs-website/docs/architecture/local-embedding-provider.md) adds a model-neutral port, explicit TEI deployment attestation and one shared bounded admission owner for operator-run query/document smoke. It does not enable vector ingestion or semantic HTTP search. Unknown sustainable TPM remains unqualified; provider-reported usage is distinguished from local tokenizer estimates. See the guide and [execution record](../../../tasks/evidence/embedding-2026-11-23/report.md) before running the explicit qualification command.
+
+The project-owned TEI service uses `rag-workbench-embedding-1` on `127.0.0.1:8082`; it has separate [startup and model evidence](../../../tasks/evidence/embedding-2026-11-23/dedicated-report.md). The original `8081` qualification artifacts describe an existing shared service and remain historical. A dedicated container shares the physical GPU and does not establish production TPM capacity.
+
+Root `start.ps1` also ensures the owned embedding container is running: a running model is left in place, and a stopped/missing service loads in the background. Its ignored local `.env` persists the source directory for first-time setup; ordinary launches need no repeated path. UI/API startup does not wait for model readiness. See the [launcher/cache follow-up](../../../tasks/evidence/embedding-2026-11-23/optimized-report.md) for measured behavior and remaining qualification gates.
+
 - **API:** health/discovery, authorized workspace/document lists and Haystack-orchestrated PostgreSQL lexical search, with bounded admission and safe metadata/errors.
 - **Persistence:** pinned PostgreSQL + pgvector, explicit migrations/seed, forced workspace RLS, atomic publication and consistent active-version snapshots.
 - **Internal parsing boundary:** immutable static parser registry and bounded UTF-8 TXT/Markdown inspection/projection under `parsing.py` and `parser_registry.py`; consumed by the separate durable ingestion routes. See the [format matrix and parser/chunking handoff](../../../docs-website/docs/architecture/content-aware-chunking-strategy.md).
@@ -223,7 +231,7 @@ Tests cover HTTP/schema/security contracts, persistence and the lexical profile.
 - **Existing independent validator:** real Haystack construction/connectivity checks, without execution; see [validator documentation](../validator/README.md).
 - **Existing UI:** fixture document displays, Preview and approved Live keyword search; see [Workbench documentation](../web/README.md).
 - **Ingestion:** synchronous durable backend passed local migration/upload/search/restart gates; upload UI remains separate.
-- **Planned:** Live document-management UI, genuine BM25 if separately justified, qualified embeddings, dense/hybrid retrieval and generation. Each needs its own qualification gate.
+- **Planned:** Live document-management UI, genuine BM25 if separately justified, durable embedding ingestion, production embedding capacity control, dense/hybrid retrieval and generation. Each needs its own qualification gate.
 
 The initial database migration is explicit; no Haystack public API changes are introduced. Application rollback is stopping the optional API while preserving its database volume. Destructive schema rollback is restricted to explicitly confirmed disposable databases; the constructor validator and standalone UI remain independent.
 
