@@ -6,7 +6,7 @@
 **Priority:** P1 — spreadsheets and tabular business data  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001  
 **Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
-**Target:** `tasks/check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md  
+**Target:** `tasks/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md  
 **Architecture:** [Content-aware format/strategy matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
@@ -135,7 +135,7 @@ Register parser/profile revisions, limits and citations in one canonical archite
 
 ## O. Mandatory Completion Checklist
 
-- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/check/` location.
+- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/` location.
 - [ ] PARSE/CONTENT ownership boundaries exercised with fixture tests; no duplicate durable element/asset model.
 - [ ] Existing SQL/API/upload/source-version test gates remain passing when new parser family is enabled.
 

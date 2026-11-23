@@ -2,12 +2,24 @@
 
 **Created:** 2026-11-20  
 **Updated:** 2026-11-23  
-**Status:** PROPOSED — backend routes are implemented; Live Documents frontend integration remains to be built  
+**Status:** COMPLETE — Live Documents implemented; real browser / HTTP / PostgreSQL / API and same-volume DB restart acceptance passed on 2026-11-23
 **Priority:** P1 · frontend integration and contract-compatibility gate  
 **Dependencies:** [completed UI-001](completed/TASK-UI-001-typed-api-and-execution-mode.md), [completed UI-002](completed/TASK-UI-002-execute-live-lexical-pipeline.md), [completed EVAL-001](completed/TASK-EVAL-001-prove-vertical-slice.md), [completed RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md), [completed CHUNK-002 Python](completed/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md); PDF is runtime-conditional via [CHUNK-003](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md)  
 **Repository snapshot inspected:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
 **Target:** `tasks/TASK-UI-003-live-document-management.md`  
 **Backend contract:** [`contracts.py`](../apps/workbench/api/contracts.py), [`ingestion_http.py`](../apps/workbench/api/ingestion_http.py), [OpenAPI](../apps/workbench/api/openapi.json)
+
+## Completion audit — 2026-11-23
+
+All Section M acceptance criteria and Section O completion items are checked below. The pre-implementation source inventory in Sections B–I is retained as the original problem statement, not a claim about the completed application.
+
+- Three implementation agents delivered the shared strict DTO/transport, request lifecycle and existing Documents UI; root integrated, reviewed and performed the visible live-server acceptance.
+- Actual browser uploads of repository TXT/Markdown/Python and qualified public PDF returned 201 with 6/58/2/6 active chunks. Markdown chunk paging, indexed text/report/job and exact source/version Keyword results were verified.
+- Real HTTP/SQL parity, four unchanged/replay operations, nine negative HTTP cases, a committed-response browser abort followed by same-key replay, actual API/DB outages and same-volume restarts passed. Test checkpoint: 12 sources / 12 versions / 80 chunks / 10 jobs; the main corpus of 15 sources was preserved.
+- Final frontend typecheck/format/build and 336 tests passed; backend check/types, 82 focused API tests and 33 validator tests passed. Unit fault/security tests and controlled response interception are explicitly distinguished from real service outages.
+- [Acceptance report and exact limitations](evidence/live-documents-2026-11-23/REPORT.md), [HTTP/SQL proof](evidence/live-documents-2026-11-23/http-sql-verification.json), [restart proof](evidence/live-documents-2026-11-23/restart-parity.json), [browser result](evidence/live-documents-2026-11-23/browser-final.jpg).
+
+The standalone repeatable Playwright harness was syntax/format checked, not executed; the actual browser scenario was run through the desktop browser tool. The full upstream Haystack suite was not run. PDF original binary/visual evidence, OCR, async workers and production multi-tenant authentication remain outside this task's scope.
 
 ## A. Title
 
@@ -351,18 +363,18 @@ Upload at least TXT, Markdown and Python via browser against disposable PostgreS
 
 ## M. Acceptance Criteria
 
-- [ ] [RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md) and actual API `IngestionRoutes` are **reused**; no second backend upload/details/chunks/jobs implementation or document store.
-- [ ] `BackendCapabilities` and runtime `decodeCapabilities` preserve `upload/document_details/jobs/pdf_ingestion` and fail closed on invalid data; `rag-api-v1.0` remains the server contract.
-- [ ] Shared frontend request helper handles **FormData** and success **201 for upload only**, while existing JSON/search/configuration/client errors remain unchanged.
-- [ ] Typed `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionResponse`, `IngestionJobResponse` and nested `error.job_id` decoders agree with actual Pydantic schema; no fictitious per-chunk source_version_id.
-- [ ] Live Document page displays only server-owned list/detail/chunks/jobs, correct empty/loading/error states and preview fixture separation, including signed cursor/revision restarts.
-- [ ] Supports TXT, Markdown, Python (each <=1 MiB) and conditionally qualified PDF (<=8 MiB/32 pages) only when server runtime gates pass; unsupported Office/YAML/CSV not advertised.
-- [ ] Upload 201/200 returns true outcome/replayed/source/version/job/count; same-key uncertain retry does not duplicate; stale update 409 never silently overwrites current version.
-- [ ] No fictitious source bytes, pages, OCR, chart/diagram interpretation, original-download endpoint or background job progress; optional registered local reveal is clearly distinct.
-- [ ] No stale request or unauthorized workspace/source/version data is committed to UI after change; malicious document content rendered inert.
-- [ ] Actual browser/PostgreSQL E2E for three qualified types and conditional PDF, API/DB restart, unsafe/error tests and existing Preview/validator/lexical regressions executed with evidence.
-- [ ] Obsolete OpenAPI description is corrected by docs-only adjustment/test or separately tracked as an explicit backend-doc blocker; no server business change required.
-- [ ] Frontend typecheck/format/unit/build and backend focused tests pass; operator README and task evidence updated with actual status.
+- [x] [RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md) and actual API `IngestionRoutes` are **reused**; no second backend upload/details/chunks/jobs implementation or document store.
+- [x] `BackendCapabilities` and runtime `decodeCapabilities` preserve `upload/document_details/jobs/pdf_ingestion` and fail closed on invalid data; `rag-api-v1.0` remains the server contract.
+- [x] Shared frontend request helper handles **FormData** and success **201 for upload only**, while existing JSON/search/configuration/client errors remain unchanged.
+- [x] Typed `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionResponse`, `IngestionJobResponse` and nested `error.job_id` decoders agree with actual Pydantic schema; no fictitious per-chunk source_version_id.
+- [x] Live Document page displays only server-owned list/detail/chunks/jobs, correct empty/loading/error states and preview fixture separation, including signed cursor/revision restarts.
+- [x] Supports TXT, Markdown, Python (each <=1 MiB) and conditionally qualified PDF (<=8 MiB/32 pages) only when server runtime gates pass; unsupported Office/YAML/CSV not advertised.
+- [x] Upload 201/200 returns true outcome/replayed/source/version/job/count; same-key uncertain retry does not duplicate; stale update 409 never silently overwrites current version.
+- [x] No fictitious source bytes, pages, OCR, chart/diagram interpretation, original-download endpoint or background job progress; optional registered local reveal is clearly distinct.
+- [x] No stale request or unauthorized workspace/source/version data is committed to UI after change; malicious document content rendered inert.
+- [x] Actual browser/PostgreSQL E2E for three qualified types and conditional PDF, API/DB restart, unsafe/error tests and existing Preview/validator/lexical regressions executed with evidence.
+- [x] Obsolete OpenAPI description is corrected by docs-only adjustment/test or separately tracked as an explicit backend-doc blocker; no server business change required.
+- [x] Frontend typecheck/format/unit/build and backend focused tests pass; operator README and task evidence updated with actual status.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -375,13 +387,13 @@ Upload at least TXT, Markdown and Python via browser against disposable PostgreS
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Actual API and client source/contract/test inventory rechecked at implementation time; all historic “endpoints absent” assumptions eliminated.
-- [ ] One shared frontend transport/decoder supports FormData 201 without weakening JSON request handling or server error correlations.
-- [ ] Live/Preview discriminated presentation and server-owned workspace/mode state proven.
-- [ ] Live list/detail/chunks/job displays authoritative PostgreSQL data; signed cursor and source-version drift safely handled.
-- [ ] TXT/Markdown/Python and conditional PDF format gates verified; no unqualified file type shown as supported.
-- [ ] Exact idempotency operation replay, guarded update, abort uncertainty and known job ID states tested.
-- [ ] Original source local hint never impersonates a byte download or a future EvidenceReference.
-- [ ] Browser security/accessibility and no HTML/code execution from documents verified.
-- [ ] App/backend/full regression and restart smoke executed with recorded results.
-- [ ] Docs and OpenAPI prose updated, release gate/evidence linked; mark COMPLETE only after real UI and all Section M checks pass.
+- [x] Actual API and client source/contract/test inventory rechecked at implementation time; all historic “endpoints absent” assumptions eliminated.
+- [x] One shared frontend transport/decoder supports FormData 201 without weakening JSON request handling or server error correlations.
+- [x] Live/Preview discriminated presentation and server-owned workspace/mode state proven.
+- [x] Live list/detail/chunks/job displays authoritative PostgreSQL data; signed cursor and source-version drift safely handled.
+- [x] TXT/Markdown/Python and conditional PDF format gates verified; no unqualified file type shown as supported.
+- [x] Exact idempotency operation replay, guarded update, abort uncertainty and known job ID states tested.
+- [x] Original source local hint never impersonates a byte download or a future EvidenceReference.
+- [x] Browser security/accessibility and no HTML/code execution from documents verified.
+- [x] App/backend/full regression and restart smoke executed with recorded results.
+- [x] Docs and OpenAPI prose updated, release gate/evidence linked; mark COMPLETE only after real UI and all Section M checks pass.

@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-21  
 **Updated:** 2026-11-23  
-**Status:** IN PROGRESS — Gate A locally qualified; Gate B awaits CONTENT-001; OCR/visual successors unavailable\
+**Status:** PARTIALLY COMPLETE — Gate A COMPLETE; Gate B PENDING DEPENDENCY (CONTENT-001)\
 **Priority:** P1 · specialized paginated document family  
 **Dependencies:** TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; TASK-RAG-CONTENT-001 is a required integration gate for immutable original visual assets/evidence, but not a blocker for independent text-layer PDF parser qualification. Scanned OCR and VLM diagram understanding are separate successors TASK-RAG-CONTENT-002/003; evidence lookup is TASK-RAG-CONTENT-005.  
 **Repository snapshot reviewed:** original 6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77; source reinspection 4dd81abd4b34794edfcafabb623703c67f40be81  
@@ -17,11 +17,25 @@ Add a qualified parser adapter and chunking policy for **text-extractable, pagin
 
 PDFs are visual layouts, not plain paragraphs. A blanket 500-word or 500-token splitter may separate numerical values from their column headers, put the page cited in the answer on the wrong segment, or merge unrelated sections. Evidence from NVIDIA's page-level RAG benchmarks favors page boundaries on average for several paginated datasets, but does not guarantee every page fits an embedding input or that page-level is optimal for analytical tasks. We need a **page-as-context / smaller-chunk-as-retrieval-unit** policy, with verified layout extraction, explicit failure/overflow and measured quality.
 
-The current Workbench does **not** contain a qualified Docling PDF ingestion integration. The UI mentions Docling in a demonstration node, but that is only display metadata and the constructor validator marks the parser unsupported. This task integrates PDF parsing behind a reviewed app-owned adapter; it must not pretend Docling is already installed or that a scanned image PDF has usable text.
+At task start, Workbench did not contain a qualified Docling PDF ingestion integration; a demonstration node was not an executable parser binding. The bounded text-layer integration is now implemented and qualified as Gate A. Scanned OCR, diagram understanding and immutable original-evidence storage are not enabled by that completion. The constructor validator remains separate from ingestion readiness.
 
 ## C. Current Repository State
 
-**2026-11-23 repository reinspection (supersedes stale early discovery rows below):** application-owned PDF source files now exist in the working source snapshot, but the PDF parser is still NOT an approved public upload feature. [pdf_models.py](../apps/workbench/api/pdf_models.py) supplies validated PdfLimits/PdfBox/PdfCell/PdfBlock/PdfPage/PdfDocument; PdfBlock.kind currently allows **text, heading, caption, table** and does not model diagram/chart/image evidence. [pdf_parser.py](../apps/workbench/api/pdf_parser.py) starts a one-slot offline child, [pdf_worker.py](../apps/workbench/api/pdf_worker.py) performs strict PDF catalog checks and Docling text/layout/table projection, and [pdf_sandbox.py](../apps/workbench/api/pdf_sandbox.py) enforces process quotas. [pdf_assets.py](../apps/workbench/api/pdf_assets.py) validates the [pinned model manifest](../apps/workbench/api/pdf_asset_manifest.json) before worker use. [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) wraps Docling HybridChunker with distinct original_excerpt and retrieval text, including row-aware table projection. [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py) defines PdfChunkingProfile (512/64, 768/0 or 768/64). However [parser_registry.py](../apps/workbench/api/parser_registry.py) still declares FormatId.PDF **unqualified** in its registry; no new PDF-specific test suite was found among the inspected API test files. No success can be claimed on parser install/code presence alone.
+### Completion audit — 2026-11-23
+
+**Completion decision: the task is not fully closed. Gate A is complete; the remaining required integration is Gate B after CONTENT-001.** This follows the independent gates in J6.6. OCR and visual understanding belong to separate successors and do not block Gate A.
+
+| Gate | Status | Verified result / remaining work |
+| --- | --- | --- |
+| A — text-layer PDF, layout and tables | **COMPLETE** | Qualified `docling-pdf-r2`, shared ingestion/PostgreSQL, live upload/search/update/restart evidence and numeric completeness checks. All 11 current qualification inputs pass; 25 labelled retrieval queries remain explicitly scored. |
+| B — immutable original assets/evidence | **PENDING DEPENDENCY: CONTENT-001** | CONTENT-001 remains PROPOSED / not implemented. Connect actual asset/element/representation identities and verify original-byte hashes, workspace isolation and restart recovery after it exists. No asset integration pass is claimed. |
+| C — scanned OCR and visual semantics | **OUT OF SCOPE / NOT QUALIFIED** | CONTENT-002/003/005 own these successors. No OCR, diagram/chart understanding or original-evidence resolution is advertised. |
+
+Evidence: [initial live/restart qualification](../docs-website/docs/tasks/pdf-layout-qualification-2026-11-23.md) and [parser r2 numerical-integrity follow-up](../docs-website/docs/tasks/pdf-two-column-numeric-integrity-2026-11-23.md). The previously refused two-column input now retains all 24 sentences, 26 numerical occurrences and 30 digit characters, with zero missing/extra numbers against both HTTP excerpts and direct PostgreSQL reads. The real public-table regression retains 259 identical cells. Existing source versions remain intact.
+
+### Historical discovery — superseded by the completion audit above
+
+**2026-11-23 repository reinspection before qualification:** application-owned PDF source files existed, but the parser was not yet an approved public upload feature. [pdf_models.py](../apps/workbench/api/pdf_models.py) supplied bounded provider-neutral records; [pdf_parser.py](../apps/workbench/api/pdf_parser.py), [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [pdf_sandbox.py](../apps/workbench/api/pdf_sandbox.py), [pdf_assets.py](../apps/workbench/api/pdf_assets.py), the [asset manifest](../apps/workbench/api/pdf_asset_manifest.json), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) and [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py) were already present. The registry was then unqualified and no PDF test suite had been found. These were starting-state observations, not the current implementation status; qualification and live verification are recorded above.
 
 **Multimodal handoff decision:** [TASK-RAG-CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) defines source/version-scoped original assets, structured elements and representations. **This task remains responsible for text-layer PDF pages, tables, headings, accurate page provenance and explicit classification of unhandled image regions.** It must not pretend to OCR scans or understand causal arrows/charts. Scanned/mixed-page OCR belongs to [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), vision diagrams to [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), and original evidence resolution to [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md). A PDF with pictures may be correctly indexed for qualified text, but figure coverage must be marked incomplete unless original visual regions have independent evidence links. Do not silently skip a diagram then mark the entire source semantically complete.
 
@@ -47,7 +61,7 @@ The current Workbench does **not** contain a qualified Docling PDF ingestion int
 | [Docling chunking docs](https://docling-project.github.io/docling/concepts/chunking/) | `HierarchicalChunker`, `HybridChunker`, table header repetition are available in Docling ecosystem, **not yet qualified in this Workbench runtime**. |
 | [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](completed/TASK-RAG-002-ingest-text-and-markdown.md) | Initial allowlist is TXT/Markdown and a 1 MiB request cap. PDF requires new explicit file/body bounds and testing; no silent extension. |
 
-**Current measured status (2026-11-23):** [Qualification record](../docs-website/docs/tasks/pdf-layout-qualification-2026-11-23.md) supersedes the historical no-runtime statement. Actual isolated Docling parsing, 11-input/25-query comparison, real public-table upload/search, independent native recount, source update and two live PostgreSQL/API restart cycles passed for the documented subset. Ambiguous two-column extraction and continuation headers remain explicit refusals; the whole dense 16-page report timed out. Gate B original assets are unavailable, and OCR/visual understanding are not claimed. PDF capability is conditional on installed runtime/assets and explicitly discloses those gaps.
+**Measured qualification (2026-11-23):** the [initial qualification record](../docs-website/docs/tasks/pdf-layout-qualification-2026-11-23.md) documents actual isolated Docling parsing, comparison controls, real public-table upload/search, independent native recount, source update and two live PostgreSQL/API restart cycles. Its parser-r1 two-column refusal is resolved by the r2 follow-up below; all 11 current inputs pass extraction. Unsupported continuation headers still fail safely, and the dense 16-page report's timeout remains an explicit limitation. Gate B original assets are unavailable, and OCR/visual understanding are not claimed. PDF capability is conditional on installed runtime/assets and discloses those gaps.
 
 **Two-column follow-up (parser r2):** the specific two-column refusal above is now fixed with selective native-cell recovery. The same input passes live upload/search and independent numeric comparison: 26 numerical occurrences / 30 digit characters, no missing/extra values, all 24 sentences retained. Ordinary tables keep the prior mode; 259 real public-report cells remain unchanged. See the [follow-up record](../docs-website/docs/tasks/pdf-two-column-numeric-integrity-2026-11-23.md). Other unqualified layouts and continuation headers still fail safely.
 
@@ -235,7 +249,7 @@ Use existing `httpx.AsyncClient` + app lifespan test patterns in `apps/workbench
 - [x] A PDF page larger than child token target is split within bounded structure without claiming a false model-token count.
 - [x] Explicit upload → persistent job/active version → chunk inspection → lexical retrieval works on actual PostgreSQL, including restart and source update.
 - [x] Failed/incompatible/corrupt/encrypted PDF leaves previously published version and search intact, with sanitized diagnostic code.
-- [x] At least 10 representative PDFs and 20 evidence queries produce a recorded page/section/plain-recursive comparison with source/page citation accuracy and resource cost. Local corpus: 11 reproducible layouts, 25 labelled queries, one explicit parser refusal; separate real-source live proof.
+- [x] At least 10 representative PDFs and 20 evidence queries produce a recorded page/section/plain-recursive comparison with source/page citation accuracy and resource cost. Current parser r2: all 11 reproducible layouts pass extraction; 25 labelled queries remain scored, including lexical misses. The earlier parser-r1 refusal is historical; real-source live proof is separate.
 - [x] New format support is not advertised before parser/route/capabilities checks pass; UI displays only authoritative available metadata.
 - [x] No alternate document store, upstream Haystack fork, unreviewed OCR/network calls or destructive migration is added.
 
@@ -252,7 +266,8 @@ Document parser revision, accepted PDFs, page/table limitations, exact byte/page
 - [x] 2026-11-23 PDF module inventory rechecked; existing worker/sandbox/asset manifest preserved.
 - [x] Source-level text and table qualification results reported separately from visual/OCR feature availability.
 - [x] Normal text PDF, mixed figure+text and image-only scan negative paths independently tested.
-- [x] CONTENT-001 evidence storage integration used only when actually available; no fake source assets. Integration remains unavailable/pending, not a claimed pass for persisted assets.
+- [x] Gate A publishes explicit unavailable-evidence warnings and no fake source assets while CONTENT-001 is absent.
+- [ ] Gate B: after CONTENT-001 is implemented, integrate its actual asset/element/representation identities and pass original-byte hash, workspace-isolation and restart checks. **PENDING DEPENDENCY; not a completed integration.**
 - [x] Visual/OCR/evidence successor dependencies and no-silent-coverage-loss policy documented.
 
 
@@ -268,4 +283,4 @@ Document parser revision, accepted PDFs, page/table limitations, exact byte/page
 - [x] Migration/rollback decisions explicit, no applied SQL overwritten and no data erased.
 - [x] Measurable acceptance evidence and actual commands captured for Gate A. Overall COMPLETE remains withheld for Gate B.
 
-**Gate A has local extraction/search/restart evidence in the qualification record. The overall task remains IN PROGRESS for Gate B integration after CONTENT-001. OCR, visual semantics and evidence-resolution are separately gated successors and cannot be claimed complete here.**
+**Final status: PARTIALLY COMPLETE. Gate A is COMPLETE with extraction/search/restart and numerical-integrity evidence. The task cannot be marked fully COMPLETE until the required Gate B integration passes after CONTENT-001. OCR, visual semantics and evidence-resolution remain separate successor work and are not claimed complete here.**

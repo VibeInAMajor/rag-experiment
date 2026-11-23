@@ -1,9 +1,29 @@
 import { useState } from "react";
 import { AlertTriangle, FileText, Search, X } from "lucide-react";
 import type { PreviewDocument } from "../domain/types";
+import {
+  LiveDocumentsContent,
+  type LiveDocumentsProps,
+} from "./LiveDocumentsContent";
 import "./views.css";
 
-export function DocumentsView({ documents }: { documents: PreviewDocument[] }) {
+type DocumentsViewProps =
+  | { mode: "preview"; documents: PreviewDocument[] }
+  | ({ mode: "live" } & LiveDocumentsProps);
+
+export function DocumentsView(props: DocumentsViewProps) {
+  return props.mode === "live" ? (
+    <LiveDocumentsContent {...props} />
+  ) : (
+    <PreviewDocumentsContent documents={props.documents} />
+  );
+}
+
+function PreviewDocumentsContent({
+  documents,
+}: {
+  documents: PreviewDocument[];
+}) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -19,7 +39,7 @@ export function DocumentsView({ documents }: { documents: PreviewDocument[] }) {
     <section className="view-page" aria-labelledby="documents-title">
       <header className="view-heading">
         <div>
-          <p className="view-eyebrow">Knowledge</p>
+          <p className="view-eyebrow">Knowledge · Preview</p>
           <h1 id="documents-title">Documents</h1>
           <p>Inspect source files and extracted content.</p>
         </div>

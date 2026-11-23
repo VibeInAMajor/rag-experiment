@@ -2,7 +2,7 @@
 
 A pipeline editor with offline Preview, separate Haystack constructor validation and opt-in Live lexical search. Preview documents, scores and processing reports are fixtures. Editing, JSON import/export and Preview need no backend; Live search requires the qualified PostgreSQL-backed API.
 
-An independent [Workbench API](../api/README.md) provides PostgreSQL lexical retrieval through Haystack. **Live** mode executes the approved Keyword search graph through that API. The initial Hybrid graph remains Preview. Live document listing is not connected yet.
+An independent [Workbench API](../api/README.md) provides PostgreSQL lexical retrieval through Haystack. **Live** mode executes the approved Keyword search graph and connects Documents to persisted sources, active chunks and synchronous uploads. The initial Hybrid graph remains Preview.
 
 ## Application configuration
 
@@ -46,7 +46,7 @@ npm run preview
 
 ### Optional application lexical API
 
-After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). The approved Keyword search graph already performs Live read-only execution; Live document listing remains separate future work.
+After explicit PostgreSQL setup/migration/seed, load `. ./apps/workbench/postgres/use-dev-env.ps1` from the repository root and launch `hatch run workbench-api:serve`. It listens on `127.0.0.1:8011`, independently of the constructor validator on port 8010. Qualified schema/index/corpus/pipeline state produces readiness 200 and advertises only `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`; missing/unavailable dependencies produce readiness 503 with no executable profile. Without database configuration, liveness/discovery still work. See the [API runbook](../api/README.md), [lexical request guide](../../../docs-website/docs/architecture/postgres-lexical-search.md) and [database operations guide](../../../docs-website/docs/architecture/postgresql-foundation.md). Live Documents uses this API's existing document and ingestion routes; upload, details and jobs each require their own runtime capability.
 
 ### Execution modes and API discovery
 
@@ -68,7 +68,7 @@ Both Vite modes proxy `/api/v1` to port 8011, independently of the validator rou
 | Live, network failure             | Offline; select Preview explicitly or refresh                                  |
 | Live, incompatible contract       | Incompatible; profile and selection cleared                                    |
 
-Discovery checks liveness, readiness, capabilities and bounded workspace pagination. Ready requires consistent responses, a running service, ready database, search support and a supported profile bound to an authorized workspace. A green liveness response alone is insufficient. Live search uses the existing versioned API; document-list requests remain a subsequent task. Preview preferences are retained but disabled in Live. Changing mode cancels pending requests and stops active local progression; recovery never changes the selected mode automatically. Mode survives navigation; refreshing resets it to Preview.
+Discovery checks liveness, readiness, capabilities and bounded workspace pagination. Ready requires consistent responses, a running service, ready database, search support and a supported profile bound to an authorized workspace. A green liveness response alone is insufficient. Live search and Documents use the existing versioned API. Preview preferences are retained but disabled in Live. Changing mode cancels pending requests and stops active local progression; recovery never changes the selected mode automatically. Mode survives navigation; refreshing resets it to Preview.
 
 ### Run a Live keyword search
 
@@ -84,6 +84,22 @@ The approved graph has exactly three nodes and two connections: query → keywor
 Stop marks the request **Interrupted locally**; server cancellation is not confirmed. Graph edits, mode/profile/workspace changes, pipeline changes and unmount invalidate pending responses. Pan/zoom only changes the viewport and does not cancel execution. Failures preserve safe codes/correlation and never substitute fixtures; 404/409/503 refresh discovery without retrying the search. Retry manually after reviewing the error.
 
 Runs and pipeline summaries show mixed, explicitly labeled Preview/Live **session** history, limited to 100 entries across both modes. Completed results retain their submitted graph snapshot; edited graphs cannot display an obsolete response as their own. Refresh clears history; there is no server-side run-history API. Graph exports retain `schemaVersion: 1`, including the new keyword kind/template. Older frontend builds reject these new kinds rather than rewriting them; old graph files remain supported.
+
+### Manage persisted documents
+
+Select **Live → Documents** after connecting to the authorized development workspace. Preview Documents remains fixture data. Live loads 50 source rows per request; **Load more documents** follows the server's opaque cursor. **Filter loaded documents** and status filters affect only rows already loaded. Counts are loaded rows, not an asserted corpus total. An expired cursor or changed corpus clears the old pages and restarts the snapshot once; errors stay visible without fixture fallback.
+
+Select a source to inspect its active version. **Indexed text** and **Chunks** show actual indexed passages, chunk IDs/hashes, section paths, and page/line metadata only when returned. This inspection loads 50 chunks per request, up to 1,000 chunks in memory; an explicit notice identifies additional server chunks at that limit. Individual text and metadata displays also report truncation. **Parse report** shows returned parser/processing policy and warnings. Missing byte counts, pages or evidence are reported as unavailable; indexed text is not the original file.
+
+When **Upload** is available, choose one `.txt`, `.md`, `.markdown` or `.py` file, at most **1 MiB**, then select **Confirm upload**. Text must be nonempty UTF-8 and Python must pass server syntax validation; uploaded code is never executed. PDF is offered only when `pdf_ingestion.available=true`, with the server's **8 MiB / 32-page** ceiling and pinned local model assets. This is text-layer processing: no OCR, visual understanding or original evidence. Office, CSV, YAML and other unqualified formats are not offered. The [parser registry](../api/parser_registry.py) and [ingestion operations guide](../../../docs-website/docs/architecture/durable-text-ingestion.md) own server qualification and recovery.
+
+Each confirmed operation retains one idempotency key and its file in this page session. **Retry same operation** reuses both after a timeout, offline response or local Stop; the server may already have committed. A local Stop never confirms rollback or a failed job. Choosing a file again starts an explicit new operation and may create another source. **Replace file** binds the request to the selected source's loaded active version. A conflict preserves the file and operation; refresh/review current details, then explicitly choose the file again before a new replacement. Failed terminal jobs replay their original failure; after correcting its cause, choose the file again to start an intentional new attempt.
+
+Successful publication reports the actual outcome/replay flag, source/version/job IDs, count and measured server stages, then reloads the list, selected source, chunks and known job. It clears the current Live search display so an old result cannot represent the changed corpus. Jobs are fetched by their known ID, with last-confirmed status/stage/timestamps and **Inspect confirmed job status** for a manual refresh. There is no automatic polling, percentage progress or global job history. **Search this source** opens the existing Keyword search graph: enter a unique term from its indexed text and compare returned source/version IDs.
+
+Navigating away interrupts pending document requests locally and retains the same-workspace upload intent for recovery. Mode/workspace changes clear private files and passages; a browser refresh clears all session intent and keys. Persisted sources and durable jobs remain in PostgreSQL. Original bytes cannot be downloaded through these routes. A registered version-specific filename link only reveals a local original on the API host, as described in [Local source names](#local-source-names).
+
+For rollback, disable the Live Documents entry and retain explicit Preview mode, PostgreSQL source/version/chunk/job rows, local registrations and the named database volume. No database downgrade, reseed or volume deletion is required.
 
 ### Authoritative validation
 
@@ -143,9 +159,9 @@ Library buttons and connection selectors provide alternatives to drag operations
 ## Boundaries and next tasks
 
 - `src/domain` owns view models, catalog, graph validation, JSON parsing, fixtures, and deterministic preview scenarios.
-- `src/hooks` owns editor history, discovery and separate cancellable Preview/Live progression. `src/domain/approvedExecution.ts` owns exact graph matching; `src/domain/liveSearch.ts` owns immutable Live session records and request generations.
+- `src/hooks` owns editor history, discovery and separate cancellable Preview/Live progression. `src/domain/approvedExecution.ts` owns exact graph matching; `src/domain/liveSearch.ts` owns immutable Live session records and request generations. `useLiveDocuments` and `src/domain/liveDocuments.ts` own document snapshots, request generations and recoverable upload operations.
 - `src/components` owns the editor; `src/views` owns Pipelines, Documents, Runs, and Settings.
-- The frontend has separate constructor-validation and typed RAG API boundaries. Safe import and exact approved-graph matching remain browser-owned; component/socket compatibility belongs to Haystack. Live search uses the fixed server profile; Live document listing and model adapters remain future tasks.
+- The frontend has separate constructor-validation and typed RAG API boundaries. Safe import and exact approved-graph matching remain browser-owned; component/socket compatibility belongs to Haystack. Live search uses the fixed server profile; Documents consumes existing PostgreSQL ingestion routes. Model adapters remain future work.
 
 The canonical implementation contract is [RAG runtime contract](../../../docs-website/docs/architecture/rag-runtime-contract.md). It defines the planned execution profiles, API, source identities, score meanings and error semantics. The dated [RAG MVP Architecture and Implementation Plan](../../../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) remains a historical planning reference; its OpenSearch and Ollama-embedding choices do not override the canonical contract.
 
@@ -159,7 +175,7 @@ Preview runs contain illustrative passages, scores and stage durations. Authorit
 
 Workbench graph files remain portable editor documents with `schemaVersion: 1`; they are not executable Haystack YAML or a general backend execution contract. Import/export, drafts and preview behavior do not require a migration for this documentation decision.
 
-The durable metadata/version registry and nullable vector columns exist in PostgreSQL + pgvector. Ingestion/indexing workflows and real embedding generation remain future work. TEI is the selected embedding transport with an expected 2560-dimensional Qwen3-Embedding-4B profile; model/tokenizer revision, endpoint health, token accounting and actual output still require qualification. The initial enabled vector profile is synthetic and three-dimensional; a synthetic 2560-dimensional storage test does not validate model output. TEI inference is not connected by the current UI. Dense/hybrid retrieval and generation remain deferred. Detailed decisions belong to the canonical contract.
+The durable metadata/version registry and nullable vector columns exist in PostgreSQL + pgvector. Bounded TXT/Markdown/Python ingestion and conditionally available PDF ingestion publish active lexical chunks through the existing writer. Real embedding generation remains future work. TEI is the selected embedding transport with an expected 2560-dimensional Qwen3-Embedding-4B profile; model/tokenizer revision, endpoint health, token accounting and actual output still require qualification. The initial enabled vector profile is synthetic and three-dimensional; a synthetic 2560-dimensional storage test does not validate model output. TEI inference is not connected by the current UI. Dense/hybrid retrieval and generation remain deferred. Detailed decisions belong to the canonical contract.
 
 | Task      | Deliverable                                                                                               |
 | --------- | --------------------------------------------------------------------------------------------------------- |

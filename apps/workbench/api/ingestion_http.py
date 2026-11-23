@@ -463,7 +463,11 @@ def register_ingestion_routes(app: FastAPI, routes: IngestionRoutes) -> None:
                                 "file": {
                                     "type": "string",
                                     "format": "binary",
-                                    "description": "One UTF-8 TXT or Markdown, at most 1 MiB.",
+                                    "description": (
+                                        "One UTF-8 TXT, Markdown or Python file, at most 1 MiB; "
+                                        "or a text-layer PDF, at most 8 MiB and 32 pages, only when "
+                                        "capabilities.pdf_ingestion.available is true. No OCR or visual understanding."
+                                    ),
                                 },
                                 "source_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},
                                 "expected_active_version_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},

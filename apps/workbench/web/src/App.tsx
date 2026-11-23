@@ -42,6 +42,7 @@ import { usePreview } from "./hooks/usePreview";
 import { useValidation } from "./hooks/useValidation";
 import { useBackendDiscovery } from "./hooks/useBackendDiscovery";
 import { useLiveSearch } from "./hooks/useLiveSearch";
+import { useLiveDocuments } from "./hooks/useLiveDocuments";
 import { matchApprovedKeywordGraph } from "./domain/approvedExecution";
 import {
   graphFingerprint,
@@ -117,6 +118,9 @@ export function App() {
   const [mode, setMode] = useState<ExecutionMode>("preview");
   const discovery = useBackendDiscovery(mode);
   const [activeId, setActiveId] = useState(initialPipelines[0].id);
+  const [sourceSearchTargets, setSourceSearchTargets] = useState<
+    Record<string, { workspaceId: string; sourceId: string; versionId: string }>
+  >({});
   const [page, setPage] = useState<Page>(() =>
     typeof window !== "undefined" && window.location.hash === "#configuration"
       ? "configuration"
@@ -158,6 +162,22 @@ export function App() {
     setLiveRuns,
     { onInvalidateDiscovery: discovery.refresh },
   );
+  const documents = useLiveDocuments(
+    {
+      mode,
+      workspaceId: discovery.state.selectedWorkspaceId,
+      capabilities: discovery.state.capabilities ?? null,
+      enabled: page === "documents",
+      profileRevision: discovery.state.profile?.profile_revision ?? null,
+    },
+    {
+      onPublished: () => {
+        live.stop();
+        setSubmittedLiveContext(null);
+        setResultsOpen(false);
+      },
+    },
+  );
   const approved = matchApprovedKeywordGraph(current.graph, discovery.state);
   const visibleLiveRun = liveRuns.find(
     (run) =>
@@ -177,6 +197,22 @@ export function App() {
             run.workspaceId === discovery.state.selectedWorkspaceId))),
   );
   const previewRun = runs.find((run) => run.pipelineId === current.id);
+  const sourceTarget = sourceSearchTargets[current.id];
+  const sourceSearchNotice =
+    sourceTarget &&
+    sourceTarget.workspaceId === discovery.state.selectedWorkspaceId
+      ? `Expected source ${sourceTarget.sourceId}, version ${sourceTarget.versionId}. ${
+          visibleLiveRun?.status === "Completed"
+            ? visibleLiveRun.results.some(
+                (item) =>
+                  item.source_id === sourceTarget.sourceId &&
+                  item.source_version_id === sourceTarget.versionId,
+              )
+              ? "Exact source and version found in returned results."
+              : "Expected source and version were not found in returned results. Try a unique term from the indexed text."
+            : "Enter a unique indexed term. Search covers the workspace corpus."
+        }`
+      : "";
   const displayedRun: RunEntry | undefined =
     mode === "preview"
       ? previewRun && { source: "preview", run: previewRun }
@@ -487,7 +523,7 @@ export function App() {
                 }
                 executionNotice={
                   mode === "live" && approved.supported
-                    ? `Requesting up to ${approved.effectiveTopK} results · ${discovery.state.profile?.score_type}. Supported Live profile; constructor validation is separate.`
+                    ? `${sourceSearchNotice ? `${sourceSearchNotice} ` : ""}Requesting up to ${approved.effectiveTopK} results · ${discovery.state.profile?.score_type}. Supported Live profile; constructor validation is separate.`
                     : undefined
                 }
                 onStop={mode === "live" ? live.stop : preview.stop}
@@ -552,24 +588,33 @@ export function App() {
           )}
           {page === "documents" &&
             (mode === "preview" ? (
-              <DocumentsView documents={previewDocuments} />
+              <DocumentsView mode="preview" documents={previewDocuments} />
             ) : (
-              <section
-                className="view-page"
-                aria-labelledby="live-documents-title"
-              >
-                <header className="view-heading">
-                  <h1 id="live-documents-title">Documents</h1>
-                </header>
-                <p className="live-empty">
-                  Live document listing is not connected yet.
-                </p>
-                <p className="live-empty">
-                  {discovery.state.capabilities?.features.documents
-                    ? "The API supports read-only listing."
-                    : "Document availability has not been confirmed."}
-                </p>
-              </section>
+              <DocumentsView
+                mode="live"
+                controller={documents}
+                capabilities={discovery.state.capabilities ?? null}
+                onSearchSource={({ title, sourceId, versionId }) => {
+                  const created = createPipeline("keyword");
+                  const workspaceId = discovery.state.selectedWorkspaceId;
+                  if (!workspaceId) return;
+                  setSourceSearchTargets((previous) => ({
+                    ...previous,
+                    [created.id]: { workspaceId, sourceId, versionId },
+                  }));
+                  created.name = `Search: ${title}`;
+                  const query = created.graph.nodes.find(
+                    (node) => node.data.kind === "query",
+                  );
+                  if (query)
+                    query.data.parameters.query = title.replace(/\.[^.]+$/, "");
+                  setPipelines((previous) => [...previous, created]);
+                  openPipeline(created.id);
+                  notify(
+                    "Keyword search opened. Enter a unique term from the indexed text; results include source and version IDs.",
+                  );
+                }}
+              />
             ))}
           {page === "runs" && (
             <RunsView

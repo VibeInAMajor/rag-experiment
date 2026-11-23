@@ -737,3 +737,110 @@
     max-width: 180px;
   }
 }
+.documents-live .view-actions,
+.documents-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.documents-live .data-name {
+  min-height: 44px;
+}
+.documents-live .data-name strong,
+.documents-upload-filename,
+.documents-error,
+.documents-error-code,
+.documents-live .detail-metadata dd {
+  overflow-wrap: anywhere;
+}
+.documents-error-code {
+  display: block;
+  margin-top: 6px;
+}
+.documents-pagination,
+.documents-ingestion {
+  padding: 20px;
+}
+.documents-ingestion {
+  margin-top: 20px;
+}
+.documents-ingestion h2 {
+  margin-top: 0;
+  font-size: 17px;
+}
+.documents-ingestion h3,
+.documents-live .detail-body h3 {
+  font-size: 14px;
+}
+.documents-detail-summary {
+  border-bottom: 1px solid var(--border-hairline);
+}
+.documents-live .detail-metadata dd {
+  min-width: 0;
+}
+.documents-metadata {
+  margin: 16px 0;
+  font-size: 12px;
+}
+.documents-metadata summary {
+  cursor: pointer;
+  padding: 10px 0;
+  color: var(--text-secondary);
+}
+.documents-metadata pre,
+.documents-chunk pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 360px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.documents-chunk pre {
+  font-family: "JetBrains Mono", monospace;
+}
+.documents-local-source {
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.documents-upload-dialog {
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+}
+.documents-upload-field {
+  margin-top: 24px;
+}
+.documents-upload-field input {
+  padding: 12px 0;
+  max-width: 100%;
+  min-height: 44px;
+}
+.documents-live
+  :is(button, input, select, summary, [role="tabpanel"]):focus-visible,
+.documents-upload-dialog :is(button, input):focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .documents-live .view-detail-layout.has-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .documents-live .view-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 600px) {
+  .documents-live .view-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .documents-live .view-search,
+  .documents-live .view-filter .input {
+    width: 100%;
+  }
+  .documents-upload-dialog .view-dialog-actions {
+    flex-wrap: wrap;
+  }
+}

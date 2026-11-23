@@ -6,7 +6,7 @@
 **Priority:** P2 — customer communications and time-aware knowledge  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001  
 **Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
-**Target:** `tasks/check/TASK-RAG-PARSE-005-conversations-and-transcripts.md  
+**Target:** `tasks/TASK-RAG-PARSE-005-conversations-and-transcripts.md  
 **Architecture:** [Content-aware chunking strategy](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
@@ -132,7 +132,7 @@ Timestamp/turn/thread metadata can initially fit bounded JSONB; indexed conversa
 
 ## O. Mandatory Completion Checklist
 
-- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/check/` location.
+- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/` location.
 - [ ] PARSE/CONTENT ownership boundaries exercised with fixture tests; no duplicate durable element/asset model.
 - [ ] Existing SQL/API/upload/source-version test gates remain passing when new parser family is enabled.
 

@@ -10,6 +10,11 @@ import type {
   SearchResponse,
   SourceRevealResponse,
   WorkspacePage,
+  DocumentPage,
+  DocumentDetail,
+  ActiveChunkPageResponse,
+  IngestionResponse,
+  IngestionJobResponse,
 } from "./contracts";
 import {
   decodeCapabilities,
@@ -26,6 +31,12 @@ import {
   decodeWorkspaces,
   validateCursor,
   validateResourceId,
+  decodeDocumentPage,
+  decodeDocumentDetail,
+  decodeActiveChunkPage,
+  decodeIngestionResponse,
+  decodeIngestionJob,
+  type DocumentDecodeContext,
 } from "./decode";
 import { invalidResponse, WorkbenchApiError } from "./errors";
 
@@ -36,7 +47,51 @@ export type WorkspaceOptions = RequestOptions & {
   cursor?: string;
   limit?: number;
 };
+export type DocumentContextOptions = RequestOptions & DocumentDecodeContext;
+export type DocumentPageOptions = WorkspaceOptions & DocumentDecodeContext;
+export type ChunkPageOptions = DocumentPageOptions;
+export type DocumentUploadRequest = {
+  file: File;
+  idempotencyKey: string;
+  sourceId?: string;
+  expectedActiveVersionId?: string;
+  pdfAvailable?: boolean;
+};
+type RequestTransport = {
+  method?: "POST" | "PUT";
+  configuration?: boolean;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  maxResponseChars?: number;
+} & (
+  | { body?: object; form?: never; upload?: never }
+  | { body?: never; form: FormData; upload: true }
+);
 export type WorkbenchApiClient = {
+  listDocuments(
+    workspaceId: string,
+    options?: DocumentPageOptions,
+  ): Promise<DocumentPage>;
+  getDocumentDetail(
+    workspaceId: string,
+    sourceId: string,
+    options?: DocumentContextOptions,
+  ): Promise<DocumentDetail>;
+  listActiveChunks(
+    workspaceId: string,
+    sourceId: string,
+    options?: ChunkPageOptions,
+  ): Promise<ActiveChunkPageResponse>;
+  getIngestionJob(
+    workspaceId: string,
+    jobId: string,
+    options?: RequestOptions,
+  ): Promise<IngestionJobResponse>;
+  uploadDocument(
+    workspaceId: string,
+    body: DocumentUploadRequest,
+    options?: RequestOptions,
+  ): Promise<IngestionResponse>;
   getConfiguration(options?: RequestOptions): Promise<ConfigurationDocument>;
   validateConfiguration(
     yaml: string,
@@ -107,22 +162,90 @@ function correlate(response: Response, data: ApiMeta): void {
   if (header !== null && header !== data.request_id) invalidResponse();
 }
 
+function pageQuery({ limit = 50, cursor }: WorkspaceOptions): URLSearchParams {
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)
+    throw new WorkbenchApiError("Page limit must be between 1 and 100.", {
+      kind: "configuration",
+      code: "INVALID_PAGE_LIMIT",
+    });
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor !== undefined) query.set("cursor", validateCursor(cursor));
+  return query;
+}
+
+function validateUpload(body: DocumentUploadRequest): string {
+  const fail = (code: string, message: string): never => {
+    throw new WorkbenchApiError(message, { kind: "configuration", code });
+  };
+  if (!/^[A-Za-z0-9_-]{8,128}$/.test(body.idempotencyKey))
+    fail(
+      "INVALID_IDEMPOTENCY_KEY",
+      "Use the same secure operation key when retrying an upload.",
+    );
+  if (
+    (body.sourceId === undefined) !==
+    (body.expectedActiveVersionId === undefined)
+  )
+    fail(
+      "INVALID_UPDATE_FIELDS",
+      "Replacement requires a source and its expected active version.",
+    );
+  const rules: Record<string, readonly string[]> = {
+    txt: ["text/plain"],
+    md: ["text/markdown", "text/x-markdown", "text/plain"],
+    markdown: ["text/markdown", "text/x-markdown", "text/plain"],
+    py: ["text/x-python", "application/x-python-code", "text/plain"],
+    pdf: ["application/pdf"],
+  };
+  const extension = body.file.name.split(".").at(-1)?.toLowerCase() ?? "";
+  const aliases = Object.hasOwn(rules, extension)
+    ? rules[extension]
+    : undefined;
+  const mime = body.file.type.split(";", 1)[0].trim().toLowerCase();
+  if (!aliases || (mime && !aliases.includes(mime)))
+    return fail(
+      "UNSUPPORTED_FORMAT",
+      "Choose a qualified TXT, Markdown, Python or available text-layer PDF file.",
+    );
+  if (extension === "pdf" && body.pdfAvailable !== true)
+    fail(
+      "PDF_UNAVAILABLE",
+      "PDF ingestion is unavailable in the current backend.",
+    );
+  const maximum = extension === "pdf" ? 8388608 : 1048576;
+  if (
+    !Number.isSafeInteger(body.file.size) ||
+    body.file.size < 1 ||
+    body.file.size > maximum
+  )
+    fail(
+      "CONTENT_LIMIT_EXCEEDED",
+      `Choose a nonempty file no larger than ${maximum} bytes.`,
+    );
+  return mime || aliases[0];
+}
+
 export function createWorkbenchApiClient({
   baseUrl = import.meta.env.VITE_WORKBENCH_API_BASE_URL ?? "/api/v1",
   fetchImpl = globalThis.fetch,
   timeoutMs = 5000,
   searchTimeoutMs = 15000,
+  uploadTimeoutMs = 240000,
 }: {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
   searchTimeoutMs?: number;
+  uploadTimeoutMs?: number;
 } = {}): WorkbenchApiClient {
   const base = publicBase(baseUrl);
   if (
     [timeoutMs, searchTimeoutMs].some(
       (value) => !Number.isSafeInteger(value) || value < 1 || value > 60000,
-    )
+    ) ||
+    !Number.isSafeInteger(uploadTimeoutMs) ||
+    uploadTimeoutMs < 1 ||
+    uploadTimeoutMs > 240000
   )
     throw new WorkbenchApiError("Use a bounded API request timeout.", {
       kind: "configuration",
@@ -131,16 +254,9 @@ export function createWorkbenchApiClient({
 
   async function request<T extends ApiMeta>(
     path: string,
-    decode: (value: unknown) => T,
+    decode: (value: unknown, httpStatus: number) => T,
     { signal }: RequestOptions = {},
-    transport: {
-      body?: object;
-      method?: "POST" | "PUT";
-      configuration?: boolean;
-      headers?: Record<string, string>;
-      timeoutMs?: number;
-      maxResponseChars?: number;
-    } = {},
+    transport: RequestTransport = {},
   ): Promise<T> {
     const controller = new AbortController();
     let rejectAbort: (error: WorkbenchApiError) => void = () => {};
@@ -150,8 +266,12 @@ export function createWorkbenchApiClient({
     const cancel = (timeout: boolean) => {
       const error = new WorkbenchApiError(
         timeout
-          ? "Backend request timed out. Retry when available."
-          : "Backend request interrupted locally.",
+          ? transport.upload
+            ? "Upload timed out; server outcome may be unknown. Retry the same operation key."
+            : "Backend request timed out. Retry when available."
+          : transport.upload
+            ? "Request stopped locally; server outcome may be unknown."
+            : "Backend request interrupted locally.",
         {
           kind: timeout ? "timeout" : "cancelled",
           code: timeout ? "TIMEOUT" : "CANCELLED",
@@ -188,7 +308,10 @@ export function createWorkbenchApiClient({
         }
         const response = await fetchImpl(`${base}${path}`, {
           method:
-            transport.method ?? (transport.body === undefined ? "GET" : "POST"),
+            transport.method ??
+            (transport.body === undefined && transport.form === undefined
+              ? "GET"
+              : "POST"),
           headers: {
             Accept: "application/json",
             ...(transport.configuration
@@ -199,9 +322,11 @@ export function createWorkbenchApiClient({
               ? {}
               : { "Content-Type": "application/json" }),
           },
-          ...(transport.body === undefined
-            ? {}
-            : { body: JSON.stringify(transport.body) }),
+          ...(transport.form !== undefined
+            ? { body: transport.form }
+            : transport.body === undefined
+              ? {}
+              : { body: JSON.stringify(transport.body) }),
           signal: controller.signal,
           credentials: "omit",
           cache: "no-store",
@@ -246,11 +371,16 @@ export function createWorkbenchApiClient({
               requestId: failure.request_id,
               traceId: failure.trace_id,
               runId: failure.error.run_id ?? undefined,
+              jobId: failure.error.job_id ?? undefined,
             },
           );
         }
-        if (response.status !== 200) invalidResponse();
-        const data = decode(value);
+        if (
+          response.status !== 200 &&
+          !(transport.upload && response.status === 201)
+        )
+          invalidResponse();
+        const data = decode(value, response.status);
         correlate(response, data);
         return data;
       };
@@ -263,7 +393,9 @@ export function createWorkbenchApiClient({
       )
         throw controller.signal.reason;
       throw new WorkbenchApiError(
-        "Backend is unavailable. Check the API service and proxy.",
+        transport.upload
+          ? "Upload connection failed; server outcome may be unknown. Retry the same operation key."
+          : "Backend is unavailable. Check the API service and proxy.",
         { kind: "transport", code: "NETWORK_ERROR", retryable: true },
       );
     } finally {
@@ -284,6 +416,76 @@ export function createWorkbenchApiClient({
   };
 
   return {
+    listDocuments: async (workspaceId, options = {}) => {
+      const scope = validateResourceId(workspaceId);
+      return request(
+        `/workspaces/${encodeURIComponent(scope)}/documents?${pageQuery(options)}`,
+        (value) => decodeDocumentPage(value, scope, options),
+        options,
+      );
+    },
+    getDocumentDetail: async (workspaceId, sourceId, options = {}) => {
+      const scope = validateResourceId(workspaceId);
+      const source = validateResourceId(sourceId);
+      return request(
+        `/workspaces/${encodeURIComponent(scope)}/documents/${encodeURIComponent(source)}`,
+        (value) => decodeDocumentDetail(value, scope, source, options),
+        options,
+        { maxResponseChars: 4194304 },
+      );
+    },
+    listActiveChunks: async (workspaceId, sourceId, options = {}) => {
+      const scope = validateResourceId(workspaceId);
+      const source = validateResourceId(sourceId);
+      return request(
+        `/workspaces/${encodeURIComponent(scope)}/documents/${encodeURIComponent(source)}/chunks?${pageQuery(options)}`,
+        (value) => decodeActiveChunkPage(value, scope, source, options),
+        options,
+        { maxResponseChars: 16777216 },
+      );
+    },
+    getIngestionJob: async (workspaceId, jobId, options) => {
+      const scope = validateResourceId(workspaceId);
+      const job = validateResourceId(jobId);
+      return request(
+        `/workspaces/${encodeURIComponent(scope)}/jobs/${encodeURIComponent(job)}`,
+        (value) => decodeIngestionJob(value, scope, job),
+        options,
+      );
+    },
+    uploadDocument: async (workspaceId, body, options) => {
+      const scope = validateResourceId(workspaceId);
+      const mime = validateUpload(body);
+      const form = new FormData();
+      // Browsers otherwise send application/octet-stream for extensions without an OS MIME mapping.
+      form.append(
+        "file",
+        body.file.type ? body.file : body.file.slice(0, body.file.size, mime),
+        body.file.name,
+      );
+      if (
+        body.sourceId !== undefined &&
+        body.expectedActiveVersionId !== undefined
+      ) {
+        form.append("source_id", validateResourceId(body.sourceId));
+        form.append(
+          "expected_active_version_id",
+          validateResourceId(body.expectedActiveVersionId),
+        );
+      }
+      return request(
+        `/workspaces/${encodeURIComponent(scope)}/documents`,
+        (value, status) =>
+          decodeIngestionResponse(value, scope, status, body.sourceId),
+        options,
+        {
+          form,
+          upload: true,
+          headers: { "Idempotency-Key": body.idempotencyKey },
+          timeoutMs: uploadTimeoutMs,
+        },
+      );
+    },
     getConfiguration: (options) =>
       request("/configuration", decodeConfigurationDocument, options, {
         configuration: true,

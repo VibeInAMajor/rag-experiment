@@ -9,6 +9,7 @@ export class WorkbenchApiError extends Error {
   readonly traceId?: string;
   readonly requestId?: string;
   readonly runId?: string;
+  readonly jobId?: string;
 
   constructor(
     message: string,
@@ -20,6 +21,7 @@ export class WorkbenchApiError extends Error {
       traceId?: string;
       requestId?: string;
       runId?: string;
+      jobId?: string;
     },
   ) {
     super(message);
@@ -31,6 +33,7 @@ export class WorkbenchApiError extends Error {
     this.traceId = details.traceId;
     this.requestId = details.requestId;
     this.runId = details.runId;
+    this.jobId = details.jobId;
   }
 }
 

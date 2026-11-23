@@ -13,6 +13,15 @@ import {
   type SearchResponse,
   type SourceRevealResponse,
   type WorkspacePage,
+  type DocumentItem,
+  type DocumentPage,
+  type DocumentDetail,
+  type ActiveChunkPageResponse,
+  type IngestionResponse,
+  type IngestionJobResponse,
+  type IngestionStageTiming,
+  type JsonValue,
+  type PdfIngestionCapabilities,
 } from "./contracts";
 import { invalidResponse } from "./errors";
 
@@ -357,7 +366,11 @@ export function decodeCapabilities(value: unknown): BackendCapabilities {
     features: {
       documents: boolean(features.documents),
       search: boolean(features.search),
+      upload: boolean(features.upload),
+      document_details: boolean(features.document_details),
+      jobs: boolean(features.jobs),
     },
+    pdf_ingestion: decodePdfCapabilities(item.pdf_ingestion),
     dependencies: {
       database: {
         status: choice(database.status, [
@@ -424,6 +437,10 @@ export function decodeFailure(value: unknown, httpStatus: number): ApiFailure {
         error.run_id === null || error.run_id === undefined
           ? error.run_id
           : identifier(error.run_id),
+      job_id:
+        error.job_id === null || error.job_id === undefined
+          ? error.job_id
+          : identifier(error.job_id),
       fields,
     },
   };
@@ -486,4 +503,366 @@ export function decodeConfigurationValidation(
     errors,
     warnings: array(item.warnings, 10).map((value) => text(value, 512)),
   };
+}
+
+function decodePdfCapabilities(value: unknown): PdfIngestionCapabilities {
+  const item = object(value);
+  if (
+    item.original_evidence !== false ||
+    item.ocr !== false ||
+    item.visual_understanding !== false
+  )
+    invalidResponse();
+  const available = boolean(item.available);
+  const textLayer = boolean(item.text_layer);
+  const pageProvenance = boolean(item.page_provenance);
+  const tableRows = boolean(item.table_rows);
+  if (available && (!textLayer || !pageProvenance || !tableRows))
+    invalidResponse();
+  return {
+    available,
+    text_layer: textLayer,
+    page_provenance: pageProvenance,
+    table_rows: tableRows,
+    original_evidence: false,
+    ocr: false,
+    visual_understanding: false,
+    visual_detection_coverage: literal(
+      item.visual_detection_coverage,
+      "unverified",
+    ),
+    max_bytes: literal(item.max_bytes, 8388608),
+    max_pages: literal(item.max_pages, 32),
+  };
+}
+
+function nonnegativeInteger(value: unknown): number {
+  const result = finiteNumber(value);
+  if (!Number.isSafeInteger(result)) invalidResponse();
+  return result;
+}
+
+function nullableId(value: unknown): string | null {
+  return value === null ? null : identifier(value);
+}
+
+function timestamp(value: unknown): string {
+  const result = text(value, 64);
+  if (
+    !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(
+      result,
+    ) ||
+    !Number.isFinite(Date.parse(result))
+  )
+    invalidResponse();
+  const year = Number(result.slice(0, 4));
+  const month = Number(result.slice(5, 7));
+  const day = Number(result.slice(8, 10));
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > new Date(Date.UTC(year, month, 0)).getUTCDate()
+  )
+    invalidResponse();
+  return result;
+}
+
+function boundedDocumentText(value: unknown, maximum = 52428800): string {
+  const result = documentText(value);
+  if (result.length > maximum) invalidResponse();
+  return result;
+}
+
+function jsonMap(value: unknown): Record<string, JsonValue> {
+  let remaining = 20000;
+  const visit = (input: unknown, depth: number): JsonValue => {
+    if (--remaining < 0 || depth > 16) invalidResponse();
+    if (input === null || typeof input === "boolean") return input;
+    if (typeof input === "string") return boundedDocumentText(input, 65536);
+    if (typeof input === "number") {
+      if (!Number.isFinite(input)) invalidResponse();
+      return input;
+    }
+    if (Array.isArray(input))
+      return input.map((entry) => visit(entry, depth + 1));
+    const item = object(input);
+    return Object.fromEntries(
+      Object.entries(item).map(([key, entry]) => {
+        boundedDocumentText(key, 512);
+        return [key, visit(entry, depth + 1)];
+      }),
+    );
+  };
+  const item = object(value);
+  return Object.fromEntries(
+    Object.entries(item).map(([key, entry]) => {
+      boundedDocumentText(key, 512);
+      return [key, visit(entry, 1)];
+    }),
+  );
+}
+
+function documentItem(value: unknown): DocumentItem {
+  const item = object(value);
+  return {
+    source_id: identifier(item.source_id),
+    title: documentText(item.title),
+    media_type: text(item.media_type, 256),
+    status: choice(item.status, ["ready", "processing", "error"]),
+    active_version_id: nullableId(item.active_version_id),
+    chunk_count: nonnegativeInteger(item.chunk_count),
+    updated_at: timestamp(item.updated_at),
+    ...(item.error_code === undefined
+      ? {}
+      : { error_code: optionalText(item.error_code) }),
+  };
+}
+
+export type DocumentDecodeContext = {
+  expectedCorpusRevision?: string;
+  expectedVersionId?: string;
+};
+
+function documentScope(
+  item: Record<string, unknown>,
+  workspaceId: string,
+  context: DocumentDecodeContext = {},
+) {
+  if (
+    item.workspace_id !== workspaceId ||
+    (context.expectedCorpusRevision !== undefined &&
+      item.corpus_revision !== context.expectedCorpusRevision)
+  )
+    invalidResponse();
+  return {
+    ...meta(item),
+    workspace_id: identifier(item.workspace_id),
+    corpus_revision: identifier(item.corpus_revision),
+  };
+}
+
+export function decodeDocumentPage(
+  value: unknown,
+  workspaceId: string,
+  context: DocumentDecodeContext = {},
+): DocumentPage {
+  const item = object(value);
+  const items = array(item.items, 100).map(documentItem);
+  if (new Set(items.map((entry) => entry.source_id)).size !== items.length)
+    invalidResponse();
+  return {
+    ...documentScope(item, workspaceId, context),
+    items,
+    next_cursor:
+      item.next_cursor === null ? null : validateCursor(item.next_cursor),
+  };
+}
+
+export function decodeDocumentDetail(
+  value: unknown,
+  workspaceId: string,
+  sourceId: string,
+  context: DocumentDecodeContext = {},
+): DocumentDetail {
+  const item = object(value);
+  if (
+    item.source_id !== sourceId ||
+    (context.expectedVersionId !== undefined &&
+      item.active_version_id !== context.expectedVersionId) ||
+    item.original_content_available !== false
+  )
+    invalidResponse();
+  const base = documentItem(item);
+  const result: DocumentDetail = {
+    ...documentScope(item, workspaceId, context),
+    source_id: base.source_id,
+    title: base.title,
+    media_type: base.media_type,
+    status: base.status,
+    active_version_id: base.active_version_id,
+    chunk_count: base.chunk_count,
+    updated_at: base.updated_at,
+    warnings: array(item.warnings, 4096).map((warning) =>
+      documentText(warning),
+    ),
+    original_content_available: false,
+  };
+  for (const key of [
+    "processing_profile",
+    "document_processing",
+    "parser",
+  ] as const) {
+    if (item[key] !== undefined)
+      result[key] = item[key] === null ? null : jsonMap(item[key]);
+  }
+  for (const key of [
+    "processing_profile_fingerprint",
+    "ingestion_policy_revision",
+    "source_content_sha256",
+  ] as const) {
+    if (item[key] !== undefined) result[key] = optionalText(item[key], 4096);
+  }
+  for (const key of ["source_bytes", "parsed_element_count"] as const) {
+    if (item[key] !== undefined)
+      result[key] = item[key] === null ? null : nonnegativeInteger(item[key]);
+  }
+  if (item.language_policy !== undefined)
+    result.language_policy =
+      item.language_policy === null
+        ? null
+        : choice(item.language_policy, [
+            "unqualified_source_locale",
+            "configured_sentence_language",
+            "configured_structural_boundaries",
+          ] as const);
+  if (item.default_language !== undefined)
+    result.default_language =
+      item.default_language === null
+        ? null
+        : choice(item.default_language, ["en", "ru"] as const);
+  return result;
+}
+
+export function decodeActiveChunkPage(
+  value: unknown,
+  workspaceId: string,
+  sourceId: string,
+  context: DocumentDecodeContext = {},
+): ActiveChunkPageResponse {
+  const item = object(value);
+  if (
+    item.source_id !== sourceId ||
+    (context.expectedVersionId !== undefined &&
+      item.source_version_id !== context.expectedVersionId)
+  )
+    invalidResponse();
+  const items = array(item.items, 100).map((value) => {
+    const entry = object(value);
+    const content = boundedDocumentText(entry.content, 32768);
+    if (!content.length) invalidResponse();
+    return {
+      chunk_id: identifier(entry.chunk_id),
+      order: nonnegativeInteger(entry.order),
+      content,
+      content_hash: text(entry.content_hash, 256),
+      ...(entry.page === undefined
+        ? {}
+        : { page: entry.page === null ? null : positiveInteger(entry.page) }),
+      section_path: array(entry.section_path, 4096).map((part) =>
+        documentText(part),
+      ),
+      metadata: jsonMap(entry.metadata),
+    };
+  });
+  if (
+    new Set(items.map((entry) => entry.chunk_id)).size !== items.length ||
+    items.some(
+      (entry, index) => index > 0 && entry.order <= items[index - 1].order,
+    )
+  )
+    invalidResponse();
+  return {
+    ...documentScope(item, workspaceId, context),
+    source_id: identifier(item.source_id),
+    source_version_id: identifier(item.source_version_id),
+    items,
+    next_cursor:
+      item.next_cursor === null ? null : validateCursor(item.next_cursor),
+  };
+}
+
+function ingestionStages(value: unknown): IngestionStageTiming[] {
+  const stages = array(value, 3).map((value) => {
+    const entry = object(value);
+    return {
+      stage: choice(entry.stage, ["parsing", "chunking", "publication"]),
+      duration_ms: finiteNumber(entry.duration_ms),
+    };
+  });
+  if (new Set(stages.map((entry) => entry.stage)).size !== stages.length)
+    invalidResponse();
+  return stages;
+}
+
+export function decodeIngestionResponse(
+  value: unknown,
+  workspaceId: string,
+  httpStatus: number,
+  expectedSourceId?: string,
+): IngestionResponse {
+  const item = object(value);
+  const outcome = choice(item.outcome, ["created", "updated", "unchanged"]);
+  const replayed = boolean(item.replayed);
+  if (
+    (httpStatus !== 200 && httpStatus !== 201) ||
+    (httpStatus === 201 && (outcome !== "created" || replayed)) ||
+    (httpStatus === 200 && outcome === "created" && !replayed) ||
+    (expectedSourceId !== undefined && item.source_id !== expectedSourceId)
+  )
+    invalidResponse();
+  return {
+    ...documentScope(item, workspaceId),
+    source_id: identifier(item.source_id),
+    source_version_id: identifier(item.source_version_id),
+    job_id: identifier(item.job_id),
+    outcome,
+    status: literal(item.status, "completed"),
+    chunk_count: positiveInteger(item.chunk_count),
+    stages: ingestionStages(item.stages),
+    replayed,
+  };
+}
+
+export function decodeIngestionJob(
+  value: unknown,
+  workspaceId: string,
+  jobId: string,
+): IngestionJobResponse {
+  const item = object(value);
+  if (item.workspace_id !== workspaceId || item.job_id !== jobId)
+    invalidResponse();
+  const states = [
+    "pending",
+    "parsing",
+    "chunking",
+    "publishing",
+    "completed",
+    "failed",
+  ] as const;
+  const result: IngestionJobResponse = {
+    ...meta(item),
+    workspace_id: identifier(item.workspace_id),
+    job_id: identifier(item.job_id),
+    source_id: identifier(item.source_id),
+    source_version_id: nullableId(item.source_version_id),
+    reserved_version_id: identifier(item.reserved_version_id),
+    status: choice(item.status, states),
+    stage: choice(item.stage, states),
+    retryable: boolean(item.retryable),
+    error_code: item.error_code === null ? null : text(item.error_code, 128),
+    chunk_count:
+      item.chunk_count === null ? null : nonnegativeInteger(item.chunk_count),
+    outcome:
+      item.outcome === null
+        ? null
+        : choice(item.outcome, ["created", "updated", "unchanged"] as const),
+    created_at: timestamp(item.created_at),
+    updated_at: timestamp(item.updated_at),
+    finished_at: item.finished_at === null ? null : timestamp(item.finished_at),
+    stages: ingestionStages(item.stages),
+  };
+  if (
+    (result.status !== "failed" && result.status !== result.stage) ||
+    Date.parse(result.updated_at) < Date.parse(result.created_at) ||
+    (result.finished_at !== null &&
+      Date.parse(result.finished_at) < Date.parse(result.created_at)) ||
+    (result.status === "completed" &&
+      (result.source_version_id === null ||
+        result.outcome === null ||
+        result.chunk_count === null ||
+        result.finished_at === null))
+  )
+    invalidResponse();
+  return result;
 }

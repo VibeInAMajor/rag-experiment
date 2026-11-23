@@ -13,6 +13,7 @@ export type ApiFailure = ApiMeta & {
     retryable: boolean;
     http_status: number;
     run_id?: string | null;
+    job_id?: string | null;
     fields?: Array<{ field: string; code: string }> | null;
   };
 };
@@ -53,7 +54,14 @@ export type BackendCapabilities = ApiMeta & {
   deployment_mode: "single_workspace_dev";
   service_state: "starting" | "running" | "stopping" | "stopped";
   profiles: BackendProfile[];
-  features: { documents: boolean; search: boolean };
+  features: {
+    documents: boolean;
+    search: boolean;
+    upload: boolean;
+    document_details: boolean;
+    jobs: boolean;
+  };
+  pdf_ingestion: PdfIngestionCapabilities;
   dependencies: {
     database: {
       status:
@@ -129,6 +137,101 @@ export type DocumentPage = ApiMeta & {
   corpus_revision: string;
   items: DocumentItem[];
   next_cursor: string | null;
+};
+
+export type PdfIngestionCapabilities = {
+  available: boolean;
+  text_layer: boolean;
+  page_provenance: boolean;
+  table_rows: boolean;
+  original_evidence: false;
+  ocr: false;
+  visual_understanding: false;
+  visual_detection_coverage: "unverified";
+  max_bytes: 8388608;
+  max_pages: 32;
+};
+
+export type JsonValue =
+  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+export type DocumentDetail = ApiMeta &
+  Omit<DocumentItem, "error_code"> & {
+    workspace_id: string;
+    corpus_revision: string;
+    processing_profile?: Record<string, JsonValue> | null;
+    processing_profile_fingerprint?: string | null;
+    ingestion_policy_revision?: string | null;
+    language_policy?:
+      | "unqualified_source_locale"
+      | "configured_sentence_language"
+      | "configured_structural_boundaries"
+      | null;
+    default_language?: "en" | "ru" | null;
+    document_processing?: Record<string, JsonValue> | null;
+    source_content_sha256?: string | null;
+    source_bytes?: number | null;
+    parsed_element_count?: number | null;
+    parser?: Record<string, JsonValue> | null;
+    warnings: string[];
+    original_content_available: false;
+  };
+
+export type ActiveChunkItem = {
+  chunk_id: string;
+  order: number;
+  content: string;
+  content_hash: string;
+  page?: number | null;
+  section_path: string[];
+  metadata: Record<string, JsonValue>;
+};
+
+export type ActiveChunkPageResponse = ApiMeta & {
+  workspace_id: string;
+  source_id: string;
+  source_version_id: string;
+  corpus_revision: string;
+  items: ActiveChunkItem[];
+  next_cursor: string | null;
+};
+
+export type IngestionStageTiming = {
+  stage: "parsing" | "chunking" | "publication";
+  duration_ms: number;
+};
+
+export type IngestionResponse = ApiMeta & {
+  workspace_id: string;
+  source_id: string;
+  source_version_id: string;
+  job_id: string;
+  outcome: "created" | "updated" | "unchanged";
+  status: "completed";
+  chunk_count: number;
+  corpus_revision: string;
+  stages: IngestionStageTiming[];
+  replayed: boolean;
+};
+
+export type IngestionJobResponse = ApiMeta & {
+  workspace_id: string;
+  job_id: string;
+  source_id: string;
+  source_version_id: string | null;
+  reserved_version_id: string;
+  status:
+    "pending" | "parsing" | "chunking" | "publishing" | "completed" | "failed";
+  stage:
+    "pending" | "parsing" | "chunking" | "publishing" | "completed" | "failed";
+  retryable: boolean;
+  error_code: string | null;
+  chunk_count: number | null;
+  outcome: "created" | "updated" | "unchanged" | null;
+  created_at: string;
+  updated_at: string;
+  finished_at: string | null;
+  stages: IngestionStageTiming[];
 };
 
 export type LocalSourceFile = ApiMeta & {

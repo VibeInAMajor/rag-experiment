@@ -41,7 +41,25 @@ function capabilities(): BackendCapabilities {
         },
       },
     ],
-    features: { documents: true, search: true },
+    features: {
+      documents: true,
+      search: true,
+      upload: true,
+      document_details: true,
+      jobs: true,
+    },
+    pdf_ingestion: {
+      available: false,
+      text_layer: false,
+      page_provenance: false,
+      table_rows: false,
+      original_evidence: false,
+      ocr: false,
+      visual_understanding: false,
+      visual_detection_coverage: "unverified",
+      max_bytes: 8388608,
+      max_pages: 32,
+    },
     dependencies: {
       database: {
         status: "ready",

@@ -20,7 +20,7 @@ Mermaid is not an image requiring OCR. The Mermaid text already encodes graph st
 
 ### C0. Source and parser-family status reconciliation
 
-**Source reinspection 2026-11-23:** [parsing.py](../apps/workbench/api/parsing.py) already recognizes Markdown fenced blocks as `ParsedElement.PROTECTED_RAW`. [parser_registry.py](../apps/workbench/api/parser_registry.py) has no qualified Mermaid grammar adapter, and no one has implemented a Mermaid source-to-graph schema yet. [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) separately proposes safe JSON/YAML/JSONL extraction, not Mermaid.
+**Source reinspection 2026-11-23:** [parsing.py](../apps/workbench/api/parsing.py) already recognizes Markdown fenced blocks as `ParsedElement.PROTECTED_RAW`. [parser_registry.py](../apps/workbench/api/parser_registry.py) has no qualified Mermaid grammar adapter, and no one has implemented a Mermaid source-to-graph schema yet. [PARSE-004](TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) separately proposes safe JSON/YAML/JSONL extraction, not Mermaid.
 
 | Source | Verified implementation / missing behavior |
 | --- | --- |
@@ -59,7 +59,7 @@ No OCR, no VLM diagram interpretation of Mermaid, no browser-executed Markdown d
 
 - **Input detection owner:** existing Markdown [parsing.py](../apps/workbench/api/parsing.py) emits protected fenced elements with exact line/source spans. This task consumes those elements. It MUST NOT build a second Markdown scanner/registry that duplicates `PARSE-001`.
 - **This task's unique role:** parse/validate Mermaid syntax and typed diagram-family relations from the existing `mermaid` fenced source (flowchart/sequence first). Preserve exact original code via [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and deterministic source-to-graph links; derived summaries become searchable via current chunking/ingestion.
-- **Separate structured data:** [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) owns YAML/JSON record path and value fidelity. A YAML string containing `flowchart` is **not** implicitly Mermaid. An explicit future field-to-Mermaid adapter would need separate scope and tests.
+- **Separate structured data:** [PARSE-004](TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) owns YAML/JSON record path and value fidelity. A YAML string containing `flowchart` is **not** implicitly Mermaid. An explicit future field-to-Mermaid adapter would need separate scope and tests.
 - **Distinct visual graphs:** [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) analyzes diagram *pixels* and yields model-inferred relations; Mermaid AST is deterministic_parse. Do not run VLM on Mermaid source or conflate their trust status.
 - **Evidence endpoint:** [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) owns authorized retrieval of original source and stable citations; not this parser adapter.
 
@@ -117,7 +117,7 @@ Mermaid content is untrusted executable-looking text. Never execute user-provide
 
 ## L. Testing / Evaluation / Runtime Verification
 
-Run Hatch workbench-api:check/test/types and targeted new tests. Use the current app's safe UTF-8 and Markdown regression fixtures plus 32 new deterministic Mermaid samples. Mock structural worker must return typed candidate data for unit tests; **real grammar adapter tests are mandatory** before claiming family support. Negative tests: invalid syntax, unsupported family, ambiguous edges, changed annotation, malicious HTML/click, external href, infinite/nested code, parser timeout, too-large block, Unicode offsets, crossed Markdown headings, foreign workspace, blob hash mismatch and duplicate upload. Integration on disposable PostgreSQL: upload Markdown with one prose paragraph and Mermaid, search both, follow evidence to original diagram source, compare relation type/direction; restart with no reseed. Record actual test output, supported construct list and known failures.
+Run Hatch workbench-api:test/types and targeted new tests. Use the current app's safe UTF-8 and Markdown regression fixtures plus 32 new deterministic Mermaid samples. Mock structural worker must return typed candidate data for unit tests; **real grammar adapter tests are mandatory** before claiming family support. Negative tests: invalid syntax, unsupported family, ambiguous edges, changed annotation, malicious HTML/click, external href, infinite/nested code, parser timeout, too-large block, Unicode offsets, crossed Markdown headings, foreign workspace, blob hash mismatch and duplicate upload. Integration on disposable PostgreSQL: upload Markdown with one prose paragraph and Mermaid, search both, follow evidence to original diagram source, compare relation type/direction; restart with no reseed. Record actual test output, supported construct list and known failures.
 
 ## M. Acceptance Criteria
 

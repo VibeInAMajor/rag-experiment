@@ -38,7 +38,25 @@ const capabilities: BackendCapabilities = {
   deployment_mode: "single_workspace_dev",
   service_state: "running",
   profiles: [profile],
-  features: { documents: true, search: true },
+  features: {
+    documents: true,
+    search: true,
+    upload: true,
+    document_details: true,
+    jobs: true,
+  },
+  pdf_ingestion: {
+    available: false,
+    text_layer: false,
+    page_provenance: false,
+    table_rows: false,
+    original_evidence: false,
+    ocr: false,
+    visual_understanding: false,
+    visual_detection_coverage: "unverified",
+    max_bytes: 8388608,
+    max_pages: 32,
+  },
   dependencies: {
     database: {
       status: "ready",
@@ -123,7 +141,13 @@ describe("Workbench API discovery transport", () => {
     const { client } = clientFor({
       ...capabilities,
       profiles: [],
-      features: { documents: false, search: false },
+      features: {
+        documents: false,
+        search: false,
+        upload: false,
+        document_details: false,
+        jobs: false,
+      },
       dependencies: { database: { status: "unavailable" } },
     });
     expect((await client.getCapabilities()).profiles).toEqual([]);
@@ -171,6 +195,9 @@ describe("Workbench API discovery transport", () => {
     expect((await client.getCapabilities()).features).toEqual({
       documents: true,
       search: true,
+      upload: true,
+      document_details: true,
+      jobs: true,
     });
   });
 

@@ -151,6 +151,9 @@ async function discoverySmoke(page) {
     notReady["/api/v1/capabilities"].body.features = {
       documents: false,
       search: false,
+      upload: false,
+      document_details: false,
+      jobs: false,
     };
     notReady["/api/v1/capabilities"].body.dependencies.database.status =
       "unavailable";

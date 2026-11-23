@@ -6,7 +6,7 @@
 **Priority:** P1/P2 — structured data and developer documentation  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; Python AST is independent TASK-RAG-CHUNK-002  
 **Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
-**Target:** `tasks/check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md  
+**Target:** `tasks/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md  
 **Architecture:** [Content-aware format/strategy matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
@@ -134,7 +134,7 @@ Profile revisions encode schema and transform rules; arbitrary JSON metadata rem
 
 ## O. Mandatory Completion Checklist
 
-- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/check/` location.
+- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/` location.
 - [ ] PARSE/CONTENT ownership boundaries exercised with fixture tests; no duplicate durable element/asset model.
 - [ ] Existing SQL/API/upload/source-version test gates remain passing when new parser family is enabled.
 

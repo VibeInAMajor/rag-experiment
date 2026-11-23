@@ -6,7 +6,7 @@
 **Priority:** P1 — common business-document coverage  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; PDF belongs to TASK-RAG-CHUNK-003  
 **Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
-**Target:** `tasks/check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md  
+**Target:** `tasks/TASK-RAG-PARSE-002-office-and-web-document-parsers.md  
 **Architecture:** [Format and chunking matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
@@ -159,7 +159,7 @@ Add source-specific parser revisions/capabilities, known layout loss and upload 
 
 ## O. Mandatory Completion Checklist
 
-- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/check/` location.
+
 - [ ] PARSE/CONTENT ownership boundaries exercised with fixture tests; no duplicate durable element/asset model.
 - [ ] Existing SQL/API/upload/source-version test gates remain passing when new parser family is enabled.
 

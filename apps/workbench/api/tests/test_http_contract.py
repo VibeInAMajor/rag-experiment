@@ -145,6 +145,19 @@ def test_published_openapi_matches_the_application_contract() -> None:
     assert published == create_app(settings=ApiSettings()).openapi()
 
 
+def test_upload_schema_describes_qualified_formats_and_runtime_pdf_gate() -> None:
+    """Multipart documentation must reflect format bounds without promising unavailable OCR."""
+    operation = create_app(settings=ApiSettings()).openapi()["paths"]["/api/v1/workspaces/{workspace_id}/documents"][
+        "post"
+    ]
+    schema = operation["requestBody"]["content"]["multipart/form-data"]["schema"]
+    description = schema["properties"]["file"]["description"]
+    for term in ("TXT", "Markdown", "Python", "1 MiB", "PDF", "8 MiB", "32 pages", "pdf_ingestion.available"):
+        assert term in description
+    assert "No OCR or visual understanding" in description
+    assert schema["required"] == ["file"]
+
+
 @pytest.mark.asyncio
 async def test_slow_readiness_is_cancelled_without_disabling_liveness(monkeypatch: pytest.MonkeyPatch) -> None:
     """A hung cooperative probe cannot keep discovery requests waiting indefinitely."""

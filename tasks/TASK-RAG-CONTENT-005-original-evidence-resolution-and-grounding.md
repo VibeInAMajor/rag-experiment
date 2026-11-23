@@ -20,7 +20,7 @@ A RAG result may contain a synthesized caption for a flowchart or an OCR reconst
 
 ### C0. Source and parser-family status reconciliation
 
-**Source reinspection 2026-11-23:** the current [api/contracts.py](../apps/workbench/api/contracts.py) provides `DocumentDetail.original_content_available=false` and [local_sources.py](../apps/workbench/api/local_sources.py) optionally opens a registered host-local file, but neither supplies general asset/evidence IDs or byte retrieval. [PARSE-002..005](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md) are proposed extraction tasks. CONTENT-001 is the prospective durable `DocumentElement/ContentRepresentation/DocumentAsset` owner.
+**Source reinspection 2026-11-23:** the current [api/contracts.py](../apps/workbench/api/contracts.py) provides `DocumentDetail.original_content_available=false` and [local_sources.py](../apps/workbench/api/local_sources.py) optionally opens a registered host-local file, but neither supplies general asset/evidence IDs or byte retrieval. [PARSE-002..005](TASK-RAG-PARSE-002-office-and-web-document-parsers.md) are proposed extraction tasks. CONTENT-001 is the prospective durable `DocumentElement/ContentRepresentation/DocumentAsset` owner.
 
 | Source | Current behavior / evidence gap |
 | --- | --- |
@@ -59,7 +59,7 @@ No new arbitrary LLM generator, no universal fact-checking guarantee, no embeddi
 
 ### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
 
-- **Input owners:** [PARSE-002](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md), [PARSE-003](check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md), [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) and [PARSE-005](check/TASK-RAG-PARSE-005-conversations-and-transcripts.md) must emit truthful source offset/slide/row/cue metadata; they do NOT implement EvidenceResolver or issue original-asset links.
+- **Input owners:** [PARSE-002](TASK-RAG-PARSE-002-office-and-web-document-parsers.md), [PARSE-003](TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md), [PARSE-004](TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) and [PARSE-005](TASK-RAG-PARSE-005-conversations-and-transcripts.md) must emit truthful source offset/slide/row/cue metadata; they do NOT implement EvidenceResolver or issue original-asset links.
 - **Foundation:** [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) uniquely persists version-scoped elements/assets/representations and joins `Chunk` to original evidence. The resolver consumes that database/AssetStorePort, it does not create a second source/asset store.
 - **This task uniquely owns retrieval-time evidence resolution:** validate workspace, source, version, element/representation/asset hash and exact source-range/page/bbox/speaker/time/graph link. Claims about an original are unavailable when the required asset/span has not been stored; do not synthesize citation from a chunk label.
 - **Local reveal is separate:** `LocalSources` is host-local and registry-gated, not an authenticated browser binary download. Reuse only as a narrow operator hint; never treat `can_reveal` as evidence authorization.
@@ -121,7 +121,7 @@ Evidence bytes are often more sensitive than summaries. Access must be checked f
 
 ## L. Testing / Evaluation / Runtime Verification
 
-Run existing Hatch workbench-api check/test/types, disposable PostgreSQL with CONTENT-001 temporary asset root, frontend contract tests only if SearchResult display changes. Unit tests for evidence graph joins, locator bounds, crop coordinate conversion, exact byte/UTF-8 span matching, SHA checks and trust-state transitions. Integration: authorized GET metadata/original; 404 foreign/unknown, 409 inconsistent version, 503 corrupted/missing store; restart API and DB without reseeding; idempotent source publication and retention state transitions. E2E smoke: one search hit per qualified input family resolves original evidence; unsupported OCR/visual case returns incomplete not fake citation. Record metrics and all mismatches in Markdown evidence. Do not mark visual/scan tests PASS when their upstream producer is unimplemented; block relevant acceptance gate until source exists.
+Run existing Hatch workbench-api test/types, disposable PostgreSQL with CONTENT-001 temporary asset root, frontend contract tests only if SearchResult display changes. Unit tests for evidence graph joins, locator bounds, crop coordinate conversion, exact byte/UTF-8 span matching, SHA checks and trust-state transitions. Integration: authorized GET metadata/original; 404 foreign/unknown, 409 inconsistent version, 503 corrupted/missing store; restart API and DB without reseeding; idempotent source publication and retention state transitions. E2E smoke: one search hit per qualified input family resolves original evidence; unsupported OCR/visual case returns incomplete not fake citation. Record metrics and all mismatches in Markdown evidence. Do not mark visual/scan tests PASS when their upstream producer is unimplemented; block relevant acceptance gate until source exists.
 
 ## M. Acceptance Criteria
 

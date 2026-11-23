@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Workbench Live Documents now displays persisted sources, active chunks,
+    processing reports and durable ingestion jobs. Upload TXT, Markdown and
+    Python, plus text-layer PDF when the backend reports it ready. Guarded
+    replacement and same-operation retry preserve version and idempotency
+    checks; stopped requests report an unconfirmed server outcome.
