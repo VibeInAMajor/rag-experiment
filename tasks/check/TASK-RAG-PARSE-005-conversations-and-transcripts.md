@@ -1,13 +1,13 @@
 # TASK-RAG-PARSE-005 — Conversation, email, subtitles and transcript-aware boundaries
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21  
+**Updated:** 2026-11-23  
 **Status:** PROPOSED — blueprint, not implemented  
 **Priority:** P2 — customer communications and time-aware knowledge  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001  
-**Repository snapshot reviewed:** `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`  
-**Target:** `tasks/TASK-RAG-PARSE-005-conversations-and-transcripts.md`  
-**Architecture:** [Content-aware chunking strategy](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
+**Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
+**Target:** `tasks/check/TASK-RAG-PARSE-005-conversations-and-transcripts.md  
+**Architecture:** [Content-aware chunking strategy](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
 
@@ -19,13 +19,15 @@ Conversational sources cannot be chunked like a policy PDF without losing who sa
 
 ## C. Current Repository State
 
+**Source audit refreshed 2026-11-23:** [RAG-002](../completed/TASK-RAG-002-ingest-text-and-markdown.md) and [PARSE-001](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) are implemented, but [parser_registry.py](../../apps/workbench/api/parser_registry.py) only catalogues the timed-transcript family and does not approve public EML/MSG/SRT/VTT ingestion. [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) already owns upload/job/details/chunks routes; this task must add bounded per-format parsers and metadata only. Do not confuse upstream `MSGToDocument` with a qualified Workbench pipeline.
+
 | Actual source | Existing behavior | Gap |
 | --- | --- | --- |
-| [`haystack/components/converters/msg.py`](../haystack/components/converters/msg.py) `MSGToDocument` | Outlook `.msg` primitive exists, optional dependency. | Not proven to preserve thread/attachments or user ACL without additional structure checks. |
-| [`haystack/components/converters/multi_file_converter.py`](../haystack/components/converters/multi_file_converter.py) | Does not include EML, MSG or subtitles in its class MIME set. | No universal conversation conversion path. |
-| [`haystack/components/preprocessors/embedding_based_document_splitter.py`](../haystack/components/preprocessors/embedding_based_document_splitter.py) | Embedding-based topic-shift splitting exists but requires a qualified embedder. | Initial speaker/turn segmentation must work without any model. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | `Chunk.metadata` can hold bounded speaker/time/thread provenance. | No time-aware UI/citation contract currently; ensure no invented speakers. |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | PostgreSQL FTS over persisted chunks. | No diarization or entity extraction from lexical search. |
+| [`haystack/components/converters/msg.py`](../../haystack/components/converters/msg.py) `MSGToDocument` | Outlook `.msg` primitive exists, optional dependency. | Not proven to preserve thread/attachments or user ACL without additional structure checks. |
+| [`haystack/components/converters/multi_file_converter.py`](../../haystack/components/converters/multi_file_converter.py) | Does not include EML, MSG or subtitles in its class MIME set. | No universal conversation conversion path. |
+| [`haystack/components/preprocessors/embedding_based_document_splitter.py`](../../haystack/components/preprocessors/embedding_based_document_splitter.py) | Embedding-based topic-shift splitting exists but requires a qualified embedder. | Initial speaker/turn segmentation must work without any model. |
+| [`apps/workbench/api/persistence.py`](../../apps/workbench/api/persistence.py) | `Chunk.metadata` can hold bounded speaker/time/thread provenance. | No time-aware UI/citation contract currently; ensure no invented speakers. |
+| [`apps/workbench/api/lexical.py`](../../apps/workbench/api/lexical.py) | PostgreSQL FTS over persisted chunks. | No diarization or entity extraction from lexical search. |
 
 Upstream Docling lists email/WebVTT and audio/video processing; these are **upstream features** requiring pinned extras/runtime, not app capabilities. No media transcription or connector was verified in the repository.
 
@@ -49,6 +51,15 @@ No live Gmail/Slack/Teams API connector, email sending, external attachment fetc
 
 ## G. Architecture / Boundaries
 
+### PARSE/CONTENT ownership contract — non-duplication gate
+
+- **Ownership:** PARSE-005 alone extracts **mail message/turn/cue boundaries and timestamps**, preserving author/speaker evidence when present. It does not send email, call message APIs, transcribe audio, infer speakers or create a new chat/thread database. It uses the shared app [parsing.py](../../apps/workbench/api/parsing.py), [chunking.py](../../apps/workbench/api/chunking.py) and existing ingestion job/write path.
+- **CONTENT-001:** [CONTENT-001](../TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) owns persisted element/representation/original attachment **asset metadata**. PARSE-005 may emit an attachment manifest (safe filename/MIME/count/hash if available) but must not implement upload/store of attachment bytes, `DocumentAsset` or a second source-table lifecycle.
+- **CONTENT-002/003:** [CONTENT-002](../TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md) is scanned-PDF OCR; [CONTENT-003](../TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) is visual graph interpretation. Neither supplies ASR, diarization or video subtitle extraction. Media/ASR support is a **separate future task**; never accidentally claim it from a current transcript parser.
+- **Evidence:** [CONTENT-005](../TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) provides securely resolved original email/time/line evidence after it exists. PARSE-005 only records truthful message IDs/time zones/cue offsets. Sender and speaker IDs are source data, not user identity/authorization.
+
+**Qualification modes:** Gate P = format-specific parser/structured chunk + existing PostgreSQL lexical publication (this task); Gate E = durable byte/evidence/representation resolution (CONTENT-001/005 or specialty CONTENT adapter). Gate P may pass while Gate E is NOT_IMPLEMENTED, but Gate P must not claim original evidence or multimodal completeness. No new global parser registry, ContentRepresentation storage or EvidenceResolver is permitted in this task.
+
 `PARSE-001 verified EML/MSG/SRT/VTT → safe message/cue parser → chronological typed elements → turn-aware policy (optional bounded topic merge) → shared ingestion/source-version job → PostgreSQL + pgvector → lexical results with truthful source/message/time metadata`. Authentication and retention must be decided by the server; message sender identities are **document data**, never user authorization.
 
 ## H. Contracts / Interfaces / Data Model
@@ -64,6 +75,16 @@ No live Gmail/Slack/Teams API connector, email sending, external attachment fetc
 - Do NOT change Haystack core, database migration `0001`, the PostgreSQL scoring contract or frontend Preview history.
 
 ## J. Implementation Requirements
+
+### J0. Reconcile completed app owners and format-specific handoffs
+
+1. Confirm current [parser registry](../../apps/workbench/api/parser_registry.py), [parsing.py](../../apps/workbench/api/parsing.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [chunking.py](../../apps/workbench/api/chunking.py), [PostgreSQL publication](../../apps/workbench/api/postgres_ingestion.py) and [actual contracts](../../apps/workbench/api/contracts.py). The old blueprint predates completed RAG-002 and PARSE-001; do not reimplement their components.
+2. Build a format/element/asset/evidence matrix and mark all unsupported extractions `NOT_QUALIFIED`; record original evidence status separately from parsed text.
+3. Align this task's format-specific `ParsedElement` projection with CONTENT-001's long-lived `DocumentElement` contract **without building it here**. Confirm all source/span/line/page/time units are explicitly defined before using them as citations.
+
+### J6. Format boundary regression and CONTENT handoff
+
+Test MIME nested email, quoted replies, attachments as metadata-only, SRT/VTT overlapping cues and unknown speaker; prove exact speaker/time source attribution. Original email files/attachments are stored only if CONTENT-001 is implemented and authorized; otherwise declare original unavailable. ASR/diarization must remain explicitly unsupported.
 
 ### J1. Inspect and constrain message/media surface
 
@@ -101,11 +122,20 @@ Valid/invalid MIME nesting, multipart, encoded header, HTML/script, quoted chain
 - [ ] At least 10 representative files and 10 labeled questions per enabled family; PII/no-leak and structural quality measured.
 - [ ] Capabilities exclude Slack/Teams connectors and media until their own approval; failure paths do not alter active version.
 
+- [ ] Reuses **completed** PARSE-001/RAG-002/chunking and current API; no duplicate format registry, HTTP upload handler, persistence adapter or version publication.
+- [ ] Does **not** implement CONTENT-001 original asset storage/`DocumentElement` persistence or CONTENT-005 evidence resolution; the parser exports accurate source/element spans for later adapters.
+- [ ] `EML/MSG/SRT/VTT` format-specific supported/unsupported visual/attachment/graph cases are labelled truthfully; no inferred OCR/VLM/Mermaid/ASR behavior advertised from parsing.
+
 ## N. Documentation / Migration / Compatibility / Rollback
 
 Timestamp/turn/thread metadata can initially fit bounded JSONB; indexed conversation joins and deletion policies may require a separately reviewed migration. Existing lexical score and job responses must remain compatible. A media/audio connector is **not** permitted as an implicit parser swap. Rollback disables specific format profiles without deleting existing version records and active source snapshots.
 
 ## O. Mandatory Completion Checklist
+
+- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/check/` location.
+- [ ] PARSE/CONTENT ownership boundaries exercised with fixture tests; no duplicate durable element/asset model.
+- [ ] Existing SQL/API/upload/source-version test gates remain passing when new parser family is enabled.
+
 
 - [ ] MIME/MSG/SRT/VTT parser adapters reused or qualified with explicit resource limits.
 - [ ] Speaker/time/thread metadata and no-invented-provenance rules verified.

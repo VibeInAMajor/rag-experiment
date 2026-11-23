@@ -1,13 +1,13 @@
 # TASK-RAG-PARSE-004 — JSON/JSONL/YAML/TOML/XML and DevOps configuration ingestion
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21  
+**Updated:** 2026-11-23  
 **Status:** PROPOSED — blueprint; no parser activation yet  
 **Priority:** P1/P2 — structured data and developer documentation  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; Python AST is independent TASK-RAG-CHUNK-002  
-**Repository snapshot reviewed:** `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`  
-**Target:** `tasks/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md`  
-**Architecture:** [Content-aware format/strategy matrix](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
+**Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
+**Target:** `tasks/check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md  
+**Architecture:** [Content-aware format/strategy matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
 
@@ -19,15 +19,17 @@ RAG over Kubernetes manifests, CI YAML, JSON APIs and service configuration fail
 
 ## C. Current Repository State
 
+**Source audit refreshed 2026-11-23:** [PARSE-001](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) and [RAG-002](../completed/TASK-RAG-002-ingest-text-and-markdown.md) are complete. [parser_registry.py](../../apps/workbench/api/parser_registry.py) catalogs JSON/YAML candidates but does **not** expose qualified JSON/JSONL/YAML ingestion. [ingestion.py](../../apps/workbench/api/ingestion.py) and [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) already implement the shared durable upload; no second REST handler or SQL writer is needed. Current [chunking.py](../../apps/workbench/api/chunking.py) is available for structural policy reuse.
+
 | Source / symbol | Existing capability | Risk/gap |
 | --- | --- | --- |
-| [`haystack/components/converters/json.py`](../haystack/components/converters/json.py) `JSONConverter` | Existing JSON converter with configured content key. | Does not by itself prove recursive object path/index/record provenance. |
-| [`haystack/components/converters/multi_file_converter.py`](../haystack/components/converters/multi_file_converter.py) `MultiFileConverter` | JSON handled among text/Office formats. | Reuse when appropriate but don't flatten nested records into undocumented text. |
-| [`haystack/components/preprocessors/recursive_splitter.py`](../haystack/components/preprocessors/recursive_splitter.py) | Bounded general text splitter. | Use only as a secondary splitter inside one protected record/object. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | Source/version/chunk fields and JSON metadata in PostgreSQL. | Metadata values bounded and JSON-safe; no provider/client object or giant nested payload. |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | Atomic publication under `WorkspaceContext`; PostgreSQL FTS. | Reuse same persistence; do not store secrets verbatim in logs. |
-| [`tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md`](TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) | Typed `ParsedElement` and qualified format registry blueprint. | Extend its descriptors rather than adding another MIME manager. |
-| [`haystack/components/preprocessors/python_code_splitter.py`](../haystack/components/preprocessors/python_code_splitter.py) | Python AST-aware splitter exists. | Not a YAML/JSON/PowerShell parser; no source execution. |
+| [`haystack/components/converters/json.py`](../../haystack/components/converters/json.py) `JSONConverter` | Existing JSON converter with configured content key. | Does not by itself prove recursive object path/index/record provenance. |
+| [`haystack/components/converters/multi_file_converter.py`](../../haystack/components/converters/multi_file_converter.py) `MultiFileConverter` | JSON handled among text/Office formats. | Reuse when appropriate but don't flatten nested records into undocumented text. |
+| [`haystack/components/preprocessors/recursive_splitter.py`](../../haystack/components/preprocessors/recursive_splitter.py) | Bounded general text splitter. | Use only as a secondary splitter inside one protected record/object. |
+| [`apps/workbench/api/persistence.py`](../../apps/workbench/api/persistence.py) | Source/version/chunk fields and JSON metadata in PostgreSQL. | Metadata values bounded and JSON-safe; no provider/client object or giant nested payload. |
+| [`apps/workbench/api/postgres.py`](../../apps/workbench/api/postgres.py) | Atomic publication under `WorkspaceContext`; PostgreSQL FTS. | Reuse same persistence; do not store secrets verbatim in logs. |
+| [`tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md`](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) | Typed `ParsedElement` and qualified format registry blueprint. | Extend its descriptors rather than adding another MIME manager. |
+| [`haystack/components/preprocessors/python_code_splitter.py`](../../haystack/components/preprocessors/python_code_splitter.py) | Python AST-aware splitter exists. | Not a YAML/JSON/PowerShell parser; no source execution. |
 
 **Missing:** app-owned safe JSON object/JSON Lines/YAML structure adapters; no declared support in public Workbench API.
 
@@ -50,6 +52,15 @@ No YAML `load` with arbitrary Python object creation, `eval`, PowerShell executi
 
 ## G. Architecture / Boundaries
 
+### PARSE/CONTENT ownership contract — non-duplication gate
+
+- **Ownership:** PARSE-004 alone implements **safe syntax parsing** and source-path/record provenance for JSON/JSONL/YAML. It uses the existing [parser registry](../../apps/workbench/api/parser_registry.py), [ParsedElement](../../apps/workbench/api/parsing.py) and bounded [chunking](../../apps/workbench/api/chunking.py). A YAML Kubernetes namespace is document data, never a tenant workspace.
+- **CONTENT-001:** [CONTENT-001](../TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) owns persisted element/representation IDs and exact original evidence assets; PARSE-004 must not define a second universal `DocumentElement` database or `AssetStorePort`. The parser emits verified JSON pointer/YAML path spans; CONTENT maps them to long-lived source-version-linked elements once implemented.
+- **Mermaid:** [CONTENT-004](../TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) is responsible for **Mermaid grammar** only after the existing Markdown fenced-block extraction. JSON/YAML structures that happen to contain strings such as `flowchart TD` remain strings unless a separately approved explicit Mermaid format/field adapter is designed. Do not add a competing Mermaid parser inside PARSE-004.
+- **Visual / evidence:** [CONTENT-003](../TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) is for model-inferred visual diagrams, not Kubernetes manifest topology guessing. [CONTENT-005](../TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) owns secure original source span retrieval and claim verification; PARSE-004 only produces accurate source offsets.
+
+**Qualification modes:** Gate P = format-specific parser/structured chunk + existing PostgreSQL lexical publication (this task); Gate E = durable byte/evidence/representation resolution (CONTENT-001/005 or specialty CONTENT adapter). Gate P may pass while Gate E is NOT_IMPLEMENTED, but Gate P must not claim original evidence or multimodal completeness. No new global parser registry, ContentRepresentation storage or EvidenceResolver is permitted in this task.
+
 `verified source → selected safe parser adapter → typed object/record elements with path/provenance → CHUNK-001 scoped grouping → existing Source/SourceVersion/Chunk + publish_source → PostgreSQL lexical search`. Parsing logic is library-independent at contract boundary, while concrete JSON/YAML/XML libs remain adapter-only. Server decides workspace; configuration source cannot grant authorization via a `namespace`, `workspace_id` or ACL key inside itself.
 
 ## H. Contracts / Interfaces / Data Model
@@ -66,6 +77,16 @@ No YAML `load` with arbitrary Python object creation, `eval`, PowerShell executi
 - Do NOT edit core Haystack, existing applied database migration, evaluation score type, or external cloud resources.
 
 ## J. Implementation Requirements
+
+### J0. Reconcile completed app owners and format-specific handoffs
+
+1. Confirm current [parser registry](../../apps/workbench/api/parser_registry.py), [parsing.py](../../apps/workbench/api/parsing.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [chunking.py](../../apps/workbench/api/chunking.py), [PostgreSQL publication](../../apps/workbench/api/postgres_ingestion.py) and [actual contracts](../../apps/workbench/api/contracts.py). The old blueprint predates completed RAG-002 and PARSE-001; do not reimplement their components.
+2. Build a format/element/asset/evidence matrix and mark all unsupported extractions `NOT_QUALIFIED`; record original evidence status separately from parsed text.
+3. Align this task's format-specific `ParsedElement` projection with CONTENT-001's long-lived `DocumentElement` contract **without building it here**. Confirm all source/span/line/page/time units are explicitly defined before using them as citations.
+
+### J6. Format boundary regression and CONTENT handoff
+
+Test JSONL malformed row, JSON duplicate keys, YAML alias explosion/unsafe tag, secrets redaction and Kubernetes resources. Compare parsed source key paths with actual source codepoint/line offsets and verify a **separate** CONTENT source-element adapter could later store these spans without duplicate parser models. No Mermaid graph extraction or YAML code execution in this task.
 
 ### J1. Strict parser and schema evidence
 
@@ -103,11 +124,20 @@ JSON strict duplicate keys; escaped path segments; mixed arrays; invalid number/
 - [ ] At least 10 representative files and 10 labeled queries per enabled family recorded with Recall/citation accuracy and cost.
 - [ ] No unqualified TOML/XML/SQL/PowerShell/HCL family is advertised as supported.
 
+- [ ] Reuses **completed** PARSE-001/RAG-002/chunking and current API; no duplicate format registry, HTTP upload handler, persistence adapter or version publication.
+- [ ] Does **not** implement CONTENT-001 original asset storage/`DocumentElement` persistence or CONTENT-005 evidence resolution; the parser exports accurate source/element spans for later adapters.
+- [ ] `JSON/JSONL/YAML` format-specific supported/unsupported visual/attachment/graph cases are labelled truthfully; no inferred OCR/VLM/Mermaid/ASR behavior advertised from parsing.
+
 ## N. Documentation / Migration / Compatibility / Rollback
 
 Profile revisions encode schema and transform rules; arbitrary JSON metadata remains bounded and compatible with current `Chunk.metadata`. Add a separate migration if path-based indexes become a measured requirement, not before. Existing upload body/route/error semantics stay stable; rollback disables one descriptor while preserving indexed versions and volume. Enterprise connector ingestion is separate from file parsing.
 
 ## O. Mandatory Completion Checklist
+
+- [ ] All new source paths and GitHub-relative links verified from the actual `tasks/check/` location.
+- [ ] PARSE/CONTENT ownership boundaries exercised with fixture tests; no duplicate durable element/asset model.
+- [ ] Existing SQL/API/upload/source-version test gates remain passing when new parser family is enabled.
+
 
 - [ ] Existing converter and format classifier reused rather than duplicated.
 - [ ] Safe parser, bounded resource policy and source path provenance implemented.
