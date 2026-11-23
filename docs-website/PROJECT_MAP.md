@@ -19,6 +19,8 @@
 
 ## 1. Repository shape (verified)
 
+**PDF update (2026-11-23):** [CHUNK-003](../tasks/TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) now qualifies the bounded text-layer subset through the existing parser registry, shared resolver/PreparedChunk and durable PostgreSQL upload/jobs. The existing offline Docling worker, quota sandbox, pinned model manifest and HybridChunker adapter remain the owners. Conditional `pdf_ingestion` capability discloses absent OCR, original evidence and visual understanding; detected pictures are unprocessed geometry with incomplete coverage. The [qualification record](docs/tasks/pdf-layout-qualification-2026-11-23.md) separates actual public PDF/live/restart proof from 11-layout/25-query controls. Gate B awaits CONTENT-001; the overall task remains IN PROGRESS.
+
 **Configuration editor update:** `App.tsx` owns the wrench entry below Runs; `ConfigurationView.tsx`, `YamlEditor.tsx` and `ConfirmationDialog.tsx` own the lazy editing surface and unsaved-change lifecycle. Existing client/DTOs add direct local configuration requests. `configuration.py` persists the selected YAML with atomic CAS/backups; `configuration_http.py` reuses the local trusted-origin boundary and a non-secret request-intent header. Operator login, keys and the Application-wide badge were removed at the user's explicit request. Parsing remains owned by `document_processing.py`. See the [operator guide](docs/architecture/document-processing-configuration.md#edit-configuration-in-workbench) and [UI verification record](../tasks/TASK-UI-CONFIG-001-yaml-configuration-editor.md).
 
 ```text

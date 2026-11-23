@@ -650,7 +650,7 @@ class IngestionService:
 
         :param context: Server-resolved scope and safe request trace correlation.
         :param upload: Bounded bytes and immutable operation parameters; no filenames become paths or identities.
-        :param timeout_seconds: At most 30 seconds; a bounded portion is reserved for terminal failure persistence.
+        :param timeout_seconds: At most 30 seconds for text or 210 for PDF; includes terminal failure persistence.
         :param on_job: Optional server callback exposing reserved or replayed job identity before processing starts.
         :returns: A committed completed job, with replay identity preserved and no duplicate publication.
         :raises IngestionError: Safe input, processing, ownership, availability or timeout failure.

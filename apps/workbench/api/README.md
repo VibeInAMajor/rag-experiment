@@ -25,6 +25,8 @@ Visual detection is incomplete and explicitly `unverified`; every accepted PDF r
 
 See the [PDF qualification record](../../../docs-website/docs/tasks/pdf-layout-qualification-2026-11-23.md) for measured scope and known refusals.
 
+Parser `docling-pdf-r2` additionally handles the qualified two-column sentence layout. The normal cell-matching mode is preserved for ordinary tables. Only a numeric-coverage failure in a candidate two-column block permits one recovery attempt with native cell text, inside the same process/resource deadline. Unaffected primary blocks are retained. Recovered complete sentence columns have real page/box provenance and `PDF_NATIVE_CELL_RECOVERY`, `PDF_COLUMNS_PROJECTED_AS_TEXT`, `PDF_COLUMN_ORDER_GEOMETRIC` warnings; inferred table headers are not published. Numeric checks compare complete number occurrences as well as digit counts. Existing indexed versions require explicit re-ingestion to apply the new parser revision. See the [live numeric verification](../../../docs-website/docs/tasks/pdf-two-column-numeric-integrity-2026-11-23.md).
+
 ## Start
 
 For the complete local application, after the one-time database setup below, run from the repository root:

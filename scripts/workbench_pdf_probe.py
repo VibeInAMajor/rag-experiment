@@ -180,7 +180,7 @@ def main() -> None:  # noqa: PLR0915 -- Explicit phases keep live writes and res
             fields = {"source_id": result["source_id"], "expected_active_version_id": result["source_version_id"]}
             for invalid, expected in (
                 (b"%PDF-1.7\ncorrupt", "PDF_CORRUPT"),
-                (Path("tmp/pdfs/ca-warn-first-two-pages.pdf").read_bytes(), "TABLE_STRUCTURE_UNCERTAIN"),
+                ((_ROOT / "ca-warn-first-two-pages.pdf").read_bytes(), "TABLE_STRUCTURE_UNCERTAIN"),
             ):
                 response = _upload(client, invalid, key=uuid4().hex, fields=fields)
                 assert response.status_code == 400, response.text

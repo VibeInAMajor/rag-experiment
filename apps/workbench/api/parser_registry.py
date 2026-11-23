@@ -197,7 +197,7 @@ def _descriptor(format_id: FormatId) -> ParserDescriptor:
     if format_id is FormatId.PDF:
         return ParserDescriptor(
             parser_id="docling-pdf",
-            parser_revision="docling-pdf-r1",
+            parser_revision="docling-pdf-r2",
             accepted_format_ids=(FormatId.PDF,),
             available=True,
             qualified=True,

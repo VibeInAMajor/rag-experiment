@@ -21,7 +21,7 @@ def prepare_pdf_chunks(
     started: float,
 ) -> tuple["PreparedChunk", ...]:
     """Reuse HybridChunker, common native admission and immutable version-scoped chunk identities."""
-    from apps.workbench.api.chunking import PreparedChunk, _fingerprint, _model_size
+    from apps.workbench.api.chunking import PreparedChunk, _canonical_bytes, _fingerprint, _model_size
     from apps.workbench.api.chunking_adapters import count_tokens
     from apps.workbench.api.pdf_chunking_adapter import split_pdf_block
 
@@ -123,7 +123,7 @@ def prepare_pdf_chunks(
                 if admission
                 else None,
                 model_counter_revision=admission.counter_revision if admission else None,
-                pdf_metadata=metadata,
+                pdf_metadata_json=_canonical_bytes(metadata),
                 page=block.page,
             )
             chunk.metadata()

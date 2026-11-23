@@ -17,7 +17,7 @@ from apps.workbench.api.pdf_assets import pdf_runtime_available
 from apps.workbench.api.pdf_chunking_adapter import _document, split_pdf_block
 from apps.workbench.api.pdf_models import PdfBlock, PdfBox, PdfCell, PdfDocument, PdfLimits, PdfPage, PdfVisualRegion
 from apps.workbench.api.pdf_parser import _PARSER_SLOT, _decode_result, extract_pdf
-from apps.workbench.api.pdf_worker import _preflight, _project
+from apps.workbench.api.pdf_worker import _preflight, _project, _verify_numbers
 from apps.workbench.api.pdf_worker import _table as _project_table
 from apps.workbench.api.upload_policy import upload_file_byte_limit
 from scripts.workbench_pdf_fixtures import pdf_bytes
@@ -252,3 +252,40 @@ def test_real_isolated_docling_text_and_mixed_figure(mixed: bool) -> None:
         assert table.row_count == 9 and table.column_count == 3
         assert "1007" in table.text and "1056" in table.text
     PdfDocument.model_validate_json(document.model_dump_json())
+
+
+def test_real_two_column_sentences_retain_numeric_suffixes_and_column_geometry() -> None:
+    """Native cell extraction retains the final 11 and publishes no invented table headers."""
+    content = pdf_bytes(two_columns=True)
+    document = extract_pdf(content)
+    columns = [block for block in document.blocks if "PDF_COLUMNS_PROJECTED_AS_TEXT" in block.warning_codes]
+    assert len(columns) == 2
+    assert all(block.kind == "text" and not block.cells for block in columns)
+    assert columns[0].bbox.right < columns[1].bbox.left
+    for column, side in zip(columns, ("Left", "Right"), strict=True):
+        assert column.text == " ".join(f"{side} section observation {index}." for index in range(12))
+        assert column.page == 1
+        assert "PDF_COLUMN_ORDER_GEOMETRIC" in column.warning_codes
+    assert not any(block.kind == "table" for block in document.blocks)
+
+
+@pytest.mark.parametrize(
+    "original,projected",
+    [
+        ("First 12, second 34.", "First 13, second 24."),
+        ("Measured 3.14 litres.", "Measured 31.4 litres."),
+        ("Left 11. Right 11.", "Left 11. Right."),
+    ],
+)
+def test_numeric_coverage_refuses_missing_or_reassembled_numbers(original: str, projected: str) -> None:
+    """Matching a bag of digits is insufficient when complete numbers or decimal positions changed."""
+    block = PdfBlock(
+        block_id="numbers",
+        page=1,
+        kind="text",
+        text=projected,
+        bbox=PdfBox(left=10.0, top=10.0, right=100.0, bottom=50.0),
+    )
+    with pytest.raises(ParsingError) as failure:
+        _verify_numbers((block,), [original])
+    assert failure.value.reason == "PDF_NUMERIC_COVERAGE_MISMATCH"

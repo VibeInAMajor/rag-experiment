@@ -127,7 +127,7 @@ class PreparedChunk:
     length_tiktoken_model_input: int | None = None
     model_counter_revision: str | None = None
     python_span: PythonSpan | None = None
-    pdf_metadata: dict[str, Any] | None = None
+    pdf_metadata_json: bytes | None = None
     page: int | None = None
 
     def metadata(self) -> dict[str, Any]:
@@ -199,8 +199,8 @@ class PreparedChunk:
                     metadata["class_name"] = innermost[0].class_name
                 if innermost[0].decorators:
                     metadata["decorators"] = list(innermost[0].decorators)
-        if self.pdf_metadata is not None:
-            metadata.update(self.pdf_metadata)
+        if self.pdf_metadata_json is not None:
+            metadata.update(json.loads(self.pdf_metadata_json))
         if self.length_model_token is not None:
             metadata.update(
                 {

@@ -124,3 +124,30 @@ async def test_pdf_and_text_have_separate_transport_caps(disposable_database: Di
             client, content=b"%PDF-1.7\n" + b"x" * 8_388_608, filename="large.pdf", mime="application/pdf"
         )
         assert response.status_code == 413
+
+
+async def test_two_column_pdf_indexes_every_sentence_and_replays_the_same_version(
+    disposable_database: DisposableDatabase,
+) -> None:
+    """The previously refused input publishes real page-scoped prose without synthetic table headers."""
+    key = uuid4().hex
+    content = pdf_bytes(two_columns=True)
+    async with _client(disposable_database) as client:
+        response = await _upload(client, content=content, filename="columns.pdf", mime="application/pdf", key=key)
+        assert response.status_code == 201, response.text
+        result = response.json()
+        detail = (await client.get(f"{_DOCUMENTS}/{result['source_id']}")).json()
+        assert detail["parser"]["parser_revision"] == "docling-pdf-r2"
+        assert detail["parser"]["pdf_tables"] == 0
+        assert "PDF_COLUMNS_PROJECTED_AS_TEXT" in detail["warnings"]
+        chunks = (await client.get(f"{_DOCUMENTS}/{result['source_id']}/chunks", params={"limit": 100})).json()["items"]
+        text = "\n".join(chunk["metadata"]["original_excerpt"] for chunk in chunks)
+        assert all(chunk["page"] == 1 for chunk in chunks)
+        for side in ("Left", "Right"):
+            for index in range(12):
+                assert f"{side} section observation {index}." in text
+        assert not any(chunk["metadata"]["block_kind"] == "table" for chunk in chunks)
+        hits = (await _search(client, "Right observation 11"))["results"]
+        assert hits and hits[0]["source_id"] == result["source_id"] and hits[0]["page"] == 1
+        replay = await _upload(client, content=content, filename="columns.pdf", mime="application/pdf", key=key)
+        assert replay.status_code == 200 and replay.json()["source_version_id"] == result["source_version_id"]

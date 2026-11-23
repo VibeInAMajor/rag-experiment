@@ -1,0 +1,15 @@
+---
+fixes:
+  - |
+    Workbench PDF ingestion now recovers a qualified two-column text layout when
+    Docling cell matching truncates a numerical suffix. Complete sentences are
+    retained as geometry-scoped text, with explicit column-order warnings,
+    rather than publishing inferred table headers. Numeric admission checks both
+    digit counts and complete number counts, including decimal positions.
+upgrade:
+  - |
+    The PDF parser revision is now ``docling-pdf-r2``. Existing indexed versions
+    remain intact; explicitly re-ingest a source to use the new extraction policy.
+    Ordinary tables retain the prior cell-matching mode. At most one recovery
+    pass runs after a numerical mismatch, within the same existing process,
+    wall-time, CPU and memory quotas. Unaffected source blocks are preserved.

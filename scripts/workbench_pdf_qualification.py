@@ -155,6 +155,7 @@ def main() -> None:  # noqa: PLR0915 -- Extraction, controls and read-only SQL m
             else:
                 document = extract_pdf(path.read_bytes())
             (root / (path.stem + ".projection.json")).write_text(document.model_dump_json(), encoding="utf-8")
+            audited_rows = _audit_table_rows(path.stem, document)
             case.update(
                 status="passed",
                 pages=len(document.pages),
@@ -164,8 +165,10 @@ def main() -> None:  # noqa: PLR0915 -- Extraction, controls and read-only SQL m
                 peak_memory_bytes=document.peak_memory_bytes,
                 cpu_seconds=document.cpu_seconds,
                 visual_processing_status=document.visual_processing_status,
-                audited_table_body_rows=_audit_table_rows(path.stem, document),
+                audited_table_body_rows=audited_rows,
                 row_column_integrity="exact"
+                if audited_rows
+                else "not_audited"
                 if any(block.kind == "table" for block in document.blocks)
                 else "not_applicable",
             )

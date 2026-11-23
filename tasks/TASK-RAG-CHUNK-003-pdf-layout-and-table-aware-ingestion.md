@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-21  
 **Updated:** 2026-11-23  
-**Status:** IN PROGRESS — source audit and bounded parser qualification  
+**Status:** IN PROGRESS — Gate A locally qualified; Gate B awaits CONTENT-001; OCR/visual successors unavailable\
 **Priority:** P1 · specialized paginated document family  
 **Dependencies:** TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; TASK-RAG-CONTENT-001 is a required integration gate for immutable original visual assets/evidence, but not a blocker for independent text-layer PDF parser qualification. Scanned OCR and VLM diagram understanding are separate successors TASK-RAG-CONTENT-002/003; evidence lookup is TASK-RAG-CONTENT-005.  
 **Repository snapshot reviewed:** original 6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77; source reinspection 4dd81abd4b34794edfcafabb623703c67f40be81  
@@ -47,7 +47,9 @@ The current Workbench does **not** contain a qualified Docling PDF ingestion int
 | [Docling chunking docs](https://docling-project.github.io/docling/concepts/chunking/) | `HierarchicalChunker`, `HybridChunker`, table header repetition are available in Docling ecosystem, **not yet qualified in this Workbench runtime**. |
 | [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](completed/TASK-RAG-002-ingest-text-and-markdown.md) | Initial allowlist is TXT/Markdown and a 1 MiB request cap. PDF requires new explicit file/body bounds and testing; no silent extension. |
 
-**Known risk:** PDF may have no text layer, oversized table cells or page/column order ambiguity. A parser that returns empty text while reporting success produces a silent search false-negative. No run of a Docling PDF parser has been executed for this task; no benchmark is claimed.
+**Current measured status (2026-11-23):** [Qualification record](../docs-website/docs/tasks/pdf-layout-qualification-2026-11-23.md) supersedes the historical no-runtime statement. Actual isolated Docling parsing, 11-input/25-query comparison, real public-table upload/search, independent native recount, source update and two live PostgreSQL/API restart cycles passed for the documented subset. Ambiguous two-column extraction and continuation headers remain explicit refusals; the whole dense 16-page report timed out. Gate B original assets are unavailable, and OCR/visual understanding are not claimed. PDF capability is conditional on installed runtime/assets and explicitly discloses those gaps.
+
+**Two-column follow-up (parser r2):** the specific two-column refusal above is now fixed with selective native-cell recovery. The same input passes live upload/search and independent numeric comparison: 26 numerical occurrences / 30 digit characters, no missing/extra values, all 24 sentences retained. Ordinary tables keep the prior mode; 259 real public-report cells remain unchanged. See the [follow-up record](../docs-website/docs/tasks/pdf-two-column-numeric-integrity-2026-11-23.md). Other unqualified layouts and continuation headers still fail safely.
 
 ## D. Goal
 
@@ -217,25 +219,25 @@ Use existing `httpx.AsyncClient` + app lifespan test patterns in `apps/workbench
 
 ## M. Acceptance Criteria
 
-- [ ] Reviewed PDF parser, sandbox, manifest and HybridChunker code is reused; no second document parser or writer was introduced for already-present components.
-- [ ] Parser registry/public capability remains false until qualifying integration tests pass; image-only scans cannot silently become an indexed success.
-- [ ] Pages/tables retain original page/box/row provenance; images/diagrams without understanding emit explicit incomplete-coverage warnings rather than invented relations.
-- [ ] Existing text-PDF qualification is not blocked on future OCR/VLM work, and no OCR/visual support is claimed by completing text-PDF checks.
+- [x] Reviewed PDF parser, sandbox, manifest and HybridChunker code is reused; no second document parser or writer was introduced for already-present components.
+- [x] Parser registry/public capability remains false until qualifying integration tests pass; image-only scans cannot silently become an indexed success.
+- [x] Pages/tables retain original page/box/row provenance; images/diagrams without understanding emit explicit incomplete-coverage warnings rather than invented relations.
+- [x] Existing text-PDF qualification is not blocked on future OCR/VLM work, and no OCR/visual support is claimed by completing text-PDF checks.
 - [ ] After CONTENT-001 is completed, PDF text/figure/page objects use its source-version scoped asset/element/representation IDs; original image evidence is byte-verifiable, not inferred.
-- [ ] Cross-task tests prove missing asset/unverified diagram does not yield a false "original source" citation.
+- [x] Cross-task tests prove missing asset/unverified diagram does not yield a false "original source" citation. Asset byte/RLS/restart tests remain NOT TESTED until CONTENT-001 exists.
 
 
 
-- [ ] Versioned qualified PDF parser is installed only in the reviewed application environment and fails safely when unavailable.
-- [ ] All PDF chunks have real source/version provenance; where reliable pages exist, `Chunk.page` and page-range metadata match manually audited input.
-- [ ] No PDF with missing text/OCR requirement is marked indexed or publishes an empty chunk set.
-- [ ] Table header/caption/row labels are preserved in retrieved child context; data cells are not silently dropped or spliced across unrelated rows.
-- [ ] A PDF page larger than child token target is split within bounded structure without claiming a false model-token count.
-- [ ] Explicit upload → persistent job/active version → chunk inspection → lexical retrieval works on actual PostgreSQL, including restart and source update.
-- [ ] Failed/incompatible/corrupt/encrypted PDF leaves previously published version and search intact, with sanitized diagnostic code.
-- [ ] At least 10 representative PDFs and 20 evidence queries produce a recorded page/section/plain-recursive comparison with source/page citation accuracy and resource cost.
-- [ ] New format support is not advertised before parser/route/capabilities checks pass; UI displays only authoritative available metadata.
-- [ ] No alternate document store, upstream Haystack fork, unreviewed OCR/network calls or destructive migration is added.
+- [x] Versioned qualified PDF parser is installed only in the reviewed application environment and fails safely when unavailable.
+- [x] All PDF chunks have real source/version provenance; where reliable pages exist, `Chunk.page` and page-range metadata match manually audited input.
+- [x] No PDF with missing text/OCR requirement is marked indexed or publishes an empty chunk set.
+- [x] Table header/caption/row labels are preserved in retrieved child context; data cells are not silently dropped or spliced across unrelated rows.
+- [x] A PDF page larger than child token target is split within bounded structure without claiming a false model-token count.
+- [x] Explicit upload → persistent job/active version → chunk inspection → lexical retrieval works on actual PostgreSQL, including restart and source update.
+- [x] Failed/incompatible/corrupt/encrypted PDF leaves previously published version and search intact, with sanitized diagnostic code.
+- [x] At least 10 representative PDFs and 20 evidence queries produce a recorded page/section/plain-recursive comparison with source/page citation accuracy and resource cost. Local corpus: 11 reproducible layouts, 25 labelled queries, one explicit parser refusal; separate real-source live proof.
+- [x] New format support is not advertised before parser/route/capabilities checks pass; UI displays only authoritative available metadata.
+- [x] No alternate document store, upstream Haystack fork, unreviewed OCR/network calls or destructive migration is added.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -247,23 +249,23 @@ Document parser revision, accepted PDFs, page/table limitations, exact byte/page
 
 ## O. Mandatory Completion Checklist
 
-- [ ] 2026-11-23 PDF module inventory rechecked; existing worker/sandbox/asset manifest preserved.
-- [ ] Source-level text and table qualification results reported separately from visual/OCR feature availability.
-- [ ] Normal text PDF, mixed figure+text and image-only scan negative paths independently tested.
-- [ ] CONTENT-001 evidence storage integration used only when actually available; no fake source assets.
-- [ ] Visual/OCR/evidence successor dependencies and no-silent-coverage-loss policy documented.
+- [x] 2026-11-23 PDF module inventory rechecked; existing worker/sandbox/asset manifest preserved.
+- [x] Source-level text and table qualification results reported separately from visual/OCR feature availability.
+- [x] Normal text PDF, mixed figure+text and image-only scan negative paths independently tested.
+- [x] CONTENT-001 evidence storage integration used only when actually available; no fake source assets. Integration remains unavailable/pending, not a claimed pass for persisted assets.
+- [x] Visual/OCR/evidence successor dependencies and no-silent-coverage-loss policy documented.
 
 
 
-- [ ] Current source paths and task dependencies verified against working tree before code changes.
-- [ ] Parser installation/license/resource limits evaluated with actual PDF fixtures.
-- [ ] Page/heading/table projection and provenance implemented; silent empty extraction blocked.
-- [ ] Shared content-aware policy and existing PostgreSQL ingestion/job/publication reused without duplicates.
-- [ ] Model-token unit declarations and oversize/table policies verified, no misleading 500-token claim.
-- [ ] Correctness, negative/security, restart, update and regression suites executed with evidence.
-- [ ] Page-citation/table-retrieval evaluation recorded with controlled baseline comparison.
-- [ ] Documentation and feature advertisement match implemented parser capabilities.
-- [ ] Migration/rollback decisions explicit, no applied SQL overwritten and no data erased.
-- [ ] Measurable acceptance evidence and actual commands captured before marking COMPLETE.
+- [x] Current source paths and task dependencies verified against working tree before code changes.
+- [x] Parser installation/license/resource limits evaluated with actual PDF fixtures.
+- [x] Page/heading/table projection and provenance implemented; silent empty extraction blocked.
+- [x] Shared content-aware policy and existing PostgreSQL ingestion/job/publication reused without duplicates.
+- [x] Model-token unit declarations and oversize/table policies verified, no misleading 500-token claim.
+- [x] Correctness, negative/security, restart, update and regression suites executed with evidence.
+- [x] Page-citation/table-retrieval evaluation recorded with controlled baseline comparison.
+- [x] Documentation and feature advertisement match implemented parser capabilities.
+- [x] Migration/rollback decisions explicit, no applied SQL overwritten and no data erased.
+- [x] Measurable acceptance evidence and actual commands captured for Gate A. Overall COMPLETE remains withheld for Gate B.
 
-**Task remains IN PROGRESS until all applicable text-PDF qualification gates in Section O have real extraction/search evidence. OCR, visual semantics and evidence-resolution are separately gated successors and cannot be claimed complete here.**
+**Gate A has local extraction/search/restart evidence in the qualification record. The overall task remains IN PROGRESS for Gate B integration after CONTENT-001. OCR, visual semantics and evidence-resolution are separately gated successors and cannot be claimed complete here.**
