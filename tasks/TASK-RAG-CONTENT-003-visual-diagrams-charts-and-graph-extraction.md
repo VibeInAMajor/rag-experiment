@@ -5,7 +5,7 @@
 **Status:** PROPOSED — implementation blueprint; no qualified visual inference service exists  
 **Priority:** P1 — visual evidence after content assets and PDF layout  
 **Dependencies:** TASK-RAG-CONTENT-001, TASK-RAG-CHUNK-003; OCR-dependent scanned cases also require TASK-RAG-CONTENT-002  
-**Repository snapshot inspected:** 4dd81abd4b34794edfcafabb623703c67f40be81  
+**Repository snapshot inspected:** 522c2cb38aff746e65a8f04ea48d88d3695fc5a9  
 **Target:** tasks/TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md
 
 ## A. Title
@@ -17,6 +17,10 @@ Detect graphical elements in PDFs, preserve authorized exact image evidence, der
 Text extraction can return all labels of a flowchart while losing arrow direction, decision branches and conditional edge labels. Charts are more dangerous: describing a trend does not establish correct axis scales or numerical data. A text-search pipeline that indexes a fabricated visual description can confidently answer the wrong question. Conversely, a visual diagram may occupy only a bounded region on a page and can be retained as exact image evidence. We need representation plurality: source crop, observed labels, candidate relations, confidence/verification and retrieval text, all linked to source and version. Do not use plain OCR as a graph parser.
 
 ## C. Current Repository State
+
+### C0. Source and parser-family status reconciliation
+
+**Source reinspection 2026-11-23:** the current PDF parser has qualified text-layer/page/table mechanics and explicitly incomplete visual semantics; [parser_registry.py](../apps/workbench/api/parser_registry.py) reports no OCR/visual understanding despite Docling availability. [PARSE-002](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md) and [PARSE-003](check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md) remain proposed and **do not** qualify embedded slide/workbook charts today. No approved VLM or graph representation exists.
 
 | Exact repository source | Verified state and gap |
 | --- | --- |
@@ -52,6 +56,13 @@ For an authorized, bounded document containing a detectable visual diagram or ch
 No OCR engine implementation (CONTENT-002), no Mermaid source parsing (CONTENT-004), no auto-generated image editing, no general chat reasoning model, no universal vector-image embeddings, no training/finetuning a VLM, no default remote image uploads, no full digital-twin graph database, and no reproduction of charts by guessing unobserved values. PNG/JPEG uploads outside an authorized PDF/source are deferred unless separately added to parser registry and contracts. Do not claim support for chart data extraction on all chart families based on successful detection.
 
 ## G. Architecture / Boundaries
+
+### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
+
+- **Source parsing is NOT here:** format-specific [PARSE-002](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md) extracts slides/embedded-media placeholders; [PARSE-003](check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md) extracts sheets/tables; existing [PDF CHUNK-003](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) extracts page blocks. They provide `ParsedElement` and verified image/crop/page/slide/row hints where genuinely available, not VLM content.
+- **This task uniquely owns interpretation:** versioned `VisualUnderstandingPort` and typed candidate diagram nodes/edges/conditions plus chart axes/series/numeric uncertainty. It receives **already detected/cropped** visual source elements through one shared element/asset contract. No new DOCX/XLSX/PDF parser, blob store, or source writer.
+- **Supported input gates:** first PDF images after [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md); Office slide and workbook chart adapters are **future per-format extensions** requiring the PARSE input family qualification and an explicit source-coordinate policy. Do not mark these formats visually supported merely because a common VLM port exists.
+- **Not Mermaid:** [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) parses original Mermaid grammar deterministically rather than analyzing a rendered picture. [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) owns evidence resolution, not model inference.
 
 [x] application visual element projection, [x] provider-neutral inference port, [x] bounded adapter, [x] evidence assets, [x] existing ingestion + PostgreSQL, [x] retrieval provenance, [x] security, [x] observations/tests; [ ] arbitrary agent runtime. Dependency graph:
 

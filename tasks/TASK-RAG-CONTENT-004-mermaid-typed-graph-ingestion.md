@@ -5,7 +5,7 @@
 **Status:** PROPOSED — implementation blueprint; no approved Mermaid structural parser currently exists  
 **Priority:** P1 — Markdown structural enrichment after representation foundation  
 **Dependencies:** TASK-RAG-CONTENT-001; completed TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002; evidence consumer TASK-RAG-CONTENT-005  
-**Repository snapshot inspected:** 4dd81abd4b34794edfcafabb623703c67f40be81  
+**Repository snapshot inspected:** 522c2cb38aff746e65a8f04ea48d88d3695fc5a9  
 **Target:** tasks/TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md
 
 ## A. Title
@@ -17,6 +17,10 @@ Extract Mermaid fenced blocks from Markdown, validate syntax with a pinned offli
 Mermaid is not an image requiring OCR. The Mermaid text already encodes graph structure, including directional edges, labels, ordered messages, inheritance and ER cardinalities. Treating it as a generic code fence and then recursively splitting after an arbitrary token count breaks graph semantics. Sending a rendered SVG to a VLM wastes exact source information and adds inference error. But treating a Mermaid syntax validator as a complete graph extractor is also incorrect: validation may only return a diagram type, not nodes, edges or exact sequencing. Each supported Mermaid family needs a deliberately qualified AST/grammar projection.
 
 ## C. Current Repository State
+
+### C0. Source and parser-family status reconciliation
+
+**Source reinspection 2026-11-23:** [parsing.py](../apps/workbench/api/parsing.py) already recognizes Markdown fenced blocks as `ParsedElement.PROTECTED_RAW`. [parser_registry.py](../apps/workbench/api/parser_registry.py) has no qualified Mermaid grammar adapter, and no one has implemented a Mermaid source-to-graph schema yet. [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) separately proposes safe JSON/YAML/JSONL extraction, not Mermaid.
 
 | Source | Verified implementation / missing behavior |
 | --- | --- |
@@ -50,6 +54,14 @@ For each qualified Mermaid fenced block in an authorized Markdown source, persis
 No OCR, no VLM diagram interpretation of Mermaid, no browser-executed Markdown directives, no arbitrary scripting, no network calls, no new graph database, no direct import of user-selected JavaScript modules or CDN assets, no dependence on Mermaid rendering for semantic correctness, and no claim that unsupported diagram families are understood. Static preview rendering (if chosen later) must never become an authority for structure.
 
 ## G. Architecture / Boundaries
+
+### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
+
+- **Input detection owner:** existing Markdown [parsing.py](../apps/workbench/api/parsing.py) emits protected fenced elements with exact line/source spans. This task consumes those elements. It MUST NOT build a second Markdown scanner/registry that duplicates `PARSE-001`.
+- **This task's unique role:** parse/validate Mermaid syntax and typed diagram-family relations from the existing `mermaid` fenced source (flowchart/sequence first). Preserve exact original code via [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and deterministic source-to-graph links; derived summaries become searchable via current chunking/ingestion.
+- **Separate structured data:** [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) owns YAML/JSON record path and value fidelity. A YAML string containing `flowchart` is **not** implicitly Mermaid. An explicit future field-to-Mermaid adapter would need separate scope and tests.
+- **Distinct visual graphs:** [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) analyzes diagram *pixels* and yields model-inferred relations; Mermaid AST is deterministic_parse. Do not run VLM on Mermaid source or conflate their trust status.
+- **Evidence endpoint:** [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) owns authorized retrieval of original source and stable citations; not this parser adapter.
 
 [x] parsing and domain schemas, [x] app-level per-family adapter registry, [x] current chunking/ingestion, [x] CONTENT-001 asset/representation port, [x] existing PostgreSQL, [x] security/observability, [x] eval/docs; [ ] agent runtime. Data flow:
 

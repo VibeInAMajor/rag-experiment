@@ -5,7 +5,7 @@
 **Status:** PROPOSED — architecture and storage blueprint; not implemented  
 **Priority:** P0 — prerequisite for trustworthy multimodal ingestion  
 **Dependencies:** completed TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; coordinate with active TASK-RAG-CHUNK-003  
-**Repository snapshot inspected:** 4dd81abd4b34794edfcafabb623703c67f40be81  
+**Repository snapshot inspected:** 522c2cb38aff746e65a8f04ea48d88d3695fc5a9  
 **Target:** tasks/TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md
 
 ## A. Title
@@ -19,6 +19,10 @@ Current ingestion persists searchable text chunks, but does not preserve a gener
 The required product model is: Document -> Structured Elements -> Multiple Representations -> Searchable Chunks + Original Evidence. One source element may have raw, OCR, structure, searchable description and image representations; these must remain distinguishable and all tie back to an immutable source version. Rendering and retrieval must not promote an inferred edge or generated claim into an observed fact.
 
 ## C. Current Repository State
+
+### C0. Source and parser-family status reconciliation
+
+**Source reinspection 2026-11-23 / ownership correction:** [PARSE-001](completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) and TXT/Markdown/Python ingestion are implemented. [parsing.py](../apps/workbench/api/parsing.py) already defines immutable **transient** `ParsedElement`/`ParsedDocument`; [parser_registry.py](../apps/workbench/api/parser_registry.py) owns `ElementKind` and format classification. [local_sources.py](../apps/workbench/api/local_sources.py) provides a narrowly guarded registered host-local original file hint/reveal, but not a general durable `DocumentAsset` byte store. No `ContentRepresentation`/blob-backed EvidenceResolver schema is implemented. CONTENT-001 must **map from** the existing parser output, not create another parser system.
 
 | Actual source | Inspected current fact | Reuse / gap |
 | --- | --- | --- |
@@ -53,6 +57,14 @@ An application service can stage original source bytes or a verified derived cro
 No OCR run, no VLM call, no Mermaid parser, no PDF parser replacement, no code execution, no new vector database, no arbitrary graph runtime, no object-storage cloud account requirement, no content deletion UI and no answer-generation feature in this task. Provider-neutral contract does not imply that multimodal retrieval works today.
 
 ## G. Architecture / Boundaries
+
+### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
+
+- **Input owner:** format adapters in [PARSE-002](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md), [PARSE-003](check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md), [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) and [PARSE-005](check/TASK-RAG-PARSE-005-conversations-and-transcripts.md) produce bounded, verified `ParsedDocument/ParsedElement` and source-specific offsets. They do NOT create `DocumentAsset`, `ContentRepresentation`, `EvidenceReference` or new tables.
+- **This task's owner:** map `ParsedElement` → immutable persisted `DocumentElement` under `SourceVersion`, preserve kind/span/structure and confidence, create **one** source-version/tenant-scoped asset/representation store and link existing `Chunk` records. There is exactly **one** persistent element owner; `ParsedElement` is an in-memory extraction DTO, not a competing DB entity.
+- **Schema coordination:** extend [parser_registry.py](../apps/workbench/api/parser_registry.py) `ElementKind` centrally for truly supported format-specific kinds, or document a stable mapping at the app boundary; do not create conflicting, separately evolving parser type registries.
+- **Existing local source:** optionally reference version-scoped [LocalSources](../apps/workbench/api/local_sources.py) registration as a discovery hint after security review; it does not make uploaded originals available byte-for-byte. Never silently claim `original_content_available=true` in current v1 API.
+- **Handoff:** PARSE tasks may reach Gate P (lexical chunks and truthful offsets) before this task. Gate E (immutable original evidence and representation APIs) requires CONTENT-001 and [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md). Do not force all Office/CSV parsers to implement the AssetStorePort before their initial lexical qualification.
 
 Affected: [x] domain contracts, [x] application orchestration, [x] storage port, [x] PostgreSQL metadata, [x] retrieval provenance, [x] security, [x] observability, [x] local infrastructure and docs; [ ] agent runtime. Dependency direction: parser / OCR / VLM / Mermaid adapters -> app-owned Element/Representation contracts -> existing ingestion and persistence ports -> PostgreSQL plus an AssetStorePort implementation. Retrieval continues to use current Chunk and postgres-fts-baseline until independently qualified extensions exist.
 

@@ -5,7 +5,7 @@
 **Status:** PROPOSED — implementation blueprint; scanned-PDF support not qualified  
 **Priority:** P1 — after evidence storage and existing PDF parser qualification  
 **Dependencies:** TASK-RAG-CONTENT-001; coordinate with active TASK-RAG-CHUNK-003 and completed TASK-RAG-PARSE-001/TASK-RAG-002  
-**Repository snapshot inspected:** 4dd81abd4b34794edfcafabb623703c67f40be81  
+**Repository snapshot inspected:** 522c2cb38aff746e65a8f04ea48d88d3695fc5a9  
 **Target:** tasks/TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md
 
 ## A. Title
@@ -17,6 +17,10 @@ Implement bounded, offline-capable **page-by-page OCR** and layout recovery for 
 Scanned PDF pages contain image pixels rather than a reliable text layer. Existing text PDF parsing must NOT report success when scanned pages produce no searchable text. Mixed PDFs are more difficult: some pages may have selectable text, others scans; some contain both a poor hidden OCR layer and visible images. A single blanket OCR pass either loses legible text, duplicates it, or corrupts reading order. Neither OCR nor page segmentation understands arrows, graph data or causal relationships; that belongs to CONTENT-003. We need page-level inspection and a separately qualified OCR route that can be measured and safely disabled.
 
 ## C. Current Repository State
+
+### C0. Source and parser-family status reconciliation
+
+**Source reinspection 2026-11-23:** [parser_registry.py](../apps/workbench/api/parser_registry.py) now sets PDF descriptor `qualified=true` and gates actual `available` on pinned runtime asset discovery; [pdf_worker.py](../apps/workbench/api/pdf_worker.py) and [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) implement text-layer/page/table processing. The current [PDF task](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) reports **Gate A locally qualified** and **original evidence/OCR/vision unavailable**. Older rows in this task describing all PDF as unqualified are historical. Scanned-page OCR remains a new, separate producer.
 
 | Inspected source | Current behavior and reuse |
 | --- | --- |
@@ -53,6 +57,13 @@ Given an authorized, bounded PDF, classify each page by quality of its text laye
 No extraction of arrow semantics, chart numerical series, graph node/edge inference, Mermaid parsing, visual question answering, remote OCR APIs, generic image uploads, handwriting recognition without a qualified engine, unbounded OCR, production multi-user RBAC, or raw PDF execution. CONTENT-003 owns diagram understanding. Do not classify an image-only diagram as search-complete merely because labels were OCR'ed.
 
 ## G. Architecture / Boundaries
+
+### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
+
+- **Already implemented owner:** [CHUNK-003](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) and its existing Docling sandbox own safe PDF text-layer parse, page geometry, table-aware chunking and source-version publication. **Do not write another PDF parser or upload API.**
+- **This task alone owns PDF OCR:** native-vs-scan classification, bounded OCR provider, extracted words/lines/confidence and deterministic reconciliation; emits verified OCR observations through existing `PdfPage/PdfBox/ParsedElement`, then [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) persists representations/assets when ready.
+- **Other parsers:** [PARSE-002](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md) covers DOCX/PPTX/HTML text. Office embedded-image OCR is **not** implicitly supported by this PDF-only task; a follow-on approved adapter could reuse this `OcrProvider` without duplicating it. [PARSE-003](check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md) covers spreadsheets without OCR.
+- **Visual meaning:** [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) alone owns arrow/graph/chart inference; text extracted by OCR must never be advertised as a verified relationship graph. [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) owns secure original evidence reads.
 
 [x] parsing/OCR adapter, [x] application policy, [x] provider-neutral OcrProvider contract, [x] content representations, [x] existing Postgres ingestion, [x] security and audit, [x] evaluation; [ ] agent runtime. Flow:
 

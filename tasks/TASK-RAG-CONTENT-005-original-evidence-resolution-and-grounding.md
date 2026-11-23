@@ -5,7 +5,7 @@
 **Status:** PROPOSED — implementation blueprint; source evidence resolver not yet present  
 **Priority:** P1 — trust boundary for multimodal retrieval and future answers  
 **Dependencies:** TASK-RAG-CONTENT-001; CONTENT-002/003/004 integrations provide format-specific evidence (may roll out separately); completed TASK-RAG-001/TASK-RAG-002  
-**Repository snapshot inspected:** 4dd81abd4b34794edfcafabb623703c67f40be81  
+**Repository snapshot inspected:** 522c2cb38aff746e65a8f04ea48d88d3695fc5a9  
 **Target:** tasks/TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md
 
 ## A. Title
@@ -17,6 +17,10 @@ Implement a tenant-authorized Evidence Resolver that maps every retrievable text
 A RAG result may contain a synthesized caption for a flowchart or an OCR reconstruction of a scanned PDF. Such text is useful for search but is not itself the original evidence. Returning a persuasive answer with a source title and invented page number is worse than returning no citation. Source provenance must survive splitting, version updates, file conversions, API restart and model revisions. There is also a privacy risk: a guessed evidence ID must not reveal an original PDF/image from another workspace. Existing SearchResponse has chunk provenance, but not a complete verified original-asset resolution contract.
 
 ## C. Current Repository State
+
+### C0. Source and parser-family status reconciliation
+
+**Source reinspection 2026-11-23:** the current [api/contracts.py](../apps/workbench/api/contracts.py) provides `DocumentDetail.original_content_available=false` and [local_sources.py](../apps/workbench/api/local_sources.py) optionally opens a registered host-local file, but neither supplies general asset/evidence IDs or byte retrieval. [PARSE-002..005](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md) are proposed extraction tasks. CONTENT-001 is the prospective durable `DocumentElement/ContentRepresentation/DocumentAsset` owner.
 
 | Source | Current behavior / evidence gap |
 | --- | --- |
@@ -52,6 +56,14 @@ For each authorized search hit carrying an evidence link, resolve a structured e
 No new arbitrary LLM generator, no universal fact-checking guarantee, no embeddings/reranking upgrade, no unapproved public storage URLs, no full document annotation UI, no automatic human reviewer service, no hallucination detection by a single LLM judgment, no altering original source to fit a citation and no resynthesizing an original graph from a description. A verified hash proves bytes, not the semantic truth of a VLM-derived claim.
 
 ## G. Architecture / Boundaries
+
+### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
+
+- **Input owners:** [PARSE-002](check/TASK-RAG-PARSE-002-office-and-web-document-parsers.md), [PARSE-003](check/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md), [PARSE-004](check/TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) and [PARSE-005](check/TASK-RAG-PARSE-005-conversations-and-transcripts.md) must emit truthful source offset/slide/row/cue metadata; they do NOT implement EvidenceResolver or issue original-asset links.
+- **Foundation:** [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) uniquely persists version-scoped elements/assets/representations and joins `Chunk` to original evidence. The resolver consumes that database/AssetStorePort, it does not create a second source/asset store.
+- **This task uniquely owns retrieval-time evidence resolution:** validate workspace, source, version, element/representation/asset hash and exact source-range/page/bbox/speaker/time/graph link. Claims about an original are unavailable when the required asset/span has not been stored; do not synthesize citation from a chunk label.
+- **Local reveal is separate:** `LocalSources` is host-local and registry-gated, not an authenticated browser binary download. Reuse only as a narrow operator hint; never treat `can_reveal` as evidence authorization.
+- **Modality producer boundaries:** CONTENT-002 OCR, CONTENT-003 visual model claims and CONTENT-004 Mermaid relations each supply distinct provenance states. The evidence resolver verifies links/hashes and flags inferred claims; it does not re-run OCR, VLM, Mermaid, spreadsheet or transcript parsing.
 
 [x] application domain evidence contracts, [x] scoped storage + representation links, [x] HTTP and retrieval projection, [x] security/RLS, [x] observability, [x] tests/docs; [ ] arbitrary agent runtime, [ ] new vector provider. Pipeline:
 
