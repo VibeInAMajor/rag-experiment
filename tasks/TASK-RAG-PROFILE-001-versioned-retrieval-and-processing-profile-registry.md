@@ -53,6 +53,20 @@ MODIFY [profiles.py](../apps/workbench/api/profiles.py), [contracts.py](../apps/
 
 **MUST NOT:** duplicate source registry, migration ownership, transport adapters, file ingestion jobs or framework components. If another component is materially affected, revise this section and its tests before coding.
 
+### I.1. Concrete implementation ownership — source reinspection 2026-11-23
+
+| Existing file (direct link) | Symbol, contract and test reuse |
+| --- | --- |
+| [`apps/workbench/api/profiles.py`](../apps/workbench/api/profiles.py) | currently only postgres-fts-baseline-r1 |
+| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | SearchRequest.expected_profile_revision and CapabilitiesResponse |
+| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | _capabilities/_search fixed allowlist |
+| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | approved Haystack baseline |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | strict client graph matcher |
+| [`apps/workbench/web/src/api/decode.ts`](../apps/workbench/web/src/api/decode.ts) | runtime API contract validation |
+| [`apps/workbench/api/tests/test_http_contract.py`](../apps/workbench/api/tests/test_http_contract.py) | profile revision and 409/503 tests |
+
+**Related project, pinned audit sources (architecture/test patterns only):** [`src/enterprise_ai_pipeline/rag/embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embeddings.py); [`src/enterprise_ai_pipeline/rag/embedding_capacity.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_capacity.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Inventory profile constants, Pydantic discriminator literals, capability UI and current errors. Freeze lexical baseline revision and outward contract snapshots. Define explicit score types: postgres_ts_rank_cd, bm25_raw, cosine_distance, rrf_score; never present any as calibrated probability.
@@ -64,6 +78,24 @@ MODIFY [profiles.py](../apps/workbench/api/profiles.py), [contracts.py](../apps/
 
 All implementation methods use descriptive domain names (not task identifiers); all new behavior is fail-closed and traceable. No acceptance box is checked merely because a file was created.
 
+### J7–J13. Executable, file-specific implementation sequence
+
+**J7.** Freeze existing four-field search contract and keyword Live browser behavior; audit component labels versus actual executable backend profiles.
+
+**J8.** Define immutable profile registry for lexical, exact dense, ANN dense, hybrid/RRF, optional BM25 and embedding profiles, with source/index generation and per-workspace authorization.
+
+**J9.** Model `capacity_policy_id` as distinct field referencing TPM-001 (desired 0.92, hard 0.95) without exposing numeric quota controls to untrusted clients.
+
+**J10.** Qualify each profile against actual adapter, embedding coverage, GIN/ANN physical index status, model revision and API authorization; status planned does not imply runnable.
+
+**J11.** Replace hardcoded single profile dispatch with static allowlisted provider-neutral composition; NEVER deserialize arbitrary Python or user graph into runtime components.
+
+**J12.** Extend frontend discovery selector, JSON schema, error status and stale profile invalidation. Test no fallback to fixture Preview on network outage.
+
+**J13.** Test 409 stale, unknown RRF, mixed model versions, missing TPM policy, 503 unready, wrong workspace and old lexical golden regression.
+
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
+
 ## K. Security / Governance / Observability
 
 Enforce server-resolved WorkspaceContext and database RLS on each operation. Never trust client-supplied scope, source/file paths, graph JSON or model IDs as authorization. Protect secrets through runtime secret references; redact input text, original assets, embeddings, DSNs, API keys and model prompts from traces. Log only safe opaque IDs, profile/generation/revision, status/error category, counts, timings and trace_id. Handle prompt-injected document text as untrusted data. Bound request/token/GPU/SQL memory and concurrency; record retention and cross-workspace negative tests. Do not equate quality-confidence with authorization.
@@ -73,6 +105,13 @@ Enforce server-resolved WorkspaceContext and database RLS on each operation. Nev
 Registry decoder/unit tests; malformed profiles; unsupported score/profile pairing; version mismatch HTTP 409; readiness 503 during missing embedding; UI no fallback, old exact keyword graph; request replay and live reload; cross-workspace profile selection negative; smoke lexical unchanged. Capture safe example CapabilitiesResponse and app revision.
 
 **Execution baseline:** use existing Hatch application commands `hatch run workbench-api:check`, `hatch run workbench-api:test`, `hatch run workbench-api:types`, the pinned PostgreSQL Docker environment and explicitly disposable test data. If UI changes, run `npm run typecheck`, `npm test`, `npm run build` from `apps/workbench/web`, plus existing Preview/validator/Live smoke. Capture exact executed commands, versions, sanitized HTTP/SQL and real PASS/FAIL/SKIP results; NO invented latency.
+
+### L.1. Specialized test matrix / release gate
+
+- [ ] Execute primary owner-specific tests named in I.1 and new focused unit and disposable PostgreSQL integration tests for this stage; attach actual commands/output.
+- [ ] Prove 400/404/409/429/503/504 failure/cancellation, source-version drift, tenant RLS, safe trace IDs and absence of fixture fallback.
+- [ ] Compare real source/result identities with independently checked PostgreSQL response and report quality/latency sample counts; no synthetic numerical performance claims.
+- [ ] Re-run workbench-api Hatch check/test/types and (if browser touched) npm typecheck/test/build, Preview/validation/Live browser regression.
 
 ## M. Acceptance Criteria
 

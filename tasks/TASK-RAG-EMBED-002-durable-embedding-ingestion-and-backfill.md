@@ -4,7 +4,7 @@
 **Updated:** 2026-11-23  
 **Status:** PROPOSED — detailed implementation blueprint; no code changes or runtime tests in this task publication  
 **Priority:** P0  
-**Dependencies:** EMBED-001, INDEX-001; completed RAG-002/DB-001, coordinate PROFILE-001  
+**Dependencies:** EMBED-001, INDEX-001; completed RAG-002/DB-001, coordinate PROFILE-001  , **[TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)**
 **Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
 **Target location:** tasks/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md
 
@@ -53,6 +53,35 @@ MODIFY [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../
 
 **MUST NOT:** duplicate source registry, migration ownership, transport adapters, file ingestion jobs or framework components. If another component is materially affected, revise this section and its tests before coding.
 
+### I.1. Source-level reuse matrix — refreshed 2026-11-23
+
+**Recipient code anchors (real files, inspected):**
+
+| Repository file | Existing owner; exact integration role |
+| --- | --- |
+| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | synchronous parse/chunk followed by existing durable job; no model inference |
+| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | complete_ingestion_with_publication currently requires null embeddings and owns terminal job transaction |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | _publish and vector_search, registered profile dimension checks |
+| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | source/version/chunk identities and EmbeddingProfile guards |
+| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | embedding_profiles, nullable vector, CHECK dimension; do not rewrite |
+| [`apps/workbench/api/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) | existing indexing jobs are not durable embedding jobs |
+| [`apps/workbench/api/tests/test_ingestion_persistence.py`](../apps/workbench/api/tests/test_ingestion_persistence.py) | source version rollback/replay fixtures |
+| [`apps/workbench/api/tests/test_ingestion_resilience.py`](../apps/workbench/api/tests/test_ingestion_resilience.py) | interrupted publishing and current job retry expectations |
+
+**Pinned previous-project candidates (do NOT copy unlicensed code or Qdrant/SQLite infrastructure):** donor commit `955fd049949d3fc462d555be14774e4b255aa15c`.
+
+| Pinned previous-project source | Targeted symbol/behavior |
+| --- | --- |
+| [`src/enterprise_ai_pipeline/rag/semantic_embedding_preparation.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/semantic_embedding_preparation.py) | EmbeddingPreparation, digest-keyed cache partition, late-result recovery |
+| [`src/enterprise_ai_pipeline/rag/embedding_execution.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_execution.py) | bounded execution windows; transport workers do not own source publication |
+| [`src/enterprise_ai_pipeline/rag/embedding_dispatch.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_dispatch.py) | capacity reserve/finish through TPM-001 |
+| [`src/enterprise_ai_pipeline/rag/embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embeddings.py) | EmbeddingRequest/Batch and fake provider |
+| [`tests/pipeline/test_embeddings_and_vector_store.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_embeddings_and_vector_store.py) | cache/identity/dimension/transport tests |
+| [`tests/pipeline/test_semantic_restore_delta_lifecycle.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_semantic_restore_delta_lifecycle.py) | restart and stale-generation repair scenarios |
+| [`LICENSE.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) | owner permission required for code transplant |
+
+**Reuse decision gate:** compare current component to donor behavior, list reusable algorithm/contract, incompatibilities and the exact owner of PostgreSQL/model/tokenizer state. Code copying requires permission under [donor LICENSE](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md); otherwise independently implement compatible behavior and port test **scenarios**. Existing completed Workbench components must not be replaced without a measurable reason.
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Inventory publication write ownership and dimension rules; design job+coverage schema with workspace FKs, RLS and idempotent unique (chunk/version/model_profile/input_hash). Model how a source replacement supersedes its old vector candidates and how a model revision creates a new semantic generation.
@@ -64,6 +93,26 @@ MODIFY [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../
 
 All implementation methods use descriptive domain names (not task identifiers); all new behavior is fail-closed and traceable. No acceptance box is checked merely because a file was created.
 
+### J7–J14. Detailed, source-grounded implementation handoff — 2026-11-23
+
+**Step J7 —** Keep existing lexical publication intact: never remove the `chunk.embedding is None` guard from postgres_ingestion.py merely to force embeddings through HTTP upload. Add a distinct durable embedding job/backfill stage that runs after current source/version commit.
+
+**Step J8 —** Define embedding job key `(workspace_id,source_id,version_id,chunk_id,model_profile_revision,input_digest)`, with lease, retries, checkpoint and generation ownership; persist in an additive migration with FORCE RLS and guaranteed non-superuser role.
+
+**Step J9 —** Compute the complete text to embed before a provider call: section/heading/context prefix, query-vs-document instruction and tokenizer/profile digest. Model-input SHA, source occurrence and profile revision differ from bare `content_hash` and must be separately persisted.
+
+**Step J10 —** Borrow donor semantic_embedding_preparation's cache partition pattern and bounded execution windows; do not import Qdrant physical-point identities or caller-owned SQLite writes. Database operations must stay in PostgresPersistence adapter and use current source/version constraints.
+
+**Step J11 —** Send 100% of batches through one TPM-001 scheduler shared with live query embeddings. Lease releases only on known provider-not-sent or safe expiry; reserve before sending, reconcile provider/proxy token usage separately, no background worker bypass.
+
+**Step J12 —** After each vector batch, re-check that the source/version and model/processing profile still match the job before saving vectors. A newer source supersedes stale jobs; no mixed 2560/1536 or query/description instruction vectors in one read generation.
+
+**Step J13 —** Publish a semantic index generation only when required eligible active chunk coverage is complete and every vector has a correct model/profile/dimension hash. Partial failures retain lexical readiness and show a truthful `NOT_READY` dense capability.
+
+**Step J14 —** Run model-down/restart/TEI 429, OOM, duplicate queue and source replacement tests; compare provider calls saved by compatible prior cache; preserve existing ingestion_idempotency and active version semantics.
+
+**Mandatory dependency handshake:** [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) owns 0.92 desired / 0.95 hard admission and all query/document model calls; do not implement an independent limiter.
+
 ## K. Security / Governance / Observability
 
 Enforce server-resolved WorkspaceContext and database RLS on each operation. Never trust client-supplied scope, source/file paths, graph JSON or model IDs as authorization. Protect secrets through runtime secret references; redact input text, original assets, embeddings, DSNs, API keys and model prompts from traces. Log only safe opaque IDs, profile/generation/revision, status/error category, counts, timings and trace_id. Handle prompt-injected document text as untrusted data. Bound request/token/GPU/SQL memory and concurrency; record retention and cross-workspace negative tests. Do not equate quality-confidence with authorization.
@@ -73,6 +122,14 @@ Enforce server-resolved WorkspaceContext and database RLS on each operation. Nev
 Real qualified model optional GPU integration and fake provider deterministic tests; 100+ chunks, mixed languages, source update, quota/429, network outage, stale job/lease, wrong dimension, missing asset, RLS tenant denial, source version swap, crash recovery, latency/throughput and PostgreSQL migration/rollback. Acceptance requires 100% coverage on a known small supported corpus; larger backfill completeness reported with counts.
 
 **Execution baseline:** use existing Hatch application commands `hatch run workbench-api:check`, `hatch run workbench-api:test`, `hatch run workbench-api:types`, the pinned PostgreSQL Docker environment and explicitly disposable test data. If UI changes, run `npm run typecheck`, `npm test`, `npm run build` from `apps/workbench/web`, plus existing Preview/validator/Live smoke. Capture exact executed commands, versions, sanitized HTTP/SQL and real PASS/FAIL/SKIP results; NO invented latency.
+
+### L.1. Reuse-specific test migration and verification
+
+- [ ] test_embedding_ingestion.py + integration: 8-source seed and actual uploaded 20+ chunks produce eligible semantic coverage exactly 100%, with correct vector dimension and per-workspace RLS.
+- [ ] Fault injection: late paid result after new source generation, interrupted write, duplicate job, complete job with missing vector, ungoverned API client, 429 with retry cooldown; no false-ready profile.
+- [ ] Performance: a backlogged governed 10-minute run records TPM target 0.92 and hard 0.95 admission but only claims success when provider reports/qualified proxy supports the measurement.
+
+**Proof requirements:** record donor behavior source commit, recipient code and exact executed test commands. Donor unit tests **do not** demonstrate recipient functionality; recipient CI evidence must exercise the actual PostgreSQL/TEI/client paths. Capture a fixture-vs-runtime result matrix, error correlation and no-secrets logs.
 
 ## M. Acceptance Criteria
 
@@ -84,6 +141,10 @@ Real qualified model optional GPU integration and fake provider deterministic te
 - [ ] Changing source text/model/profile invalidates stale embeddings correctly
 - [ ] Cross-workspace cache reuse forbidden unless separately security-reviewed
 - [ ] Database migrations and existing lexical/Evidence regression pass
+
+- [ ] All provider calls from embedding jobs use exactly the TPM-001 dispatch budget
+- [ ] Stale/superseded source vectors cannot be attached to an active new generation
+- [ ] Original lexical source publisher unchanged and remains operational when TEI is offline
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

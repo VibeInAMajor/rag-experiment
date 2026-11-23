@@ -4,7 +4,7 @@
 **Updated:** 2026-11-23  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P1  
-**Dependencies:** DENSE-001, PROFILE-001, INDEX-001; BM25-002 optional and not a prerequisite  
+**Dependencies:** DENSE-001, PROFILE-001, INDEX-001; BM25-002 optional and not a prerequisite  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
 **Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
 **Target:** tasks/TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md
 
@@ -45,6 +45,20 @@ HybridProfile{profile_id,profile_revision,index_generation,lexical_profile_id,de
 
 CREATE apps/workbench/api/hybrid.py, tests/test_hybrid_retrieval.py, tests/test_hybrid_routes.py; MODIFY profiles.py/registry, services.py, application.py, contracts.py, projection.py and shared UI approved matcher/template; REUSE lexical.py, dense.py, PostgresPersistence, Haystack DocumentJoiner. MUST NOT silently change existing keyword flow, DocumentJoiner defaults or raw score labels.
 
+### I.1. Concrete implementation ownership — source reinspection 2026-11-23
+
+| Existing file (direct link) | Symbol, contract and test reuse |
+| --- | --- |
+| [`haystack/components/joiners/document_joiner.py`](../haystack/components/joiners/document_joiner.py) | DocumentJoiner default CONCATENATE; explicit RRF needed |
+| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | existing Haystack lexical retriever |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | separate FTS/pgvector search paths |
+| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | stable Chunk identity |
+| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | profile/score version contract |
+| [`apps/workbench/api/projection.py`](../apps/workbench/api/projection.py) | actual stage timing and identifiers |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | only vetted graph topology executable |
+
+**Related project, pinned audit sources (architecture/test patterns only):** [`docs/23-implementation-step-06-hybrid-fusion-and-reranking.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/23-implementation-step-06-hybrid-fusion-and-reranking.md); [`src/enterprise_ai_pipeline/rag/embedding_dispatch.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_dispatch.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
+
 ## J. Implementation Requirements — ordered executable blueprint
 
 1. J1 — Inspect actual Haystack DocumentJoiner RRF mode and its score semantics in current library; verify joiner input socket map, Document.id provenance and rank output with controlled two-arm fixture including duplicate source/versions.
@@ -53,6 +67,24 @@ CREATE apps/workbench/api/hybrid.py, tests/test_hybrid_retrieval.py, tests/test_
 4. J4 — Integrate provider/profile capabilities, normalized request and component-specific stage/timing; attach source link/evidence from CONTENT-005 when ready without making image processing a prerequisite for text hybrid.
 5. J5 — Add browser approved hybrid template and test 400 bad graph, 409 stale profile, 503 missing vectors, 429 busy, 504 timeout/cancellation. Do not execute existing demo Hybrid canvas until server validates the exact supported graph.
 6. J6 — Compare 30+ labeled lexical, paraphrase, source code and multi-part queries at fixed context-token budget. Record hybrid Recall@5/10 and MRR versus each arm and per-workspace p95; prioritize no material regression.
+
+### J7–J13. Executable, file-specific implementation sequence
+
+**J7.** Verify exact Haystack DocumentJoiner RRF mode and tested ranking semantics; explicitly set it, never rely on default concatenate.
+
+**J8.** Compose two allowlisted retrieval arms under the same server workspace/source generation, query embedding via shared TPM-001 governor and bounded candidates.
+
+**J9.** Deduplicate exact source_version_id/chunk_id records; incompatible generations return 409/503, never merge old and new source chunks.
+
+**J10.** Compute RRF=Σ1/(k+rank) with declared k and deterministic ties; do not add incomparable ts_rank_cd, BM25 and cosine raw scores.
+
+**J11.** Return `rrf_score`, source IDs, model/index/profile revisions and actual arm timing; mark degraded execution as a separate explicitly selected profile if supported.
+
+**J12.** Map a new typed Hybrid Live graph, keeping the existing Preview demo unsupported for actual execution until server approves exact topology.
+
+**J13.** Test 30+ gold queries, per-arm/hybrid Recall/MRR, no duplicate passages, query provider outage and indexing/interactive TPM fairness.
+
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
 ## K. Security / Governance / Observability
 
@@ -63,6 +95,13 @@ WorkspaceContext and RLS are required for every candidate and metadata lookup. N
 Unit RRF score numeric examples, duplicate chunks, ties, missing arms, empty results, reversed score direction, source/version disambiguation, timeout, concurrent query, partial embedding coverage, 10+ classic lexical and 30+ semantic queries, UI Preview/Live distinctness and full HTTP/SQL output parity. Check RRF k monotonic and no arbitrary graph execution.
 
 Run scoped Hatch workbench-api:check/test/types, PostgreSQL container integration tests and (if UI touched) web typecheck/test/build and existing Preview/validator smoke. Use disposable benchmark database; real measurements must be labeled separately from mocks.
+
+### L.1. Specialized test matrix / release gate
+
+- [ ] Execute primary owner-specific tests named in I.1 and new focused unit and disposable PostgreSQL integration tests for this stage; attach actual commands/output.
+- [ ] Prove 400/404/409/429/503/504 failure/cancellation, source-version drift, tenant RLS, safe trace IDs and absence of fixture fallback.
+- [ ] Compare real source/result identities with independently checked PostgreSQL response and report quality/latency sample counts; no synthetic numerical performance claims.
+- [ ] Re-run workbench-api Hatch check/test/types and (if browser touched) npm typecheck/test/build, Preview/validation/Live browser regression.
 
 ## M. Acceptance Criteria
 

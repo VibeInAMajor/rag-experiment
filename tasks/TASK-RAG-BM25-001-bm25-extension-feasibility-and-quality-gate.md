@@ -45,6 +45,20 @@ BenchmarkExperiment{corpus_generation,query_labels,expected_relevant_source_or_c
 
 READ [0001 migration](../apps/workbench/api/migrations/0001_initial.up.sql), [postgres.py](../apps/workbench/api/postgres.py), [lexical.py](../apps/workbench/api/lexical.py), [lexical gold fixture](../apps/workbench/api/fixtures/lexical-evaluation.json), [evaluation guide](../docs-website/docs/architecture/postgres-lexical-search.md); CREATE benchmark design/tools in tests/benchmarks/ or apps/workbench/api/tests/benchmark_bm25.py, and tasks/BM25_DECISION_REPORT.md with Created/Updated; do not change live SQL or public API.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | true baseline plainto_tsquery('simple') + ts_rank_cd + active version filter |
+| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | generated tsvector and GIN index |
+| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | read-only Haystack FTS baseline |
+| [`apps/workbench/api/fixtures/lexical-evaluation.json`](../apps/workbench/api/fixtures/lexical-evaluation.json) | 10 exact, 3 paraphrase cases, insufficient for BM25 decision |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | rank and provenance oracle |
+| [`docs-website/docs/architecture/postgres-lexical-search.md`](../docs-website/docs/architecture/postgres-lexical-search.md) | current lexical runbook/results |
+| [`haystack/components/retrievers/in_memory/bm25_retriever.py`](../haystack/components/retrievers/in_memory/bm25_retriever.py) | in-memory implementation NOT a pgvector adapter |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/22-implementation-step-05-sparse-and-symbol-retrieval.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/22-implementation-step-05-sparse-and-symbol-retrieval.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered executable blueprint
 
 1. J1 — Freeze current lexical quality and EXPLAIN/latency from actual corpus. Expand to >=1000 non-sensitive representative chunks across 3+ format families and >=100 labeled query/evidence pairs with exact, long-tail, paraphrase and code identifiers.
@@ -53,6 +67,24 @@ READ [0001 migration](../apps/workbench/api/migrations/0001_initial.up.sql), [po
 4. J4 — Compare Recall@5/10, MRR@10, nDCG@10 where graded labels exist, source/citation correctness, p50/p95 latency, indexing time, disk and memory, query analyzer behavior EN/RU/UK, update workload and tenant skew.
 5. J5 — Write Go/No-Go with pass thresholds proposed pre-analysis: >=5 percentage point source-hit improvement on weak-query subset OR comparable overall quality with materially better latency/cost, no critical tenant regression; require stakeholders to agree on gates before looking at results.
 6. J6 — If GO: authorize BM25-002 as conditional implementation; if NO-GO: keep native FTS, preserve benchmark/evidence, reassess only when corpus/query workload changes.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Freeze current FTS exact SQL/GIN/profile and score_type before evaluating any BM25 extension; record baseline source IDs and quality of full 10+3 set.
+
+**J8.** Define ≥1000 non-sensitive chunks across code/TXT/Markdown/real parsed PDF, 100+ manually labeled exact/error-code/multilingual/long-document queries; avoid skewing benchmark to eight seed rows.
+
+**J9.** Investigate current pg_search/ParadeDB extension version, Postgres 17 binary compatibility, licensing AGPL/commercial obligations and maintenance. Document explicit GO conditions approved by owner before running results.
+
+**J10.** Deploy extension only to disposable Postgres clone with correct RLS/workspace and active version filter; do not change current GIN index or production connection.
+
+**J11.** Run pairwise Recall@5, MRR@10, false source/page citation, query p95, index write/update time, index size, memory and query analyzer behavior; include real no-match/remote mode negative.
+
+**J12.** Compare with current FTS and evaluate whether source-dense RRF is a better quality investment than BM25 migration; record no-go as valid success.
+
+**J13.** Publish signed markdown decision and rollback/operator impact. Only if GO unblocks BM25-002; no test should claim source model embeddings helped lexical BM25 quality.
+
+**Cross-cutting constraints:** BM25 is a measured GO/NO-GO; the production path must not relabel ts_rank_cd as bm25_raw.
 
 ## K. Security / Governance / Observability
 
@@ -63,6 +95,14 @@ WorkspaceContext and RLS are required for every candidate and metadata lookup. N
 Reproduce signed corpus/query manifest, stable sample query labels, multiple runs cold/warm, one tenant 1% of rows, source version switch, query tokenization, extension outage, index build pressure, 100+ queries and 1000+ chunks. Record all unsuccessful queries; no leakage of confidential documents; compare raw scores only within their algorithms.
 
 Run scoped Hatch workbench-api:check/test/types, PostgreSQL container integration tests and (if UI touched) web typecheck/test/build and existing Preview/validator smoke. Use disposable benchmark database; real measurements must be labeled separately from mocks.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] A/B paired >100 queries, >=1000 chunks; exact/identifier RU/UK/EN, document text length strata.
+- [ ] Workspace skew, deleted/updated active version and stale data, no cross-tenant search.
+- [ ] Extension unload/restart/upgrade, FTS unaffected, no transient InMemoryDocumentStore Live fallback.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 

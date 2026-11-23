@@ -53,6 +53,33 @@ CREATE apps/workbench/api/embedding.py (port/types), embedding_adapters.py (loca
 
 **MUST NOT:** duplicate source registry, migration ownership, transport adapters, file ingestion jobs or framework components. If another component is materially affected, revise this section and its tests before coding.
 
+### I.1. Source-level reuse matrix — refreshed 2026-11-23
+
+**Recipient code anchors (real files, inspected):**
+
+| Repository file | Existing owner; exact integration role |
+| --- | --- |
+| [`apps/workbench/api/model_token_counter.py`](../apps/workbench/api/model_token_counter.py) | native model tokenizer input admission, NOT model embedding transport |
+| [`apps/workbench/api/document_processing.py`](../apps/workbench/api/document_processing.py) | processing profile and token settings; do not confuse with throughput TPM |
+| [`apps/workbench/document_processing.yaml`](../apps/workbench/document_processing.yaml) | current o200k_base 500/50 and pinned native admission policy |
+| [`apps/workbench/api/config.py`](../apps/workbench/api/config.py) | runtime settings, no committed secret or permissive endpoint |
+| [`apps/workbench/api/profiles.py`](../apps/workbench/api/profiles.py) | only lexical server profile exists, new embedding capability must be qualified |
+| [`apps/workbench/api/tests/test_model_token_counter.py`](../apps/workbench/api/tests/test_model_token_counter.py) | existing source-token tests; preserve |
+| [`docs-website/docs/architecture/rag-runtime-contract.md`](../docs-website/docs/architecture/rag-runtime-contract.md) | TEI Qwen target, expected 2560 and transport qualification |
+
+**Pinned previous-project candidates (do NOT copy unlicensed code or Qdrant/SQLite infrastructure):** donor commit `955fd049949d3fc462d555be14774e4b255aa15c`.
+
+| Pinned previous-project source | Targeted symbol/behavior |
+| --- | --- |
+| [`src/enterprise_ai_pipeline/providers/tei_embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/providers/tei_embeddings.py) | TEIEmbeddingProvider.prepare_transport/_tokens/_dispatch_execute |
+| [`src/enterprise_ai_pipeline/providers/tei_profile.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/providers/tei_profile.py) | TEIProfile and model/digest/capacity validation; donor target defaults differ |
+| [`src/enterprise_ai_pipeline/rag/embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embeddings.py) | EmbeddingRequest/Batch/Provider contracts and FakeEmbeddingProvider |
+| [`src/enterprise_ai_pipeline/rag/embedding_capacity.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_capacity.py) | capacity policy; must not duplicate TPM-001 |
+| [`tests/pipeline/test_tei_embedding_provider.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_tei_embedding_provider.py) | model/response, request batching, tokenizer/gated test scenarios |
+| [`LICENSE.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) | PolyForm Strict: explicit cross-product permission before literal copy |
+
+**Reuse decision gate:** compare current component to donor behavior, list reusable algorithm/contract, incompatibilities and the exact owner of PostgreSQL/model/tokenizer state. Code copying requires permission under [donor LICENSE](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md); otherwise independently implement compatible behavior and port test **scenarios**. Existing completed Workbench components must not be replaced without a measurable reason.
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Inspect actual local TEI health/model metadata, served endpoint, response field naming, error shapes, startup options and the pinned Qwen model/tokenizer digest. Distinguish model card nominal 2560 from real service output; document local CUDA/device memory and max batch size without asserting unobserved throughput.
@@ -64,6 +91,24 @@ CREATE apps/workbench/api/embedding.py (port/types), embedding_adapters.py (loca
 
 All implementation methods use descriptive domain names (not task identifiers); all new behavior is fail-closed and traceable. No acceptance box is checked merely because a file was created.
 
+### J7–J14. Detailed, source-grounded implementation handoff — 2026-11-23
+
+**Step J7 —** Define one app-owned EmbeddingPort interface accepting immutable profile, purpose=query/document, ordered ID/text items and monotonic deadline. Ensure no donor package import in domain and fail if local real model service has not been positively attested.
+
+**Step J8 —** Compare the donor TEI native `/embed` payload (`inputs`, `truncate:false`, `normalize:true`) against the running Workbench endpoint; explicitly test `/v1/embeddings` versus `/embed` and select exactly one qualified adapter. Document response shape, rate headers (if any), timeout and batch semantics; do not assume native returned token usage.
+
+**Step J9 —** Model qualification: read `/info`/health as appropriate, pin served model digest and tokenizer digest, reject response mismatch, preserve query instruction/character encoding and log no full input. Verify exactly 2560 (or actual measured) finite values, norm, stable ordering and no implicit truncation.
+
+**Step J10 —** Make EmbeddingPort emit `usage_provenance=provider_reported|tokenizer_counted_proxy|unknown`; the donor's TEI adapter frequently returns its locally tokenized count as usage_tokens. Do not call a token-count proxy measured provider-reported completed TPM.
+
+**Step J11 —** Integrate «reserve -> provider -> finish» only through TPM-001's one shared governor when active; query and document transports cannot open an ungoverned second provider client. A model health probe is not an inference capacity bypass.
+
+**Step J12 —** Write a real model-gated smoke on a local RTX 4090 and 30 representative texts (EN/RU/UK/code/boundary lengths), recording p50/p95, 2560-dim validation, GPU peak, model token parity and the observed/unknown actual usage field. Keep fake provider pure unit tests completely offline.
+
+**Step J13 —** Record donor reuse decision: code copying subject to LICENSE permission; otherwise adapt interface and test scenarios independently. Qdrant/SQLite code and historical TPM claims are not portable to the Workbench database.
+
+**Mandatory dependency handshake:** [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) owns 0.92 desired / 0.95 hard admission and all query/document model calls; do not implement an independent limiter.
+
 ## K. Security / Governance / Observability
 
 Enforce server-resolved WorkspaceContext and database RLS on each operation. Never trust client-supplied scope, source/file paths, graph JSON or model IDs as authorization. Protect secrets through runtime secret references; redact input text, original assets, embeddings, DSNs, API keys and model prompts from traces. Log only safe opaque IDs, profile/generation/revision, status/error category, counts, timings and trace_id. Handle prompt-injected document text as untrusted data. Bound request/token/GPU/SQL memory and concurrency; record retention and cross-workspace negative tests. Do not equate quality-confidence with authorization.
@@ -74,6 +119,14 @@ Provider fake and optional real TEI smoke; 30 mixed texts, Unicode, empty, over 
 
 **Execution baseline:** use existing Hatch application commands `hatch run workbench-api:check`, `hatch run workbench-api:test`, `hatch run workbench-api:types`, the pinned PostgreSQL Docker environment and explicitly disposable test data. If UI changes, run `npm run typecheck`, `npm test`, `npm run build` from `apps/workbench/web`, plus existing Preview/validator/Live smoke. Capture exact executed commands, versions, sanitized HTTP/SQL and real PASS/FAIL/SKIP results; NO invented latency.
 
+### L.1. Reuse-specific test migration and verification
+
+- [ ] test_embedding_adapter.py: invalid model digest, missing/changed tokenizer, unsupported request dimension, NaN/zero norm, row count mismatch, order reversal, TEI 429/timeout/redirects, invalid UTF-8 and missing usage.
+- [ ] test_embedding_model_smoke.py (explicitly enabled): 30 texts with an actual local model, query/doc instruction parity, normalized vector lengths and no cloud network.
+- [ ] Model/TPM integration: with TPM-001 no simultaneous query+document reservations over hard 0.95; if capacity unknown, fail safely and report NOT_QUALIFIED, not a fake quota.
+
+**Proof requirements:** record donor behavior source commit, recipient code and exact executed test commands. Donor unit tests **do not** demonstrate recipient functionality; recipient CI evidence must exercise the actual PostgreSQL/TEI/client paths. Capture a fixture-vs-runtime result matrix, error correlation and no-secrets logs.
+
 ## M. Acceptance Criteria
 
 - [ ] One model-neutral EmbeddingPort with fake tests and verified local TEI adapter
@@ -83,6 +136,10 @@ Provider fake and optional real TEI smoke; 30 mixed texts, Unicode, empty, over 
 - [ ] Measured tokens/s, memory and latency are recorded on actual target GPU or explicitly NOT TESTED
 - [ ] No raw texts in logs or cloud requests enabled by default
 - [ ] Existing FTS, token chunking and DB regression checks pass
+
+- [ ] A pinned donor source-to-recipient decision table records whether exact TEI adapter can be reused and why
+- [ ] Observed usage provenance is never conflated with provider billed/actual tokens
+- [ ] Real provider requests are quota-governed by one TPM-001 owner; a separate ungoverned embedding client cannot pass tests
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

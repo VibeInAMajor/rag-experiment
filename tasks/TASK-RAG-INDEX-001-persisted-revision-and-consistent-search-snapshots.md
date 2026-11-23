@@ -53,6 +53,19 @@ MODIFY [postgres.py](../apps/workbench/api/postgres.py) _corpus_snapshot/lexical
 
 **MUST NOT:** duplicate source registry, migration ownership, transport adapters, file ingestion jobs or framework components. If another component is materially affected, revise this section and its tests before coding.
 
+### I.1. Concrete implementation ownership — source reinspection 2026-11-23
+
+| Existing file (direct link) | Symbol, contract and test reuse |
+| --- | --- |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | _corpus_snapshot enumerates and hashes active documents/chunks; lexical_search_snapshot reads it for each request |
+| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | complete_ingestion_with_publication calls _publish and commits job and revision |
+| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | CorpusSnapshot/LexicalSearchSnapshot/WorkspaceContext boundaries |
+| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | explicit checksum migration tooling |
+| [`apps/workbench/api/tests/test_ingestion_persistence.py`](../apps/workbench/api/tests/test_ingestion_persistence.py) | transaction and version regression |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | HTTP/SQL rank and corpus provenance |
+
+**Related project, pinned audit sources (architecture/test patterns only):** [`docs/63-progressive-repository-indexing-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/63-progressive-repository-indexing-architecture.md); [`tests/pipeline/test_semantic_restore_delta_lifecycle.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_semantic_restore_delta_lifecycle.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
+
 ## J. Implementation Requirements — ordered blueprint
 
 1. J1 — Trace all reads and writes of corpus_revision in SQL, API, tests and UI. Record baseline EXPLAIN/timings at 8, 10k and >=100k **disposable synthetic** chunks, separating fingerprint time from ranking time. Identify every existing _corpus_snapshot caller, including readiness and post-publication; do not leave an O(N) path hidden there.
@@ -64,6 +77,22 @@ MODIFY [postgres.py](../apps/workbench/api/postgres.py) _corpus_snapshot/lexical
 
 All implementation methods use descriptive domain names (not task identifiers); all new behavior is fail-closed and traceable. No acceptance box is checked merely because a file was created.
 
+### J7–J13. Executable, file-specific implementation sequence
+
+**J7.** Measure SQL plans from `_corpus_snapshot`/`lexical_search_snapshot` on 8/10k/100k synthetic chunks, recording rows read, CPU and p50/p95 independent from actual FTS ranking.
+
+**J8.** Add additive per-workspace manifest/index_generation with RLS, counts, model/source/profile boundaries and monotonic state; migrate once from populated 0002 without modifying old files.
+
+**J9.** Within existing `_publish` transaction update new active source version, committed job and manifest generation exactly once; unchanged retries/failures do not advance.
+
+**J10.** Replace full all-chunk SHA per query with a constant metadata read under REPEATABLE READ, while returning original rank/source/version/score unchanged.
+
+**J11.** Reconciliation offline command checks manifest vs true counts, never force-ready or re-hash every corpus on each HTTP request.
+
+**J12.** Concurrency, unknown generation, DB restart and stale UI cursor tests; compare old 10 exact/3 paraphrase FTS profile quality.
+
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
+
 ## K. Security / Governance / Observability
 
 Enforce server-resolved WorkspaceContext and database RLS on each operation. Never trust client-supplied scope, source/file paths, graph JSON or model IDs as authorization. Protect secrets through runtime secret references; redact input text, original assets, embeddings, DSNs, API keys and model prompts from traces. Log only safe opaque IDs, profile/generation/revision, status/error category, counts, timings and trace_id. Handle prompt-injected document text as untrusted data. Bound request/token/GPU/SQL memory and concurrency; record retention and cross-workspace negative tests. Do not equate quality-confidence with authorization.
@@ -73,6 +102,13 @@ Enforce server-resolved WorkspaceContext and database RLS on each operation. Nev
 SQL migration from populated 0002; same-key replay, one generation per changed source, no generation on failure/unchanged, concurrent source updates, cross-workspace RLS, corrupted manifest 503, read transaction consistency, API contract, 100k synthetic performance and restart. Compare p50/p95 snapshot SQL duration and number of rows read versus old baseline; old lexical gold and API/frontend tests stay green.
 
 **Execution baseline:** use existing Hatch application commands `hatch run workbench-api:check`, `hatch run workbench-api:test`, `hatch run workbench-api:types`, the pinned PostgreSQL Docker environment and explicitly disposable test data. If UI changes, run `npm run typecheck`, `npm test`, `npm run build` from `apps/workbench/web`, plus existing Preview/validator/Live smoke. Capture exact executed commands, versions, sanitized HTTP/SQL and real PASS/FAIL/SKIP results; NO invented latency.
+
+### L.1. Specialized test matrix / release gate
+
+- [ ] Execute primary owner-specific tests named in I.1 and new focused unit and disposable PostgreSQL integration tests for this stage; attach actual commands/output.
+- [ ] Prove 400/404/409/429/503/504 failure/cancellation, source-version drift, tenant RLS, safe trace IDs and absence of fixture fallback.
+- [ ] Compare real source/result identities with independently checked PostgreSQL response and report quality/latency sample counts; no synthetic numerical performance claims.
+- [ ] Re-run workbench-api Hatch check/test/types and (if browser touched) npm typecheck/test/build, Preview/validation/Live browser regression.
 
 ## M. Acceptance Criteria
 

@@ -45,6 +45,21 @@ BM25Profile includes algorithm=BM25, extension+analyzer revision, bm25_raw score
 
 CREATE app-owned bm25.py adapter/test suite and next additive extension-specific migration/image packaging only after decision; MODIFY profiles.py, application.py dispatch, contracts.py, PostgreSQL ops docs, web approved template in narrow scope. MUST NOT edit historical migration 0001/0002, existing lexical.py score fields, original source assets, default UI Preview node behavior.
 
+### I.1. Verified implementation map, symbol ownership and test references
+
+| Existing real source file | Role / reason to reuse |
+| --- | --- |
+| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | keep native GIN index |
+| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | additive change approval |
+| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | persistent workspace + active version SQL source |
+| [`apps/workbench/api/profiles.py`](../apps/workbench/api/profiles.py) | current FTS-only profile constants |
+| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | fixed allowlist dispatch and safe errors |
+| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | profile and score schema |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | supported Live graph matcher |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | baseline scores/provenance |
+
+**Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/22-implementation-step-05-sparse-and-symbol-retrieval.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/22-implementation-step-05-sparse-and-symbol-retrieval.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
 ## J. Implementation Requirements — ordered executable blueprint
 
 1. J1 — Verify BM25-001 signed Go document and license/OS/release approval, inspect current DB image and query/exact index results. Refuse work if unapproved.
@@ -53,6 +68,24 @@ CREATE app-owned bm25.py adapter/test suite and next additive extension-specific
 4. J4 — Expose bm25-v1 as a **new** capability with its own profile generation and exact query analyzer version; retain old FTS path/score. Add frontend search template only after backend qualifies.
 5. J5 — Run BM25-001 evaluation dataset as regression, workspace skew and update benchmark. Confirm score labels are truthful, 100% target citation identity and no missing active-version exclusion.
 6. J6 — Canary controlled profile selection; verify fallback by explicit operator/profile action and rollback index extension without touching source rows or existing GIN.
+
+### J7–J13. Concrete implementation handoff and component changes
+
+**J7.** Require BM25-001 real GO/NO-GO with accepted extension license and deployment version; refuse to install if decision incomplete.
+
+**J8.** Define separate bm25-v1 profile, score_type bm25_raw and analyzer/embedding-independent rank semantics; do not reinterpret current postgres-fts-baseline.
+
+**J9.** Install approved extension in a new digest-pinned Postgres 17 image and additive explicit schema/DDL, record upgrade/backup and extension permissions.
+
+**J10.** Add one BM25 query adapter in the existing PostgresPersistence/PersistencePort layer with active version and tenant RLS; do not create secondary BM25 document-store ownership.
+
+**J11.** Gate capabilities on actual extension,index state and workspace/source generation; profile 409 stale, 503 unavailable. Preserve FTS stable when extension off.
+
+**J12.** Add approved Live BM25 keyword graph only when backend built; old Preview BM25 node label does not grant execution.
+
+**J13.** Run BM25-001 benchmark as regression, verify raw score parity with SQL, tenant skew and failover, and document rollback to existing FTS index.
+
+**Cross-cutting constraints:** BM25 is a measured GO/NO-GO; the production path must not relabel ts_rank_cd as bm25_raw.
 
 ## K. Security / Governance / Observability
 
@@ -63,6 +96,14 @@ WorkspaceContext and RLS are required for every candidate and metadata lookup. N
 Extension startup/upgrade/uninstall, safe non-default profile, 100+ paired quality queries, 1% workspace skew, source replacement, idempotent retry, 429/503/504, security and backup restore. Use disposable DB and record actual performance. Re-run FTS gold/capability tests and browser negative/Preview regressions.
 
 Run scoped Hatch workbench-api:check/test/types, PostgreSQL container integration tests and (if UI touched) web typecheck/test/build and existing Preview/validator smoke. Use disposable benchmark database; real measurements must be labeled separately from mocks.
+
+### L.1. Task-specific reproducible test vectors
+
+- [ ] Legacy FTS rank/score unchanged before/after BM25 deployment, 100+ gold queries and index correctness.
+- [ ] Index invalid/missing extension/DDL denied, 404 foreign workspace, source superseded and stale profile errors.
+- [ ] Rollback removes new profile and optionally index only, retains FTS corpus and old source versions.
+
+Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
 
