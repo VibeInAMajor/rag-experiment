@@ -1,0 +1,13 @@
+{
+  "schema_revision": "0003",
+  "api_status": "ready",
+  "profile_id": "postgres-fts-baseline",
+  "sources": 15,
+  "chunks": 44,
+  "corpus_revision": "corpus-138b2a8f620aed19d324da8c8046dd2f251d7e7e957c724665c9f45252e04b10",
+  "result_count": 3,
+  "sql_identity_score_parity": true,
+  "trace_id": "85a6c34064c34b769ad8391f28f6db31",
+  "backup": "apps/workbench/postgres/backups/workbench-before-0003-20261123-203525.dump",
+  "records_preserved": true
+}

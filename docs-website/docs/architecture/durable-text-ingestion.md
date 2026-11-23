@@ -17,7 +17,7 @@ The [ingestion task](../../../tasks/completed/TASK-RAG-002-ingest-text-and-markd
 
 ## Upgrade an existing volume
 
-Use the existing administrator credentials and preserve the named volume. Check status and explicitly apply migration `0002`; API startup and the launcher never migrate or seed:
+Use the existing administrator credentials and preserve the named volume. Stop old application writers, check status and explicitly apply the current migration `0003`; API startup and the launcher never migrate or seed:
 
 ```powershell
 . ./apps/workbench/postgres/use-dev-env.ps1 -IncludeAdmin
@@ -26,7 +26,7 @@ hatch run workbench-api:db-migrate
 hatch run workbench-api:db-status
 ```
 
-Do not run `db-seed` to refresh a populated workspace: its immutable demo guard deliberately refuses changed data. The updated API still certifies revision `0001` for lexical reads, with ingestion features false. Revision `0002` adds durable jobs and their RLS/constraints; checksums validate each applied migration. An older API that understands only `0001` cannot serve the upgraded schema. Use a compatible binary or reviewed forward repair; destructive downgrade remains disposable-only. Follow the [operations runbook](postgresql-foundation.md) for backups.
+Do not run `db-seed` to refresh a populated workspace: its immutable demo guard deliberately refuses changed data. Revision `0002` adds durable jobs and their RLS/constraints; `0003` adds persisted workspace generations and advances the manifest in the source-publication/job transaction. Default persisted snapshot mode requires `0003`; explicit legacy mode can read older schemas, with ingestion features false on `0001`. Checksums validate each applied migration. An older API cannot serve an unknown upgraded schema. Use a compatible binary or reviewed forward repair; destructive downgrade remains disposable-only. Follow the [operations runbook](postgresql-foundation.md) for backups and the [generation guide](persisted-index-generations.md) for reconciliation and explicit read-path rollback.
 
 Provision verified tokenizer assets explicitly with `hatch run workbench-api:chunking-setup`. Start the API in an application-only terminal and inspect capabilities. Additive `upload`, `document_details` and `jobs` booleans describe their dependencies; existing `documents` still describes listing. These ingestion flags are checked independently of executable lexical profiles, so an empty corpus does not by itself disable first-upload availability; lexical readiness still requires a usable corpus.
 

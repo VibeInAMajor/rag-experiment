@@ -65,11 +65,14 @@ class DatabaseDependency:
 
 
 def create_database_dependency(
-    dsn: SecretStr | None, *, persistence: PersistencePort | None = None
+    dsn: SecretStr | None,
+    *,
+    persistence: PersistencePort | None = None,
+    snapshot_mode: Literal["persisted", "legacy"] = "persisted",
 ) -> DatabaseDependency:
     """Bind only the configured local infrastructure adapter at the composition edge."""
     if persistence is None and dsn is not None:
         from apps.workbench.api.postgres import PostgresPersistence
 
-        persistence = PostgresPersistence(dsn.get_secret_value())
+        persistence = PostgresPersistence(dsn.get_secret_value(), snapshot_mode=snapshot_mode)
     return DatabaseDependency(persistence)

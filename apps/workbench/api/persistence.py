@@ -206,10 +206,29 @@ class DocumentRecord(ContractModel):
 
 
 class CorpusSnapshot(ContractModel):
+    corpus_id: Identifier = "development-corpus-v1"
     corpus_revision: Identifier
     documents: list[DocumentRecord]
     chunk_count: int = Field(ge=0)
     content_bytes: int = Field(ge=0)
+
+
+class IndexGeneration(ContractModel):
+    """One committed lexical generation; it does not qualify any semantic index."""
+
+    workspace_id: Identifier
+    corpus_id: Identifier
+    generation_id: int = Field(ge=0)
+    corpus_revision: Identifier
+    committed_at: str
+    active_source_count: int = Field(ge=0)
+    active_chunk_count: int = Field(ge=0)
+    content_bytes: int = Field(ge=0)
+    active_source_manifest_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    lexical_index_revision: Identifier
+    status: Literal["ready"]
+    previous_generation: int | None = Field(default=None, ge=0)
+    event_id: Identifier
 
 
 class LexicalSearchSnapshot(ContractModel):
@@ -282,6 +301,12 @@ class ActiveChunkPage(ContractModel):
 
 
 class PersistencePort(Protocol):
+    async def current_index_generation(
+        self, context: WorkspaceContext, *, expected_generation_id: int | None = None
+    ) -> IndexGeneration:
+        """Read the committed scoped generation; historical reads are not supported."""
+        ...
+
     async def ingestion_ready(self, context: WorkspaceContext) -> bool:
         """Qualify the separately migrated durable-ingestion schema."""
         ...
@@ -412,7 +437,11 @@ class PersistencePort(Protocol):
         ...
 
     async def corpus_snapshot(self, context: WorkspaceContext) -> CorpusSnapshot:
-        """Read bounded authoritative source metadata and a stable corpus fingerprint."""
+        """Read bounded authoritative source metadata and its committed corpus revision."""
+        ...
+
+    async def corpus_summary(self, context: WorkspaceContext) -> CorpusSnapshot:
+        """Read qualification metadata without enumerating source or chunk records."""
         ...
 
     async def lexical_search_snapshot(

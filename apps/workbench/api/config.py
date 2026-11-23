@@ -23,6 +23,7 @@ class ApiSettings(BaseModel):
     port: int = Field(default=8011, ge=1, le=65535)
     backend_revision: Identifier = "workbench-api-lexical-v1"
     database_dsn: SecretStr | None = None
+    corpus_snapshot_mode: Literal["persisted", "legacy"] = "persisted"
     local_source_root: str | None = None
     ingestion_timeout_seconds: float = Field(default=30.0, gt=0, le=30)
     pdf_ingestion_timeout_seconds: float = Field(default=210.0, gt=0, le=210)
@@ -138,6 +139,9 @@ class ApiSettings(BaseModel):
         database_dsn = environment.get("WORKBENCH_DB_DSN")
         if database_dsn is not None:
             values["database_dsn"] = SecretStr(database_dsn)
+        snapshot_mode = environment.get("WORKBENCH_CORPUS_SNAPSHOT_MODE")
+        if snapshot_mode is not None:
+            values["corpus_snapshot_mode"] = snapshot_mode
         local_root = environment.get("WORKBENCH_LOCAL_SOURCE_ROOT")
         if local_root is not None:
             values["local_source_root"] = local_root

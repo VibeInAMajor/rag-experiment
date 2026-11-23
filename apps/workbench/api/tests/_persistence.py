@@ -48,7 +48,11 @@ class _DatabaseProbe(PersistencePort):
     async def corpus_snapshot(self, _context: WorkspaceContext) -> CorpusSnapshot:
         return CorpusSnapshot(corpus_revision="empty-test-corpus", documents=[], chunk_count=0, content_bytes=0)
 
+    async def corpus_summary(self, context: WorkspaceContext) -> CorpusSnapshot:
+        return await self.corpus_snapshot(context)
+
     create_workspace = _unexpected
+    current_index_generation = _unexpected
     list_workspaces = _unexpected
     list_sources = _unexpected
     get_chunk = _unexpected

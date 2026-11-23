@@ -88,6 +88,15 @@ def test_unknown_application_fields_are_rejected() -> None:
         ApiSettings.model_validate({"ready": True})
 
 
+def test_legacy_snapshot_requires_explicit_operator_selection() -> None:
+    """Default startup never silently selects the full-corpus rollback scan."""
+    assert ApiSettings.from_env({}).corpus_snapshot_mode == "persisted"
+    settings = ApiSettings.from_env({"WORKBENCH_CORPUS_SNAPSHOT_MODE": "legacy"})
+    assert settings.corpus_snapshot_mode == "legacy"
+    with pytest.raises(ValidationError):
+        ApiSettings.from_env({"WORKBENCH_CORPUS_SNAPSHOT_MODE": "automatic"})
+
+
 @pytest.mark.parametrize("revision", ["", "with spaces", "secret=value", "r" * 129])
 def test_backend_revision_is_a_bounded_opaque_identifier(revision: str) -> None:
     """Configuration cannot inject arbitrary text into every response and log correlation."""

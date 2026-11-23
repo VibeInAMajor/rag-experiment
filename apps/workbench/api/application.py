@@ -480,6 +480,7 @@ class _Routes:
                     trace_id=context.trace_id or "",
                     workspace_id=context.workspace_id,
                     profile_id=POSTGRES_FTS_PROFILE_ID,
+                    corpus_revision=result.corpus_revision,
                     result_count=len(search_response.results),
                     duration_ms=search_response.duration_ms,
                     corpus_load_ms=result.corpus_load_duration_ms,
@@ -528,7 +529,9 @@ def create_app(
 ) -> FastAPI:
     """Bind the qualified lexical service to the existing persistent corpus."""
     configuration = ApiSettings.from_env() if settings is None else settings
-    database = create_database_dependency(configuration.database_dsn, persistence=persistence)
+    database = create_database_dependency(
+        configuration.database_dsn, persistence=persistence, snapshot_mode=configuration.corpus_snapshot_mode
+    )
     service = lexical
     ingestion = (
         IngestionService(database.persistence, processing=configuration.document_processing)

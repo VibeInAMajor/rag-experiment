@@ -79,7 +79,7 @@ def _lock_key(workspace_id: str, idempotency_key: str) -> int:
 async def _verify_ingestion_schema(
     repository: PostgresPersistence, connection: AsyncConnection[dict[str, Any]]
 ) -> None:
-    if await repository._verify_schema(connection) != "0002":
+    if await repository._verify_schema(connection) not in {"0002", "0003"}:
         raise SchemaIncompatible("Durable ingestion requires the explicit ingestion migration.")
     protected = await (
         await connection.execute(
@@ -376,7 +376,7 @@ async def transition_ingestion(
 async def recover_ingestions(repository: PostgresPersistence, context: WorkspaceContext) -> int:
     """Diagnose only reservations without any live session-lock holder; never replay unavailable bytes."""
     async with repository._transaction(context, operation="recover_ingestions") as connection:
-        if await repository._verify_schema(connection) != "0002":
+        if await repository._verify_schema(connection) not in {"0002", "0003"}:
             return 0
         await _verify_ingestion_schema(repository, connection)
         await repository._require_workspace(connection, context)
@@ -511,26 +511,29 @@ async def complete_ingestion_with_publication(
             chunk_count = _require_row(count)["count"]
             outcome = "unchanged"
         else:
-            counts = await (
+            summary = await repository._corpus_summary(connection, context)
+            old_source = await (
                 await connection.execute(
                     "SELECT count(*) AS count,COALESCE(sum(octet_length(c.content)),0) AS bytes "
-                    "FROM workbench.chunks c "
-                    "JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
-                    "WHERE c.workspace_id=%s AND v.status='active' AND c.source_id<>%s",
+                    "FROM workbench.chunks c JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
+                    "WHERE c.workspace_id=%s AND c.source_id=%s AND v.status='active'",
                     (context.workspace_id, source.source_id),
                 )
             ).fetchone()
-            counts = _require_row(counts)
+            previous = _require_row(old_source)
             if (
-                counts["count"] + len(chunks) > _MAX_CORPUS_CHUNKS
-                or counts["bytes"] + sum(len(chunk.content.encode("utf-8")) for chunk in chunks) > _MAX_CORPUS_BYTES
+                summary.chunk_count - previous["count"] + len(chunks) > _MAX_CORPUS_CHUNKS
+                or summary.content_bytes
+                - previous["bytes"]
+                + sum(len(chunk.content.encode("utf-8")) for chunk in chunks)
+                > _MAX_CORPUS_BYTES
             ):
                 raise CorpusLimitExceeded("Publication exceeds the lexical corpus limits.")
             source = source.model_copy(update={"metadata": {**source_metadata, **source.metadata}})
             await repository._publish(connection, context=context, source=source, version=version, chunks=chunks)
             effective_version, chunk_count = version.version_id, len(chunks)
             outcome = "created" if row["operation"] == "create" else "updated"
-        corpus = await repository._corpus_snapshot(connection, context)
+        corpus = await repository._corpus_summary(connection, context)
         timings.append(IngestionTiming(stage="publication", duration_ms=(monotonic() - started) * 1000).model_dump())
         updated = await (
             await connection.execute(
@@ -597,7 +600,7 @@ async def get_source_detail(
 ) -> SourceDetail | None:
     """Read actual source and active-version metadata without inventing original-file availability."""
     async with repository._transaction(context, operation="get_source_detail", repeatable_read=True) as connection:
-        corpus = await repository._corpus_snapshot(connection, context)
+        corpus = await repository._corpus_summary(connection, context)
         row = await (
             await connection.execute(
                 "SELECT workspace_id,source_id,title,media_type,metadata,updated_at "
@@ -617,7 +620,19 @@ async def get_source_detail(
         return SourceDetail(
             source=Source.model_validate({name: row[name] for name in Source.model_fields}),
             version=SourceVersion.model_validate(active) if active else None,
-            chunk_count=next((item.chunk_count for item in corpus.documents if item.source_id == source_id), 0),
+            chunk_count=(
+                _require_row(
+                    await (
+                        await connection.execute(
+                            "SELECT count(*) AS count FROM workbench.chunks "
+                            "WHERE workspace_id=%s AND source_id=%s AND version_id=%s",
+                            (context.workspace_id, source_id, active["version_id"]),
+                        )
+                    ).fetchone()
+                )["count"]
+                if active
+                else 0
+            ),
             corpus_revision=corpus.corpus_revision,
             updated_at=row["updated_at"].astimezone(UTC).isoformat().replace("+00:00", "Z"),
         )
@@ -638,7 +653,7 @@ async def list_active_chunks(
     if type(limit) is not int or not 1 <= limit <= 100:
         raise RecordConflict("Invalid chunk pagination bounds.")
     async with repository._transaction(context, operation="list_active_chunks", repeatable_read=True) as connection:
-        corpus = await repository._corpus_snapshot(connection, context)
+        corpus = await repository._corpus_summary(connection, context)
         if expected_corpus_revision is not None and corpus.corpus_revision != expected_corpus_revision:
             raise RecordConflict("The chunk cursor belongs to an expired corpus snapshot.")
         active = await _active_version(connection, context, source_id)

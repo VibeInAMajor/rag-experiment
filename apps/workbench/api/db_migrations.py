@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL, Connection
 from sqlalchemy.pool import NullPool
 
-HEAD_REVISION = "0002"
+HEAD_REVISION = "0003"
 EXPECTED_REVISION = HEAD_REVISION
 MIGRATION_TOOL_VERSION = "alembic-1.20.1"
 _EXTENSION_VERSION = "0.8.2"
@@ -22,7 +22,7 @@ _DIRECTORY = Path(__file__).resolve().parent / "migrations"
 _LOCK_KEY = 719342176213
 _TABLES = ("workspaces", "sources", "source_versions", "chunks", "embedding_profiles")
 _SCOPED_TABLES = ("workspaces", "sources", "source_versions", "chunks")
-_REVISIONS = (("0001", "0001_initial"), ("0002", "0002_ingestion_jobs"))
+_REVISIONS = (("0001", "0001_initial"), ("0002", "0002_ingestion_jobs"), ("0003", "0003_index_generations"))
 
 
 class MigrationError(ValueError):
@@ -105,12 +105,14 @@ def _status(connection: Connection) -> MigrationStatus:
         return MigrationStatus(revision=revision, extension_version=extension, reason="CHECKSUM_MISMATCH")
     if extension != _EXTENSION_VERSION:
         return MigrationStatus(revision=revision, extension_version=extension, reason="EXTENSION_INCOMPATIBLE")
-    required_tables = _TABLES + (("ingestion_jobs",) if revision == "0002" else ())
+    required_tables = _TABLES + (("ingestion_jobs",) if revision >= "0002" else ())
+    if revision >= "0003":
+        required_tables += ("corpus_index_state", "index_generations", "corpus_source_state")
     tables_exist = all(
         connection.execute(text("SELECT to_regclass(:table)"), {"table": f"workbench.{table}"}).scalar_one_or_none()
         is not None
         for table in required_tables
-    ) and _scoping_enabled(connection, ingestion=revision == "0002")
+    ) and _scoping_enabled(connection, ingestion=revision >= "0002", indexes=revision >= "0003")
     return MigrationStatus(
         revision=revision,
         extension_version=extension,
@@ -121,8 +123,10 @@ def _status(connection: Connection) -> MigrationStatus:
     )
 
 
-def _scoping_enabled(connection: Connection, *, ingestion: bool = False) -> bool:
+def _scoping_enabled(connection: Connection, *, ingestion: bool = False, indexes: bool = False) -> bool:
     tables = _SCOPED_TABLES + (("ingestion_jobs",) if ingestion else ())
+    if indexes:
+        tables += ("corpus_index_state", "index_generations", "corpus_source_state")
     rows = connection.execute(
         text(
             "SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity, pg_get_userbyid(c.relowner) "
@@ -131,7 +135,21 @@ def _scoping_enabled(connection: Connection, *, ingestion: bool = False) -> bool
         ),
         {"tables": list(tables)},
     ).all()
-    return len(rows) == len(tables) and all(row[1] and row[2] and row[3] != "workbench_app" for row in rows)
+    protected = len(rows) == len(tables) and all(row[1] and row[2] and row[3] != "workbench_app" for row in rows)
+    if not indexes or not protected:
+        return protected
+    enabled_triggers: int = connection.execute(
+        text(
+            "SELECT count(*) FROM pg_trigger WHERE tgenabled IN ('O','A') AND "
+            "(tgrelid,tgname) IN (('workbench.workspaces'::regclass,'initialize_corpus_index'),"
+            "('workbench.sources'::regclass,'dirty_source_index'),"
+            "('workbench.source_versions'::regclass,'dirty_version_index'),"
+            "('workbench.chunks'::regclass,'dirty_chunk_index'),"
+            "('workbench.index_generations'::regclass,'immutable_index_generation'),"
+            "('workbench.corpus_index_state'::regclass,'corpus_generation_transition'))"
+        )
+    ).scalar_one()
+    return enabled_triggers == 6
 
 
 def migration_status(dsn: str) -> MigrationStatus:
@@ -184,6 +202,11 @@ def _grant_application(connection: Connection) -> None:
     connection.exec_driver_sql("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
     if connection.execute(text("SELECT to_regclass('workbench.ingestion_jobs')")).scalar_one_or_none() is not None:
         connection.exec_driver_sql("GRANT SELECT,INSERT,UPDATE ON workbench.ingestion_jobs TO workbench_app")
+    if connection.execute(text("SELECT to_regclass('workbench.corpus_index_state')")).scalar_one_or_none() is not None:
+        connection.exec_driver_sql(
+            "GRANT SELECT ON workbench.corpus_index_state,workbench.index_generations,"
+            "workbench.corpus_source_state TO workbench_app"
+        )
 
 
 def _migrate(connection: Connection) -> MigrationStatus:

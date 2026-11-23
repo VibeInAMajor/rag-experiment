@@ -6,7 +6,7 @@ description: Local PostgreSQL and pgvector setup, explicit migrations, developme
 # PostgreSQL foundation operations
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-22
+**Updated:** 2026-11-23
 
 The Workbench persistence foundation stores workspace, source, version and chunk records in PostgreSQL. The browser supports fixture Preview and the approved Live keyword graph; upload UI remains separate. The application now also exposes the separately qualified [PostgreSQL lexical profile](postgres-lexical-search.md), using these same records through Haystack. Storage connectivity alone does not establish execution readiness; follow the [runtime contract](rag-runtime-contract.md) for profile semantics.
 
@@ -40,7 +40,7 @@ hatch run workbench-api:db-seed
 
 `create-dev-env.ps1` generates separate administrator and application credentials in the ignored `apps/workbench/postgres/.env`; it refuses to overwrite an existing file. Preserve that file with its existing volume. Changing an initialization password in an environment file does not rotate a role inside an existing PostgreSQL volume. Treat the file as a local secret and restrict access to it.
 
-`db-bootstrap` provisions `workbench_app` using the separate administrator connection. `db-migrate` applies explicit, transactional Alembic migrations; startup never applies migrations. The migration head is `0002`; the updated API certifies both lexical-only `0001` and ingestion-enabled `0002`. Status reports the actually applied revision, tool `alembic-1.20.1`, vector extension `0.8.2`, and a matching SHA-256 checksum over the reviewed up/down SQL. CRLF/LF checkout differences are normalized; actual SQL changes still invalidate the checksum. An unknown head, checksum drift, missing extension, or unprotected scoped table makes the schema incompatible; do not edit an applied migration to repair it.
+`db-bootstrap` provisions `workbench_app` using the separate administrator connection. `db-migrate` applies explicit, transactional Alembic migrations; startup never applies migrations. The migration head is `0003`, adding persisted corpus generations. Default persisted snapshot mode requires `0003`; explicit `WORKBENCH_CORPUS_SNAPSHOT_MODE=legacy` retains reads on lexical-only `0001` and ingestion-enabled `0002` for a reviewed rollout or rollback. Status reports the actually applied revision, tool `alembic-1.20.1`, vector extension `0.8.2`, and a matching SHA-256 checksum over the reviewed up/down SQL. CRLF/LF checkout differences are normalized; actual SQL changes still invalidate the checksum. An unknown head, checksum drift, missing extension, or unprotected scoped table makes the schema incompatible; do not edit an applied migration to repair it.
 
 The seed is explicit and atomic. It inserts eight synthetic, non-sensitive technical sources into workspace `development`, each with deterministic source/version/chunk identity. The first command reports eight inserted sources; an unchanged repeat reports zero. Existing non-demo records or changed seed identities/content cause refusal rather than replacement. Startup never re-seeds. These passages are development data, not uploaded user documents.
 
@@ -48,7 +48,7 @@ Seed records persist for the lifetime of this development volume; there is no au
 
 ## Upgrade an existing populated volume
 
-Migration `0001` remains immutable. Apply the additive `0002` job migration explicitly using existing credentials and volume:
+Applied migrations `0001` and `0002` remain immutable. Apply the additive `0003` generation migration explicitly using existing credentials and volume; stop old application writers first:
 
 ```powershell
 . ./apps/workbench/postgres/use-dev-env.ps1 -IncludeAdmin
@@ -57,9 +57,9 @@ hatch run workbench-api:db-migrate
 hatch run workbench-api:db-status
 ```
 
-Do not bootstrap or reseed as a recovery shortcut. Per-revision ledger/checksums validate applied migrations, including populated `0001` upgrades and no-op reruns. Updated API code preserves lexical reads at `0001`, with ingestion features disabled. `0002` adds workspace-scoped jobs, immutable terminal state, unique idempotency reservations and fenced advisory-lock ownership. Source/version/chunk publication and job completion share one transaction. Original upload bytes are not persisted. See the [ingestion runbook](durable-text-ingestion.md) for the exact route/policy contract and current qualification status.
+Do not bootstrap or reseed as a recovery shortcut. Per-revision ledger/checksums validate applied migrations, including populated upgrades and no-op reruns. `0002` adds workspace-scoped jobs, immutable terminal state, unique idempotency reservations and fenced advisory-lock ownership. `0003` backfills workspace manifests and generation history; source/version/chunk publication, manifest advancement and job completion share one transaction. Default persisted mode refuses older schemas; only the explicit legacy read mode preserves their prior lexical behavior. Original upload bytes are not persisted. See the [generation operations guide](persisted-index-generations.md) for reconciliation and read-path rollback and the [ingestion runbook](durable-text-ingestion.md) for upload behavior.
 
-Startup and GET job inspection recover an interrupted job only after its owner lock is absent; lazy lookup handles database restart without relabeling another live API's work. The previous active version remains searchable on failed replacement. A migration upgrade is not reversed by reverting code: deploy an API compatible with `0002`, retain the volume and use a reviewed forward repair where required.
+Startup and GET job inspection recover an interrupted job only after its owner lock is absent; lazy lookup handles database restart without relabeling another live API's work. The previous active version remains searchable on failed replacement. A migration upgrade is not reversed by reverting code: deploy an API compatible with the applied revision, retain the volume and use a reviewed forward repair where required.
 
 ## Start and inspect the API
 
@@ -146,6 +146,6 @@ hatch run workbench-api:types
 hatch run workbench-api:test
 ```
 
-Without test DSNs, container-backed tests skip; a passing unit-only run is not database evidence. Fixtures create their own disposable database names. The migration suite was independently executed on 2026-11-21: **five tests passed**, covering fresh/repeated migration, disposable rollback/reapply, unknown head, extension removal, checksum drift and restricted application privileges. See the [implementation task](../../../tasks/TASK-DB-001-postgresql-pgvector-foundation.md) for the final integration, restart and backup evidence rather than inferring those results from these commands.
+Without test DSNs, container-backed tests skip; a passing unit-only run is not database evidence. Fixtures create their own disposable database names. The migration suite was independently executed on 2026-11-21: **five tests passed**, covering fresh/repeated migration, disposable rollback/reapply, unknown head, extension removal, checksum drift and restricted application privileges. See the [implementation task](../../../tasks/completed/TASK-DB-001-postgresql-pgvector-foundation.md) for the final integration, restart and backup evidence rather than inferring those results from these commands.
 
 Structured diagnostics record operation names, correlation/workspace IDs, outcomes and elapsed time. They omit DSNs, credentials, text, vectors and raw database exceptions. Default diagnostics are process-local console output; persistent log capture, retention and access remain deployment responsibilities.

@@ -72,7 +72,7 @@ class LexicalService:
         """Qualify schema, index and a bounded complete corpus without executing a search."""
         try:
             _build_pipeline(self._repository)
-            corpus = await self._repository.corpus_snapshot(context)
+            corpus = await self._repository.corpus_summary(context)
             _qualify(corpus)
         except PersistenceError:
             return ReadinessSnapshot()
@@ -82,7 +82,7 @@ class LexicalService:
                     profile_id=PROFILE_ID,
                     profile_revision=PROFILE_REVISION,
                     workspace_ids=[context.workspace_id],
-                    corpus_id="development-corpus-v1",
+                    corpus_id=corpus.corpus_id,
                     score_type="postgres_ts_rank_cd",
                 )
             ]

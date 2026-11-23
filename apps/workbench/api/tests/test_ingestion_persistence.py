@@ -32,6 +32,7 @@ from apps.workbench.api.persistence import (
     WorkspaceContext,
 )
 from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.api.postgres_indexes import reconcile_index
 from apps.workbench.api.tests.conftest import DisposableDatabase
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
@@ -436,7 +437,7 @@ async def test_populated_0001_upgrade_preserves_seed_and_lexical_readiness(
         connection.execute(text("CREATE SCHEMA workbench"))
         command.upgrade(db_migrations._configuration(connection), "0001")
         db_migrations._grant_application(connection)
-    repository = PostgresPersistence(disposable_database.app_dsn)
+    repository = PostgresPersistence(disposable_database.app_dsn, snapshot_mode="legacy")
     await repository.start()
     try:
         await seed_development(repository)
@@ -446,10 +447,10 @@ async def test_populated_0001_upgrade_preserves_seed_and_lexical_readiness(
         assert not await repository.ingestion_ready(_CONTEXT)
         checksum = db_migrations.migration_checksum()
         upgraded = db_migrations.migrate(disposable_database.admin_dsn)
-        assert upgraded.revision == "0002" and upgraded.compatible
+        assert upgraded.revision == db_migrations.HEAD_REVISION and upgraded.compatible
         assert db_migrations.migration_checksum() == checksum
         assert await repository.corpus_snapshot(_CONTEXT) == before
-        assert (await repository.readiness(_CONTEXT)).schema_revision == "0002"
+        assert (await repository.readiness(_CONTEXT)).schema_revision == db_migrations.HEAD_REVISION
         assert await repository.ingestion_ready(_CONTEXT)
         assert db_migrations.migrate(disposable_database.admin_dsn) == upgraded
     finally:
@@ -516,6 +517,8 @@ async def test_source_annotations_survive_update_without_reusing_old_local_origi
             "UPDATE workbench.sources SET metadata='{" + '"annotation":"retained"' + "}'::jsonb WHERE source_id=%s",
             (initial.source_id,),
         )
+    # The trusted fixture mutation follows the same explicit repair rule as offline operators.
+    await asyncio.to_thread(reconcile_index, disposable_database.admin_dsn, workspace_id="development", repair=True)
     async with repository.reserve_ingestion(
         _CONTEXT,
         **_request(

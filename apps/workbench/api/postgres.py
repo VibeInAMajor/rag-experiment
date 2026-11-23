@@ -24,6 +24,7 @@ from apps.workbench.api.persistence import (
     CorpusSnapshot,
     DatabaseUnavailable,
     DocumentRecord,
+    IndexGeneration,
     IngestionJob,
     IngestionTiming,
     InvalidEmbedding,
@@ -84,11 +85,21 @@ class PostgresPersistence:
     """Use an application role and short transactions; never run migrations on startup."""
 
     def __init__(
-        self, dsn: str, *, min_size: int = 1, max_size: int = 4, timeout: float = 3.0, statement_timeout_ms: int = 3000
+        self,
+        dsn: str,
+        *,
+        min_size: int = 1,
+        max_size: int = 4,
+        timeout: float = 3.0,
+        statement_timeout_ms: int = 3000,
+        snapshot_mode: Literal["persisted", "legacy"] = "persisted",
     ) -> None:
         if not 1 <= min_size <= max_size <= 16 or not 0 < timeout <= 30 or not 1 <= statement_timeout_ms <= 30000:
             raise ValueError("Invalid database pool bounds.")
         self._timeout = timeout
+        if snapshot_mode not in {"persisted", "legacy"}:
+            raise ValueError("Invalid corpus snapshot mode.")
+        self._snapshot_mode = snapshot_mode
         self._statement_timeout_ms = statement_timeout_ms
         self._ingestion_owners: dict[str, tuple[str, str, int]] = {}
         logging.getLogger("psycopg.pool").addFilter(_POOL_LOG_FILTER)
@@ -229,9 +240,19 @@ class PostgresPersistence:
 
     async def readiness(self, context: WorkspaceContext) -> PersistenceReady:
         """Verify exact migration/extension versions and an active persisted corpus."""
-        async with self._transaction(context, operation="readiness") as connection:
+        async with self._transaction(context, operation="readiness", repeatable_read=True) as connection:
             revision = await self._verify_schema(connection)
             await self._require_workspace(connection, context)
+            if self._snapshot_mode == "persisted":
+                generation = await self._index_generation(connection, context)
+                if generation.active_chunk_count == 0:
+                    raise DatabaseUnavailable("No committed active corpus is available.")
+                return PersistenceReady(
+                    schema_revision=revision,
+                    workspace_id=context.workspace_id,
+                    source_count=generation.active_source_count,
+                    chunk_count=generation.active_chunk_count,
+                )
             counts = await (
                 await connection.execute(
                     "SELECT count(DISTINCT c.source_id) AS source_count,count(*) AS chunk_count "
@@ -314,6 +335,11 @@ class PostgresPersistence:
         registration = LocalOriginalRegistration(relative_path=relative_path, sha256=sha256)
         async with self._transaction(context, operation="register_local_original") as connection:
             await self._require_workspace(connection, context)
+            await connection.execute(
+                "SELECT workspace_id FROM workbench.workspaces WHERE workspace_id=%s FOR UPDATE",
+                (context.workspace_id,),
+            )
+            indexed = await self._prepare_generation(connection, context)
             source = await (
                 await connection.execute(
                     "SELECT metadata FROM workbench.sources WHERE workspace_id=%s AND source_id=%s FOR UPDATE",
@@ -344,6 +370,10 @@ class PostgresPersistence:
                 "updated_at=now() WHERE workspace_id=%s AND source_id=%s AND version_id=%s",
                 (Jsonb(registration.model_dump()), context.workspace_id, source_id, version_id),
             )
+            if indexed:
+                from apps.workbench.api.postgres_indexes import commit_source_generation
+
+                await commit_source_generation(connection, context, source_id=source_id, event_kind="metadata")
 
     async def _require_lexical_index(self, connection: AsyncConnection[dict[str, Any]]) -> None:
         index = await (
@@ -358,7 +388,7 @@ class PostgresPersistence:
         if index != {"usable": True}:
             raise SchemaIncompatible("The required lexical index is unavailable.")
 
-    async def _corpus_snapshot(
+    async def _legacy_corpus_snapshot(
         self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext
     ) -> CorpusSnapshot:
         await self._verify_schema(connection)
@@ -374,37 +404,7 @@ class PostgresPersistence:
         ).fetchone()
         if counts is None or counts["chunk_count"] > 10000 or counts["content_bytes"] > 52428800:
             raise CorpusNotReady("The complete corpus exceeds the approved profile bounds.")
-        rows = await (
-            await connection.execute(
-                "SELECT s.source_id,s.title,s.media_type,active.version_id AS active_version_id, "
-                "COALESCE(active.chunk_count,0)::bigint AS chunk_count, "
-                "greatest(s.updated_at,COALESCE(latest.updated_at,s.updated_at)) AS updated_at, "
-                "CASE WHEN latest.status='error' THEN 'error' WHEN latest.status='staged' THEN 'processing' "
-                "WHEN active.version_id IS NOT NULL THEN 'ready' ELSE 'processing' END AS status "
-                "FROM workbench.sources s LEFT JOIN LATERAL ("
-                "SELECT v.version_id,count(c.chunk_id) AS chunk_count FROM workbench.source_versions v "
-                "LEFT JOIN workbench.chunks c USING(workspace_id,source_id,version_id) "
-                "WHERE v.workspace_id=s.workspace_id AND v.source_id=s.source_id AND v.status='active' "
-                "GROUP BY v.workspace_id,v.source_id,v.version_id) active ON true "
-                "LEFT JOIN LATERAL (SELECT status,updated_at FROM workbench.source_versions v "
-                "WHERE v.workspace_id=s.workspace_id AND v.source_id=s.source_id "
-                "ORDER BY updated_at DESC,version_id DESC LIMIT 1) latest ON true "
-                "WHERE s.workspace_id=%s ORDER BY s.source_id LIMIT 10001",
-                (context.workspace_id,),
-            )
-        ).fetchall()
-        if len(rows) > 10000:
-            raise CorpusNotReady("The complete corpus exceeds the approved profile bounds.")
-        documents = [
-            DocumentRecord(
-                **{
-                    **row,
-                    "updated_at": row["updated_at"].astimezone(UTC).isoformat().replace("+00:00", "Z"),
-                    "error_code": "PROCESSING_FAILED" if row["status"] == "error" else None,
-                }
-            )
-            for row in rows
-        ]
+        documents = await self._document_records(connection, context)
         chunks = await (
             await connection.execute(
                 "SELECT c.chunk_id,c.source_id,c.version_id,c.title,c.page, "
@@ -433,8 +433,108 @@ class PostgresPersistence:
             **counts,
         )
 
+    async def _document_records(
+        self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext
+    ) -> list[DocumentRecord]:
+        rows = await (
+            await connection.execute(
+                "SELECT s.source_id,s.title,s.media_type,active.version_id AS active_version_id, "
+                "COALESCE(active.chunk_count,0)::bigint AS chunk_count, "
+                "greatest(s.updated_at,COALESCE(latest.updated_at,s.updated_at)) AS updated_at, "
+                "CASE WHEN latest.status='error' THEN 'error' WHEN latest.status='staged' THEN 'processing' "
+                "WHEN active.version_id IS NOT NULL THEN 'ready' ELSE 'processing' END AS status "
+                "FROM workbench.sources s LEFT JOIN LATERAL ("
+                "SELECT v.version_id,count(c.chunk_id) AS chunk_count FROM workbench.source_versions v "
+                "LEFT JOIN workbench.chunks c USING(workspace_id,source_id,version_id) "
+                "WHERE v.workspace_id=s.workspace_id AND v.source_id=s.source_id AND v.status='active' "
+                "GROUP BY v.workspace_id,v.source_id,v.version_id) active ON true "
+                "LEFT JOIN LATERAL (SELECT status,updated_at FROM workbench.source_versions v "
+                "WHERE v.workspace_id=s.workspace_id AND v.source_id=s.source_id "
+                "ORDER BY updated_at DESC,version_id DESC LIMIT 1) latest ON true "
+                "WHERE s.workspace_id=%s ORDER BY s.source_id LIMIT 10001",
+                (context.workspace_id,),
+            )
+        ).fetchall()
+        if len(rows) > 10000:
+            raise CorpusNotReady("The complete corpus exceeds the approved profile bounds.")
+        return [
+            DocumentRecord(
+                **{
+                    **row,
+                    "updated_at": row["updated_at"].astimezone(UTC).isoformat().replace("+00:00", "Z"),
+                    "error_code": "PROCESSING_FAILED" if row["status"] == "error" else None,
+                }
+            )
+            for row in rows
+        ]
+
+    async def _index_generation(
+        self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext
+    ) -> IndexGeneration:
+        from apps.workbench.api.postgres_indexes import read_index_state
+
+        return IndexGeneration.model_validate(await read_index_state(connection, context))
+
+    async def _prepare_generation(self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext) -> bool:
+        revision = await self._verify_schema(connection)
+        if revision == "0003":
+            await self._index_generation(connection, context)
+            return True
+        if self._snapshot_mode != "legacy":
+            raise SchemaIncompatible("Persisted corpus snapshots require the explicit generation migration.")
+        return False
+
+    async def current_index_generation(
+        self, context: WorkspaceContext, *, expected_generation_id: int | None = None
+    ) -> IndexGeneration:
+        """Read the current committed generation; historical snapshots cannot be selected."""
+        if expected_generation_id is not None and (
+            type(expected_generation_id) is not int or expected_generation_id < 0
+        ):
+            raise ValueError("Invalid generation identity.")
+        async with self._transaction(context, operation="index_generation", repeatable_read=True) as connection:
+            await self._verify_schema(connection)
+            await self._require_workspace(connection, context)
+            await self._require_lexical_index(connection)
+            generation = await self._index_generation(connection, context)
+            if expected_generation_id is not None and generation.generation_id != expected_generation_id:
+                raise RecordConflict("The requested generation is no longer current.")
+            return generation
+
+    async def _corpus_summary(
+        self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext
+    ) -> CorpusSnapshot:
+        if self._snapshot_mode == "legacy":
+            return await self._legacy_corpus_snapshot(connection, context)
+        await self._verify_schema(connection)
+        await self._require_workspace(connection, context)
+        await self._require_lexical_index(connection)
+        generation = await self._index_generation(connection, context)
+        if generation.active_chunk_count > 10000 or generation.content_bytes > 52428800:
+            raise CorpusNotReady("The complete corpus exceeds the approved profile bounds.")
+        return CorpusSnapshot(
+            corpus_id=generation.corpus_id,
+            corpus_revision=generation.corpus_revision,
+            documents=[],
+            chunk_count=generation.active_chunk_count,
+            content_bytes=generation.content_bytes,
+        )
+
+    async def _corpus_snapshot(
+        self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext
+    ) -> CorpusSnapshot:
+        summary = await self._corpus_summary(connection, context)
+        if self._snapshot_mode == "legacy":
+            return summary
+        return summary.model_copy(update={"documents": await self._document_records(connection, context)})
+
+    async def corpus_summary(self, context: WorkspaceContext) -> CorpusSnapshot:
+        """Qualify corpus metadata without enumerating documents or active chunks."""
+        async with self._transaction(context, operation="corpus_summary", repeatable_read=True) as connection:
+            return await self._corpus_summary(connection, context)
+
     async def corpus_snapshot(self, context: WorkspaceContext) -> CorpusSnapshot:
-        """Fingerprint actual persisted records under a repeatable-read snapshot."""
+        """Read document metadata alongside its committed repeatable-read generation."""
         async with self._transaction(context, operation="corpus_snapshot", repeatable_read=True) as connection:
             return await self._corpus_snapshot(connection, context)
 
@@ -489,6 +589,7 @@ class PostgresPersistence:
         await connection.execute(
             "SELECT workspace_id FROM workbench.workspaces WHERE workspace_id=%s FOR UPDATE", (context.workspace_id,)
         )
+        indexed = await self._prepare_generation(connection, context)
         if source.workspace_id != context.workspace_id or version.workspace_id != context.workspace_id:
             raise WorkspaceNotFound("Workspace is not available.")
         if version.source_id != source.source_id or not 1 <= len(chunks) <= 10000:
@@ -558,6 +659,10 @@ class PostgresPersistence:
             "WHERE workspace_id=%s AND source_id=%s AND version_id=%s",
             (context.workspace_id, source.source_id, version.version_id),
         )
+        if indexed:
+            from apps.workbench.api.postgres_indexes import commit_source_generation
+
+            await commit_source_generation(connection, context, source_id=source.source_id)
 
     async def ingestion_ready(self, context: WorkspaceContext) -> bool:
         """Qualify additive ingestion independently from the compatible lexical-only schema."""
@@ -707,7 +812,7 @@ class PostgresPersistence:
             raise ValueError("Invalid lexical search parameters.")
         started = monotonic()
         async with self._transaction(context, operation="lexical_search", repeatable_read=True) as connection:
-            corpus = await self._corpus_snapshot(connection, context)
+            corpus = await self._corpus_summary(connection, context)
             loaded = monotonic()
             rows = await (
                 await connection.execute(

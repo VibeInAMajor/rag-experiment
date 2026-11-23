@@ -53,7 +53,9 @@ async def _register(*, workspace_id: str, source_id: str, version_id: str, file:
     if settings.database_dsn is None or settings.local_source_root is None:
         raise ValueError("The database and local source root must be explicitly configured.")
     context = resolve_development_workspace(workspace_id)
-    repository = PostgresPersistence(settings.database_dsn.get_secret_value())
+    repository = PostgresPersistence(
+        settings.database_dsn.get_secret_value(), snapshot_mode=settings.corpus_snapshot_mode
+    )
     try:
         await repository.start()
         await register_original_file(

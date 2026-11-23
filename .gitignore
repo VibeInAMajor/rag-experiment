@@ -190,3 +190,11 @@ apps/workbench/postgres/.env
 apps/workbench/postgres/backups/
 
 tasks/evidence/*
+!tasks/evidence/index-2026-11-23/
+tasks/evidence/index-2026-11-23/*
+!tasks/evidence/index-2026-11-23/benchmark.json
+!tasks/evidence/index-2026-11-23/restart.json
+!tasks/evidence/index-2026-11-23/index-tests.xml
+!tasks/evidence/index-2026-11-23/full-tests.xml
+!tasks/evidence/index-2026-11-23/quality-checks.txt
+!tasks/evidence/index-2026-11-23/report.md

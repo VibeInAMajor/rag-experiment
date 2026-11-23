@@ -1,0 +1,60 @@
+{
+  "recorded_at": "2026-11-23T16:00:06.478576+00:00",
+  "image": "pgvector/pgvector:0.8.2-pg17-bookworm@sha256:feb68f4f15446397d8cac7f4fe48fe4586de83160d1fc48b46283312d1a33966",
+  "scope": "UUID-owned isolated container and loopback API processes; no shared services restarted",
+  "generation": {
+    "workspace_id": "development",
+    "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+    "generation_id": 1,
+    "corpus_revision": "corpus-4be469660ec02e9dccff152fcf4932d1cf89c9debad5b48ea39ce1eb4c82386b",
+    "committed_at": "2026-11-23T15:59:52.141014Z",
+    "active_source_count": 1,
+    "active_chunk_count": 1,
+    "content_bytes": 24,
+    "active_source_manifest_hash": "9783665e534a1e945a5aca279256cc23055e5dad01e37ce41e35f887de8cc5a6",
+    "lexical_index_revision": "postgres-fts-baseline-r1",
+    "status": "ready",
+    "previous_generation": 0,
+    "event_id": "8f23f38f-3ce1-46ac-bce3-9e0041183145"
+  },
+  "before": {
+    "corpus_revision": "corpus-4be469660ec02e9dccff152fcf4932d1cf89c9debad5b48ea39ce1eb4c82386b",
+    "trace_id": "bc69e94da14346a3bba851f08cbab514",
+    "results": [
+      {
+        "source_id": "restart-source",
+        "source_version_id": "restart-version",
+        "chunk_id": "restart-chunk",
+        "score": 0.10000000149011612,
+        "score_type": "postgres_ts_rank_cd"
+      }
+    ]
+  },
+  "after_api_restart": {
+    "corpus_revision": "corpus-4be469660ec02e9dccff152fcf4932d1cf89c9debad5b48ea39ce1eb4c82386b",
+    "trace_id": "4058031847744d3887cb65fd2fea8fa8",
+    "results": [
+      {
+        "source_id": "restart-source",
+        "source_version_id": "restart-version",
+        "chunk_id": "restart-chunk",
+        "score": 0.10000000149011612,
+        "score_type": "postgres_ts_rank_cd"
+      }
+    ]
+  },
+  "after_database_restart": {
+    "corpus_revision": "corpus-4be469660ec02e9dccff152fcf4932d1cf89c9debad5b48ea39ce1eb4c82386b",
+    "trace_id": "146839ffd1174bcf8bc736c5ab60a853",
+    "results": [
+      {
+        "source_id": "restart-source",
+        "source_version_id": "restart-version",
+        "chunk_id": "restart-chunk",
+        "score": 0.10000000149011612,
+        "score_type": "postgres_ts_rank_cd"
+      }
+    ]
+  },
+  "result": "passed"
+}

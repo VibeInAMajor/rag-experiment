@@ -547,7 +547,13 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
     }
     package = Path(__file__).resolve().parents[1]
     for source in package.glob("*.py"):
-        if source.name in {"postgres.py", "postgres_ingestion.py", "db_migrations.py", "db_admin.py"}:
+        if source.name in {
+            "postgres.py",
+            "postgres_ingestion.py",
+            "postgres_indexes.py",
+            "db_migrations.py",
+            "db_admin.py",
+        }:
             continue
         restricted = (
             forbidden - {"haystack"}

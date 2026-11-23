@@ -1,0 +1,16 @@
+DROP TRIGGER dirty_chunk_index ON workbench.chunks;
+DROP TRIGGER dirty_version_index ON workbench.source_versions;
+DROP TRIGGER dirty_source_index ON workbench.sources;
+DROP TRIGGER initialize_corpus_index ON workbench.workspaces;
+DROP FUNCTION workbench.commit_source_generation(text,text,text);
+DROP FUNCTION workbench.mark_corpus_index_dirty();
+DROP FUNCTION workbench.initialize_corpus_index();
+DROP FUNCTION workbench.index_source_projection(text,text);
+DROP TRIGGER immutable_index_generation ON workbench.index_generations;
+DROP FUNCTION workbench.prevent_index_generation_mutation();
+DROP TRIGGER corpus_generation_transition ON workbench.corpus_index_state;
+DROP FUNCTION workbench.validate_corpus_generation_transition();
+DROP TABLE workbench.corpus_source_state;
+DROP TABLE workbench.corpus_index_state;
+DROP TABLE workbench.index_generations;
+DELETE FROM workbench.schema_migrations WHERE revision='0003';

@@ -1,0 +1,18 @@
+---
+upgrade:
+  - |
+    Workbench database operators must apply the additive corpus-generation
+    migration ``0003`` with ``hatch run workbench-api:db-migrate`` before using the new
+    snapshot path. Preserve the existing volume and credentials; do not reseed.
+    Treat ``corpus_revision`` as an opaque identity and restart pagination after
+    upgrading. See the persisted corpus generations operations guide for
+    reconciliation and recovery. Explicit ``WORKBENCH_CORPUS_SNAPSHOT_MODE=legacy``
+    retains the prior full-corpus read path for a reviewed rollback; the default
+    ``persisted`` mode refuses older schemas.
+features:
+  - |
+    Workbench lexical search reads a persisted workspace generation and active
+    counts instead of hashing every active chunk for each search. Source
+    publication and ingestion completion commit the generation atomically;
+    unchanged uploads and retries retain it. Search results preserve existing
+    PostgreSQL ranking and source-version provenance.
