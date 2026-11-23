@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import type { ExecutionMode, WorkbenchSettings } from "../domain/types";
 import type { useBackendDiscovery } from "../hooks/useBackendDiscovery";
+import { isSupportedLexicalProfile } from "../domain/backendDiscovery";
 import "./views.css";
 
 export function SettingsView({
@@ -8,13 +9,13 @@ export function SettingsView({
   onChange,
   mode,
   discovery,
-  onWorkspaceChange,
+  onExecutionChange,
 }: {
   settings: WorkbenchSettings;
   onChange: (settings: WorkbenchSettings) => void;
   mode: ExecutionMode;
   discovery: ReturnType<typeof useBackendDiscovery>;
-  onWorkspaceChange: () => void;
+  onExecutionChange: () => void;
 }) {
   function update<Key extends keyof WorkbenchSettings>(
     key: Key,
@@ -90,10 +91,13 @@ export function SettingsView({
               className="input"
               value={discovery.state.selectedWorkspaceId ?? ""}
               onChange={(event) => {
-                onWorkspaceChange();
+                onExecutionChange();
                 discovery.selectWorkspace(event.target.value);
               }}
-              disabled={mode !== "live" || discovery.state.status !== "ready"}
+              disabled={
+                mode !== "live" ||
+                !["ready", "awaiting_profile"].includes(discovery.state.status)
+              }
             >
               <option value="" disabled>
                 No authorized workspace selected
@@ -107,6 +111,44 @@ export function SettingsView({
                 </option>
               ))}
             </select>
+          </label>
+          <label className="view-field">
+            <span id="execution-profile-label">Execution profile</span>
+            <select
+              className="input"
+              value={discovery.state.profile?.profile_id ?? ""}
+              onChange={(event) => {
+                onExecutionChange();
+                discovery.selectProfile(event.target.value);
+              }}
+              disabled={
+                mode !== "live" ||
+                !["ready", "awaiting_profile"].includes(discovery.state.status)
+              }
+              aria-describedby="execution-profile-help"
+              aria-labelledby="execution-profile-label"
+            >
+              <option value="" disabled>
+                Choose an approved profile
+              </option>
+              {discovery.state.capabilities?.profiles
+                .filter(
+                  (profile) =>
+                    isSupportedLexicalProfile(profile) &&
+                    discovery.state.selectedWorkspaceId !== null &&
+                    profile.workspace_ids.includes(
+                      discovery.state.selectedWorkspaceId,
+                    ),
+                )
+                .map((profile) => (
+                  <option key={profile.profile_id} value={profile.profile_id}>
+                    {profile.profile_id} · {profile.profile_revision}
+                  </option>
+                ))}
+            </select>
+            <small id="execution-profile-help">
+              Approved lexical profiles only. Higher scores rank first.
+            </small>
           </label>
           <dl className="backend-diagnostics">
             <div>
@@ -132,6 +174,12 @@ export function SettingsView({
               <dt>Score type</dt>
               <dd className="mono">
                 {discovery.state.profile?.score_type ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt>Maximum results</dt>
+              <dd>
+                {discovery.state.profile?.parameters.top_k.maximum ?? "—"}
               </dd>
             </div>
             <div>

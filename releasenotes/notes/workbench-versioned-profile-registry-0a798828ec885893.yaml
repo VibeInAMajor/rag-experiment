@@ -1,0 +1,18 @@
+---
+upgrade:
+  - |
+    Workbench operators must apply additive migration ``0004`` with
+    ``hatch run workbench-api:db-migrate`` before starting the profile-enabled API.
+    Keep existing source/vector data and immutable
+    profile revisions, and publish new policy revisions explicitly with the
+    separate administrator. See the approved execution profiles operations guide
+    for configuration, lifecycle and rollback commands. Startup never migrates
+    or rewrites profile history.
+features:
+  - |
+    Workbench now selects approved, versioned lexical policies from an immutable
+    registry with workspace-scoped rollout and revision fencing. The baseline
+    ``postgres-fts-baseline-r1`` request and raw PostgreSQL score semantics remain
+    compatible. Live discovery and the profile selector expose only qualified
+    executable profiles; stored dense, ANN, hybrid and BM25 definitions do not
+    enable those retrieval modes.

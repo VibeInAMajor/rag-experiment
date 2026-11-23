@@ -198,3 +198,16 @@ tasks/evidence/index-2026-11-23/*
 !tasks/evidence/index-2026-11-23/full-tests.xml
 !tasks/evidence/index-2026-11-23/quality-checks.txt
 !tasks/evidence/index-2026-11-23/report.md
+!tasks/evidence/profile-2026-11-23/
+tasks/evidence/profile-2026-11-23/*
+!tasks/evidence/profile-2026-11-23/profile-routes.xml
+!tasks/evidence/profile-2026-11-23/profile-regressions.xml
+!tasks/evidence/profile-2026-11-23/full-tests.xml
+!tasks/evidence/profile-2026-11-23/quality-checks.txt
+!tasks/evidence/profile-2026-11-23/http-rollout.json
+!tasks/evidence/profile-2026-11-23/browser-smoke.json
+!tasks/evidence/profile-2026-11-23/deployment.json
+!tasks/evidence/profile-2026-11-23/report.md
+!tasks/evidence/profile-2026-11-23/profile-selected-1440.png
+!tasks/evidence/profile-2026-11-23/profile-selected-1100.png
+!tasks/evidence/profile-2026-11-23/profile-recovered-1440.png

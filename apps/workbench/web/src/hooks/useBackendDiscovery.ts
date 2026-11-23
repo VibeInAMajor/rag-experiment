@@ -44,5 +44,9 @@ export function useBackendDiscovery(
       if (activeMode.current === "live")
         discovery.current?.selectWorkspace(workspaceId);
     },
+    selectProfile(profileId: string) {
+      if (activeMode.current === "live")
+        discovery.current?.selectProfile(profileId);
+    },
   };
 }

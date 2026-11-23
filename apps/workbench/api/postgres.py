@@ -34,6 +34,7 @@ from apps.workbench.api.persistence import (
     LocalOriginalRegistration,
     PersistenceError,
     PersistenceReady,
+    ProfileNotAvailable,
     RecordConflict,
     SchemaIncompatible,
     SeedConflict,
@@ -46,10 +47,18 @@ from apps.workbench.api.persistence import (
     WorkspaceContext,
     WorkspaceNotFound,
 )
+from apps.workbench.api.profile_registry import ProfileDefinition, ProfileRollout
 
 _CHUNK_COLUMNS = (
     "c.workspace_id,c.source_id,c.version_id,c.chunk_id,c.title,c.content,c.content_hash,"
     "c.page,c.metadata,c.embedding::text AS embedding,c.embedding_profile_id,c.dimensions"
+)
+_LEXICAL_INDEX_QUERY = (
+    "SELECT i.indisvalid AND i.indisready AND i.indnkeyatts=1 AND am.amname='gin' "
+    "AND pg_get_indexdef(i.indexrelid,1,true)='search_vector' AS usable "
+    "FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid JOIN pg_am am ON am.oid=c.relam "
+    "WHERE i.indexrelid=to_regclass('workbench.chunks_search_vector') "
+    "AND i.indrelid=to_regclass('workbench.chunks')"
 )
 _logger = logging.getLogger("workbench.persistence")
 
@@ -376,15 +385,7 @@ class PostgresPersistence:
                 await commit_source_generation(connection, context, source_id=source_id, event_kind="metadata")
 
     async def _require_lexical_index(self, connection: AsyncConnection[dict[str, Any]]) -> None:
-        index = await (
-            await connection.execute(
-                "SELECT i.indisvalid AND i.indisready AND i.indnkeyatts=1 AND am.amname='gin' "
-                "AND pg_get_indexdef(i.indexrelid,1,true)='search_vector' AS usable "
-                "FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid JOIN pg_am am ON am.oid=c.relam "
-                "WHERE i.indexrelid=to_regclass('workbench.chunks_search_vector') "
-                "AND i.indrelid=to_regclass('workbench.chunks')"
-            )
-        ).fetchone()
+        index = await (await connection.execute(_LEXICAL_INDEX_QUERY)).fetchone()
         if index != {"usable": True}:
             raise SchemaIncompatible("The required lexical index is unavailable.")
 
@@ -477,7 +478,7 @@ class PostgresPersistence:
 
     async def _prepare_generation(self, connection: AsyncConnection[dict[str, Any]], context: WorkspaceContext) -> bool:
         revision = await self._verify_schema(connection)
-        if revision == "0003":
+        if revision >= "0003":
             await self._index_generation(connection, context)
             return True
         if self._snapshot_mode != "legacy":
@@ -518,6 +519,7 @@ class PostgresPersistence:
             documents=[],
             chunk_count=generation.active_chunk_count,
             content_bytes=generation.content_bytes,
+            index_generation_id=generation.generation_id,
         )
 
     async def _corpus_snapshot(
@@ -799,8 +801,23 @@ class PostgresPersistence:
         """Run native full-text ranking over persisted active chunks."""
         return (await self.lexical_search_snapshot(context, query=query, top_k=top_k)).hits
 
+    async def get_profile_rollouts(self, context: WorkspaceContext) -> tuple[ProfileRollout, ...]:
+        """Read the authorized durable profile selection and immutable policy identity."""
+        from apps.workbench.api.postgres_profiles import read_profile_rollouts
+
+        async with self._transaction(context, operation="profile_rollouts", repeatable_read=True) as connection:
+            await self._verify_schema(connection)
+            await self._require_workspace(connection, context)
+            return await read_profile_rollouts(connection, context)
+
     async def lexical_search_snapshot(
-        self, context: WorkspaceContext, *, query: str, top_k: int = 10
+        self,
+        context: WorkspaceContext,
+        *,
+        query: str,
+        top_k: int = 10,
+        profile_fence: ProfileRollout | None = None,
+        profile_definition: ProfileDefinition | None = None,
     ) -> LexicalSearchSnapshot:
         """Read corpus revision and real ranks in the same read-only SQL snapshot."""
         if (
@@ -811,8 +828,31 @@ class PostgresPersistence:
         ):
             raise ValueError("Invalid lexical search parameters.")
         started = monotonic()
+        if (profile_fence is None) != (profile_definition is None):
+            raise ProfileNotAvailable("An approved revision requires its complete policy fence.")
         async with self._transaction(context, operation="lexical_search", repeatable_read=True) as connection:
+            if profile_fence is not None:
+                from apps.workbench.api.postgres_profiles import read_profile_rollouts
+
+                current_rollouts = await read_profile_rollouts(connection, context)
+                if profile_fence.state != "active" or profile_fence not in current_rollouts:
+                    raise ProfileNotAvailable("The approved profile changed before retrieval.")
             corpus = await self._corpus_summary(connection, context)
+            if profile_definition is not None and profile_fence is not None:
+                from apps.workbench.api.profiles import qualify_profile, validate_search_policy
+
+                if (
+                    profile_definition.profile_id,
+                    profile_definition.profile_revision,
+                    profile_definition.policy_hash,
+                ) != (
+                    profile_fence.profile_id,
+                    profile_fence.profile_revision,
+                    profile_fence.policy_hash,
+                ) or context.workspace_id not in profile_definition.workspace_ids:
+                    raise ProfileNotAvailable("The selected policy differs from its approved revision.")
+                validate_search_policy(profile_definition, query=query, top_k=top_k)
+                qualify_profile(profile_definition, corpus)
             loaded = monotonic()
             rows = await (
                 await connection.execute(
@@ -834,6 +874,7 @@ class PostgresPersistence:
                 ],
                 corpus_load_duration_ms=(loaded - started) * 1000,
                 retrieval_duration_ms=(retrieved - loaded) * 1000,
+                index_generation_id=corpus.index_generation_id,
             )
 
     async def vector_search(

@@ -12,6 +12,7 @@ from apps.workbench.api.persistence import (
     PersistenceReady,
     WorkspaceContext,
 )
+from apps.workbench.api.profile_registry import ProfileRollout
 from apps.workbench.api.services import LexicalServicePort, ReadinessSnapshot
 
 
@@ -50,6 +51,9 @@ class _DatabaseProbe(PersistencePort):
 
     async def corpus_summary(self, context: WorkspaceContext) -> CorpusSnapshot:
         return await self.corpus_snapshot(context)
+
+    async def get_profile_rollouts(self, _context: WorkspaceContext) -> tuple[ProfileRollout, ...]:
+        return ()
 
     create_workspace = _unexpected
     current_index_generation = _unexpected

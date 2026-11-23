@@ -5,6 +5,7 @@ const statusLabels: Record<BackendDiscoveryState["status"], string> = {
   unconfigured: "Not checked",
   checking: "Checking",
   ready: "Ready",
+  awaiting_profile: "Choose profile",
   not_ready: "Not ready",
   unavailable: "Offline",
   incompatible: "Incompatible",

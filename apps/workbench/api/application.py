@@ -53,15 +53,18 @@ from apps.workbench.api.local_sources import (
 from apps.workbench.api.parser_registry import FormatId, parser_descriptors
 from apps.workbench.api.persistence import (
     DatabaseUnavailable,
+    InvalidSearchParameters,
     LexicalSearchSnapshot,
     PersistenceError,
     PersistencePort,
+    ProfileNotAvailable,
     SchemaIncompatible,
     WorkspaceContext,
     WorkspaceNotFound,
     resolve_development_workspace,
 )
-from apps.workbench.api.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
+from apps.workbench.api.profile_registry import ProfileRegistry
+from apps.workbench.api.profiles import resolve_profile, validate_search_policy
 from apps.workbench.api.projection import project_search
 from apps.workbench.api.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot
 
@@ -170,6 +173,10 @@ def _failure(request: Request, error: Exception, *, run_id: str | None = None) -
         status, code, message = (503, "FILE_REVEAL_FAILED", "Explorer could not select the original file.")
     elif isinstance(error, _InvalidCursor):
         status, code, message = (400, "INVALID_CURSOR", "Restart the list from its first page.")
+    elif isinstance(error, InvalidSearchParameters):
+        status, code, message = (400, "INVALID_REQUEST", "The request exceeds the selected profile policy.")
+    elif isinstance(error, ProfileNotAvailable):
+        status, code, message = (409, "PROFILE_NOT_AVAILABLE", "Refresh executable profiles before searching.")
     elif isinstance(error, DatabaseUnavailable):
         status, code, message = (503, "DEPENDENCY_UNAVAILABLE", "The data dependency is unavailable.")
     elif isinstance(error, _ServiceStopping):
@@ -224,6 +231,7 @@ class _Routes:
         readiness: ReadinessProbe | None,
         local_sources: LocalSources,
         ingestion: IngestionService | None,
+        registry: ProfileRegistry,
     ) -> None:
         self.app = app
         self.configuration = configuration
@@ -232,8 +240,10 @@ class _Routes:
         self.readiness = readiness
         self.local_sources = local_sources
         self.ingestion = ingestion
+        self.registry = registry
         self.cursors = _Cursors()
         self.active_searches = 0
+        self.profile_searches: dict[tuple[str, str], int] = {}
 
     async def _local_file(
         self, request: Request, workspace_id: str, source_id: str, version_id: str
@@ -437,19 +447,20 @@ class _Routes:
             context = _context(request, workspace_id)
         except WorkspaceNotFound as error:
             return _failure(request, error)
-        if (
-            body.profile_id != POSTGRES_FTS_PROFILE_ID
-            or body.expected_profile_revision != POSTGRES_FTS_PROFILE_REVISION
-        ):
-            return error_response(
-                request_meta(request),
-                status=409,
-                code="PROFILE_NOT_AVAILABLE",
-                message="Refresh executable profiles before searching.",
+        try:
+            definition = resolve_profile(
+                self.registry,
+                profile_id=body.profile_id,
+                profile_revision=body.expected_profile_revision,
+                workspace_id=context.workspace_id,
             )
+            validate_search_policy(definition, query=body.query, top_k=body.top_k)
+        except PersistenceError as error:
+            return _failure(request, error)
         if self.service is None or self.app.state.lifecycle != ServiceState.RUNNING:
             return self._unavailable(request)
-        if self.active_searches >= 2:
+        profile_key = (definition.profile_id, definition.profile_revision)
+        if self.active_searches >= 2 or self.profile_searches.get(profile_key, 0) >= definition.max_concurrent:
             response = error_response(
                 request_meta(request),
                 status=429,
@@ -460,10 +471,11 @@ class _Routes:
             response.headers["Retry-After"] = "1"
             return response
         self.active_searches += 1
+        self.profile_searches[profile_key] = self.profile_searches.get(profile_key, 0) + 1
         started = monotonic()
         run_id = uuid4().hex
         try:
-            async with asyncio.timeout(_SEARCH_TIMEOUT_SECONDS):
+            async with asyncio.timeout(min(_SEARCH_TIMEOUT_SECONDS, definition.timeout_ms / 1000)):
                 result = await _execute_search(request, self.service, context=context, body=body)
                 _ensure_running(self.app)
                 search_response = project_search(
@@ -473,14 +485,22 @@ class _Routes:
                     meta=request_meta(request),
                     run_id=run_id,
                     started=started,
+                    expected_profile=definition,
                 )
                 log_event(
                     "search_completed",
                     run_id=run_id,
                     trace_id=context.trace_id or "",
                     workspace_id=context.workspace_id,
-                    profile_id=POSTGRES_FTS_PROFILE_ID,
+                    profile_id=definition.profile_id,
+                    profile_revision=definition.profile_revision,
+                    policy_hash=definition.policy_hash,
                     corpus_revision=result.corpus_revision,
+                    **(
+                        {"index_generation_id": result.index_generation_id}
+                        if result.index_generation_id is not None
+                        else {}
+                    ),
                     result_count=len(search_response.results),
                     duration_ms=search_response.duration_ms,
                     corpus_load_ms=result.corpus_load_duration_ms,
@@ -503,6 +523,11 @@ class _Routes:
             return _failure(request, error, run_id=run_id)
         finally:
             self.active_searches -= 1
+            remaining = self.profile_searches[profile_key] - 1
+            if remaining:
+                self.profile_searches[profile_key] = remaining
+            else:
+                del self.profile_searches[profile_key]
 
 
 class _Application(FastAPI):
@@ -526,9 +551,11 @@ def create_app(
     persistence: PersistencePort | None = None,
     lexical: LexicalServicePort | None = None,
     local_file_launcher: LocalFileLauncher | None = None,
+    registry: ProfileRegistry | None = None,
 ) -> FastAPI:
     """Bind the qualified lexical service to the existing persistent corpus."""
     configuration = ApiSettings.from_env() if settings is None else settings
+    approved_registry = configuration.profile_registry if registry is None else registry
     database = create_database_dependency(
         configuration.database_dsn, persistence=persistence, snapshot_mode=configuration.corpus_snapshot_mode
     )
@@ -566,7 +593,7 @@ def create_app(
     if service is None and database.persistence is not None:
         from apps.workbench.api.lexical import LexicalService
 
-        service = LexicalService(database.persistence)
+        service = LexicalService(database.persistence, registry=approved_registry)
     app = _Application(
         title="Workbench API",
         version="rag-api-v1.0",
@@ -593,6 +620,7 @@ def create_app(
         readiness=readiness,
         local_sources=local_sources,
         ingestion=ingestion,
+        registry=approved_registry,
     )
     app.add_api_route("/api/v1/health/live", routes._live, response_model=LiveResponse, name="live")
     app.add_api_route("/api/v1/health/ready", routes._ready, response_model=ReadyResponse, name="ready")

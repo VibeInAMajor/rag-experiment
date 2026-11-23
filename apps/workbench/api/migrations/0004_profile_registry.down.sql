@@ -1,0 +1,11 @@
+DROP TRIGGER initialize_profile_rollout ON workbench.workspaces;
+DROP FUNCTION workbench.initialize_profile_rollout();
+DROP TRIGGER record_profile_rollout ON workbench.retrieval_profile_rollouts;
+DROP FUNCTION workbench.record_profile_rollout();
+DROP TRIGGER immutable_profile_revision ON workbench.retrieval_profile_revisions;
+DROP TRIGGER immutable_profile_rollout_event ON workbench.profile_rollout_events;
+DROP FUNCTION workbench.prevent_profile_history_mutation();
+DROP TABLE workbench.profile_rollout_events;
+DROP TABLE workbench.retrieval_profile_rollouts;
+DROP TABLE workbench.retrieval_profile_revisions;
+DELETE FROM workbench.schema_migrations WHERE revision='0004';

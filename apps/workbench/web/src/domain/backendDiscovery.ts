@@ -23,6 +23,11 @@ type DiscoveryDetails = {
 
 type DiscoverySelection =
   | {
+      status: "awaiting_profile";
+      selectedWorkspaceId: string;
+      profile: null;
+    }
+  | {
       status: "ready";
       selectedWorkspaceId: string;
       profile: BackendProfile;
@@ -46,11 +51,31 @@ export type BackendDiscoveryClient = Pick<
   "getLive" | "getReady" | "getCapabilities" | "listWorkspaces"
 >;
 
-export const supportedLexicalProfile = {
-  id: "postgres-fts-baseline",
-  revision: "postgres-fts-baseline-r1",
-  scoreType: "postgres_ts_rank_cd",
-} as const;
+export function isSupportedLexicalProfile(profile: BackendProfile): boolean {
+  const bounded = (value: number, maximum: number) =>
+    Number.isSafeInteger(value) && value >= 1 && value <= maximum;
+  return (
+    /^[A-Za-z0-9_-]{1,128}$/.test(profile.profile_id) &&
+    /^[A-Za-z0-9_-]{1,128}$/.test(profile.profile_revision) &&
+    profile.kind === "lexical_search" &&
+    profile.score_type === "postgres_ts_rank_cd" &&
+    profile.parameters.query.type === "string" &&
+    profile.parameters.query.min_length === 1 &&
+    bounded(profile.parameters.query.max_length, 4096) &&
+    profile.parameters.top_k.type === "integer" &&
+    profile.parameters.top_k.minimum === 1 &&
+    bounded(profile.parameters.top_k.maximum, 50) &&
+    bounded(
+      profile.parameters.top_k.default,
+      profile.parameters.top_k.maximum,
+    ) &&
+    bounded(profile.limits.max_request_bytes, 32768) &&
+    bounded(profile.limits.timeout_ms, 10000) &&
+    bounded(profile.limits.max_concurrent_searches, 2) &&
+    bounded(profile.limits.max_corpus_chunks, 10000) &&
+    bounded(profile.limits.max_corpus_bytes, 52428800)
+  );
+}
 const maxWorkspacePages = 10;
 const discoveryTimeoutMs = 15000;
 
@@ -93,6 +118,7 @@ export class BackendDiscovery {
   private generation = 0;
   private controller?: AbortController;
   private preferredWorkspaceId: string | null = null;
+  private preferredProfileId: string | null = null;
 
   constructor(
     private client: BackendDiscoveryClient | (() => BackendDiscoveryClient),
@@ -113,12 +139,13 @@ export class BackendDiscovery {
   reset() {
     this.invalidate();
     this.preferredWorkspaceId = null;
+    this.preferredProfileId = null;
     this.publish(initialDiscoveryState());
   }
 
   selectWorkspace(workspaceId: string): boolean {
     if (
-      this.state.status !== "ready" ||
+      !["ready", "awaiting_profile"].includes(this.state.status) ||
       !this.state.workspaces.some(
         (workspace) => workspace.workspace_id === workspaceId,
       ) ||
@@ -131,6 +158,24 @@ export class BackendDiscovery {
       this.preferredWorkspaceId = workspaceId;
       void this.refresh();
     }
+    return true;
+  }
+
+  selectProfile(profileId: string): boolean {
+    const workspaceId = this.state.selectedWorkspaceId;
+    if (
+      !["ready", "awaiting_profile"].includes(this.state.status) ||
+      !workspaceId ||
+      !this.state.capabilities?.profiles.some(
+        (profile) =>
+          profile.profile_id === profileId &&
+          isSupportedLexicalProfile(profile) &&
+          profile.workspace_ids.includes(workspaceId),
+      )
+    )
+      return false;
+    this.preferredProfileId = profileId;
+    void this.refresh();
     return true;
   }
 
@@ -290,12 +335,7 @@ export class BackendDiscovery {
       );
       return;
     }
-    const profiles = capabilities.profiles.filter(
-      (profile) =>
-        profile.profile_id === supportedLexicalProfile.id &&
-        profile.profile_revision === supportedLexicalProfile.revision &&
-        profile.score_type === supportedLexicalProfile.scoreType,
-    );
+    const profiles = capabilities.profiles.filter(isSupportedLexicalProfile);
     if (!profiles.length) {
       unavailable(
         "incompatible",
@@ -356,7 +396,7 @@ export class BackendDiscovery {
     }
     const selectedWorkspaceId =
       this.preferredWorkspaceId ?? workspaces[0]?.workspace_id;
-    const profile = profiles.find(
+    const workspaceProfiles = profiles.filter(
       (item) =>
         selectedWorkspaceId && item.workspace_ids.includes(selectedWorkspaceId),
     );
@@ -365,7 +405,7 @@ export class BackendDiscovery {
       !workspaces.some(
         (workspace) => workspace.workspace_id === selectedWorkspaceId,
       ) ||
-      !profile ||
+      !workspaceProfiles.length ||
       (capabilities.dependencies.database.workspace_id != null &&
         capabilities.dependencies.database.workspace_id !== selectedWorkspaceId)
     ) {
@@ -379,6 +419,29 @@ export class BackendDiscovery {
       return;
     }
     this.preferredWorkspaceId = selectedWorkspaceId;
+    const preferredId = this.preferredProfileId ?? "postgres-fts-baseline";
+    const profile = workspaceProfiles.find(
+      (item) => item.profile_id === preferredId,
+    );
+    if (!profile) {
+      finish({
+        status: "awaiting_profile",
+        capabilities,
+        workspaces,
+        selectedWorkspaceId,
+        profile: null,
+        error: conflict(
+          this.preferredProfileId
+            ? "PROFILE_NOT_AVAILABLE"
+            : "PROFILE_SELECTION_REQUIRED",
+          this.preferredProfileId
+            ? "The selected profile is no longer available. Choose an approved profile."
+            : "Choose an approved lexical profile before searching.",
+        ),
+      });
+      return;
+    }
+    this.preferredProfileId = profile.profile_id;
     finish({
       status: "ready",
       capabilities,

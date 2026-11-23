@@ -207,12 +207,85 @@ describe("backend discovery", () => {
     expect(discovery.state.error?.code).toBe("BACKEND_REVISION_MISMATCH");
   });
 
-  it("requires a supported discovered profile revision", async () => {
+  it("uses the current server-approved revision without hardcoding its version", async () => {
     const { discovery, caps } = clientFixture();
     caps.profiles[0].profile_revision = "postgres-fts-baseline-r2";
     await discovery.refresh();
-    expect(discovery.state.status).toBe("incompatible");
+    expect(discovery.state.status).toBe("ready");
+    expect(discovery.state.profile?.profile_revision).toBe(
+      "postgres-fts-baseline-r2",
+    );
+  });
+
+  it("requires explicit selection when only new approved lexical IDs are available", async () => {
+    const { discovery, caps, ready, changed } = clientFixture();
+    caps.profiles[0].profile_id = "postgres-fts-bounded";
+    caps.profiles[0].profile_revision = "bounded-r1";
+    ready.ready_profile_ids = ["postgres-fts-bounded"];
+    await discovery.refresh();
+    expect(discovery.state).toMatchObject({
+      status: "awaiting_profile",
+      profile: null,
+      selectedWorkspaceId: "development",
+      error: { code: "PROFILE_SELECTION_REQUIRED" },
+    });
+    expect(discovery.selectProfile("postgres-fts-bounded")).toBe(true);
+    expect(discovery.state.status).toBe("checking");
+    await vi.waitFor(() => expect(discovery.state.status).toBe("ready"));
+    expect(discovery.state.profile?.profile_id).toBe("postgres-fts-bounded");
+    expect(changed).toHaveBeenCalled();
+  });
+
+  it("never substitutes another profile when an explicitly selected profile is retired", async () => {
+    const { discovery, caps, ready } = clientFixture();
+    const alternate = {
+      ...caps.profiles[0],
+      profile_id: "postgres-fts-bounded",
+      profile_revision: "bounded-r1",
+    };
+    caps.profiles.push(alternate);
+    ready.ready_profile_ids.push(alternate.profile_id);
+    await discovery.refresh();
+    expect(discovery.state.profile?.profile_id).toBe("postgres-fts-baseline");
+    expect(discovery.selectProfile(alternate.profile_id)).toBe(true);
+    await vi.waitFor(() =>
+      expect(discovery.state.profile?.profile_id).toBe(alternate.profile_id),
+    );
+    caps.profiles = caps.profiles.filter(
+      (item) => item.profile_id !== alternate.profile_id,
+    );
+    ready.ready_profile_ids = ["postgres-fts-baseline"];
+    await discovery.refresh();
+    expect(discovery.state).toMatchObject({
+      status: "awaiting_profile",
+      profile: null,
+      error: { code: "PROFILE_NOT_AVAILABLE" },
+    });
+    expect(discovery.selectProfile("postgres-fts-baseline")).toBe(true);
+    await vi.waitFor(() => expect(discovery.state.status).toBe("ready"));
+  });
+
+  it("refuses selection outside the advertised workspace and never sends a request", async () => {
+    const { discovery, caps, ready, client } = clientFixture();
+    caps.profiles.push({
+      ...caps.profiles[0],
+      profile_id: "foreign-profile",
+      workspace_ids: ["foreign"],
+    });
+    ready.ready_profile_ids.push("foreign-profile");
+    await discovery.refresh();
+    expect(discovery.selectProfile("foreign-profile")).toBe(false);
+    expect(discovery.selectProfile("unregistered")).toBe(false);
+    expect(client.getCapabilities).toHaveBeenCalledTimes(1);
+    expect(discovery.state.profile?.profile_id).toBe("postgres-fts-baseline");
+  });
+
+  it("rejects unsupported score semantics even when a profile is advertised as ready", async () => {
+    const { discovery, caps, client } = clientFixture();
+    caps.profiles[0].score_type = "bm25_raw";
+    await discovery.refresh();
     expect(discovery.state.error?.code).toBe("PROFILE_NOT_SUPPORTED");
+    expect(client.listWorkspaces).not.toHaveBeenCalled();
   });
 
   it("requires intersection with the authorized workspace list", async () => {

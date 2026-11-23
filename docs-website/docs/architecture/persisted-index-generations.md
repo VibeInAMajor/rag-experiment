@@ -25,6 +25,8 @@ Capabilities uses the manifest's actual persisted `corpus_id` in the existing pr
 
 `ApiSettings.corpus_snapshot_mode` defaults to `persisted`. Normal startup reads the trusted operator environment variable `WORKBENCH_CORPUS_SNAPSHOT_MODE`, accepting only `persisted` or `legacy`; it is never a request parameter. Persisted mode requires migration `0003`. An older schema does not silently fall back to full enumeration.
 
+Current public profile execution additionally uses the [profile registry governance](profile-registry.md) introduced by migration `0004`. The corpus read switch selects snapshot implementation only; it does not bypass revision/rollout qualification or make missing governance tables executable. The `0003` generation contract and its recorded qualification below remain unchanged.
+
 Keep the existing database volume and credentials. Back up the selected database using the [PostgreSQL runbook](postgresql-foundation.md), stop old application writers before changing the generation contract, and run:
 
 ```powershell

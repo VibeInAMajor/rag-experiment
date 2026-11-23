@@ -9,7 +9,7 @@ from apps.workbench.api.persistence import CorpusSnapshot, LexicalSearchSnapshot
 
 
 class ReadinessSnapshot(ContractModel):
-    profiles: list[ExecutionProfile] = Field(default_factory=list, max_length=1)
+    profiles: list[ExecutionProfile] = Field(default_factory=list, max_length=32)
 
 
 class ReadinessProbe(Protocol):

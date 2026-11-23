@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL, Connection
 from sqlalchemy.pool import NullPool
 
-HEAD_REVISION = "0003"
+HEAD_REVISION = "0004"
 EXPECTED_REVISION = HEAD_REVISION
 MIGRATION_TOOL_VERSION = "alembic-1.20.1"
 _EXTENSION_VERSION = "0.8.2"
@@ -22,7 +22,12 @@ _DIRECTORY = Path(__file__).resolve().parent / "migrations"
 _LOCK_KEY = 719342176213
 _TABLES = ("workspaces", "sources", "source_versions", "chunks", "embedding_profiles")
 _SCOPED_TABLES = ("workspaces", "sources", "source_versions", "chunks")
-_REVISIONS = (("0001", "0001_initial"), ("0002", "0002_ingestion_jobs"), ("0003", "0003_index_generations"))
+_REVISIONS = (
+    ("0001", "0001_initial"),
+    ("0002", "0002_ingestion_jobs"),
+    ("0003", "0003_index_generations"),
+    ("0004", "0004_profile_registry"),
+)
 
 
 class MigrationError(ValueError):
@@ -108,11 +113,15 @@ def _status(connection: Connection) -> MigrationStatus:
     required_tables = _TABLES + (("ingestion_jobs",) if revision >= "0002" else ())
     if revision >= "0003":
         required_tables += ("corpus_index_state", "index_generations", "corpus_source_state")
+    if revision >= "0004":
+        required_tables += ("retrieval_profile_revisions", "retrieval_profile_rollouts", "profile_rollout_events")
     tables_exist = all(
         connection.execute(text("SELECT to_regclass(:table)"), {"table": f"workbench.{table}"}).scalar_one_or_none()
         is not None
         for table in required_tables
-    ) and _scoping_enabled(connection, ingestion=revision >= "0002", indexes=revision >= "0003")
+    ) and _scoping_enabled(
+        connection, ingestion=revision >= "0002", indexes=revision >= "0003", profiles=revision >= "0004"
+    )
     return MigrationStatus(
         revision=revision,
         extension_version=extension,
@@ -123,10 +132,14 @@ def _status(connection: Connection) -> MigrationStatus:
     )
 
 
-def _scoping_enabled(connection: Connection, *, ingestion: bool = False, indexes: bool = False) -> bool:
+def _scoping_enabled(
+    connection: Connection, *, ingestion: bool = False, indexes: bool = False, profiles: bool = False
+) -> bool:
     tables = _SCOPED_TABLES + (("ingestion_jobs",) if ingestion else ())
     if indexes:
         tables += ("corpus_index_state", "index_generations", "corpus_source_state")
+    if profiles:
+        tables += ("retrieval_profile_rollouts", "profile_rollout_events")
     rows = connection.execute(
         text(
             "SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity, pg_get_userbyid(c.relowner) "
@@ -149,7 +162,20 @@ def _scoping_enabled(connection: Connection, *, ingestion: bool = False, indexes
             "('workbench.corpus_index_state'::regclass,'corpus_generation_transition'))"
         )
     ).scalar_one()
-    return enabled_triggers == 6
+    if enabled_triggers != 6:
+        return False
+    if not profiles:
+        return True
+    profile_triggers: int = connection.execute(
+        text(
+            "SELECT count(*) FROM pg_trigger WHERE tgenabled IN ('O','A') AND "
+            "(tgrelid,tgname) IN (('workbench.retrieval_profile_revisions'::regclass,'immutable_profile_revision'),"
+            "('workbench.retrieval_profile_rollouts'::regclass,'record_profile_rollout'),"
+            "('workbench.profile_rollout_events'::regclass,'immutable_profile_rollout_event'),"
+            "('workbench.workspaces'::regclass,'initialize_profile_rollout'))"
+        )
+    ).scalar_one()
+    return profile_triggers == 4
 
 
 def migration_status(dsn: str) -> MigrationStatus:
@@ -206,6 +232,14 @@ def _grant_application(connection: Connection) -> None:
         connection.exec_driver_sql(
             "GRANT SELECT ON workbench.corpus_index_state,workbench.index_generations,"
             "workbench.corpus_source_state TO workbench_app"
+        )
+    if (
+        connection.execute(text("SELECT to_regclass('workbench.retrieval_profile_revisions')")).scalar_one_or_none()
+        is not None
+    ):
+        connection.exec_driver_sql(
+            "GRANT SELECT ON workbench.retrieval_profile_revisions,workbench.retrieval_profile_rollouts,"
+            "workbench.profile_rollout_events TO workbench_app"
         )
 
 

@@ -116,6 +116,28 @@ describe("Live search HTTP boundary", () => {
       (await client.search("development", submitted)).results[0],
     ).not.toHaveProperty("page");
   });
+
+  it("fences a selected registered lexical revision instead of assuming the baseline identity", async () => {
+    const request = {
+      ...submitted,
+      profile_id: "postgres-fts-bounded",
+      expected_profile_revision: "bounded-r2",
+    };
+    const original = {
+      ...response(),
+      profile_id: request.profile_id,
+      profile_revision: request.expected_profile_revision,
+    };
+    expect(
+      await clientFor(original).client.search("development", request),
+    ).toEqual(original);
+    await expect(
+      clientFor({ ...original, profile_revision: "bounded-r1" }).client.search(
+        "development",
+        request,
+      ),
+    ).rejects.toMatchObject({ kind: "protocol" });
+  });
   it("accepts zero hits, nullable page and arbitrary plain-text passages", async () => {
     const value = response();
     value.results = [];

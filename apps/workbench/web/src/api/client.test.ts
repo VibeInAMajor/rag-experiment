@@ -109,17 +109,22 @@ describe("Workbench API discovery transport", () => {
         "profiles",
       ]),
     );
-    expect(
-      schema.components.schemas.ExecutionProfile.properties.score_type.enum,
-    ).toEqual(["bm25_raw", "postgres_ts_rank_cd"]);
+    const scoreSchema =
+      schema.components.schemas.ExecutionProfile.properties.score_type;
+    expect(scoreSchema.enum ?? [scoreSchema.const]).toContain(
+      "postgres_ts_rank_cd",
+    );
     for (const [key, value] of Object.entries(profile.limits))
       expect(
-        schema.components.schemas.ProfileLimits.properties[key].const,
+        schema.components.schemas.ProfileLimits.properties[key].default,
       ).toBe(value);
+    const revisionSchema =
+      schema.components.schemas.SearchResponse.properties.profile_revision;
+    expect(revisionSchema.type).toBe("string");
     expect(
-      schema.components.schemas.SearchResponse.properties.profile_revision
-        .const,
-    ).toBe(profile.profile_revision);
+      revisionSchema.const === profile.profile_revision ||
+        new RegExp(revisionSchema.pattern).test(profile.profile_revision),
+    ).toBe(true);
   });
 
   it("decodes genuine discovery shapes and uses only GET, public headers and no browser credentials", async () => {
@@ -153,6 +158,27 @@ describe("Workbench API discovery transport", () => {
     expect((await client.getCapabilities()).profiles).toEqual([]);
   });
 
+  it("decodes bounded registered lexical profiles without changing the baseline shape", async () => {
+    const registered = {
+      ...profile,
+      profile_id: "postgres-fts-bounded",
+      profile_revision: "bounded-r4",
+      parameters: {
+        query: { type: "string", min_length: 1, max_length: 256 },
+        top_k: { type: "integer", default: 2, minimum: 1, maximum: 3 },
+      },
+      limits: { ...profile.limits, timeout_ms: 5000, max_corpus_chunks: 1000 },
+    };
+    expect(
+      (
+        await clientFor({
+          ...capabilities,
+          profiles: [registered],
+        }).client.getCapabilities()
+      ).profiles,
+    ).toEqual([registered]);
+  });
+
   it.each([
     { contract_revision: "rag-api-v9" },
     { request_id: "unsafe/id" },
@@ -164,6 +190,40 @@ describe("Workbench API discovery transport", () => {
     { profiles: [{ ...profile, workspace_ids: ["unsafe/id"] }] },
     { profiles: [{ ...profile, score_type: "bm25_raw" }] },
     { profiles: [{ ...profile, kind: "generation" }] },
+    { profiles: [{ ...profile, profile_id: "bad/profile" }] },
+    {
+      profiles: [
+        {
+          ...profile,
+          parameters: {
+            ...profile.parameters,
+            top_k: { ...profile.parameters.top_k, default: 4, maximum: 3 },
+          },
+        },
+      ],
+    },
+    {
+      profiles: [
+        {
+          ...profile,
+          parameters: {
+            ...profile.parameters,
+            top_k: { ...profile.parameters.top_k, maximum: 51 },
+          },
+        },
+      ],
+    },
+    {
+      profiles: [
+        {
+          ...profile,
+          parameters: {
+            ...profile.parameters,
+            query: { ...profile.parameters.query, max_length: 4097 },
+          },
+        },
+      ],
+    },
     {
       profiles: [
         { ...profile, limits: { ...profile.limits, timeout_ms: null } },

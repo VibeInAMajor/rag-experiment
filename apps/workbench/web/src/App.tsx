@@ -633,7 +633,7 @@ export function App() {
               onChange={setSettings}
               mode={mode}
               discovery={discovery}
-              onWorkspaceChange={() => {
+              onExecutionChange={() => {
                 live.stop();
                 setSubmittedLiveContext(null);
               }}

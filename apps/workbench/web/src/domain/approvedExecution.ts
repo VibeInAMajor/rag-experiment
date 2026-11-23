@@ -1,6 +1,6 @@
 import type { SearchRequest } from "../api/contracts";
 import {
-  supportedLexicalProfile,
+  isSupportedLexicalProfile,
   type BackendDiscoveryState,
 } from "./backendDiscovery";
 import type { Graph, GraphIssue, WorkbenchNode } from "./types";
@@ -61,10 +61,7 @@ function approvedDiscovery(discovery: BackendDiscoveryState): boolean {
     (capabilities.dependencies.database.workspace_id == null ||
       capabilities.dependencies.database.workspace_id ===
         selectedWorkspaceId) &&
-    profile.profile_id === supportedLexicalProfile.id &&
-    profile.profile_revision === supportedLexicalProfile.revision &&
-    profile.kind === "lexical_search" &&
-    profile.score_type === supportedLexicalProfile.scoreType &&
+    isSupportedLexicalProfile(profile) &&
     profile.workspace_ids.includes(selectedWorkspaceId) &&
     discovery.workspaces.some(
       (workspace) =>
@@ -81,7 +78,16 @@ function approvedDiscovery(discovery: BackendDiscoveryState): boolean {
         advertised.workspace_ids.includes(selectedWorkspaceId) &&
         advertised.parameters.query.max_length ===
           parameters.query.max_length &&
-        advertised.parameters.top_k.maximum === parameters.top_k.maximum,
+        advertised.parameters.top_k.maximum === parameters.top_k.maximum &&
+        advertised.parameters.top_k.default === parameters.top_k.default &&
+        advertised.limits.max_request_bytes ===
+          profile.limits.max_request_bytes &&
+        advertised.limits.timeout_ms === profile.limits.timeout_ms &&
+        advertised.limits.max_concurrent_searches ===
+          profile.limits.max_concurrent_searches &&
+        advertised.limits.max_corpus_chunks ===
+          profile.limits.max_corpus_chunks &&
+        advertised.limits.max_corpus_bytes === profile.limits.max_corpus_bytes,
     ) &&
     parameters.query.type === "string" &&
     parameters.query.min_length === 1 &&

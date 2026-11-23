@@ -30,22 +30,22 @@ export type ReadyResponse = ApiMeta & {
 };
 
 export type BackendProfile = {
-  profile_id: "bm25-v1" | "postgres-keyword-v1" | "postgres-fts-baseline";
+  profile_id: string;
   profile_revision: string;
   kind: "lexical_search";
   workspace_ids: string[];
   corpus_id: string;
   score_type: "postgres_ts_rank_cd" | "bm25_raw";
   parameters: {
-    query: { type: "string"; min_length: 1; max_length: 4096 };
-    top_k: { type: "integer"; default: 10; minimum: 1; maximum: 50 };
+    query: { type: "string"; min_length: 1; max_length: number };
+    top_k: { type: "integer"; default: number; minimum: 1; maximum: number };
   };
   limits: {
-    max_request_bytes: 32768;
-    timeout_ms: 10000;
-    max_concurrent_searches: 2;
-    max_corpus_chunks: 10000;
-    max_corpus_bytes: 52428800;
+    max_request_bytes: number;
+    timeout_ms: number;
+    max_concurrent_searches: number;
+    max_corpus_chunks: number;
+    max_corpus_bytes: number;
   };
 };
 
@@ -108,8 +108,8 @@ export type SearchResponse = ApiMeta & {
   mode: "live";
   workspace_id: string;
   corpus_revision: string;
-  profile_id: "postgres-fts-baseline";
-  profile_revision: "postgres-fts-baseline-r1";
+  profile_id: string;
+  profile_revision: string;
   run_id: string;
   status: "success";
   duration_ms: number;

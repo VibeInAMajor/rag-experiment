@@ -1,0 +1,71 @@
+{
+  "recorded_at": "2026-11-23T21:02:03.3814508Z",
+  "scope": "actual Playwright browser; owned disposable PostgreSQL; synthetic lexical corpus; main API8011 preserved",
+  "frontend": {
+    "typecheck": "passed",
+    "format_check": "passed",
+    "tests": 350,
+    "test_files": 18,
+    "build": "passed",
+    "regenerated_openapi_contract_tests": 97
+  },
+  "preview_smoke": "passed existing browser-smoke.js",
+  "validator_smoke": "passed actual validator8010 and validation-smoke.js",
+  "qualified_selection": {
+    "result": "passed",
+    "profile_id": "postgres-fts-focused",
+    "profile_revision": "focused-r1",
+    "top_k_maximum": 3,
+    "result_count": 1,
+    "score_type": "postgres_ts_rank_cd",
+    "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+    "trace_id": "97b31326f1964003ab21bab9b10616f0",
+    "request_fields": [
+      "query",
+      "top_k",
+      "profile_id",
+      "expected_profile_revision"
+    ],
+    "viewport_widths": [
+      1440,
+      1100
+    ],
+    "horizontal_overflow": false
+  },
+  "actual_retirement": {
+    "result": "passed",
+    "operation": "actual administrator lifecycle helper retired focused revision",
+    "status": "awaiting_profile",
+    "error_code": "PROFILE_NOT_AVAILABLE",
+    "automatic_substitution": false,
+    "run_disabled": true,
+    "previous_results_hidden": true,
+    "manual_recovery_profile": "postgres-fts-baseline"
+  },
+  "live_search_regression": {
+    "result": "passed",
+    "real_queries": 3,
+    "injected_failure_scenarios": 9,
+    "search_requests": 14,
+    "source_registry_unchanged": true,
+    "local_stop_and_late_response": "passed",
+    "viewport_widths": [
+      1440,
+      1100
+    ]
+  },
+  "screenshots": [
+    "profile-selected-1440.png",
+    "profile-selected-1100.png",
+    "profile-recovered-1440.png"
+  ],
+  "reproduction": [
+    "npx --no-install --package @playwright/cli playwright-cli -s=profile001 open http://127.0.0.1:5173",
+    "npx --no-install --package @playwright/cli playwright-cli -s=profile001 run-code --filename=scripts/browser-smoke.js",
+    "npx --no-install --package @playwright/cli playwright-cli -s=profile001 run-code --filename=scripts/validation-smoke.js",
+    "npx --no-install --package @playwright/cli playwright-cli -s=profile001 run-code --filename=scripts/profile-selector-smoke.js",
+    "hatch run workbench-api:python -m scripts.workbench_profile_smoke retire",
+    "Repeat profile-selector-smoke.js in the same browser session after actual retirement",
+    "npx --no-install --package @playwright/cli playwright-cli -s=profile001 run-code --filename=scripts/live-search-smoke.js"
+  ]
+}

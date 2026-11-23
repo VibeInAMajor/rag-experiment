@@ -79,7 +79,7 @@ def _lock_key(workspace_id: str, idempotency_key: str) -> int:
 async def _verify_ingestion_schema(
     repository: PostgresPersistence, connection: AsyncConnection[dict[str, Any]]
 ) -> None:
-    if await repository._verify_schema(connection) not in {"0002", "0003"}:
+    if await repository._verify_schema(connection) < "0002":
         raise SchemaIncompatible("Durable ingestion requires the explicit ingestion migration.")
     protected = await (
         await connection.execute(
@@ -376,7 +376,7 @@ async def transition_ingestion(
 async def recover_ingestions(repository: PostgresPersistence, context: WorkspaceContext) -> int:
     """Diagnose only reservations without any live session-lock holder; never replay unavailable bytes."""
     async with repository._transaction(context, operation="recover_ingestions") as connection:
-        if await repository._verify_schema(connection) not in {"0002", "0003"}:
+        if await repository._verify_schema(connection) < "0002":
             return 0
         await _verify_ingestion_schema(repository, connection)
         await repository._require_workspace(connection, context)

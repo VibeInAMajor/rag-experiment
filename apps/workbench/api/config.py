@@ -14,6 +14,7 @@ from apps.workbench.api.document_processing import (
     document_processing_configuration_path,
     load_document_processing,
 )
+from apps.workbench.api.profile_registry import ProfileRegistry, default_profile_registry, load_profile_registry
 
 
 class ApiSettings(BaseModel):
@@ -24,6 +25,7 @@ class ApiSettings(BaseModel):
     backend_revision: Identifier = "workbench-api-lexical-v1"
     database_dsn: SecretStr | None = None
     corpus_snapshot_mode: Literal["persisted", "legacy"] = "persisted"
+    profile_registry: ProfileRegistry = Field(default_factory=default_profile_registry)
     local_source_root: str | None = None
     ingestion_timeout_seconds: float = Field(default=30.0, gt=0, le=30)
     pdf_ingestion_timeout_seconds: float = Field(default=210.0, gt=0, le=210)
@@ -126,6 +128,7 @@ class ApiSettings(BaseModel):
         environment = os.environ if environ is None else environ
         values: dict[str, object] = {}
         values["document_processing"] = load_document_processing(environment)
+        values["profile_registry"] = load_profile_registry(environment)
         values["configuration_file"] = str(document_processing_configuration_path(environment))
         values["configuration_language_override"] = environment.get("WORKBENCH_DEFAULT_LANGUAGE")
         fields = {"HOST": "host", "PORT": "port", "BACKEND_REVISION": "backend_revision"}

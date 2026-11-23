@@ -1,0 +1,1156 @@
+{
+  "scope": "owned disposable PostgreSQL; synthetic lexical corpus",
+  "recorded_at": "2026-11-23T21:02:08.536216+00:00",
+  "activate": {
+    "workspace_id": "development",
+    "profile_id": "postgres-fts-focused",
+    "profile_revision": "focused-r1",
+    "state": "active",
+    "policy_hash": "5f3caf3e7e74f0fc904a917bf3b81b9d5a108558d27933d08ef7cfbe0c808116",
+    "rollout_version": 5,
+    "qualified_generation_id": 8
+  },
+  "preparation": {
+    "schema_revision": "0004",
+    "profiles": [
+      "postgres-fts-baseline",
+      "postgres-fts-focused"
+    ]
+  },
+  "cleanup": {
+    "database_removed": true,
+    "api_stopped": true
+  },
+  "http_verification": {
+    "readiness": 200,
+    "capabilities": {
+      "contract_revision": "rag-api-v1.0",
+      "request_id": "a30acfa5260e41adb8ebee423013078b",
+      "trace_id": "06040515cbd64ee6bdd6356bfe3ae4a4",
+      "backend_revision": "workbench-api-lexical-v1",
+      "deployment_mode": "single_workspace_dev",
+      "service_state": "running",
+      "profiles": [
+        {
+          "profile_id": "postgres-fts-baseline",
+          "profile_revision": "postgres-fts-baseline-r1",
+          "kind": "lexical_search",
+          "workspace_ids": [
+            "development"
+          ],
+          "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "min_length": 1,
+              "max_length": 4096
+            },
+            "top_k": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "limits": {
+            "max_request_bytes": 32768,
+            "timeout_ms": 10000,
+            "max_concurrent_searches": 2,
+            "max_corpus_chunks": 10000,
+            "max_corpus_bytes": 52428800
+          },
+          "score_type": "postgres_ts_rank_cd"
+        },
+        {
+          "profile_id": "postgres-fts-focused",
+          "profile_revision": "focused-r1",
+          "kind": "lexical_search",
+          "workspace_ids": [
+            "development"
+          ],
+          "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "min_length": 1,
+              "max_length": 4096
+            },
+            "top_k": {
+              "type": "integer",
+              "default": 3,
+              "minimum": 1,
+              "maximum": 3
+            }
+          },
+          "limits": {
+            "max_request_bytes": 32768,
+            "timeout_ms": 10000,
+            "max_concurrent_searches": 2,
+            "max_corpus_chunks": 10000,
+            "max_corpus_bytes": 52428800
+          },
+          "score_type": "postgres_ts_rank_cd"
+        }
+      ],
+      "features": {
+        "documents": true,
+        "search": true,
+        "upload": true,
+        "document_details": true,
+        "jobs": true
+      },
+      "dependencies": {
+        "database": {
+          "status": "ready",
+          "schema_revision": "0004",
+          "workspace_id": "development",
+          "source_count": 8,
+          "chunk_count": 8
+        }
+      },
+      "pdf_ingestion": {
+        "available": true,
+        "text_layer": true,
+        "page_provenance": true,
+        "table_rows": true,
+        "original_evidence": false,
+        "ocr": false,
+        "visual_understanding": false,
+        "visual_detection_coverage": "unverified",
+        "max_bytes": 8388608,
+        "max_pages": 32
+      }
+    },
+    "searches": [
+      {
+        "profile_id": "postgres-fts-baseline",
+        "profile_revision": "postgres-fts-baseline-r1",
+        "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+        "trace_id": "ad4befa23f5d4c7180a24381d5079d1e",
+        "score_type": "postgres_ts_rank_cd",
+        "results": [
+          {
+            "chunk_id": "demo-search-chunk-1",
+            "source_id": "demo-search",
+            "source_version_id": "demo-search-v1",
+            "score": 0.20000000298023224
+          },
+          {
+            "chunk_id": "demo-backup-chunk-1",
+            "source_id": "demo-backup",
+            "source_version_id": "demo-backup-v1",
+            "score": 0.10000000149011612
+          },
+          {
+            "chunk_id": "demo-identifiers-chunk-1",
+            "source_id": "demo-identifiers",
+            "source_version_id": "demo-identifiers-v1",
+            "score": 0.10000000149011612
+          }
+        ],
+        "sql_parity": true
+      },
+      {
+        "profile_id": "postgres-fts-focused",
+        "profile_revision": "focused-r1",
+        "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+        "trace_id": "977df27c7f1943a9ab427c76b64f2fe1",
+        "score_type": "postgres_ts_rank_cd",
+        "results": [
+          {
+            "chunk_id": "demo-search-chunk-1",
+            "source_id": "demo-search",
+            "source_version_id": "demo-search-v1",
+            "score": 0.20000000298023224
+          },
+          {
+            "chunk_id": "demo-backup-chunk-1",
+            "source_id": "demo-backup",
+            "source_version_id": "demo-backup-v1",
+            "score": 0.10000000149011612
+          },
+          {
+            "chunk_id": "demo-identifiers-chunk-1",
+            "source_id": "demo-identifiers",
+            "source_version_id": "demo-identifiers-v1",
+            "score": 0.10000000149011612
+          }
+        ],
+        "sql_parity": true
+      }
+    ]
+  },
+  "retire": {
+    "workspace_id": "development",
+    "profile_id": "postgres-fts-focused",
+    "profile_revision": "focused-r1",
+    "state": "retired",
+    "policy_hash": "5f3caf3e7e74f0fc904a917bf3b81b9d5a108558d27933d08ef7cfbe0c808116",
+    "rollout_version": 3,
+    "qualified_generation_id": null
+  },
+  "events": [
+    {
+      "action": "retire",
+      "recorded_at": "2026-11-23T21:00:17.695758+00:00",
+      "data": {
+        "workspace_id": "development",
+        "profile_id": "postgres-fts-focused",
+        "profile_revision": "focused-r1",
+        "state": "retired",
+        "policy_hash": "5f3caf3e7e74f0fc904a917bf3b81b9d5a108558d27933d08ef7cfbe0c808116",
+        "rollout_version": 3,
+        "qualified_generation_id": null
+      }
+    },
+    {
+      "action": "retired_request",
+      "recorded_at": "2026-11-23T21:00:18.014408+00:00",
+      "data": {
+        "http_status": 409,
+        "code": "PROFILE_NOT_AVAILABLE",
+        "trace_id": "8d67b9920ca24db6956afe0f725b1b30"
+      }
+    },
+    {
+      "action": "http_verification",
+      "recorded_at": "2026-11-23T21:00:23.319839+00:00",
+      "data": {
+        "readiness": 200,
+        "capabilities": {
+          "contract_revision": "rag-api-v1.0",
+          "request_id": "93a77d2540474a9b940735de19ba1fa9",
+          "trace_id": "6c38bbd8553a4ca2a38e69cdf5c275a6",
+          "backend_revision": "workbench-api-lexical-v1",
+          "deployment_mode": "single_workspace_dev",
+          "service_state": "running",
+          "profiles": [
+            {
+              "profile_id": "postgres-fts-baseline",
+              "profile_revision": "postgres-fts-baseline-r1",
+              "kind": "lexical_search",
+              "workspace_ids": [
+                "development"
+              ],
+              "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+              "parameters": {
+                "query": {
+                  "type": "string",
+                  "min_length": 1,
+                  "max_length": 4096
+                },
+                "top_k": {
+                  "type": "integer",
+                  "default": 10,
+                  "minimum": 1,
+                  "maximum": 50
+                }
+              },
+              "limits": {
+                "max_request_bytes": 32768,
+                "timeout_ms": 10000,
+                "max_concurrent_searches": 2,
+                "max_corpus_chunks": 10000,
+                "max_corpus_bytes": 52428800
+              },
+              "score_type": "postgres_ts_rank_cd"
+            }
+          ],
+          "features": {
+            "documents": true,
+            "search": true,
+            "upload": true,
+            "document_details": true,
+            "jobs": true
+          },
+          "dependencies": {
+            "database": {
+              "status": "ready",
+              "schema_revision": "0004",
+              "workspace_id": "development",
+              "source_count": 8,
+              "chunk_count": 8
+            }
+          },
+          "pdf_ingestion": {
+            "available": true,
+            "text_layer": true,
+            "page_provenance": true,
+            "table_rows": true,
+            "original_evidence": false,
+            "ocr": false,
+            "visual_understanding": false,
+            "visual_detection_coverage": "unverified",
+            "max_bytes": 8388608,
+            "max_pages": 32
+          }
+        },
+        "searches": [
+          {
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+            "trace_id": "7eda312eaae74aea99456fcbe5e53299",
+            "score_type": "postgres_ts_rank_cd",
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "score": 0.20000000298023224
+              },
+              {
+                "chunk_id": "demo-backup-chunk-1",
+                "source_id": "demo-backup",
+                "source_version_id": "demo-backup-v1",
+                "score": 0.10000000149011612
+              },
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "score": 0.10000000149011612
+              }
+            ],
+            "sql_parity": true
+          }
+        ]
+      }
+    },
+    {
+      "action": "activate",
+      "recorded_at": "2026-11-23T21:01:46.822808+00:00",
+      "data": {
+        "workspace_id": "development",
+        "profile_id": "postgres-fts-focused",
+        "profile_revision": "focused-r1",
+        "state": "active",
+        "policy_hash": "5f3caf3e7e74f0fc904a917bf3b81b9d5a108558d27933d08ef7cfbe0c808116",
+        "rollout_version": 5,
+        "qualified_generation_id": 8
+      }
+    },
+    {
+      "action": "api_restart",
+      "recorded_at": "2026-11-23T21:01:57.986065+00:00",
+      "data": {
+        "before": {
+          "readiness": 200,
+          "capabilities": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "260c163126224beaa12f527c4bd5bdc4",
+            "trace_id": "219f0dce1b504b5689d8b616a6958a7a",
+            "backend_revision": "workbench-api-lexical-v1",
+            "deployment_mode": "single_workspace_dev",
+            "service_state": "running",
+            "profiles": [
+              {
+                "profile_id": "postgres-fts-baseline",
+                "profile_revision": "postgres-fts-baseline-r1",
+                "kind": "lexical_search",
+                "workspace_ids": [
+                  "development"
+                ],
+                "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+                "parameters": {
+                  "query": {
+                    "type": "string",
+                    "min_length": 1,
+                    "max_length": 4096
+                  },
+                  "top_k": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 1,
+                    "maximum": 50
+                  }
+                },
+                "limits": {
+                  "max_request_bytes": 32768,
+                  "timeout_ms": 10000,
+                  "max_concurrent_searches": 2,
+                  "max_corpus_chunks": 10000,
+                  "max_corpus_bytes": 52428800
+                },
+                "score_type": "postgres_ts_rank_cd"
+              },
+              {
+                "profile_id": "postgres-fts-focused",
+                "profile_revision": "focused-r1",
+                "kind": "lexical_search",
+                "workspace_ids": [
+                  "development"
+                ],
+                "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+                "parameters": {
+                  "query": {
+                    "type": "string",
+                    "min_length": 1,
+                    "max_length": 4096
+                  },
+                  "top_k": {
+                    "type": "integer",
+                    "default": 3,
+                    "minimum": 1,
+                    "maximum": 3
+                  }
+                },
+                "limits": {
+                  "max_request_bytes": 32768,
+                  "timeout_ms": 10000,
+                  "max_concurrent_searches": 2,
+                  "max_corpus_chunks": 10000,
+                  "max_corpus_bytes": 52428800
+                },
+                "score_type": "postgres_ts_rank_cd"
+              }
+            ],
+            "features": {
+              "documents": true,
+              "search": true,
+              "upload": true,
+              "document_details": true,
+              "jobs": true
+            },
+            "dependencies": {
+              "database": {
+                "status": "ready",
+                "schema_revision": "0004",
+                "workspace_id": "development",
+                "source_count": 8,
+                "chunk_count": 8
+              }
+            },
+            "pdf_ingestion": {
+              "available": true,
+              "text_layer": true,
+              "page_provenance": true,
+              "table_rows": true,
+              "original_evidence": false,
+              "ocr": false,
+              "visual_understanding": false,
+              "visual_detection_coverage": "unverified",
+              "max_bytes": 8388608,
+              "max_pages": 32
+            }
+          },
+          "searches": [
+            {
+              "profile_id": "postgres-fts-baseline",
+              "profile_revision": "postgres-fts-baseline-r1",
+              "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+              "trace_id": "58b2cf6a4c2a4a948bc3884ec8ea8f6b",
+              "score_type": "postgres_ts_rank_cd",
+              "results": [
+                {
+                  "chunk_id": "demo-search-chunk-1",
+                  "source_id": "demo-search",
+                  "source_version_id": "demo-search-v1",
+                  "score": 0.20000000298023224
+                },
+                {
+                  "chunk_id": "demo-backup-chunk-1",
+                  "source_id": "demo-backup",
+                  "source_version_id": "demo-backup-v1",
+                  "score": 0.10000000149011612
+                },
+                {
+                  "chunk_id": "demo-identifiers-chunk-1",
+                  "source_id": "demo-identifiers",
+                  "source_version_id": "demo-identifiers-v1",
+                  "score": 0.10000000149011612
+                }
+              ],
+              "sql_parity": true
+            },
+            {
+              "profile_id": "postgres-fts-focused",
+              "profile_revision": "focused-r1",
+              "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+              "trace_id": "a82483eedddf4c4d82924cbd04556984",
+              "score_type": "postgres_ts_rank_cd",
+              "results": [
+                {
+                  "chunk_id": "demo-search-chunk-1",
+                  "source_id": "demo-search",
+                  "source_version_id": "demo-search-v1",
+                  "score": 0.20000000298023224
+                },
+                {
+                  "chunk_id": "demo-backup-chunk-1",
+                  "source_id": "demo-backup",
+                  "source_version_id": "demo-backup-v1",
+                  "score": 0.10000000149011612
+                },
+                {
+                  "chunk_id": "demo-identifiers-chunk-1",
+                  "source_id": "demo-identifiers",
+                  "source_version_id": "demo-identifiers-v1",
+                  "score": 0.10000000149011612
+                }
+              ],
+              "sql_parity": true
+            }
+          ]
+        },
+        "after": {
+          "readiness": 200,
+          "capabilities": {
+            "contract_revision": "rag-api-v1.0",
+            "request_id": "6a5857d06fd840838eea5f0d72ae6e14",
+            "trace_id": "4d0aa1768ed44354919bcf03fed0e5db",
+            "backend_revision": "workbench-api-lexical-v1",
+            "deployment_mode": "single_workspace_dev",
+            "service_state": "running",
+            "profiles": [
+              {
+                "profile_id": "postgres-fts-baseline",
+                "profile_revision": "postgres-fts-baseline-r1",
+                "kind": "lexical_search",
+                "workspace_ids": [
+                  "development"
+                ],
+                "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+                "parameters": {
+                  "query": {
+                    "type": "string",
+                    "min_length": 1,
+                    "max_length": 4096
+                  },
+                  "top_k": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 1,
+                    "maximum": 50
+                  }
+                },
+                "limits": {
+                  "max_request_bytes": 32768,
+                  "timeout_ms": 10000,
+                  "max_concurrent_searches": 2,
+                  "max_corpus_chunks": 10000,
+                  "max_corpus_bytes": 52428800
+                },
+                "score_type": "postgres_ts_rank_cd"
+              },
+              {
+                "profile_id": "postgres-fts-focused",
+                "profile_revision": "focused-r1",
+                "kind": "lexical_search",
+                "workspace_ids": [
+                  "development"
+                ],
+                "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+                "parameters": {
+                  "query": {
+                    "type": "string",
+                    "min_length": 1,
+                    "max_length": 4096
+                  },
+                  "top_k": {
+                    "type": "integer",
+                    "default": 3,
+                    "minimum": 1,
+                    "maximum": 3
+                  }
+                },
+                "limits": {
+                  "max_request_bytes": 32768,
+                  "timeout_ms": 10000,
+                  "max_concurrent_searches": 2,
+                  "max_corpus_chunks": 10000,
+                  "max_corpus_bytes": 52428800
+                },
+                "score_type": "postgres_ts_rank_cd"
+              }
+            ],
+            "features": {
+              "documents": true,
+              "search": true,
+              "upload": true,
+              "document_details": true,
+              "jobs": true
+            },
+            "dependencies": {
+              "database": {
+                "status": "ready",
+                "schema_revision": "0004",
+                "workspace_id": "development",
+                "source_count": 8,
+                "chunk_count": 8
+              }
+            },
+            "pdf_ingestion": {
+              "available": true,
+              "text_layer": true,
+              "page_provenance": true,
+              "table_rows": true,
+              "original_evidence": false,
+              "ocr": false,
+              "visual_understanding": false,
+              "visual_detection_coverage": "unverified",
+              "max_bytes": 8388608,
+              "max_pages": 32
+            }
+          },
+          "searches": [
+            {
+              "profile_id": "postgres-fts-baseline",
+              "profile_revision": "postgres-fts-baseline-r1",
+              "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+              "trace_id": "6a0dd31b54264329ab4a48b1f30522aa",
+              "score_type": "postgres_ts_rank_cd",
+              "results": [
+                {
+                  "chunk_id": "demo-search-chunk-1",
+                  "source_id": "demo-search",
+                  "source_version_id": "demo-search-v1",
+                  "score": 0.20000000298023224
+                },
+                {
+                  "chunk_id": "demo-backup-chunk-1",
+                  "source_id": "demo-backup",
+                  "source_version_id": "demo-backup-v1",
+                  "score": 0.10000000149011612
+                },
+                {
+                  "chunk_id": "demo-identifiers-chunk-1",
+                  "source_id": "demo-identifiers",
+                  "source_version_id": "demo-identifiers-v1",
+                  "score": 0.10000000149011612
+                }
+              ],
+              "sql_parity": true
+            },
+            {
+              "profile_id": "postgres-fts-focused",
+              "profile_revision": "focused-r1",
+              "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+              "trace_id": "2981506a0a164771a232aeab627e82da",
+              "score_type": "postgres_ts_rank_cd",
+              "results": [
+                {
+                  "chunk_id": "demo-search-chunk-1",
+                  "source_id": "demo-search",
+                  "source_version_id": "demo-search-v1",
+                  "score": 0.20000000298023224
+                },
+                {
+                  "chunk_id": "demo-backup-chunk-1",
+                  "source_id": "demo-backup",
+                  "source_version_id": "demo-backup-v1",
+                  "score": 0.10000000149011612
+                },
+                {
+                  "chunk_id": "demo-identifiers-chunk-1",
+                  "source_id": "demo-identifiers",
+                  "source_version_id": "demo-identifiers-v1",
+                  "score": 0.10000000149011612
+                }
+              ],
+              "sql_parity": true
+            }
+          ]
+        },
+        "passed": true
+      }
+    },
+    {
+      "action": "http_verification",
+      "recorded_at": "2026-11-23T21:02:03.580510+00:00",
+      "data": {
+        "readiness": 200,
+        "capabilities": {
+          "contract_revision": "rag-api-v1.0",
+          "request_id": "a30acfa5260e41adb8ebee423013078b",
+          "trace_id": "06040515cbd64ee6bdd6356bfe3ae4a4",
+          "backend_revision": "workbench-api-lexical-v1",
+          "deployment_mode": "single_workspace_dev",
+          "service_state": "running",
+          "profiles": [
+            {
+              "profile_id": "postgres-fts-baseline",
+              "profile_revision": "postgres-fts-baseline-r1",
+              "kind": "lexical_search",
+              "workspace_ids": [
+                "development"
+              ],
+              "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+              "parameters": {
+                "query": {
+                  "type": "string",
+                  "min_length": 1,
+                  "max_length": 4096
+                },
+                "top_k": {
+                  "type": "integer",
+                  "default": 10,
+                  "minimum": 1,
+                  "maximum": 50
+                }
+              },
+              "limits": {
+                "max_request_bytes": 32768,
+                "timeout_ms": 10000,
+                "max_concurrent_searches": 2,
+                "max_corpus_chunks": 10000,
+                "max_corpus_bytes": 52428800
+              },
+              "score_type": "postgres_ts_rank_cd"
+            },
+            {
+              "profile_id": "postgres-fts-focused",
+              "profile_revision": "focused-r1",
+              "kind": "lexical_search",
+              "workspace_ids": [
+                "development"
+              ],
+              "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+              "parameters": {
+                "query": {
+                  "type": "string",
+                  "min_length": 1,
+                  "max_length": 4096
+                },
+                "top_k": {
+                  "type": "integer",
+                  "default": 3,
+                  "minimum": 1,
+                  "maximum": 3
+                }
+              },
+              "limits": {
+                "max_request_bytes": 32768,
+                "timeout_ms": 10000,
+                "max_concurrent_searches": 2,
+                "max_corpus_chunks": 10000,
+                "max_corpus_bytes": 52428800
+              },
+              "score_type": "postgres_ts_rank_cd"
+            }
+          ],
+          "features": {
+            "documents": true,
+            "search": true,
+            "upload": true,
+            "document_details": true,
+            "jobs": true
+          },
+          "dependencies": {
+            "database": {
+              "status": "ready",
+              "schema_revision": "0004",
+              "workspace_id": "development",
+              "source_count": 8,
+              "chunk_count": 8
+            }
+          },
+          "pdf_ingestion": {
+            "available": true,
+            "text_layer": true,
+            "page_provenance": true,
+            "table_rows": true,
+            "original_evidence": false,
+            "ocr": false,
+            "visual_understanding": false,
+            "visual_detection_coverage": "unverified",
+            "max_bytes": 8388608,
+            "max_pages": 32
+          }
+        },
+        "searches": [
+          {
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+            "trace_id": "ad4befa23f5d4c7180a24381d5079d1e",
+            "score_type": "postgres_ts_rank_cd",
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "score": 0.20000000298023224
+              },
+              {
+                "chunk_id": "demo-backup-chunk-1",
+                "source_id": "demo-backup",
+                "source_version_id": "demo-backup-v1",
+                "score": 0.10000000149011612
+              },
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "score": 0.10000000149011612
+              }
+            ],
+            "sql_parity": true
+          },
+          {
+            "profile_id": "postgres-fts-focused",
+            "profile_revision": "focused-r1",
+            "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+            "trace_id": "977df27c7f1943a9ab427c76b64f2fe1",
+            "score_type": "postgres_ts_rank_cd",
+            "results": [
+              {
+                "chunk_id": "demo-search-chunk-1",
+                "source_id": "demo-search",
+                "source_version_id": "demo-search-v1",
+                "score": 0.20000000298023224
+              },
+              {
+                "chunk_id": "demo-backup-chunk-1",
+                "source_id": "demo-backup",
+                "source_version_id": "demo-backup-v1",
+                "score": 0.10000000149011612
+              },
+              {
+                "chunk_id": "demo-identifiers-chunk-1",
+                "source_id": "demo-identifiers",
+                "source_version_id": "demo-identifiers-v1",
+                "score": 0.10000000149011612
+              }
+            ],
+            "sql_parity": true
+          }
+        ]
+      }
+    },
+    {
+      "action": "cleanup",
+      "recorded_at": "2026-11-23T21:02:08.536216+00:00",
+      "data": {
+        "database_removed": true,
+        "api_stopped": true
+      }
+    }
+  ],
+  "retired_request": {
+    "http_status": 409,
+    "code": "PROFILE_NOT_AVAILABLE",
+    "trace_id": "8d67b9920ca24db6956afe0f725b1b30"
+  },
+  "api_restart": {
+    "before": {
+      "readiness": 200,
+      "capabilities": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "260c163126224beaa12f527c4bd5bdc4",
+        "trace_id": "219f0dce1b504b5689d8b616a6958a7a",
+        "backend_revision": "workbench-api-lexical-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [
+          {
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "kind": "lexical_search",
+            "workspace_ids": [
+              "development"
+            ],
+            "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+            "parameters": {
+              "query": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 4096
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 50
+              }
+            },
+            "limits": {
+              "max_request_bytes": 32768,
+              "timeout_ms": 10000,
+              "max_concurrent_searches": 2,
+              "max_corpus_chunks": 10000,
+              "max_corpus_bytes": 52428800
+            },
+            "score_type": "postgres_ts_rank_cd"
+          },
+          {
+            "profile_id": "postgres-fts-focused",
+            "profile_revision": "focused-r1",
+            "kind": "lexical_search",
+            "workspace_ids": [
+              "development"
+            ],
+            "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+            "parameters": {
+              "query": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 4096
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 3,
+                "minimum": 1,
+                "maximum": 3
+              }
+            },
+            "limits": {
+              "max_request_bytes": 32768,
+              "timeout_ms": 10000,
+              "max_concurrent_searches": 2,
+              "max_corpus_chunks": 10000,
+              "max_corpus_bytes": 52428800
+            },
+            "score_type": "postgres_ts_rank_cd"
+          }
+        ],
+        "features": {
+          "documents": true,
+          "search": true,
+          "upload": true,
+          "document_details": true,
+          "jobs": true
+        },
+        "dependencies": {
+          "database": {
+            "status": "ready",
+            "schema_revision": "0004",
+            "workspace_id": "development",
+            "source_count": 8,
+            "chunk_count": 8
+          }
+        },
+        "pdf_ingestion": {
+          "available": true,
+          "text_layer": true,
+          "page_provenance": true,
+          "table_rows": true,
+          "original_evidence": false,
+          "ocr": false,
+          "visual_understanding": false,
+          "visual_detection_coverage": "unverified",
+          "max_bytes": 8388608,
+          "max_pages": 32
+        }
+      },
+      "searches": [
+        {
+          "profile_id": "postgres-fts-baseline",
+          "profile_revision": "postgres-fts-baseline-r1",
+          "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+          "trace_id": "58b2cf6a4c2a4a948bc3884ec8ea8f6b",
+          "score_type": "postgres_ts_rank_cd",
+          "results": [
+            {
+              "chunk_id": "demo-search-chunk-1",
+              "source_id": "demo-search",
+              "source_version_id": "demo-search-v1",
+              "score": 0.20000000298023224
+            },
+            {
+              "chunk_id": "demo-backup-chunk-1",
+              "source_id": "demo-backup",
+              "source_version_id": "demo-backup-v1",
+              "score": 0.10000000149011612
+            },
+            {
+              "chunk_id": "demo-identifiers-chunk-1",
+              "source_id": "demo-identifiers",
+              "source_version_id": "demo-identifiers-v1",
+              "score": 0.10000000149011612
+            }
+          ],
+          "sql_parity": true
+        },
+        {
+          "profile_id": "postgres-fts-focused",
+          "profile_revision": "focused-r1",
+          "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+          "trace_id": "a82483eedddf4c4d82924cbd04556984",
+          "score_type": "postgres_ts_rank_cd",
+          "results": [
+            {
+              "chunk_id": "demo-search-chunk-1",
+              "source_id": "demo-search",
+              "source_version_id": "demo-search-v1",
+              "score": 0.20000000298023224
+            },
+            {
+              "chunk_id": "demo-backup-chunk-1",
+              "source_id": "demo-backup",
+              "source_version_id": "demo-backup-v1",
+              "score": 0.10000000149011612
+            },
+            {
+              "chunk_id": "demo-identifiers-chunk-1",
+              "source_id": "demo-identifiers",
+              "source_version_id": "demo-identifiers-v1",
+              "score": 0.10000000149011612
+            }
+          ],
+          "sql_parity": true
+        }
+      ]
+    },
+    "after": {
+      "readiness": 200,
+      "capabilities": {
+        "contract_revision": "rag-api-v1.0",
+        "request_id": "6a5857d06fd840838eea5f0d72ae6e14",
+        "trace_id": "4d0aa1768ed44354919bcf03fed0e5db",
+        "backend_revision": "workbench-api-lexical-v1",
+        "deployment_mode": "single_workspace_dev",
+        "service_state": "running",
+        "profiles": [
+          {
+            "profile_id": "postgres-fts-baseline",
+            "profile_revision": "postgres-fts-baseline-r1",
+            "kind": "lexical_search",
+            "workspace_ids": [
+              "development"
+            ],
+            "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+            "parameters": {
+              "query": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 4096
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 50
+              }
+            },
+            "limits": {
+              "max_request_bytes": 32768,
+              "timeout_ms": 10000,
+              "max_concurrent_searches": 2,
+              "max_corpus_chunks": 10000,
+              "max_corpus_bytes": 52428800
+            },
+            "score_type": "postgres_ts_rank_cd"
+          },
+          {
+            "profile_id": "postgres-fts-focused",
+            "profile_revision": "focused-r1",
+            "kind": "lexical_search",
+            "workspace_ids": [
+              "development"
+            ],
+            "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+            "parameters": {
+              "query": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 4096
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 3,
+                "minimum": 1,
+                "maximum": 3
+              }
+            },
+            "limits": {
+              "max_request_bytes": 32768,
+              "timeout_ms": 10000,
+              "max_concurrent_searches": 2,
+              "max_corpus_chunks": 10000,
+              "max_corpus_bytes": 52428800
+            },
+            "score_type": "postgres_ts_rank_cd"
+          }
+        ],
+        "features": {
+          "documents": true,
+          "search": true,
+          "upload": true,
+          "document_details": true,
+          "jobs": true
+        },
+        "dependencies": {
+          "database": {
+            "status": "ready",
+            "schema_revision": "0004",
+            "workspace_id": "development",
+            "source_count": 8,
+            "chunk_count": 8
+          }
+        },
+        "pdf_ingestion": {
+          "available": true,
+          "text_layer": true,
+          "page_provenance": true,
+          "table_rows": true,
+          "original_evidence": false,
+          "ocr": false,
+          "visual_understanding": false,
+          "visual_detection_coverage": "unverified",
+          "max_bytes": 8388608,
+          "max_pages": 32
+        }
+      },
+      "searches": [
+        {
+          "profile_id": "postgres-fts-baseline",
+          "profile_revision": "postgres-fts-baseline-r1",
+          "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+          "trace_id": "6a0dd31b54264329ab4a48b1f30522aa",
+          "score_type": "postgres_ts_rank_cd",
+          "results": [
+            {
+              "chunk_id": "demo-search-chunk-1",
+              "source_id": "demo-search",
+              "source_version_id": "demo-search-v1",
+              "score": 0.20000000298023224
+            },
+            {
+              "chunk_id": "demo-backup-chunk-1",
+              "source_id": "demo-backup",
+              "source_version_id": "demo-backup-v1",
+              "score": 0.10000000149011612
+            },
+            {
+              "chunk_id": "demo-identifiers-chunk-1",
+              "source_id": "demo-identifiers",
+              "source_version_id": "demo-identifiers-v1",
+              "score": 0.10000000149011612
+            }
+          ],
+          "sql_parity": true
+        },
+        {
+          "profile_id": "postgres-fts-focused",
+          "profile_revision": "focused-r1",
+          "corpus_revision": "corpus-d30ee1f8c6a91acb8fba8cb8f395412ab75e3bfb7dafb67e1f53ada11975de4d",
+          "trace_id": "2981506a0a164771a232aeab627e82da",
+          "score_type": "postgres_ts_rank_cd",
+          "results": [
+            {
+              "chunk_id": "demo-search-chunk-1",
+              "source_id": "demo-search",
+              "source_version_id": "demo-search-v1",
+              "score": 0.20000000298023224
+            },
+            {
+              "chunk_id": "demo-backup-chunk-1",
+              "source_id": "demo-backup",
+              "source_version_id": "demo-backup-v1",
+              "score": 0.10000000149011612
+            },
+            {
+              "chunk_id": "demo-identifiers-chunk-1",
+              "source_id": "demo-identifiers",
+              "source_version_id": "demo-identifiers-v1",
+              "score": 0.10000000149011612
+            }
+          ],
+          "sql_parity": true
+        }
+      ]
+    },
+    "passed": true
+  }
+}

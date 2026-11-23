@@ -1,0 +1,90 @@
+{
+  "recorded_at": "2026-11-23T21:10:38.7226774Z",
+  "scope": "existing local development database and API8011",
+  "migration_from": "0003",
+  "migration_to": "0004",
+  "compatible": true,
+  "backup": {
+    "path": "apps\\workbench\\postgres\\backups\\workbench-before-0004-20261123-210904.dump",
+    "bytes": 103984,
+    "sha256": "2A8640C225D1916D9177864CEE298119AFE2CD9ABA4546C66C4C162E7A2BBEEA",
+    "archive_list_verified": true
+  },
+  "existing_records_preserved": true,
+  "table_signatures": {
+    "chunks": {
+      "sha256": "cc8ede8b431f1c696114a66dab5f8d81da9c0ccf50c3d7de966b91ba824fae80",
+      "row_count": 55
+    },
+    "sources": {
+      "sha256": "1e725797820289653ba38527fcbb3962a8baa4dcd85e017cb87179da1d11b85a",
+      "row_count": 15
+    },
+    "workspaces": {
+      "sha256": "a158d8d2e6f0c2fae2ea0ba89f84da160d1f9bb16f4adeb8ecb4615483181c2b",
+      "row_count": 1
+    },
+    "ingestion_jobs": {
+      "sha256": "c4753f1d6ce791ec8d16be8164a6f274f3ce65d6045065e30570aa404f71566f",
+      "row_count": 14
+    },
+    "source_versions": {
+      "sha256": "783d0f81acd9626dd380f946f6f5e78e55ccc04c9811f37a1acfc450bf6e3536",
+      "row_count": 17
+    },
+    "index_generations": {
+      "sha256": "9f15f600b76eb2e894dbcef9c488dcbcd424a94a18c00d3a7b0be879805fd0e3",
+      "row_count": 2
+    },
+    "corpus_index_state": {
+      "sha256": "8b93319d80a1aa81c0490f34efcbab829a778223e538f00732c776e00859d914",
+      "row_count": 1
+    },
+    "embedding_profiles": {
+      "sha256": "9feccaf77edefce1db433ca77785504c9ca10e2c14ab8c053d99afd4036bd281",
+      "row_count": 1
+    },
+    "corpus_source_state": {
+      "sha256": "aa55552f1047f3137f2c33e276c99a3748c85989f507c1cc518b0e9f0c11257b",
+      "row_count": 15
+    }
+  },
+  "readiness_http": 200,
+  "profile": {
+    "profile_id": "postgres-fts-baseline",
+    "profile_revision": "postgres-fts-baseline-r1",
+    "kind": "lexical_search",
+    "workspace_ids": [
+      "development"
+    ],
+    "corpus_id": "corpus-875b9380866e9d56e7110b0ee310962c16d9d4ae103f829d62bdffd2cbe7c61d",
+    "parameters": {
+      "query": {
+        "type": "string",
+        "min_length": 1,
+        "max_length": 4096
+      },
+      "top_k": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 50
+      }
+    },
+    "limits": {
+      "max_request_bytes": 32768,
+      "timeout_ms": 10000,
+      "max_concurrent_searches": 2,
+      "max_corpus_chunks": 10000,
+      "max_corpus_bytes": 52428800
+    },
+    "score_type": "postgres_ts_rank_cd"
+  },
+  "source_count": 15,
+  "chunk_count": 44,
+  "corpus_revision": "corpus-138b2a8f620aed19d324da8c8046dd2f251d7e7e957c724665c9f45252e04b10",
+  "result_count": 3,
+  "sql_identity_score_parity": true,
+  "trace_id": "8991171fa702478ab512d8e3a8cf1df1",
+  "code_changes_during_deployment": false
+}

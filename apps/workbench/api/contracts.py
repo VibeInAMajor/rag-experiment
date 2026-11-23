@@ -40,14 +40,20 @@ class ErrorResponse(Meta):
 class QueryParameter(ContractModel):
     type: Literal["string"] = "string"
     min_length: Literal[1] = 1
-    max_length: Literal[4096] = 4096
+    max_length: int = Field(default=4096, ge=1, le=4096)
 
 
 class TopKParameter(ContractModel):
     type: Literal["integer"] = "integer"
-    default: Literal[10] = 10
+    default: int = Field(default=10, ge=1, le=50)
     minimum: Literal[1] = 1
-    maximum: Literal[50] = 50
+    maximum: int = Field(default=50, ge=1, le=50)
+
+    @model_validator(mode="after")
+    def _default_within_bounds(self) -> "TopKParameter":
+        if self.default > self.maximum:
+            raise ValueError("The default top-k must fit the approved maximum")
+        return self
 
 
 class ProfileParameters(ContractModel):
@@ -56,15 +62,15 @@ class ProfileParameters(ContractModel):
 
 
 class ProfileLimits(ContractModel):
-    max_request_bytes: Literal[32768] = 32768
-    timeout_ms: Literal[10000] = 10000
-    max_concurrent_searches: Literal[2] = 2
-    max_corpus_chunks: Literal[10000] = 10000
-    max_corpus_bytes: Literal[52428800] = 52428800
+    max_request_bytes: int = Field(default=32768, ge=1, le=32768)
+    timeout_ms: int = Field(default=10000, ge=1, le=10000)
+    max_concurrent_searches: int = Field(default=2, ge=1, le=2)
+    max_corpus_chunks: int = Field(default=10000, ge=1, le=10000)
+    max_corpus_bytes: int = Field(default=52428800, ge=1, le=52428800)
 
 
 class ExecutionProfile(ContractModel):
-    profile_id: Literal["bm25-v1", "postgres-keyword-v1", "postgres-fts-baseline"] = "bm25-v1"
+    profile_id: Identifier = "bm25-v1"
     profile_revision: Identifier
     kind: Literal["lexical_search"] = "lexical_search"
     workspace_ids: list[Identifier] = Field(min_length=1, max_length=1)
@@ -183,8 +189,8 @@ class SearchResponse(Meta):
     mode: Literal["live"] = "live"
     workspace_id: Identifier
     corpus_revision: Identifier
-    profile_id: Literal["postgres-fts-baseline"] = "postgres-fts-baseline"
-    profile_revision: Literal["postgres-fts-baseline-r1"] = "postgres-fts-baseline-r1"
+    profile_id: Identifier = "postgres-fts-baseline"
+    profile_revision: Identifier = "postgres-fts-baseline-r1"
     run_id: Identifier
     status: Literal["success"] = "success"
     duration_ms: float = Field(ge=0, allow_inf_nan=False)

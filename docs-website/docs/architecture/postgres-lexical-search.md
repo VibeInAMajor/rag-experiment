@@ -33,7 +33,7 @@ $lexicalProfile = $lexicalCapabilities.profiles | Where-Object profile_id -EQ 'p
 if ($null -eq $lexicalProfile) { throw 'No approved lexical profile is ready.' }
 ```
 
-Liveness is independent of storage. Readiness is 200 only while this profile qualifies; unavailable, incompatible, empty or oversized corpora produce 503 `NOT_READY` and no executable profile in capabilities. Discovery can still return 200 with `profiles: []`. The dependency's separate database status is not a substitute for execution-profile qualification.
+Liveness is independent of storage. Readiness is 200 while at least one authorized profile qualifies; unavailable, incompatible, empty or oversized corpora produce 503 `NOT_READY` when none qualify. Discovery can still return 200 with `profiles: []`. The baseline remains the default, while the [approved profile registry](profile-registry.md) permits additional immutable lexical policies using the same FTS composition. Each policy is subject to its own bounds, workspace rollout and revision fence. The dependency's separate database status is not a substitute for execution-profile qualification.
 
 ## Read persisted metadata and search
 

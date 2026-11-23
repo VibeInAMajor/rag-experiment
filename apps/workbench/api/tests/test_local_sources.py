@@ -441,10 +441,9 @@ def test_windows_native_launcher_uses_full_file_pidl_and_balances_com(
 def test_new_routes_publish_schemas_without_changing_search_response() -> None:
     """Local-file discovery is additive and does not modify the lexical result contract."""
     schema = create_app(settings=ApiSettings()).openapi()
-    assert (
-        schema["components"]["schemas"]["SearchResponse"]["properties"]["profile_revision"]["const"]
-        == "postgres-fts-baseline-r1"
-    )
+    revision = schema["components"]["schemas"]["SearchResponse"]["properties"]["profile_revision"]
+    assert revision["default"] == "postgres-fts-baseline-r1"
+    assert revision["pattern"] == r"^[A-Za-z0-9_-]{1,128}$"
     assert "name" in schema["components"]["schemas"]["LocalSourceFileResponse"]["required"]
     assert schema["components"]["schemas"]["RevealSourceRequest"]["additionalProperties"] is False
     assert "local_original" not in json.dumps(schema["components"]["schemas"]["SearchResponse"])

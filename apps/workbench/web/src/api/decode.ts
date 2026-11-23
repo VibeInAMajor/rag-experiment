@@ -43,6 +43,12 @@ function positiveInteger(value: unknown): number {
   return number;
 }
 
+function boundedPositiveInteger(value: unknown, maximum: number): number {
+  const number = positiveInteger(value);
+  if (number > maximum) invalidResponse();
+  return number;
+}
+
 function documentText(value: unknown): string {
   if (
     typeof value !== "string" ||
@@ -191,11 +197,8 @@ export function decodeSearch(
     mode: literal(item.mode, "live"),
     workspace_id: workspaceId,
     corpus_revision: identifier(item.corpus_revision),
-    profile_id: literal(item.profile_id, "postgres-fts-baseline"),
-    profile_revision: literal(
-      item.profile_revision,
-      "postgres-fts-baseline-r1",
-    ),
+    profile_id: identifier(item.profile_id),
+    profile_revision: identifier(item.profile_revision),
     run_id: identifier(item.run_id),
     status: literal(item.status, "success"),
     duration_ms: durationMs,
@@ -280,11 +283,7 @@ function profile(value: unknown): BackendProfile {
   const query = object(parameters.query);
   const topK = object(parameters.top_k);
   const limits = object(item.limits);
-  const profileId = choice(item.profile_id, [
-    "bm25-v1",
-    "postgres-keyword-v1",
-    "postgres-fts-baseline",
-  ]);
+  const profileId = identifier(item.profile_id);
   const scoreType = choice(item.score_type, [
     "bm25_raw",
     "postgres_ts_rank_cd",
@@ -295,6 +294,7 @@ function profile(value: unknown): BackendProfile {
     invalidResponse();
   const workspaceIds = uniqueIds(item.workspace_ids, 1);
   if (!workspaceIds.length) invalidResponse();
+  const maximumTopK = boundedPositiveInteger(topK.maximum, 50);
   return {
     profile_id: profileId,
     profile_revision: identifier(item.profile_revision),
@@ -306,21 +306,33 @@ function profile(value: unknown): BackendProfile {
       query: {
         type: literal(query.type, "string"),
         min_length: literal(query.min_length, 1),
-        max_length: literal(query.max_length, 4096),
+        max_length: boundedPositiveInteger(query.max_length, 4096),
       },
       top_k: {
         type: literal(topK.type, "integer"),
-        default: literal(topK.default, 10),
+        default: boundedPositiveInteger(topK.default, maximumTopK),
         minimum: literal(topK.minimum, 1),
-        maximum: literal(topK.maximum, 50),
+        maximum: maximumTopK,
       },
     },
     limits: {
-      max_request_bytes: literal(limits.max_request_bytes, 32768),
-      timeout_ms: literal(limits.timeout_ms, 10000),
-      max_concurrent_searches: literal(limits.max_concurrent_searches, 2),
-      max_corpus_chunks: literal(limits.max_corpus_chunks, 10000),
-      max_corpus_bytes: literal(limits.max_corpus_bytes, 52428800),
+      max_request_bytes: boundedPositiveInteger(
+        limits.max_request_bytes,
+        32768,
+      ),
+      timeout_ms: boundedPositiveInteger(limits.timeout_ms, 10000),
+      max_concurrent_searches: boundedPositiveInteger(
+        limits.max_concurrent_searches,
+        2,
+      ),
+      max_corpus_chunks: boundedPositiveInteger(
+        limits.max_corpus_chunks,
+        10000,
+      ),
+      max_corpus_bytes: boundedPositiveInteger(
+        limits.max_corpus_bytes,
+        52428800,
+      ),
     },
   };
 }

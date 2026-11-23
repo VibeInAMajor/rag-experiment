@@ -70,11 +70,13 @@ Both Vite modes proxy `/api/v1` to port 8011, independently of the validator rou
 
 Discovery checks liveness, readiness, capabilities and bounded workspace pagination. Ready requires consistent responses, a running service, ready database, search support and a supported profile bound to an authorized workspace. A green liveness response alone is insufficient. Live search and Documents use the existing versioned API. Preview preferences are retained but disabled in Live. Changing mode cancels pending requests and stops active local progression; recovery never changes the selected mode automatically. Mode survives navigation; refreshing resets it to Preview.
 
+In **Settings → Backend connection → Execution profile**, select a currently qualified lexical profile and inspect its exact ID, revision, score type and maximum results. The baseline remains the initial default when available. Other approved IDs require an explicit selection; a retired or withdrawn selection does not silently switch to another profile. Refresh obtains the current revision of the selected logical profile. Profile/workspace changes interrupt pending local runs and clear their visible submitted context. Only compatible PostgreSQL lexical semantics are executable in this client; planned dense, ANN, hybrid and BM25 definitions do not become Live options.
+
 ### Run a Live keyword search
 
 1. Start the qualified API and select **Live**. Open **Pipelines → New pipeline → Keyword search**.
 2. Edit **Search query → Question**. The template starts with `retention`, an exact term in the development corpus, not a promised answer.
-3. Set **Keyword search → Maximum results** and **Search results → Result limit**. Live sends the smaller value, bounded to 1–50; the Preview Settings result limit does not apply.
+3. Set **Keyword search → Maximum results** and **Search results → Result limit**. Both values must fit the selected profile's advertised maximum (at most 50); Live sends the smaller value. The Preview Settings result limit does not apply.
 4. Select **Run**. Output shows server rank, raw `postgres_ts_rank_cd` score, persisted source/version/chunk identity and page availability. **Stages** shows measured server operations, and **Execution details** contains correlation, profile and corpus IDs. JSON retains exact numeric values.
 
 The approved graph has exactly three nodes and two connections: query → keyword-search → results. Additional nodes, parameters, unsupported profiles or invalid values disable Live Run before any search request. The client sends only `query`, `top_k`, `profile_id` and `expected_profile_revision`; it never sends editor graph JSON. Native PostgreSQL FTS is not BM25 and its raw score is not confidence or a percentage.

@@ -1,13 +1,18 @@
 """Application-owned records and workspace-scoped persistence boundary."""
 
+from __future__ import annotations
+
 from contextlib import AbstractAsyncContextManager
 from math import isfinite
 from pathlib import PurePosixPath
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import ConfigDict, Field, JsonValue, field_validator, model_validator
 
 from apps.workbench.api.contracts import ContractModel, Identifier
+
+if TYPE_CHECKING:
+    from apps.workbench.api.profile_registry import ProfileDefinition, ProfileRollout
 
 
 class PersistenceError(Exception):
@@ -40,6 +45,14 @@ class RecordConflict(PersistenceError):
 
 class CorpusNotReady(PersistenceError):
     """The complete authorized corpus cannot qualify for this execution profile."""
+
+
+class ProfileNotAvailable(PersistenceError):
+    """The requested revision is not the approved active workspace rollout."""
+
+
+class InvalidSearchParameters(PersistenceError):
+    """A request exceeds the selected immutable profile policy."""
 
 
 class DocumentNotFound(PersistenceError):
@@ -211,6 +224,7 @@ class CorpusSnapshot(ContractModel):
     documents: list[DocumentRecord]
     chunk_count: int = Field(ge=0)
     content_bytes: int = Field(ge=0)
+    index_generation_id: int | None = Field(default=None, ge=0)
 
 
 class IndexGeneration(ContractModel):
@@ -238,6 +252,10 @@ class LexicalSearchSnapshot(ContractModel):
     content_bytes: int = Field(ge=0)
     corpus_load_duration_ms: float = Field(ge=0, allow_inf_nan=False)
     retrieval_duration_ms: float = Field(ge=0, allow_inf_nan=False)
+    profile_id: Identifier | None = None
+    profile_revision: Identifier | None = None
+    policy_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    index_generation_id: int | None = Field(default=None, ge=0)
 
 
 class IngestionTiming(ContractModel):
@@ -301,6 +319,10 @@ class ActiveChunkPage(ContractModel):
 
 
 class PersistencePort(Protocol):
+    async def get_profile_rollouts(self, context: WorkspaceContext) -> tuple[ProfileRollout, ...]:
+        """Read audited workspace profile selections without touching the retrieval corpus."""
+        ...
+
     async def current_index_generation(
         self, context: WorkspaceContext, *, expected_generation_id: int | None = None
     ) -> IndexGeneration:
@@ -445,7 +467,13 @@ class PersistencePort(Protocol):
         ...
 
     async def lexical_search_snapshot(
-        self, context: WorkspaceContext, *, query: str, top_k: int = 10
+        self,
+        context: WorkspaceContext,
+        *,
+        query: str,
+        top_k: int = 10,
+        profile_fence: ProfileRollout | None = None,
+        profile_definition: ProfileDefinition | None = None,
     ) -> LexicalSearchSnapshot:
         """Read fingerprint and ranked hits from one repeatable-read SQL snapshot."""
         ...

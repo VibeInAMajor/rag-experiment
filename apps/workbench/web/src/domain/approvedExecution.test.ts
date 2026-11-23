@@ -83,6 +83,44 @@ describe("approved keyword execution", () => {
     });
   });
 
+  it("uses the selected approved lexical ID and revision while enforcing its own smaller bounds", () => {
+    const discovery = readyDiscovery();
+    const selected = {
+      ...discovery.profile,
+      profile_id: "postgres-fts-bounded",
+      profile_revision: "bounded-r7",
+      parameters: {
+        query: {
+          type: "string" as const,
+          min_length: 1 as const,
+          max_length: 128,
+        },
+        top_k: {
+          type: "integer" as const,
+          minimum: 1 as const,
+          maximum: 3,
+          default: 2,
+        },
+      },
+    };
+    discovery.profile = selected;
+    discovery.capabilities!.profiles = [selected];
+    const graph = createPipeline("keyword").graph;
+    expect(matchApprovedKeywordGraph(graph, discovery).supported).toBe(false);
+    graph.nodes[1].data.parameters.topK = 3;
+    graph.nodes[2].data.parameters.limit = 2;
+    expect(matchApprovedKeywordGraph(graph, discovery)).toMatchObject({
+      supported: true,
+      request: {
+        profile_id: "postgres-fts-bounded",
+        expected_profile_revision: "bounded-r7",
+        top_k: 2,
+      },
+    });
+    graph.nodes[0].data.parameters.query = "x".repeat(129);
+    expect(matchApprovedKeywordGraph(graph, discovery).supported).toBe(false);
+  });
+
   it("ignores node order, labels, coordinates and viewport", () => {
     const graph = createPipeline("keyword").graph;
     graph.nodes.reverse();
