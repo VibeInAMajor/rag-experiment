@@ -1,0 +1,12 @@
+{
+  "actual_persisted_mappings": 1400.0,
+  "disposable_database_removed": true,
+  "status": "PASS",
+  "durable_chunks": 1400.0,
+  "quality_aggregate_unchanged": true,
+  "generated_inputs": 1400.0,
+  "quality_queries": 52,
+  "runtime_files_unchanged": true,
+  "unique_actual_provider_inputs": 1400,
+  "main_api_ready": "ready"
+}

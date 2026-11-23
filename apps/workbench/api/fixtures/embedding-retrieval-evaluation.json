@@ -1,0 +1,2023 @@
+{
+  "schema_version": "embedding-retrieval-eval-v1",
+  "fixture_id": "multilingual-exact-retrieval-r1",
+  "workspace_id": "embedding-evaluation",
+  "sources": [
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-retention-en",
+      "version_id": "eval-retention-en-r2",
+      "title": "retention-en",
+      "language": "en",
+      "active": true,
+      "original": "Orion snapshot retention is twenty-one days. After day twenty-one, the retention worker removes the oldest snapshots from the recovery catalog.\n\nOrion recovery starts by selecting a completed snapshot and verifying its recorded SHA-256 before restoring it to a separate target.\n\nOrion access logs are retained for ninety days. That audit-log interval does not control snapshot retention.",
+      "content_hash": "8536c376764f81001c710d6bffff8e347d7d7df99dd4e73a0b3eebdf3ebbb48f",
+      "chunks": [
+        {
+          "chunk_id": "eval-retention-en-r2-c1",
+          "start": 0,
+          "end": 143,
+          "content": "Orion snapshot retention is twenty-one days. After day twenty-one, the retention worker removes the oldest snapshots from the recovery catalog.",
+          "content_hash": "d20f9106ee357756d461073a61178c35d6a9be1eff46ea57ba38bb6b7b23e4b0",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-retention-en-r2-c2",
+          "start": 145,
+          "end": 277,
+          "content": "Orion recovery starts by selecting a completed snapshot and verifying its recorded SHA-256 before restoring it to a separate target.",
+          "content_hash": "4d81527fa098a773983f93e4504efe8ae6ad50a15bed005204ea808cce4d649c",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-retention-en-r2-c3",
+          "start": 279,
+          "end": 387,
+          "content": "Orion access logs are retained for ninety days. That audit-log interval does not control snapshot retention.",
+          "content_hash": "c3b9ae338d10c2fe3f021e5762af8d166667a7eab0e8c9f6ff9ef8503f6bcba3",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-retention-ru",
+      "version_id": "eval-retention-ru-r2",
+      "title": "retention-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Снимки Orion хранятся двадцать один день. После двадцать первого дня служба хранения удаляет старые снимки из каталога восстановления.\n\nВосстановление Orion начинается с выбора завершённого снимка и проверки записанного SHA-256 перед загрузкой в отдельную цель.\n\nЖурналы доступа Orion хранятся девяносто дней. Срок журналов аудита не задаёт срок хранения снимков.",
+      "content_hash": "57c66ed7e242d2f63b93bbe66bd0bede4594ad86cdab458a4a71111f6799c736",
+      "chunks": [
+        {
+          "chunk_id": "eval-retention-ru-r2-c1",
+          "start": 0,
+          "end": 134,
+          "content": "Снимки Orion хранятся двадцать один день. После двадцать первого дня служба хранения удаляет старые снимки из каталога восстановления.",
+          "content_hash": "f68d595f159ab29d61ce653098d7183a858b2ae7764a0123db71915de38b4ea6",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-retention-ru-r2-c2",
+          "start": 136,
+          "end": 261,
+          "content": "Восстановление Orion начинается с выбора завершённого снимка и проверки записанного SHA-256 перед загрузкой в отдельную цель.",
+          "content_hash": "610b135206a74acc7a007674965d6e6368cd44b4bfb2f4d7c326178c93407846",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-retention-ru-r2-c3",
+          "start": 263,
+          "end": 363,
+          "content": "Журналы доступа Orion хранятся девяносто дней. Срок журналов аудита не задаёт срок хранения снимков.",
+          "content_hash": "3cd61b91e36a1b8d098c906168426dd6706ed85e6673f500e9e53c64cc00b1b8",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-retention-uk",
+      "version_id": "eval-retention-uk-r2",
+      "title": "retention-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Знімки Orion зберігаються двадцять один день. Після двадцять першого дня служба зберігання вилучає старі знімки з каталогу відновлення.\n\nВідновлення Orion починається з вибору завершеного знімка та перевірки записаного SHA-256 перед завантаженням в окрему ціль.\n\nЖурнали доступу Orion зберігаються дев’яносто днів. Строк журналів аудиту не визначає строк зберігання знімків.",
+      "content_hash": "1c1938a48bc104369c6c39dc9d247b1a7e6c9fb2e82c883375e0283ee74ebc17",
+      "chunks": [
+        {
+          "chunk_id": "eval-retention-uk-r2-c1",
+          "start": 0,
+          "end": 135,
+          "content": "Знімки Orion зберігаються двадцять один день. Після двадцять першого дня служба зберігання вилучає старі знімки з каталогу відновлення.",
+          "content_hash": "54186fa11956a2558ff1b28302582cc6e7de9346461ea608f6094e2968a77ad0",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-retention-uk-r2-c2",
+          "start": 137,
+          "end": 261,
+          "content": "Відновлення Orion починається з вибору завершеного знімка та перевірки записаного SHA-256 перед завантаженням в окрему ціль.",
+          "content_hash": "c29e71ed842aa5df91464657f1b3a270dd357ff679016f0ddf75a2503045a2cf",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-retention-uk-r2-c3",
+          "start": 263,
+          "end": 374,
+          "content": "Журнали доступу Orion зберігаються дев’яносто днів. Строк журналів аудиту не визначає строк зберігання знімків.",
+          "content_hash": "03acd942f5f2c463a94960107bafc17e360b8fec1b5dce1af2bd7ac8156a7dc1",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-lease-en",
+      "version_id": "eval-lease-en-r2",
+      "title": "lease-en",
+      "language": "en",
+      "active": true,
+      "original": "A Vela job lease expires after forty-five seconds without renewal. An expired lease cannot authorize a vector publication.\n\nThe Vela worker renews ownership before a long provider call and rechecks the owner token inside the publication transaction.\n\nVela HTTP requests have an eight-second response deadline. That network deadline is not the worker lease duration.",
+      "content_hash": "5e46faf51b5018205fa8dc12d4c21ef231e1ea6fa33a586c484bcd63f6eba9de",
+      "chunks": [
+        {
+          "chunk_id": "eval-lease-en-r2-c1",
+          "start": 0,
+          "end": 122,
+          "content": "A Vela job lease expires after forty-five seconds without renewal. An expired lease cannot authorize a vector publication.",
+          "content_hash": "330e26ba47780f259156a7d3519191ec30fddde60ff81531bcf57f1679552809",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-lease-en-r2-c2",
+          "start": 124,
+          "end": 249,
+          "content": "The Vela worker renews ownership before a long provider call and rechecks the owner token inside the publication transaction.",
+          "content_hash": "c8a26e2630756f8053ad873fec366f940fd2be27155b6226d3e11a6c9cc45dd4",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-lease-en-r2-c3",
+          "start": 251,
+          "end": 365,
+          "content": "Vela HTTP requests have an eight-second response deadline. That network deadline is not the worker lease duration.",
+          "content_hash": "a5747509bdadf47d69532fcd857c44d4cb96788cdb08e01706d52823e28d081b",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-lease-ru",
+      "version_id": "eval-lease-ru-r2",
+      "title": "lease-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Аренда задания Vela истекает через сорок пять секунд без продления. Истёкшая аренда не разрешает публикацию вектора.\n\nРабочий процесс Vela продлевает владение перед долгим запросом к провайдеру и проверяет токен владельца в транзакции публикации.\n\nHTTP-запросы Vela имеют срок ответа восемь секунд. Этот сетевой срок не равен времени аренды рабочего процесса.",
+      "content_hash": "727a7828da62395a427d5fa86fd42a358bb657f7d01b6d9524556643e7af86bb",
+      "chunks": [
+        {
+          "chunk_id": "eval-lease-ru-r2-c1",
+          "start": 0,
+          "end": 116,
+          "content": "Аренда задания Vela истекает через сорок пять секунд без продления. Истёкшая аренда не разрешает публикацию вектора.",
+          "content_hash": "9f945520f793021c1806f8ac73001081b8803640a677b146e8a10bb41ca7218f",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-lease-ru-r2-c2",
+          "start": 118,
+          "end": 246,
+          "content": "Рабочий процесс Vela продлевает владение перед долгим запросом к провайдеру и проверяет токен владельца в транзакции публикации.",
+          "content_hash": "35644b4d64240aba21ce853a60b789cfc19978e5b5050c33028659793e1c3aa9",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-lease-ru-r2-c3",
+          "start": 248,
+          "end": 359,
+          "content": "HTTP-запросы Vela имеют срок ответа восемь секунд. Этот сетевой срок не равен времени аренды рабочего процесса.",
+          "content_hash": "fb071c63d45496c765b1ca26c497c03b91c944a229d91e4cb2818a9613a83369",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-lease-uk",
+      "version_id": "eval-lease-uk-r2",
+      "title": "lease-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Оренда завдання Vela завершується через сорок п’ять секунд без продовження. Прострочена оренда не дозволяє публікацію вектора.\n\nРобочий процес Vela продовжує володіння перед тривалим запитом до провайдера та перевіряє токен власника в транзакції публікації.\n\nHTTP-запити Vela мають строк відповіді вісім секунд. Цей мережевий строк не дорівнює часу оренди робочого процесу.",
+      "content_hash": "0683d2b6e4f295605488990d62a88d60026846e175e25cc3a788d9307a6fb775",
+      "chunks": [
+        {
+          "chunk_id": "eval-lease-uk-r2-c1",
+          "start": 0,
+          "end": 126,
+          "content": "Оренда завдання Vela завершується через сорок п’ять секунд без продовження. Прострочена оренда не дозволяє публікацію вектора.",
+          "content_hash": "d75ade151267abd304d64e8c4f8689dcff74c1a3244ebb5bcef13412fb4d7fa8",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-lease-uk-r2-c2",
+          "start": 128,
+          "end": 257,
+          "content": "Робочий процес Vela продовжує володіння перед тривалим запитом до провайдера та перевіряє токен власника в транзакції публікації.",
+          "content_hash": "225c0a17c3c61811dec7d1d7eb60da844902fab3f304851f41a3531269950e54",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-lease-uk-r2-c3",
+          "start": 259,
+          "end": 373,
+          "content": "HTTP-запити Vela мають строк відповіді вісім секунд. Цей мережевий строк не дорівнює часу оренди робочого процесу.",
+          "content_hash": "25048db0f0ea462978ecbb19af80e0085e490b58b46e780ec0ba6eb59c61c0fc",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-queue-en",
+      "version_id": "eval-queue-en-r2",
+      "title": "queue-en",
+      "language": "en",
+      "active": true,
+      "original": "The Finch ready queue accepts at most five hundred twelve pending records. A full queue rejects another record instead of dropping an existing one.\n\nFinch resumes from its committed cursor after a worker restart; a record is acknowledged only after its durable write succeeds.\n\nFinch telemetry packets are limited to five hundred twelve bytes. Packet size does not define the number of pending queue records.",
+      "content_hash": "205163d2124e64cfb5b1989d6070955d7d46f27a25b1680380821dee2d590cf9",
+      "chunks": [
+        {
+          "chunk_id": "eval-queue-en-r2-c1",
+          "start": 0,
+          "end": 147,
+          "content": "The Finch ready queue accepts at most five hundred twelve pending records. A full queue rejects another record instead of dropping an existing one.",
+          "content_hash": "f42a90127677d7c565af55d11650ca379a0bf090513408aee1647237579e5d45",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-queue-en-r2-c2",
+          "start": 149,
+          "end": 276,
+          "content": "Finch resumes from its committed cursor after a worker restart; a record is acknowledged only after its durable write succeeds.",
+          "content_hash": "e3f908e1867bdf4a1ea370e660c0170b5bd4c2dc044c855de791284ebdf558ec",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-queue-en-r2-c3",
+          "start": 278,
+          "end": 408,
+          "content": "Finch telemetry packets are limited to five hundred twelve bytes. Packet size does not define the number of pending queue records.",
+          "content_hash": "7abaa9af3e3f6b8ce2a9f51de989dd0c301964fded86f269057c8f9db370884b",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-queue-ru",
+      "version_id": "eval-queue-ru-r2",
+      "title": "queue-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Очередь готовых записей Finch принимает не более пятисот двенадцати ожидающих записей. Полная очередь отклоняет новую запись, не удаляя старую.\n\nПосле перезапуска Finch продолжает с сохранённого курсора; подтверждение записи происходит только после успешной долговечной записи.\n\nПакеты телеметрии Finch ограничены пятьюстами двенадцатью байтами. Размер пакета не определяет число ожидающих записей очереди.",
+      "content_hash": "bbe4fa5fac2b07ca02acedab1f25acf0825ba8cd8b97f10052b6365272573508",
+      "chunks": [
+        {
+          "chunk_id": "eval-queue-ru-r2-c1",
+          "start": 0,
+          "end": 143,
+          "content": "Очередь готовых записей Finch принимает не более пятисот двенадцати ожидающих записей. Полная очередь отклоняет новую запись, не удаляя старую.",
+          "content_hash": "776bd0e5e553be61935fcd1c40e86d3117bf62aac505d6ffa49bffd82373a14e",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-queue-ru-r2-c2",
+          "start": 145,
+          "end": 277,
+          "content": "После перезапуска Finch продолжает с сохранённого курсора; подтверждение записи происходит только после успешной долговечной записи.",
+          "content_hash": "7f7332b01c1f5751abfbb56d8f74039b69c7f2ba1f3e0fd2f6dbcf7dcab9273a",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-queue-ru-r2-c3",
+          "start": 279,
+          "end": 406,
+          "content": "Пакеты телеметрии Finch ограничены пятьюстами двенадцатью байтами. Размер пакета не определяет число ожидающих записей очереди.",
+          "content_hash": "416c83d48c8eb83688bd2d5ea4fd15e0bb4e71cd429ab9020f01e4e121411cb8",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-queue-uk",
+      "version_id": "eval-queue-uk-r2",
+      "title": "queue-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Черга готових записів Finch приймає не більше п’ятисот дванадцяти очікуваних записів. Повна черга відхиляє новий запис, не видаляючи старого.\n\nПісля перезапуску Finch продовжує зі збереженого курсора; запис підтверджують лише після успішного довговічного збереження.\n\nПакети телеметрії Finch обмежені п’ятьмастами дванадцятьма байтами. Розмір пакета не визначає кількість записів у черзі.",
+      "content_hash": "f1c87fffa5aa357fac20dc7b89cac77f02c268c09f89082c0f90c5f84248904c",
+      "chunks": [
+        {
+          "chunk_id": "eval-queue-uk-r2-c1",
+          "start": 0,
+          "end": 141,
+          "content": "Черга готових записів Finch приймає не більше п’ятисот дванадцяти очікуваних записів. Повна черга відхиляє новий запис, не видаляючи старого.",
+          "content_hash": "1302d7880c5cc73d2c4a131fca0e4bf29e089804572b37e2b80ab03129c7340d",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-queue-uk-r2-c2",
+          "start": 143,
+          "end": 266,
+          "content": "Після перезапуску Finch продовжує зі збереженого курсора; запис підтверджують лише після успішного довговічного збереження.",
+          "content_hash": "c9b07add2da773d4a6344e29fc6bf87eeb36bb864feccdf261868e966e6b44f7",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-queue-uk-r2-c3",
+          "start": 268,
+          "end": 388,
+          "content": "Пакети телеметрії Finch обмежені п’ятьмастами дванадцятьма байтами. Розмір пакета не визначає кількість записів у черзі.",
+          "content_hash": "40f5a98502436fcc0d4b2503db0f13c7f410f761572e72395b553ec01e9685c7",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-timeout-en",
+      "version_id": "eval-timeout-en-r2",
+      "title": "timeout-en",
+      "language": "en",
+      "active": true,
+      "original": "The Kite connection deadline is eight seconds from admission. If the connection times out after a send, the outcome remains uncertain.\n\nKite retains the token reservation for an uncertain send and requires explicit recovery before another attempt can use that allowance.\n\nKite background lease renewal occurs every twenty seconds. Renewal cadence does not change the eight-second connection deadline.",
+      "content_hash": "3b511bd5e50944ede3b86d1a09e53c7d3eb018093d37f2e575ff229da51f6b1f",
+      "chunks": [
+        {
+          "chunk_id": "eval-timeout-en-r2-c1",
+          "start": 0,
+          "end": 134,
+          "content": "The Kite connection deadline is eight seconds from admission. If the connection times out after a send, the outcome remains uncertain.",
+          "content_hash": "bdbaa84fbbcba555c83d6cce6ed81bff9f0446b71ffa6797de696621d376a2c3",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-timeout-en-r2-c2",
+          "start": 136,
+          "end": 270,
+          "content": "Kite retains the token reservation for an uncertain send and requires explicit recovery before another attempt can use that allowance.",
+          "content_hash": "5f321e99e8454a20eca828aebb998fc233f34331d5f13c2c997c42fde5b1bb16",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-timeout-en-r2-c3",
+          "start": 272,
+          "end": 400,
+          "content": "Kite background lease renewal occurs every twenty seconds. Renewal cadence does not change the eight-second connection deadline.",
+          "content_hash": "924ca6fadf9132f888754ba7d5ccdd28846e27e0379e5a393041590e4b420714",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-timeout-ru",
+      "version_id": "eval-timeout-ru-r2",
+      "title": "timeout-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Срок подключения Kite составляет восемь секунд с момента допуска. Если время истекло после отправки, результат остаётся неопределённым.\n\nKite сохраняет резерв токенов для неопределённой отправки и требует явного восстановления до следующего использования этого допуска.\n\nФоновая аренда Kite продлевается каждые двадцать секунд. Частота продления не меняет восьмисекундный срок подключения.",
+      "content_hash": "f046a955bd10e5d523f45441c4353ea1ece90b94f217813c47d0680d96a9b4f5",
+      "chunks": [
+        {
+          "chunk_id": "eval-timeout-ru-r2-c1",
+          "start": 0,
+          "end": 135,
+          "content": "Срок подключения Kite составляет восемь секунд с момента допуска. Если время истекло после отправки, результат остаётся неопределённым.",
+          "content_hash": "5d8477cfd8e6af041d00b99ce03be49671021f3aa2ae50a617eed5aa597e120f",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-timeout-ru-r2-c2",
+          "start": 137,
+          "end": 269,
+          "content": "Kite сохраняет резерв токенов для неопределённой отправки и требует явного восстановления до следующего использования этого допуска.",
+          "content_hash": "9be332002b3fcd9ffaf95e93ad2876227244b396cf01eb9c02786f98c4f5b743",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-timeout-ru-r2-c3",
+          "start": 271,
+          "end": 389,
+          "content": "Фоновая аренда Kite продлевается каждые двадцать секунд. Частота продления не меняет восьмисекундный срок подключения.",
+          "content_hash": "ee818eb0f29b8db4038e23d27de18f083d5b0c8720f73d8f29b71eec946c8d40",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-timeout-uk",
+      "version_id": "eval-timeout-uk-r2",
+      "title": "timeout-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Строк підключення Kite становить вісім секунд від допуску. Якщо час вичерпано після надсилання, результат залишається невизначеним.\n\nKite зберігає резерв токенів для невизначеного надсилання та вимагає явного відновлення до наступного використання цього допуску.\n\nФонову оренду Kite продовжують кожні двадцять секунд. Частота продовження не змінює восьмисекундний строк підключення.",
+      "content_hash": "5da3b9fee03349e5f30f0d44ccdd0a0f668250504d4b06e7244d18748a5b35eb",
+      "chunks": [
+        {
+          "chunk_id": "eval-timeout-uk-r2-c1",
+          "start": 0,
+          "end": 131,
+          "content": "Строк підключення Kite становить вісім секунд від допуску. Якщо час вичерпано після надсилання, результат залишається невизначеним.",
+          "content_hash": "715e5985d85739ca4356a0594424795b63182f81274e4865befa03b853170616",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-timeout-uk-r2-c2",
+          "start": 133,
+          "end": 262,
+          "content": "Kite зберігає резерв токенів для невизначеного надсилання та вимагає явного відновлення до наступного використання цього допуску.",
+          "content_hash": "8bf71262bf86a8af544e363cea2a726e89b30d33391855afaa832a81828c8223",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-timeout-uk-r2-c3",
+          "start": 264,
+          "end": 382,
+          "content": "Фонову оренду Kite продовжують кожні двадцять секунд. Частота продовження не змінює восьмисекундний строк підключення.",
+          "content_hash": "86dd46e9c756a1af7e228b1f026718ebbfee2e59cae9a3904d0ed2a6f52caa4a",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-checksum-en",
+      "version_id": "eval-checksum-en-r2",
+      "title": "checksum-en",
+      "language": "en",
+      "active": true,
+      "original": "Larch verifies original asset bytes with SHA-256. A filename or file length alone is not accepted as content identity.\n\nLarch compares the stored digest immediately before returning a registered original and refuses a changed file without revealing another path.\n\nLarch uses a CRC32 value only to detect accidental corruption in temporary telemetry frames. CRC32 is not its original-asset verification algorithm.",
+      "content_hash": "bbb3fe58fe8e455c9bc622a94b572c8138e9c577e20b1aa0ca45036684a7ad9c",
+      "chunks": [
+        {
+          "chunk_id": "eval-checksum-en-r2-c1",
+          "start": 0,
+          "end": 118,
+          "content": "Larch verifies original asset bytes with SHA-256. A filename or file length alone is not accepted as content identity.",
+          "content_hash": "862159d81a09a33c43e23051aa914c4ed9e09b388ceac734a1b4133562530f33",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-checksum-en-r2-c2",
+          "start": 120,
+          "end": 262,
+          "content": "Larch compares the stored digest immediately before returning a registered original and refuses a changed file without revealing another path.",
+          "content_hash": "ce5f8510b8c4db9e1fdb532af9f7d135cf2059659e3be5c677242184c329523f",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-checksum-en-r2-c3",
+          "start": 264,
+          "end": 412,
+          "content": "Larch uses a CRC32 value only to detect accidental corruption in temporary telemetry frames. CRC32 is not its original-asset verification algorithm.",
+          "content_hash": "8c9c90c309f4211bd4de84fedc298106147ba9503415660b5d865a38719cebcc",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-checksum-ru",
+      "version_id": "eval-checksum-ru-r2",
+      "title": "checksum-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Larch проверяет исходные байты файлов алгоритмом SHA-256. Одно имя или длина файла не считаются идентификатором содержимого.\n\nLarch сравнивает сохранённый хеш непосредственно перед возвратом зарегистрированного оригинала и отказывает при изменении файла, не раскрывая другой путь.\n\nLarch использует CRC32 только для случайных повреждений временных кадров телеметрии. CRC32 не служит проверкой исходных файлов.",
+      "content_hash": "6a741e023a4359534951c2e996a17279e6d55b09c8e34b6ead760b335a9e2853",
+      "chunks": [
+        {
+          "chunk_id": "eval-checksum-ru-r2-c1",
+          "start": 0,
+          "end": 124,
+          "content": "Larch проверяет исходные байты файлов алгоритмом SHA-256. Одно имя или длина файла не считаются идентификатором содержимого.",
+          "content_hash": "b5caf08ee2e89b37b05829cdfc37f8f467f8b63f1988412230c2e4947b25ac61",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-checksum-ru-r2-c2",
+          "start": 126,
+          "end": 280,
+          "content": "Larch сравнивает сохранённый хеш непосредственно перед возвратом зарегистрированного оригинала и отказывает при изменении файла, не раскрывая другой путь.",
+          "content_hash": "d8289e73623ea407a34c1fc1fd9390bc40bfce884ef0a8790e68083b858bd4b4",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-checksum-ru-r2-c3",
+          "start": 282,
+          "end": 409,
+          "content": "Larch использует CRC32 только для случайных повреждений временных кадров телеметрии. CRC32 не служит проверкой исходных файлов.",
+          "content_hash": "e7ef54ca56782ae9497780afb1bf4ec4f9b492ab1915f7c31f9d10af50e49799",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-checksum-uk",
+      "version_id": "eval-checksum-uk-r2",
+      "title": "checksum-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Larch перевіряє початкові байти файлів алгоритмом SHA-256. Саме ім’я чи довжина файла не вважаються ідентичністю вмісту.\n\nLarch порівнює збережений хеш безпосередньо перед видачею зареєстрованого оригіналу та відмовляє за зміни файла, не розкриваючи інший шлях.\n\nLarch використовує CRC32 лише для випадкових пошкоджень тимчасових кадрів телеметрії. CRC32 не є перевіркою початкових файлів.",
+      "content_hash": "fb21e6389daa3a4cee98a1c248686d085ce151460826036322d7f1f046f23758",
+      "chunks": [
+        {
+          "chunk_id": "eval-checksum-uk-r2-c1",
+          "start": 0,
+          "end": 120,
+          "content": "Larch перевіряє початкові байти файлів алгоритмом SHA-256. Саме ім’я чи довжина файла не вважаються ідентичністю вмісту.",
+          "content_hash": "fa9afae8b2fdf774fb84ab9d643c4beccc23cc8d6f918acbdd97c0dc454b6f9a",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-checksum-uk-r2-c2",
+          "start": 122,
+          "end": 261,
+          "content": "Larch порівнює збережений хеш безпосередньо перед видачею зареєстрованого оригіналу та відмовляє за зміни файла, не розкриваючи інший шлях.",
+          "content_hash": "db74ecf2815d717416318f60954a71b30853139e533849f8f94f8be7a8b22856",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-checksum-uk-r2-c3",
+          "start": 263,
+          "end": 389,
+          "content": "Larch використовує CRC32 лише для випадкових пошкоджень тимчасових кадрів телеметрії. CRC32 не є перевіркою початкових файлів.",
+          "content_hash": "250a6fc9a864a1416f52e48ec19e0e8d203571cf3dbf3780af9a66f8443cf873",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-region-en",
+      "version_id": "eval-region-en-r2",
+      "title": "region-en",
+      "language": "en",
+      "active": true,
+      "original": "The fictional Sable archive stores approved records in region polaris-east. Copies in another region cannot become the active archive automatically.\n\nSable records the selected region in its immutable publication manifest and checks that manifest during recovery.\n\nSable preview examples mention region polaris-west. Preview examples do not authorize moving the active archive.",
+      "content_hash": "1d9175b229da618a3f26f1bd0f52cbfc999437ef22a0ede3523a06b8ea8282f0",
+      "chunks": [
+        {
+          "chunk_id": "eval-region-en-r2-c1",
+          "start": 0,
+          "end": 148,
+          "content": "The fictional Sable archive stores approved records in region polaris-east. Copies in another region cannot become the active archive automatically.",
+          "content_hash": "3a2c5e75571e64a24fe80879b08ae1a732c3ffc954ba96344c88a227b2a20a91",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-region-en-r2-c2",
+          "start": 150,
+          "end": 263,
+          "content": "Sable records the selected region in its immutable publication manifest and checks that manifest during recovery.",
+          "content_hash": "8443da72bb1a28da619cdb66769cfb448bdd97248f0252b85b25cf5ca152f9ba",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-region-en-r2-c3",
+          "start": 265,
+          "end": 377,
+          "content": "Sable preview examples mention region polaris-west. Preview examples do not authorize moving the active archive.",
+          "content_hash": "e781d16e76cb827252b4fcf53dcb5326b70e7515fe331f287c3e0f3a4f2a3ac5",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-region-ru",
+      "version_id": "eval-region-ru-r2",
+      "title": "region-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Вымышленный архив Sable хранит утверждённые записи в регионе polaris-east. Копии в другом регионе не становятся активным архивом автоматически.\n\nSable записывает выбранный регион в неизменяемый манифест публикации и проверяет манифест при восстановлении.\n\nПримеры предварительного просмотра Sable упоминают polaris-west. Примеры не разрешают переносить активный архив.",
+      "content_hash": "52896afd40d8128ea4a8e507c80e9bb4960891b8a687d2abc1332b96cafc7cf4",
+      "chunks": [
+        {
+          "chunk_id": "eval-region-ru-r2-c1",
+          "start": 0,
+          "end": 143,
+          "content": "Вымышленный архив Sable хранит утверждённые записи в регионе polaris-east. Копии в другом регионе не становятся активным архивом автоматически.",
+          "content_hash": "d1a2bbaa724b0b198d9a393a713c9648047836d5f09213425935317b27fbfd43",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-region-ru-r2-c2",
+          "start": 145,
+          "end": 254,
+          "content": "Sable записывает выбранный регион в неизменяемый манифест публикации и проверяет манифест при восстановлении.",
+          "content_hash": "cd9c2cdc10ac3c40bb64820045ff6cd13953c42e824fafb1761a5b8e4f09e0c0",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-region-ru-r2-c3",
+          "start": 256,
+          "end": 368,
+          "content": "Примеры предварительного просмотра Sable упоминают polaris-west. Примеры не разрешают переносить активный архив.",
+          "content_hash": "0d7a7d62355c3f3e5f0d3faf0c60d377334fca4b549f25dbe46239edb4cfd362",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-region-uk",
+      "version_id": "eval-region-uk-r2",
+      "title": "region-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Вигаданий архів Sable зберігає затверджені записи в регіоні polaris-east. Копії в іншому регіоні не стають активним архівом автоматично.\n\nSable записує обраний регіон у незмінний маніфест публікації та перевіряє маніфест під час відновлення.\n\nПриклади попереднього перегляду Sable згадують polaris-west. Приклади не дозволяють переносити активний архів.",
+      "content_hash": "b8f6e2d366fbc7bfc7dd4add9d67c85954409203c099bca2f1a4882b81b77ea4",
+      "chunks": [
+        {
+          "chunk_id": "eval-region-uk-r2-c1",
+          "start": 0,
+          "end": 136,
+          "content": "Вигаданий архів Sable зберігає затверджені записи в регіоні polaris-east. Копії в іншому регіоні не стають активним архівом автоматично.",
+          "content_hash": "450b9fe9a9e9d10b39243b7b3ab5bcc921427795fdbc9ec1d6d2426e9a09c3f7",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-region-uk-r2-c2",
+          "start": 138,
+          "end": 241,
+          "content": "Sable записує обраний регіон у незмінний маніфест публікації та перевіряє маніфест під час відновлення.",
+          "content_hash": "6366ee2e7eb90c7d19afe05e4cef2567c0a788fc68a4acbfbb7c22781162b188",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-region-uk-r2-c3",
+          "start": 243,
+          "end": 353,
+          "content": "Приклади попереднього перегляду Sable згадують polaris-west. Приклади не дозволяють переносити активний архів.",
+          "content_hash": "996b9d24e5ef4afe120c44953abcf870fbf83504d7d09ca492126c22c9e7c9ff",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-batch-en",
+      "version_id": "eval-batch-en-r2",
+      "title": "batch-en",
+      "language": "en",
+      "active": true,
+      "original": "Marten commits at most sixty-four vector records in one database batch. Provider inference happens before that write transaction begins.\n\nEach Marten commit rechecks the active source version and rolls back the batch when source ownership has changed.\n\nMarten displays eight rows per page in its diagnostic console. The page size is unrelated to the sixty-four-record database commit limit.",
+      "content_hash": "b8dba9b7ca017d9dcdf5e623713839b7b1a2aa8f2f0e29cf228164bd51d1ec9d",
+      "chunks": [
+        {
+          "chunk_id": "eval-batch-en-r2-c1",
+          "start": 0,
+          "end": 136,
+          "content": "Marten commits at most sixty-four vector records in one database batch. Provider inference happens before that write transaction begins.",
+          "content_hash": "3b32498756e1bebde654bdf9a81c82c43c6567a9aa39b05a454a43fa4d62b921",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-batch-en-r2-c2",
+          "start": 138,
+          "end": 251,
+          "content": "Each Marten commit rechecks the active source version and rolls back the batch when source ownership has changed.",
+          "content_hash": "edbd26f72d79ebb4cc478fcffe495493fa6660234cdfae25872ce689705ab275",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-batch-en-r2-c3",
+          "start": 253,
+          "end": 390,
+          "content": "Marten displays eight rows per page in its diagnostic console. The page size is unrelated to the sixty-four-record database commit limit.",
+          "content_hash": "9c8aa7ac034db0c939fc6525a41150708b185160bd5816cf5a7697b4be5765c6",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-batch-ru",
+      "version_id": "eval-batch-ru-r2",
+      "title": "batch-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Marten фиксирует не более шестидесяти четырёх векторных записей в одной партии базы. Вычисление провайдером выполняется до начала транзакции записи.\n\nКаждая фиксация Marten проверяет активную версию источника и откатывает партию, если владение источником изменилось.\n\nДиагностическая консоль Marten показывает восемь строк на странице. Размер страницы не связан с пределом партии базы в шестьдесят четыре записи.",
+      "content_hash": "82ce9f521dbf1ca4cec072f6d6905a14e39bb0150025f559ea9acde6c0225af1",
+      "chunks": [
+        {
+          "chunk_id": "eval-batch-ru-r2-c1",
+          "start": 0,
+          "end": 148,
+          "content": "Marten фиксирует не более шестидесяти четырёх векторных записей в одной партии базы. Вычисление провайдером выполняется до начала транзакции записи.",
+          "content_hash": "32724b42a238379a711930cb760b2232fd79b8fd16977ef1044b0f6b794ad534",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-batch-ru-r2-c2",
+          "start": 150,
+          "end": 266,
+          "content": "Каждая фиксация Marten проверяет активную версию источника и откатывает партию, если владение источником изменилось.",
+          "content_hash": "ca2daba1687ae5385418ee8a10e2c7983b068f82bf4428bdccb94c9571c82168",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-batch-ru-r2-c3",
+          "start": 268,
+          "end": 412,
+          "content": "Диагностическая консоль Marten показывает восемь строк на странице. Размер страницы не связан с пределом партии базы в шестьдесят четыре записи.",
+          "content_hash": "86f0b9d74c7e90ee50e74217050386003db03e9621e1f49821c825c069ba8878",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-batch-uk",
+      "version_id": "eval-batch-uk-r2",
+      "title": "batch-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Marten фіксує не більше шістдесяти чотирьох векторних записів в одній партії бази. Обчислення провайдером виконується до початку транзакції запису.\n\nКожна фіксація Marten перевіряє активну версію джерела та відкочує партію, якщо володіння джерелом змінилося.\n\nДіагностична консоль Marten показує вісім рядків на сторінці. Розмір сторінки не пов’язаний із межею партії бази в шістдесят чотири записи.",
+      "content_hash": "6b30a8dedfda950043c8e239e06b88533f67de7a12ab6d7df4d468a021517ae2",
+      "chunks": [
+        {
+          "chunk_id": "eval-batch-uk-r2-c1",
+          "start": 0,
+          "end": 147,
+          "content": "Marten фіксує не більше шістдесяти чотирьох векторних записів в одній партії бази. Обчислення провайдером виконується до початку транзакції запису.",
+          "content_hash": "1754fd297708997fd4fb82fbb1326dc76f139e8e4585517234964bf35614effc",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-batch-uk-r2-c2",
+          "start": 149,
+          "end": 258,
+          "content": "Кожна фіксація Marten перевіряє активну версію джерела та відкочує партію, якщо володіння джерелом змінилося.",
+          "content_hash": "ce4d248cf7c62acc3ced344e2ff2dc2c1d08876c79e08e903076c75e8a79ca2e",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-batch-uk-r2-c3",
+          "start": 260,
+          "end": 399,
+          "content": "Діагностична консоль Marten показує вісім рядків на сторінці. Розмір сторінки не пов’язаний із межею партії бази в шістдесят чотири записи.",
+          "content_hash": "8f73ac98807d02bcc2b896ae32e15d41f87d9396e3c805f9687a59e1cc5110dd",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-clock-en",
+      "version_id": "eval-clock-en-r2",
+      "title": "clock-en",
+      "language": "en",
+      "active": true,
+      "original": "The fictional Wren maintenance calendar uses UTC plus two hours. All persisted lease deadlines remain absolute UTC instants.\n\nWren converts an operator display time to UTC before comparing a deadline; it never compares localized clock strings lexicographically.\n\nWren log files rotate every two hours. Rotation frequency is not the maintenance calendar timezone offset.",
+      "content_hash": "ac561f738d40d9ecf8c1265e8e3e78bcc432acbd4d73e719fa45879a58946746",
+      "chunks": [
+        {
+          "chunk_id": "eval-clock-en-r2-c1",
+          "start": 0,
+          "end": 124,
+          "content": "The fictional Wren maintenance calendar uses UTC plus two hours. All persisted lease deadlines remain absolute UTC instants.",
+          "content_hash": "bc3d9ff0581ff31a154fc795b18185547baf4ce4dc316cf1bc2bba55c21e3e53",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-clock-en-r2-c2",
+          "start": 126,
+          "end": 261,
+          "content": "Wren converts an operator display time to UTC before comparing a deadline; it never compares localized clock strings lexicographically.",
+          "content_hash": "25a911c7e02bf6444f43bef34960d05a61b728bc4705f216ee38f2ee71d0acdc",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-clock-en-r2-c3",
+          "start": 263,
+          "end": 369,
+          "content": "Wren log files rotate every two hours. Rotation frequency is not the maintenance calendar timezone offset.",
+          "content_hash": "6a3514c69f42b97b57fd5e6d115ee9b1063de6834918bd6369793a0000b9b4a0",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-clock-ru",
+      "version_id": "eval-clock-ru-r2",
+      "title": "clock-ru",
+      "language": "ru",
+      "active": true,
+      "original": "Календарь обслуживания вымышленной системы Wren использует UTC плюс два часа. Сохранённые сроки аренды остаются абсолютными моментами UTC.\n\nWren переводит отображаемое оператору время в UTC до сравнения срока; локализованные строки часов не сравниваются по алфавиту.\n\nФайлы журналов Wren меняются каждые два часа. Частота ротации не является часовым поясом календаря обслуживания.",
+      "content_hash": "c8cd6402e5bce4c45b8c134123318a993a61a07094da0e161f4cbbbc4aa55e04",
+      "chunks": [
+        {
+          "chunk_id": "eval-clock-ru-r2-c1",
+          "start": 0,
+          "end": 138,
+          "content": "Календарь обслуживания вымышленной системы Wren использует UTC плюс два часа. Сохранённые сроки аренды остаются абсолютными моментами UTC.",
+          "content_hash": "49f12a40b25f987f4332eb69d0f073a7bd802a403c91bf1465255f5648ff2507",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-clock-ru-r2-c2",
+          "start": 140,
+          "end": 266,
+          "content": "Wren переводит отображаемое оператору время в UTC до сравнения срока; локализованные строки часов не сравниваются по алфавиту.",
+          "content_hash": "56f373ed59c1b102d28b4d882fb58ce1faa7948d7a7adefab461fd1fbaf28b9f",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-clock-ru-r2-c3",
+          "start": 268,
+          "end": 380,
+          "content": "Файлы журналов Wren меняются каждые два часа. Частота ротации не является часовым поясом календаря обслуживания.",
+          "content_hash": "4f5ee022b2cf9df467e63da21a7bc71a251cf9f2b4eca64922c55d1aa4b09722",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-clock-uk",
+      "version_id": "eval-clock-uk-r2",
+      "title": "clock-uk",
+      "language": "uk",
+      "active": true,
+      "original": "Календар обслуговування вигаданої системи Wren використовує UTC плюс дві години. Збережені строки оренди залишаються абсолютними моментами UTC.\n\nWren переводить показаний оператору час у UTC перед порівнянням строку; локалізовані рядки годинника не порівнюються за абеткою.\n\nФайли журналів Wren змінюються кожні дві години. Частота ротації не є часовим поясом календаря обслуговування.",
+      "content_hash": "fc56bfe86247d7474e7bf495730839f313ea34486d8e424e495df362913ee95e",
+      "chunks": [
+        {
+          "chunk_id": "eval-clock-uk-r2-c1",
+          "start": 0,
+          "end": 143,
+          "content": "Календар обслуговування вигаданої системи Wren використовує UTC плюс дві години. Збережені строки оренди залишаються абсолютними моментами UTC.",
+          "content_hash": "aec8ca0c3f2cccfd330ac767bd75844ac4afc71786cfbaa599613c262f286fb5",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-clock-uk-r2-c2",
+          "start": 145,
+          "end": 273,
+          "content": "Wren переводить показаний оператору час у UTC перед порівнянням строку; локалізовані рядки годинника не порівнюються за абеткою.",
+          "content_hash": "586caea3075f1bf7b97f691be8ec61c9ffd1117c57141324d616113c7b35a3aa",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-clock-uk-r2-c3",
+          "start": 275,
+          "end": 385,
+          "content": "Файли журналів Wren змінюються кожні дві години. Частота ротації не є часовим поясом календаря обслуговування.",
+          "content_hash": "630f060e04669df757c439fbee100abfb27ee758b90c83a67bd2c36a2bb98298",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-code-digest",
+      "version_id": "eval-code-digest-r2",
+      "title": "code-digest",
+      "language": "code",
+      "active": true,
+      "original": "def source_digest(content: bytes) -> str:\n    return hashlib.sha256(content).hexdigest()\n\nThe source_digest function accepts bytes and returns a hexadecimal SHA-256 identifier; callers preserve the exact original bytes.\n\ndef display_name(path: str) -> str:\n    return path.rsplit(\"/\", 1)[-1]",
+      "content_hash": "4c96a8192dbd1e3c2f6d099aad3e882acb4a69bf305ced83def992039171b91d",
+      "chunks": [
+        {
+          "chunk_id": "eval-code-digest-r2-c1",
+          "start": 0,
+          "end": 88,
+          "content": "def source_digest(content: bytes) -> str:\n    return hashlib.sha256(content).hexdigest()",
+          "content_hash": "3910e848aecdc517d25048693b3867b1a16c1058344d50f02788e88eb625b523",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-code-digest-r2-c2",
+          "start": 90,
+          "end": 219,
+          "content": "The source_digest function accepts bytes and returns a hexadecimal SHA-256 identifier; callers preserve the exact original bytes.",
+          "content_hash": "40cd66e919c34e1210adc04314402a6751a7bf2f40d8745157dfe2346eb5dcba",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-code-digest-r2-c3",
+          "start": 221,
+          "end": 291,
+          "content": "def display_name(path: str) -> str:\n    return path.rsplit(\"/\", 1)[-1]",
+          "content_hash": "efb2132e6db1ac4f2901eacd35ef22dfe5f42dd70a1b89c681ef332188a4c88f",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-code-deadline",
+      "version_id": "eval-code-deadline-r2",
+      "title": "code-deadline",
+      "language": "code",
+      "active": true,
+      "original": "def deadline_expired(now: float, deadline: float) -> bool:\n    return now >= deadline\n\ndeadline_expired uses a monotonic caller clock; equality means expired, and the function does not renew a worker lease.\n\ndef lease_has_owner(owner: str | None) -> bool:\n    return owner is not None",
+      "content_hash": "5368ede20486d4e56eba47ee8f3cf218d5d4d46f6364df4339aa6f5c45b41fa1",
+      "chunks": [
+        {
+          "chunk_id": "eval-code-deadline-r2-c1",
+          "start": 0,
+          "end": 85,
+          "content": "def deadline_expired(now: float, deadline: float) -> bool:\n    return now >= deadline",
+          "content_hash": "c0a519b65ee8aa10ba8afdeb3829ce62d83f3b8531e6cc42add0e3626d1e9355",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-code-deadline-r2-c2",
+          "start": 87,
+          "end": 206,
+          "content": "deadline_expired uses a monotonic caller clock; equality means expired, and the function does not renew a worker lease.",
+          "content_hash": "7c8bb1d7605e1a8e6cbd89f1bd7885dd1cc2be66d313ecb6b0ad086bce260004",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-code-deadline-r2-c3",
+          "start": 208,
+          "end": 284,
+          "content": "def lease_has_owner(owner: str | None) -> bool:\n    return owner is not None",
+          "content_hash": "0dee5d3e213ab30bc9af1a51dbc833e82e8e46178514cbdf8392044da70d6075",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-code-scope",
+      "version_id": "eval-code-scope-r2",
+      "title": "code-scope",
+      "language": "code",
+      "active": true,
+      "original": "SELECT chunk_id FROM chunks WHERE workspace_id = :workspace AND version_status = 'active';\n\nThe scoped query requires both the authorized workspace and active version; a client filter cannot replace the workspace predicate.\n\nSELECT count(*) FROM telemetry WHERE event_kind = 'active';",
+      "content_hash": "f63e7ae23227f61faf724edbe619e1bb93f63f27a849c964d49a52b7ea4c4c16",
+      "chunks": [
+        {
+          "chunk_id": "eval-code-scope-r2-c1",
+          "start": 0,
+          "end": 90,
+          "content": "SELECT chunk_id FROM chunks WHERE workspace_id = :workspace AND version_status = 'active';",
+          "content_hash": "98a73ea60df8284cc324d4ac6462a30056c4f0ba1314e6d1257db81b3b5ad643",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-code-scope-r2-c2",
+          "start": 92,
+          "end": 223,
+          "content": "The scoped query requires both the authorized workspace and active version; a client filter cannot replace the workspace predicate.",
+          "content_hash": "a2ced25282f3c3e47d19a33d80e4525e0c8488d3c8e255f825c94e5c9dfb1de6",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-code-scope-r2-c3",
+          "start": 225,
+          "end": 284,
+          "content": "SELECT count(*) FROM telemetry WHERE event_kind = 'active';",
+          "content_hash": "a3cbc324e0dbe39060814152b15477dd446870365d74a017918b2c5625b2a87b",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-code-cursor",
+      "version_id": "eval-code-cursor-r2",
+      "title": "code-cursor",
+      "language": "code",
+      "active": true,
+      "original": "def advance_cursor(committed_id: str, previous_id: str | None) -> str:\n    return max(committed_id, previous_id) if previous_id else committed_id\n\nadvance_cursor runs only after a successful durable commit and never acknowledges an uncommitted model result.\n\ndef reset_preview_cursor() -> None:\n    return None",
+      "content_hash": "979a2e4e76d71d35c84eaaabeaf71747634f8e28bc0fe9c17b9ba81244f623b7",
+      "chunks": [
+        {
+          "chunk_id": "eval-code-cursor-r2-c1",
+          "start": 0,
+          "end": 145,
+          "content": "def advance_cursor(committed_id: str, previous_id: str | None) -> str:\n    return max(committed_id, previous_id) if previous_id else committed_id",
+          "content_hash": "1e870241779e1bead4c3704761d9967bf3430bb0bed314b2b42150108fa7cb2d",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-code-cursor-r2-c2",
+          "start": 147,
+          "end": 257,
+          "content": "advance_cursor runs only after a successful durable commit and never acknowledges an uncommitted model result.",
+          "content_hash": "1e7f8c06f311eb4e89bec5f5052e63f788dfb6a842b7def6cb25bcd88b37e1cb",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-code-cursor-r2-c3",
+          "start": 259,
+          "end": 310,
+          "content": "def reset_preview_cursor() -> None:\n    return None",
+          "content_hash": "ceb9733eea2ce7d311a3e682cf754cc3080fbd5d6def28bbf7f570df6a58e739",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-cross-nightjar",
+      "version_id": "eval-cross-nightjar-r2",
+      "title": "cross-nightjar",
+      "language": "en",
+      "active": true,
+      "original": "Nightjar maintenance begins on Thursday at 03:20 UTC. Customer writes pause for the approved maintenance window.\n\nThe Nightjar operator drains pending writes before changing the active revision, then verifies the completed drain.\n\nNightjar synthetic load tests run on Monday at 11:00 UTC; that test schedule is not the maintenance window.",
+      "content_hash": "10cefa5fc7af37acabb2d9145c357fbb47b86b1ad2c5ab6289c0cf3806c682ef",
+      "chunks": [
+        {
+          "chunk_id": "eval-cross-nightjar-r2-c1",
+          "start": 0,
+          "end": 112,
+          "content": "Nightjar maintenance begins on Thursday at 03:20 UTC. Customer writes pause for the approved maintenance window.",
+          "content_hash": "93f835dde124e3ba39885f742f17c434f11f75b0d6f1010ac2e1caf7d2a9cb6a",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-cross-nightjar-r2-c2",
+          "start": 114,
+          "end": 229,
+          "content": "The Nightjar operator drains pending writes before changing the active revision, then verifies the completed drain.",
+          "content_hash": "5e7b3302a02a1dee20152b7021d3b8e430c17bc887f678870a5958e6928178da",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-cross-nightjar-r2-c3",
+          "start": 231,
+          "end": 338,
+          "content": "Nightjar synthetic load tests run on Monday at 11:00 UTC; that test schedule is not the maintenance window.",
+          "content_hash": "ff19c3c051b9aa705f0627ae0591c93468fcbc930e86604a462bc82c7fb2bcfa",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-cross-quartz",
+      "version_id": "eval-cross-quartz-r2",
+      "title": "cross-quartz",
+      "language": "en",
+      "active": true,
+      "original": "Quartz signs webhook payloads with HMAC-SHA256 over the exact raw request body. Re-serializing JSON before verification is forbidden.\n\nQuartz verifies the signature before parsing untrusted fields and rejects a mismatched signature without dispatching work.\n\nQuartz image previews use a perceptual thumbnail hash. That image hash is unrelated to webhook signature verification.",
+      "content_hash": "1983da20d0d8fa086ad2dd8dc6c4642a7bc164bc53492ae799c066f0dbf5adce",
+      "chunks": [
+        {
+          "chunk_id": "eval-cross-quartz-r2-c1",
+          "start": 0,
+          "end": 133,
+          "content": "Quartz signs webhook payloads with HMAC-SHA256 over the exact raw request body. Re-serializing JSON before verification is forbidden.",
+          "content_hash": "87a70843474332b480d361c49b237a324179dd1bcecb0a271b44ac44061d91f4",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-cross-quartz-r2-c2",
+          "start": 135,
+          "end": 257,
+          "content": "Quartz verifies the signature before parsing untrusted fields and rejects a mismatched signature without dispatching work.",
+          "content_hash": "fdf7104e77e545dbf70ffebaddf533de07c70e8a17968ba227e2b0a89ee66fcd",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-cross-quartz-r2-c3",
+          "start": 259,
+          "end": 377,
+          "content": "Quartz image previews use a perceptual thumbnail hash. That image hash is unrelated to webhook signature verification.",
+          "content_hash": "513ce0406749848f98761e166fcdd45c1993e3680622228392ee6155d14f8e6a",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-cross-juniper",
+      "version_id": "eval-cross-juniper-r2",
+      "title": "cross-juniper",
+      "language": "en",
+      "active": true,
+      "original": "Juniper archive restoration uses recovery sector amber-central-2. Restoration into an unapproved sector is refused.\n\nThe Juniper recovery manifest binds the approved sector to the immutable archive revision and is verified before restoration.\n\nJuniper sandbox examples use sector amber-west-9; sandbox examples cannot select the recovery target.",
+      "content_hash": "bf25288ee78ffc26e89448e2e18eea8acca8e0a1c1a2d51c67c5eb785454e973",
+      "chunks": [
+        {
+          "chunk_id": "eval-cross-juniper-r2-c1",
+          "start": 0,
+          "end": 115,
+          "content": "Juniper archive restoration uses recovery sector amber-central-2. Restoration into an unapproved sector is refused.",
+          "content_hash": "7e1add65b38678c43de8160eba4eb84f67f050aeab2a4399653b889aab9c8ce9",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-cross-juniper-r2-c2",
+          "start": 117,
+          "end": 242,
+          "content": "The Juniper recovery manifest binds the approved sector to the immutable archive revision and is verified before restoration.",
+          "content_hash": "54c84e436c5270276bee808a61508110194cb6aff92b89222f876528860cfb41",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-cross-juniper-r2-c3",
+          "start": 244,
+          "end": 345,
+          "content": "Juniper sandbox examples use sector amber-west-9; sandbox examples cannot select the recovery target.",
+          "content_hash": "0d1807195bc96749b67612699c90a5d40b4b1251cc97c50fe91b0ec55867ac0d",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-cross-helios",
+      "version_id": "eval-cross-helios-r2",
+      "title": "cross-helios",
+      "language": "en",
+      "active": true,
+      "original": "A Helios emergency grant expires after eighteen minutes and requires approval by two operators before issue.\n\nHelios records both approvals and the absolute expiry instant in its audit entry; renewal requires a new approval pair.\n\nHelios ordinary browser sessions last six hours. Browser session duration does not define emergency-grant expiry.",
+      "content_hash": "0fe917e70cbb205da608530b2143e2bda25128d2c0f8e505e9fdb5d5c5475186",
+      "chunks": [
+        {
+          "chunk_id": "eval-cross-helios-r2-c1",
+          "start": 0,
+          "end": 108,
+          "content": "A Helios emergency grant expires after eighteen minutes and requires approval by two operators before issue.",
+          "content_hash": "687c0a4c2ea7dee3649708258356b0abbb0b7d18a69e4e991abf109c4eedcb47",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-cross-helios-r2-c2",
+          "start": 110,
+          "end": 229,
+          "content": "Helios records both approvals and the absolute expiry instant in its audit entry; renewal requires a new approval pair.",
+          "content_hash": "b2cbcea3e4559a67754c149c7f4176b098e3f39cd6453b23f8f56c9a2b5dac8d",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-cross-helios-r2-c3",
+          "start": 231,
+          "end": 344,
+          "content": "Helios ordinary browser sessions last six hours. Browser session duration does not define emergency-grant expiry.",
+          "content_hash": "a6111f688117aca885bd952ff0e1c53ed343f1682ca529062ad1ec61e4135c0d",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-cross-cedar",
+      "version_id": "eval-cross-cedar-r2",
+      "title": "cross-cedar",
+      "language": "en",
+      "active": true,
+      "original": "Cedar has a recovery point objective of twelve minutes and a recovery time objective of forty-five minutes.\n\nCedar recovery drills compare the last durable checkpoint and restoration completion against those separate objectives.\n\nCedar refreshes its operator dashboard every twelve seconds. Dashboard refresh is not a recovery objective.",
+      "content_hash": "bcaca71429be200e3cadc3c242e57b3d8bdc890a0a8f405a3542b7ea3c166d82",
+      "chunks": [
+        {
+          "chunk_id": "eval-cross-cedar-r2-c1",
+          "start": 0,
+          "end": 107,
+          "content": "Cedar has a recovery point objective of twelve minutes and a recovery time objective of forty-five minutes.",
+          "content_hash": "df5d070313deac12c2b278dd8c233e06038fd811d423f7b2de0c037a501a166d",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-cross-cedar-r2-c2",
+          "start": 109,
+          "end": 228,
+          "content": "Cedar recovery drills compare the last durable checkpoint and restoration completion against those separate objectives.",
+          "content_hash": "1f9b9b26be48d034ba29f56a543ce34c143c10dfac00fc002d5cf4cbf5e1c570",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-cross-cedar-r2-c3",
+          "start": 230,
+          "end": 337,
+          "content": "Cedar refreshes its operator dashboard every twelve seconds. Dashboard refresh is not a recovery objective.",
+          "content_hash": "fa95b17b160c39cf99ab1651d6eae680f90863f28bb3b8fff39de512f037cb24",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-cross-marlin",
+      "version_id": "eval-cross-marlin-r2",
+      "title": "cross-marlin",
+      "language": "en",
+      "active": true,
+      "original": "Marlin rollout selects the next immutable revision with a monotonic revision counter. A wall-clock timestamp cannot win a concurrent rollout.\n\nMarlin compares the expected previous revision inside one transaction and rejects a competing update when that expectation is stale.\n\nMarlin displays event timestamps in its activity panel. Display ordering does not select an executable rollout revision.",
+      "content_hash": "73d064c4a97f0c31836b8b4802d1922c80b7e873f650f00084a12638579485a7",
+      "chunks": [
+        {
+          "chunk_id": "eval-cross-marlin-r2-c1",
+          "start": 0,
+          "end": 141,
+          "content": "Marlin rollout selects the next immutable revision with a monotonic revision counter. A wall-clock timestamp cannot win a concurrent rollout.",
+          "content_hash": "c4f7eaa7c39774aba209323a2bac917ea7d64d2fa28a11ee2089c819a365e5dc",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-cross-marlin-r2-c2",
+          "start": 143,
+          "end": 275,
+          "content": "Marlin compares the expected previous revision inside one transaction and rejects a competing update when that expectation is stale.",
+          "content_hash": "e87c9281825ac35b66a3140a7f6bc8762e994239d0058eb8d8c7cc2d6a12a66c",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-cross-marlin-r2-c3",
+          "start": 277,
+          "end": 397,
+          "content": "Marlin displays event timestamps in its activity panel. Display ordering does not select an executable rollout revision.",
+          "content_hash": "2f3f147caa15e5b59daa17dbda377fa88e64a4197ab0cce049e6b406f8d75af8",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-retention-en",
+      "version_id": "eval-retention-en-r1",
+      "title": "retention-en",
+      "language": "en",
+      "active": false,
+      "original": "SUPERSEDED Orion revision one kept recovery snapshots for seven days, before the current twenty-one-day policy.\n\nOrion recovery starts by selecting a completed snapshot and verifying its recorded SHA-256 before restoring it to a separate target.\n\nOrion access logs are retained for ninety days. That audit-log interval does not control snapshot retention.",
+      "content_hash": "9f345ad0238e1ce6aad05d5f30bec2a6141e4c58274e21dc478f71b3c9e64d26",
+      "chunks": [
+        {
+          "chunk_id": "eval-retention-en-r1-c1",
+          "start": 0,
+          "end": 111,
+          "content": "SUPERSEDED Orion revision one kept recovery snapshots for seven days, before the current twenty-one-day policy.",
+          "content_hash": "bb440e0f510340ba91938335a3e5061ed0c8553eb88c8596976b7897b2ae4ca0",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-retention-en-r1-c2",
+          "start": 113,
+          "end": 245,
+          "content": "Orion recovery starts by selecting a completed snapshot and verifying its recorded SHA-256 before restoring it to a separate target.",
+          "content_hash": "4d81527fa098a773983f93e4504efe8ae6ad50a15bed005204ea808cce4d649c",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-retention-en-r1-c3",
+          "start": 247,
+          "end": 355,
+          "content": "Orion access logs are retained for ninety days. That audit-log interval does not control snapshot retention.",
+          "content_hash": "c3b9ae338d10c2fe3f021e5762af8d166667a7eab0e8c9f6ff9ef8503f6bcba3",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-lease-ru",
+      "version_id": "eval-lease-ru-r1",
+      "title": "lease-ru",
+      "language": "ru",
+      "active": false,
+      "original": "УСТАРЕВШАЯ редакция Vela продлевала аренду через тридцать секунд; она не является текущей политикой.\n\nРабочий процесс Vela продлевает владение перед долгим запросом к провайдеру и проверяет токен владельца в транзакции публикации.\n\nHTTP-запросы Vela имеют срок ответа восемь секунд. Этот сетевой срок не равен времени аренды рабочего процесса.",
+      "content_hash": "0ad69abde61e2cff5e62f7c012fd410d370d0d0217486c1e43f296e8ae4370a4",
+      "chunks": [
+        {
+          "chunk_id": "eval-lease-ru-r1-c1",
+          "start": 0,
+          "end": 100,
+          "content": "УСТАРЕВШАЯ редакция Vela продлевала аренду через тридцать секунд; она не является текущей политикой.",
+          "content_hash": "25be33e75d6373792c00088d003c17054e95019ce8ff854d5cabd5c30fa4c040",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-lease-ru-r1-c2",
+          "start": 102,
+          "end": 230,
+          "content": "Рабочий процесс Vela продлевает владение перед долгим запросом к провайдеру и проверяет токен владельца в транзакции публикации.",
+          "content_hash": "35644b4d64240aba21ce853a60b789cfc19978e5b5050c33028659793e1c3aa9",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-lease-ru-r1-c3",
+          "start": 232,
+          "end": 343,
+          "content": "HTTP-запросы Vela имеют срок ответа восемь секунд. Этот сетевой срок не равен времени аренды рабочего процесса.",
+          "content_hash": "fb071c63d45496c765b1ca26c497c03b91c944a229d91e4cb2818a9613a83369",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-queue-uk",
+      "version_id": "eval-queue-uk-r1",
+      "title": "queue-uk",
+      "language": "uk",
+      "active": false,
+      "original": "ЗАСТАРІЛА редакція Finch дозволяла двісті п’ятдесят шість очікуваних записів; вона не є чинною політикою.\n\nПісля перезапуску Finch продовжує зі збереженого курсора; запис підтверджують лише після успішного довговічного збереження.\n\nПакети телеметрії Finch обмежені п’ятьмастами дванадцятьма байтами. Розмір пакета не визначає кількість записів у черзі.",
+      "content_hash": "f6a3d7c918d5837377a502586fda9f4ab4e2d03078e32a1b9739d2d63ffccfbd",
+      "chunks": [
+        {
+          "chunk_id": "eval-queue-uk-r1-c1",
+          "start": 0,
+          "end": 105,
+          "content": "ЗАСТАРІЛА редакція Finch дозволяла двісті п’ятдесят шість очікуваних записів; вона не є чинною політикою.",
+          "content_hash": "08a269535f37d12bcaf9c88ecfdca8e83ceea04bbc49ac55102a2f4a1fe554f3",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-queue-uk-r1-c2",
+          "start": 107,
+          "end": 230,
+          "content": "Після перезапуску Finch продовжує зі збереженого курсора; запис підтверджують лише після успішного довговічного збереження.",
+          "content_hash": "c9b07add2da773d4a6344e29fc6bf87eeb36bb864feccdf261868e966e6b44f7",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-queue-uk-r1-c3",
+          "start": 232,
+          "end": 352,
+          "content": "Пакети телеметрії Finch обмежені п’ятьмастами дванадцятьма байтами. Розмір пакета не визначає кількість записів у черзі.",
+          "content_hash": "40f5a98502436fcc0d4b2503db0f13c7f410f761572e72395b553ec01e9685c7",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation",
+      "source_id": "eval-code-deadline",
+      "version_id": "eval-code-deadline-r1",
+      "title": "code-deadline",
+      "language": "code",
+      "active": false,
+      "original": "def deadline_expired(now: float, deadline: float) -> bool:\n    return now > deadline\n\ndeadline_expired uses a monotonic caller clock; equality means expired, and the function does not renew a worker lease.\n\ndef lease_has_owner(owner: str | None) -> bool:\n    return owner is not None",
+      "content_hash": "ec34a91db78eb0029e3ca9566c4e22f0434e10943dc19dfb448242c21057fca2",
+      "chunks": [
+        {
+          "chunk_id": "eval-code-deadline-r1-c1",
+          "start": 0,
+          "end": 84,
+          "content": "def deadline_expired(now: float, deadline: float) -> bool:\n    return now > deadline",
+          "content_hash": "38dd039b508cabff0e6d954316c51eded1bd747c4793f1a8071d8b235820cb50",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-code-deadline-r1-c2",
+          "start": 86,
+          "end": 205,
+          "content": "deadline_expired uses a monotonic caller clock; equality means expired, and the function does not renew a worker lease.",
+          "content_hash": "7c8bb1d7605e1a8e6cbd89f1bd7885dd1cc2be66d313ecb6b0ad086bce260004",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-code-deadline-r1-c3",
+          "start": 207,
+          "end": 283,
+          "content": "def lease_has_owner(owner: str | None) -> bool:\n    return owner is not None",
+          "content_hash": "0dee5d3e213ab30bc9af1a51dbc833e82e8e46178514cbdf8392044da70d6075",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation-other",
+      "source_id": "eval-foreign-falcon",
+      "version_id": "eval-foreign-falcon-r2",
+      "title": "foreign-falcon",
+      "language": "en",
+      "active": true,
+      "original": "Tenant-private Falcon launch phrase is ZEBRA-ORCHID-91. It belongs only to the other evaluation workspace.\n\nThe foreign tenant permits direct lookup only under its own workspace scope. Main-workspace search cannot return this source.\n\nA shared filename or similar source text is never authorization to read a foreign workspace.",
+      "content_hash": "2dac39ee4db6d18ca82bd7e77094f8a4dad06296bd93f862824e05d2afc5839a",
+      "chunks": [
+        {
+          "chunk_id": "eval-foreign-falcon-r2-c1",
+          "start": 0,
+          "end": 106,
+          "content": "Tenant-private Falcon launch phrase is ZEBRA-ORCHID-91. It belongs only to the other evaluation workspace.",
+          "content_hash": "1aa3f416a709c3a92a5eb39e59328237b9154d4dca5a82a630987ae04341abc5",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-foreign-falcon-r2-c2",
+          "start": 108,
+          "end": 233,
+          "content": "The foreign tenant permits direct lookup only under its own workspace scope. Main-workspace search cannot return this source.",
+          "content_hash": "55d27dd49442b1ebd61a5b9dd20402d3cf3e375b3f05c22752066d83f61aeb0f",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-foreign-falcon-r2-c3",
+          "start": 235,
+          "end": 327,
+          "content": "A shared filename or similar source text is never authorization to read a foreign workspace.",
+          "content_hash": "07af36c064fbb4cdd1faaa227a30c7dbecc9d1baf809548b1e4f9cc5c16340f0",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation-other",
+      "source_id": "eval-foreign-heron",
+      "version_id": "eval-foreign-heron-r2",
+      "title": "foreign-heron",
+      "language": "ru",
+      "active": true,
+      "original": "Чужой рабочей области принадлежит закрытый маркер HERON-COPPER-73.\n\nЭтот источник разрешён только в отдельной рабочей области; основная область не имеет к нему доступа.\n\nСовпадение строки запроса не снимает ограничение рабочей области.",
+      "content_hash": "52b1659b130ffb0edf7d6b4eb5c40e393f534fa429ce374f23bd525185500eb5",
+      "chunks": [
+        {
+          "chunk_id": "eval-foreign-heron-r2-c1",
+          "start": 0,
+          "end": 66,
+          "content": "Чужой рабочей области принадлежит закрытый маркер HERON-COPPER-73.",
+          "content_hash": "87b35bc68b9b4652d8a85f8900e1e14767aac12c178bce1eb5938110c6fd47c5",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-foreign-heron-r2-c2",
+          "start": 68,
+          "end": 168,
+          "content": "Этот источник разрешён только в отдельной рабочей области; основная область не имеет к нему доступа.",
+          "content_hash": "04a3ce0dd8001349d4b17e81b2189ee3a4f936c9b109030ed5fabb72554c8c4b",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-foreign-heron-r2-c3",
+          "start": 170,
+          "end": 235,
+          "content": "Совпадение строки запроса не снимает ограничение рабочей области.",
+          "content_hash": "110c88263620b6157e79633ea49b6c5e542c344465db00e0054ca80f6e537f6a",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation-other",
+      "source_id": "eval-foreign-kestrel",
+      "version_id": "eval-foreign-kestrel-r2",
+      "title": "foreign-kestrel",
+      "language": "uk",
+      "active": true,
+      "original": "Іншій робочій області належить закритий маркер KESTREL-INDIGO-47.\n\nДжерело доступне лише в окремій робочій області; основна область не має до нього доступу.\n\nЗбіг рядка запиту не скасовує обмеження робочої області.",
+      "content_hash": "1e8daa7ca6feca42392e756bc7a0bea2a27721512c8d6a2dd7025db7fe54a57d",
+      "chunks": [
+        {
+          "chunk_id": "eval-foreign-kestrel-r2-c1",
+          "start": 0,
+          "end": 65,
+          "content": "Іншій робочій області належить закритий маркер KESTREL-INDIGO-47.",
+          "content_hash": "b2d96c83a67d560b8d23c9c93047fbea68cd3830e1317420f997140e87a1fc3a",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-foreign-kestrel-r2-c2",
+          "start": 67,
+          "end": 156,
+          "content": "Джерело доступне лише в окремій робочій області; основна область не має до нього доступу.",
+          "content_hash": "2da0cdd7d75363af36ae31de1617e6db7626cd7d301beab5524fc8f71e61560e",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-foreign-kestrel-r2-c3",
+          "start": 158,
+          "end": 214,
+          "content": "Збіг рядка запиту не скасовує обмеження робочої області.",
+          "content_hash": "0cabc013888b34366a7b0cf1b5a19934f1ba72e6bd8cc8941ec55e9ee1328295",
+          "role": "hard_negative"
+        }
+      ]
+    },
+    {
+      "workspace_id": "embedding-evaluation-other",
+      "source_id": "eval-foreign-duplicate-retention",
+      "version_id": "eval-foreign-duplicate-retention-r2",
+      "title": "foreign-duplicate-retention",
+      "language": "en",
+      "active": true,
+      "original": "Orion snapshot retention is twenty-one days. After day twenty-one, the retention worker removes the oldest snapshots from the recovery catalog.\n\nOrion recovery starts by selecting a completed snapshot and verifying its recorded SHA-256 before restoring it to a separate target.\n\nOrion access logs are retained for ninety days. That audit-log interval does not control snapshot retention.",
+      "content_hash": "8536c376764f81001c710d6bffff8e347d7d7df99dd4e73a0b3eebdf3ebbb48f",
+      "chunks": [
+        {
+          "chunk_id": "eval-foreign-duplicate-retention-r2-c1",
+          "start": 0,
+          "end": 143,
+          "content": "Orion snapshot retention is twenty-one days. After day twenty-one, the retention worker removes the oldest snapshots from the recovery catalog.",
+          "content_hash": "d20f9106ee357756d461073a61178c35d6a9be1eff46ea57ba38bb6b7b23e4b0",
+          "role": "primary"
+        },
+        {
+          "chunk_id": "eval-foreign-duplicate-retention-r2-c2",
+          "start": 145,
+          "end": 277,
+          "content": "Orion recovery starts by selecting a completed snapshot and verifying its recorded SHA-256 before restoring it to a separate target.",
+          "content_hash": "4d81527fa098a773983f93e4504efe8ae6ad50a15bed005204ea808cce4d649c",
+          "role": "support"
+        },
+        {
+          "chunk_id": "eval-foreign-duplicate-retention-r2-c3",
+          "start": 279,
+          "end": 387,
+          "content": "Orion access logs are retained for ninety days. That audit-log interval does not control snapshot retention.",
+          "content_hash": "c3b9ae338d10c2fe3f021e5762af8d166667a7eab0e8c9f6ff9ef8503f6bcba3",
+          "role": "hard_negative"
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "query_id": "retention-en",
+      "text": "How long are Orion recovery snapshots kept, and what verification starts a restore?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-retention-en-r2-c1": 3,
+        "eval-retention-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "retention-ru",
+      "text": "Сколько хранятся снимки восстановления Orion и с какой проверки начинается восстановление?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-retention-ru-r2-c1": 3,
+        "eval-retention-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "retention-uk",
+      "text": "Скільки зберігаються знімки відновлення Orion і з якої перевірки починається відновлення?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-retention-uk-r2-c1": 3,
+        "eval-retention-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "lease-en",
+      "text": "When does a Vela worker lease expire, and how is ownership checked before publishing?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-lease-en-r2-c1": 3,
+        "eval-lease-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "lease-ru",
+      "text": "Через какое время истекает аренда Vela и как проверяется владелец перед публикацией?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-lease-ru-r2-c1": 3,
+        "eval-lease-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "lease-uk",
+      "text": "Через який час завершується оренда Vela і як перевіряють власника перед публікацією?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-lease-uk-r2-c1": 3,
+        "eval-lease-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "queue-en",
+      "text": "What is the Finch pending-record limit and how does the worker acknowledge durable progress?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-queue-en-r2-c1": 3,
+        "eval-queue-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "queue-ru",
+      "text": "Каков предел ожидающих записей Finch и когда рабочий процесс подтверждает сохранение?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-queue-ru-r2-c1": 3,
+        "eval-queue-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "queue-uk",
+      "text": "Яка межа очікуваних записів Finch і коли робочий процес підтверджує збереження?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-queue-uk-r2-c1": 3,
+        "eval-queue-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "timeout-en",
+      "text": "What is the Kite connection deadline and what happens to tokens after an uncertain sent request?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-timeout-en-r2-c1": 3,
+        "eval-timeout-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "timeout-ru",
+      "text": "Какой срок подключения у Kite и что происходит с токенами неопределённого отправленного запроса?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-timeout-ru-r2-c1": 3,
+        "eval-timeout-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "timeout-uk",
+      "text": "Який строк підключення Kite і що стається з токенами невизначеного надісланого запиту?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-timeout-uk-r2-c1": 3,
+        "eval-timeout-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "checksum-en",
+      "text": "Which digest identifies Larch original assets and when is it checked before returning a file?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-checksum-en-r2-c1": 3,
+        "eval-checksum-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "checksum-ru",
+      "text": "Каким хешем Larch определяет исходные файлы и когда проверяет его перед выдачей?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-checksum-ru-r2-c1": 3,
+        "eval-checksum-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "checksum-uk",
+      "text": "Яким хешем Larch визначає початкові файли та коли перевіряє його перед видачею?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-checksum-uk-r2-c1": 3,
+        "eval-checksum-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "region-en",
+      "text": "Where does the Sable active archive live and how is that region bound to recovery?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-region-en-r2-c1": 3,
+        "eval-region-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "region-ru",
+      "text": "В каком регионе находится активный архив Sable и чем регион привязан к восстановлению?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-region-ru-r2-c1": 3,
+        "eval-region-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "region-uk",
+      "text": "У якому регіоні розміщено активний архів Sable і чим регіон прив’язано до відновлення?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-region-uk-r2-c1": 3,
+        "eval-region-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "batch-en",
+      "text": "How many vector records may Marten commit in a batch and which version condition is checked?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-batch-en-r2-c1": 3,
+        "eval-batch-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "batch-ru",
+      "text": "Сколько векторных записей Marten фиксирует за раз и какое условие версии проверяет?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-batch-ru-r2-c1": 3,
+        "eval-batch-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "batch-uk",
+      "text": "Скільки векторних записів Marten фіксує за раз і яку умову версії перевіряє?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-batch-uk-r2-c1": 3,
+        "eval-batch-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "clock-en",
+      "text": "Which timezone does the Wren calendar display and how are lease deadlines compared?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-clock-en-r2-c1": 3,
+        "eval-clock-en-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "clock-ru",
+      "text": "Какой часовой пояс показывает календарь Wren и как сравниваются сроки аренды?",
+      "language": "ru",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-clock-ru-r2-c1": 3,
+        "eval-clock-ru-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "clock-uk",
+      "text": "Який часовий пояс показує календар Wren і як порівнюються строки оренди?",
+      "language": "uk",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-clock-uk-r2-c1": 3,
+        "eval-clock-uk-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "code-digest",
+      "text": "Which function hashes exact source bytes with SHA-256 rather than extracting a display filename?",
+      "language": "en",
+      "cohort": "code",
+      "relevance": {
+        "eval-code-digest-r2-c1": 3,
+        "eval-code-digest-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "code-deadline",
+      "text": "Which function marks a monotonic deadline expired at equality, rather than checking whether an owner exists?",
+      "language": "en",
+      "cohort": "code",
+      "relevance": {
+        "eval-code-deadline-r2-c1": 3,
+        "eval-code-deadline-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "code-scope",
+      "text": "Which SQL query selects active chunks only in the authorized workspace, rather than counting telemetry?",
+      "language": "en",
+      "cohort": "code",
+      "relevance": {
+        "eval-code-scope-r2-c1": 3,
+        "eval-code-scope-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "code-cursor",
+      "text": "Which cursor function acknowledges a committed identifier without going backwards, rather than resetting a preview?",
+      "language": "en",
+      "cohort": "code",
+      "relevance": {
+        "eval-code-cursor-r2-c1": 3,
+        "eval-code-cursor-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-nightjar-ru",
+      "text": "Когда начинается обслуживание Nightjar и что оператор делает с ожидающими записями?",
+      "language": "ru",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-nightjar-r2-c1": 3,
+        "eval-cross-nightjar-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-nightjar-uk",
+      "text": "Коли починається обслуговування Nightjar і що оператор робить з очікуваними записами?",
+      "language": "uk",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-nightjar-r2-c1": 3,
+        "eval-cross-nightjar-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "control-nightjar-en",
+      "text": "What does the Nightjar policy require and how is that requirement verified?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-cross-nightjar-r2-c1": 3,
+        "eval-cross-nightjar-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-quartz-ru",
+      "text": "Чем Quartz подписывает исходное тело webhook и когда проверяет подпись?",
+      "language": "ru",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-quartz-r2-c1": 3,
+        "eval-cross-quartz-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-quartz-uk",
+      "text": "Чим Quartz підписує початкове тіло webhook і коли перевіряє підпис?",
+      "language": "uk",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-quartz-r2-c1": 3,
+        "eval-cross-quartz-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "control-quartz-en",
+      "text": "What does the Quartz policy require and how is that requirement verified?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-cross-quartz-r2-c1": 3,
+        "eval-cross-quartz-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-juniper-ru",
+      "text": "Какой сектор разрешён для восстановления Juniper и каким манифестом он закреплён?",
+      "language": "ru",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-juniper-r2-c1": 3,
+        "eval-cross-juniper-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-juniper-uk",
+      "text": "Який сектор дозволено для відновлення Juniper і яким маніфестом його закріплено?",
+      "language": "uk",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-juniper-r2-c1": 3,
+        "eval-cross-juniper-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "control-juniper-en",
+      "text": "What does the Juniper policy require and how is that requirement verified?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-cross-juniper-r2-c1": 3,
+        "eval-cross-juniper-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-helios-ru",
+      "text": "Каков срок экстренного допуска Helios и сколько операторов должны его одобрить?",
+      "language": "ru",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-helios-r2-c1": 3,
+        "eval-cross-helios-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-helios-uk",
+      "text": "Який строк екстреного допуску Helios і скільки операторів мають його погодити?",
+      "language": "uk",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-helios-r2-c1": 3,
+        "eval-cross-helios-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "control-helios-en",
+      "text": "What does the Helios policy require and how is that requirement verified?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-cross-helios-r2-c1": 3,
+        "eval-cross-helios-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-cedar-ru",
+      "text": "Какие у Cedar цели по потере данных и длительности восстановления и как их проверяют?",
+      "language": "ru",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-cedar-r2-c1": 3,
+        "eval-cross-cedar-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-cedar-uk",
+      "text": "Які в Cedar цілі щодо втрати даних і тривалості відновлення та як їх перевіряють?",
+      "language": "uk",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-cedar-r2-c1": 3,
+        "eval-cross-cedar-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "control-cedar-en",
+      "text": "What does the Cedar policy require and how is that requirement verified?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-cross-cedar-r2-c1": 3,
+        "eval-cross-cedar-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-marlin-ru",
+      "text": "Как Marlin выбирает ревизию развёртывания и отклоняет конкурирующее обновление?",
+      "language": "ru",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-marlin-r2-c1": 3,
+        "eval-cross-marlin-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "cross-marlin-uk",
+      "text": "Як Marlin обирає ревізію розгортання та відхиляє конкурентне оновлення?",
+      "language": "uk",
+      "cohort": "cross_language",
+      "relevance": {
+        "eval-cross-marlin-r2-c1": 3,
+        "eval-cross-marlin-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "control-marlin-en",
+      "text": "What does the Marlin policy require and how is that requirement verified?",
+      "language": "en",
+      "cohort": "same_language",
+      "relevance": {
+        "eval-cross-marlin-r2-c1": 3,
+        "eval-cross-marlin-r2-c2": 1
+      }
+    },
+    {
+      "query_id": "no-answer-unrelated-en",
+      "text": "Which telescope photographed the violet glacier on the fictional planet Ilex-94?",
+      "language": "en",
+      "cohort": "no_answer",
+      "relevance": {}
+    },
+    {
+      "query_id": "no-answer-unrelated-ru",
+      "text": "Как называется чемпионат по шахматам среди вымышленных лунных ящериц?",
+      "language": "ru",
+      "cohort": "no_answer",
+      "relevance": {}
+    },
+    {
+      "query_id": "no-answer-unrelated-uk",
+      "text": "Яка ціна вечері у вигаданому ресторані зоряних равликів?",
+      "language": "uk",
+      "cohort": "no_answer",
+      "relevance": {}
+    },
+    {
+      "query_id": "no-answer-foreign-en",
+      "text": "Find the tenant-private Falcon launch phrase ZEBRA-ORCHID-91.",
+      "language": "en",
+      "cohort": "no_answer",
+      "relevance": {}
+    },
+    {
+      "query_id": "no-answer-foreign-ru",
+      "text": "Найди закрытый маркер HERON-COPPER-73 чужой рабочей области.",
+      "language": "ru",
+      "cohort": "no_answer",
+      "relevance": {}
+    },
+    {
+      "query_id": "no-answer-stale-en",
+      "text": "Find the superseded revision-one policy authorizing publication by an expired worker lease.",
+      "language": "en",
+      "cohort": "no_answer",
+      "relevance": {}
+    }
+  ]
+}

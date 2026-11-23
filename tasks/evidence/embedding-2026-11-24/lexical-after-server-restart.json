@@ -1,0 +1,11 @@
+{
+  "profile_revision": "postgres-fts-baseline-r1",
+  "status": "PASS",
+  "expected_chunk": "demo-identifiers-chunk-1",
+  "server_restarted": true,
+  "corpus_revision": "corpus-138b2a8f620aed19d324da8c8046dd2f251d7e7e957c724665c9f45252e04b10",
+  "provider_calls": 0,
+  "transport": "HTTP",
+  "actual_chunk": "demo-identifiers-chunk-1",
+  "profile_id": "postgres-fts-baseline"
+}

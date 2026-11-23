@@ -198,6 +198,7 @@ class TeiEmbeddingAdapter:
             task_kind=request.task_kind,
             token_count=sum(item.token_count for item in prepared),
             deadline=request.deadline,
+            workspace_id=request.workspace_id,
         )
         sent = False
         provenance: UsageProvenance
@@ -225,9 +226,14 @@ class TeiEmbeddingAdapter:
         except asyncio.CancelledError:
             await governor.finish(reservation, outcome="cancelled", usage_tokens=None, usage_provenance="unknown")
             raise
-        except BaseException:
+        except BaseException as error:
+            code = error.code if isinstance(error, EmbeddingError) else None
             await governor.finish(
-                reservation, outcome="ambiguous" if sent else "failed", usage_tokens=None, usage_provenance="unknown"
+                reservation,
+                outcome="failed" if not sent or code == EmbeddingErrorCode.RATE_LIMITED else "ambiguous",
+                usage_tokens=None,
+                usage_provenance="unknown",
+                error_code=code,
             )
             raise
         await governor.finish(reservation, outcome="success", usage_tokens=usage, usage_provenance=provenance)

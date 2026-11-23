@@ -1,0 +1,11 @@
+DROP TRIGGER schedule_chunk_embeddings ON workbench.chunks;
+DROP TRIGGER schedule_version_embeddings ON workbench.source_versions;
+DROP FUNCTION workbench.schedule_source_embeddings();
+DROP TABLE workbench.embedding_generations;
+DROP TABLE workbench.chunk_embeddings;
+ALTER TABLE workbench.chunks DROP CONSTRAINT chunks_embedding_reference;
+DROP TABLE workbench.embedding_vectors;
+DROP FUNCTION workbench.immutable_embedding_vector();
+DROP TABLE workbench.embedding_jobs;
+DROP TABLE workbench.embedding_model_profiles;
+DROP FUNCTION workbench.immutable_embedding_profile();

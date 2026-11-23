@@ -1,0 +1,17 @@
+{
+  "runtime_files_frozen": 19,
+  "status": "PASS",
+  "actual_http_edit_reused": 49,
+  "native_tokens_per_input": 4096,
+  "unique_inputs": 2200,
+  "fixed_quota": 622592,
+  "hard_budget": 591462,
+  "actual_http_edit_generated": 1,
+  "packet_cycle": [
+    8,
+    8,
+    8,
+    4
+  ],
+  "target_tpm": 572784.64
+}

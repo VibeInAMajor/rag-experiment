@@ -553,6 +553,7 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
             "postgres_ingestion.py",
             "postgres_indexes.py",
             "postgres_profiles.py",
+            "postgres_embeddings.py",
             "db_migrations.py",
             "db_admin.py",
         }:

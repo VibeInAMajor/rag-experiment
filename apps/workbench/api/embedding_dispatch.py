@@ -20,6 +20,11 @@ from apps.workbench.api.embedding import EmbeddingError, EmbeddingErrorCode, Emb
 _ROOT = Path(__file__).resolve().parents[3]
 
 
+def _deployment_lease_path(deployment_id: str, lock_directory: Path | None) -> Path:
+    directory = _ROOT / ".cache" / "workbench-embedding-admission" if lock_directory is None else lock_directory
+    return directory / f"{hashlib.sha256(deployment_id.encode()).hexdigest()}.lock"
+
+
 class QualificationCapacityPolicy(BaseModel):
     """A finite test allowance, never an estimate of sustainable or globally assigned TPM."""
 
@@ -29,10 +34,10 @@ class QualificationCapacityPolicy(BaseModel):
     deployment_id: Identifier
     policy_id: Identifier = "local-embedding-qualification"
     policy_revision: Identifier = "qualification-budget-r1"
-    max_attempts: int = Field(default=256, ge=1, le=512)
-    max_total_tokens: int = Field(default=250000, ge=1, le=500000)
+    max_attempts: int = Field(default=256, ge=1, le=4096)
+    max_total_tokens: int = Field(default=250000, ge=1, le=10000000)
     max_request_tokens: int = Field(default=8192, ge=1, le=32768)
-    max_duration_seconds: float = Field(default=600.0, gt=0, le=900, allow_inf_nan=False)
+    max_duration_seconds: float = Field(default=600.0, gt=0, le=1800, allow_inf_nan=False)
 
 
 @dataclass
@@ -60,8 +65,7 @@ class QualificationEmbeddingGovernor:
     ) -> None:
         self._policy = policy
         self._clock = clock
-        directory = _ROOT / ".cache" / "workbench-embedding-admission" if lock_directory is None else lock_directory
-        self._lock_path = directory / f"{hashlib.sha256(policy.deployment_id.encode()).hexdigest()}.lock"
+        self._lock_path = _deployment_lease_path(policy.deployment_id, lock_directory)
         self._lease = FileLock(self._lock_path, timeout=0, thread_local=False)
         self._started_at: float | None = None
         self._closed = False
@@ -114,9 +118,12 @@ class QualificationEmbeddingGovernor:
         task_kind: Literal["query", "document"],
         token_count: int,
         deadline: float,
+        workspace_id: str = "development",
     ) -> EmbeddingReservation:
         """Admit at most one bounded attempt; retries and both purposes spend the same budget."""
         now = self._clock()
+        if not workspace_id:
+            raise EmbeddingError(EmbeddingErrorCode.INVALID_REQUEST)
         if self._closed or self._uncertain_execution or self._started_at is None or not self._lease.is_locked:
             raise EmbeddingError(EmbeddingErrorCode.NOT_QUALIFIED)
         if (profile_id, profile_revision, deployment_id) != (
@@ -170,9 +177,12 @@ class QualificationEmbeddingGovernor:
         outcome: Literal["success", "failed", "ambiguous", "cancelled"],
         usage_tokens: int | None,
         usage_provenance: UsageProvenance,
+        error_code: EmbeddingErrorCode | None = None,
     ) -> None:
         """Reconcile once; attempted tokens are never refunded from the finite test allowance."""
         attempt = self._owned_attempt(reservation)
+        if error_code is not None and not isinstance(error_code, EmbeddingErrorCode):
+            raise EmbeddingError(EmbeddingErrorCode.INVALID_REQUEST)
         if outcome not in {"success", "failed", "ambiguous", "cancelled"}:
             raise EmbeddingError(EmbeddingErrorCode.INVALID_REQUEST)
         if usage_provenance not in {"provider_reported", "tokenizer_counted_proxy", "unknown"}:

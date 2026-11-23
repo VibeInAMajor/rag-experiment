@@ -1,0 +1,1364 @@
+{
+  "profile": {
+    "profile_id": "qwen3-embedding-4b-local",
+    "profile_revision": "qwen3-4b-capacity-32k-r1",
+    "provider_adapter_id": "tei-openai",
+    "model_id": "Qwen/Qwen3-Embedding-4B",
+    "model_revision": "5cf2132abc99cad020ac570b19d031efec650f2b",
+    "model_digest": "cd97e9cb507f62c0b69e6540ecabbb877508ba71437d2d227f25cd611b8ae67d",
+    "tokenizer_digest": "3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+    "tokenizer_revision": "qwen3-embedding-4b:5cf2132abc99cad020ac570b19d031efec650f2b:tokenizers-0.23.3:sha256:3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+    "input_format_revision": "qwen-instruct-r1",
+    "dimensions": 2560,
+    "normalized": true,
+    "pooling": "last_token",
+    "inference_dtype": "float16",
+    "output_encoding": "float",
+    "max_tokens": 8192,
+    "max_batch_tokens": 32768,
+    "max_batch_items": 8,
+    "timeout_seconds": 60.0,
+    "retry_attempts": 0,
+    "query_instruction": "Given a web search query, retrieve relevant passages that answer the query"
+  },
+  "capacity": {
+    "policy_id": "measured-local-embedding",
+    "policy_revision": "measured-1795474613",
+    "profile_id": "qwen3-embedding-4b-local",
+    "profile_revision": "qwen3-4b-capacity-32k-r1",
+    "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+    "deployment_id": "tei-5cd3b936fc05f977b00bfe4e",
+    "runtime_evidence_digest": "fd5996cb0d88b610e38ebf61d68420e2dccd3586812641498288abcf2a00a3d0",
+    "calibration_digest": "3a2e60f732270bf40295717cadb3f4a83bb9856b5a20c9d19e890f15fe1a5cf3",
+    "capacity_source": "local-saturation-benchmark",
+    "sustainable_tpm": 622592,
+    "sustainable_rpm": 118,
+    "measured_at_unix": 1795474613.6361282,
+    "expires_at_unix": 1795481813.6361282,
+    "target_ratio": 0.92,
+    "hard_ratio": 0.95,
+    "max_request_tokens": 32768,
+    "max_in_flight": 1,
+    "max_queued_packets": 32,
+    "max_queued_tokens": 1048576,
+    "max_workspace_queued_packets": 8,
+    "max_requests_one_second": 16,
+    "max_requests_ten_seconds": 128,
+    "cooldown_seconds": 10.0,
+    "endpoint_ownership": "exclusive-workbench-process",
+    "gpu_sharing": "shared-observed-conditions"
+  },
+  "report": {
+    "status": "MEASURED",
+    "identity": {
+      "deployment_id": "tei-5cd3b936fc05f977b00bfe4e",
+      "adapter_id": "tei-openai",
+      "model_digest": "cd97e9cb507f62c0b69e6540ecabbb877508ba71437d2d227f25cd611b8ae67d",
+      "tokenizer_digest": "3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+      "tokenizer_revision": "qwen3-embedding-4b:5cf2132abc99cad020ac570b19d031efec650f2b:tokenizers-0.23.3:sha256:3d456a234fcae954923af3a43363d38828146971ce98cbd21fcbe5a97aa7cee7",
+      "served_model_id": "Qwen/Qwen3-Embedding-4B",
+      "info_digest": "aa6b6ac3ca8877c34db0982cc7e99b5190c4d2968a99365b8a3739fb3ff17283",
+      "runtime_revision": "tei-1.9.4",
+      "evidence_digest": "fd5996cb0d88b610e38ebf61d68420e2dccd3586812641498288abcf2a00a3d0"
+    },
+    "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+    "screen_duration_seconds": 12.0,
+    "sustained_duration_per_finalist_seconds": 120.0,
+    "screen_candidates": [
+      {
+        "tokens_per_item_target": 128,
+        "items": 8,
+        "elapsed_seconds": 12.125,
+        "provider_reported_tokens": 24576,
+        "completed_requests": 24,
+        "provider_reported_tpm": 121613.19587628866,
+        "completed_rpm": 118.76288659793815,
+        "adapter_latency_ms": {
+          "min": 452.9999999995198,
+          "p50": 492.0000000001892,
+          "p95": 531.9999999992433,
+          "max": 858.9999999985594
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 0.8589999999985594,
+            "tokens": 1024
+          },
+          {
+            "at": 1.3589999999985594,
+            "tokens": 1024
+          },
+          {
+            "at": 1.8589999999985594,
+            "tokens": 1024
+          },
+          {
+            "at": 2.32799999999952,
+            "tokens": 1024
+          },
+          {
+            "at": 2.8439999999991414,
+            "tokens": 1024
+          },
+          {
+            "at": 3.311999999999898,
+            "tokens": 1024
+          },
+          {
+            "at": 3.82799999999952,
+            "tokens": 1024
+          },
+          {
+            "at": 4.311999999999898,
+            "tokens": 1024
+          },
+          {
+            "at": 4.82799999999952,
+            "tokens": 1024
+          },
+          {
+            "at": 5.296999999998661,
+            "tokens": 1024
+          },
+          {
+            "at": 5.78099999999904,
+            "tokens": 1024
+          },
+          {
+            "at": 6.25,
+            "tokens": 1024
+          },
+          {
+            "at": 6.75,
+            "tokens": 1024
+          },
+          {
+            "at": 7.28099999999904,
+            "tokens": 1024
+          },
+          {
+            "at": 7.78099999999904,
+            "tokens": 1024
+          },
+          {
+            "at": 8.25,
+            "tokens": 1024
+          },
+          {
+            "at": 8.70299999999952,
+            "tokens": 1024
+          },
+          {
+            "at": 9.171999999998661,
+            "tokens": 1024
+          },
+          {
+            "at": 9.686999999999898,
+            "tokens": 1024
+          },
+          {
+            "at": 10.218999999999141,
+            "tokens": 1024
+          },
+          {
+            "at": 10.671999999998661,
+            "tokens": 1024
+          },
+          {
+            "at": 11.15599999999904,
+            "tokens": 1024
+          },
+          {
+            "at": 11.625,
+            "tokens": 1024
+          },
+          {
+            "at": 12.125,
+            "tokens": 1024
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 512,
+        "items": 1,
+        "elapsed_seconds": 12.07799999999952,
+        "provider_reported_tokens": 11776,
+        "completed_requests": 23,
+        "provider_reported_tpm": 58499.75161450804,
+        "completed_rpm": 114.25732737208601,
+        "adapter_latency_ms": {
+          "min": 436.99999999989814,
+          "p50": 515.9999999996217,
+          "p95": 593.9999999991414,
+          "max": 640.9999999996217
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 0.43699999999989814,
+            "tokens": 512
+          },
+          {
+            "at": 0.875,
+            "tokens": 512
+          },
+          {
+            "at": 1.3279999999995198,
+            "tokens": 512
+          },
+          {
+            "at": 1.7809999999990396,
+            "tokens": 512
+          },
+          {
+            "at": 2.264999999999418,
+            "tokens": 512
+          },
+          {
+            "at": 2.764999999999418,
+            "tokens": 512
+          },
+          {
+            "at": 3.32799999999952,
+            "tokens": 512
+          },
+          {
+            "at": 3.875,
+            "tokens": 512
+          },
+          {
+            "at": 4.45299999999952,
+            "tokens": 512
+          },
+          {
+            "at": 4.968999999999141,
+            "tokens": 512
+          },
+          {
+            "at": 5.483999999998559,
+            "tokens": 512
+          },
+          {
+            "at": 5.968999999999141,
+            "tokens": 512
+          },
+          {
+            "at": 6.45299999999952,
+            "tokens": 512
+          },
+          {
+            "at": 6.95299999999952,
+            "tokens": 512
+          },
+          {
+            "at": 7.53099999999904,
+            "tokens": 512
+          },
+          {
+            "at": 8.171999999998661,
+            "tokens": 512
+          },
+          {
+            "at": 8.75,
+            "tokens": 512
+          },
+          {
+            "at": 9.343999999999141,
+            "tokens": 512
+          },
+          {
+            "at": 9.889999999999418,
+            "tokens": 512
+          },
+          {
+            "at": 10.468999999999141,
+            "tokens": 512
+          },
+          {
+            "at": 11.014999999999418,
+            "tokens": 512
+          },
+          {
+            "at": 11.53099999999904,
+            "tokens": 512
+          },
+          {
+            "at": 12.07799999999952,
+            "tokens": 512
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 512,
+        "items": 4,
+        "elapsed_seconds": 12.53099999999904,
+        "provider_reported_tokens": 45056,
+        "completed_requests": 22,
+        "provider_reported_tpm": 215733.78022505844,
+        "completed_rpm": 105.33875987551681,
+        "adapter_latency_ms": {
+          "min": 500.0,
+          "p50": 554.5000000001892,
+          "p95": 625.0,
+          "max": 764.9999999994179
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 0.7649999999994179,
+            "tokens": 2048
+          },
+          {
+            "at": 1.3589999999985594,
+            "tokens": 2048
+          },
+          {
+            "at": 1.9689999999991414,
+            "tokens": 2048
+          },
+          {
+            "at": 2.5939999999991414,
+            "tokens": 2048
+          },
+          {
+            "at": 3.1719999999986612,
+            "tokens": 2048
+          },
+          {
+            "at": 3.7189999999991414,
+            "tokens": 2048
+          },
+          {
+            "at": 4.311999999999898,
+            "tokens": 2048
+          },
+          {
+            "at": 4.858999999998559,
+            "tokens": 2048
+          },
+          {
+            "at": 5.421999999998661,
+            "tokens": 2048
+          },
+          {
+            "at": 5.968999999999141,
+            "tokens": 2048
+          },
+          {
+            "at": 6.483999999998559,
+            "tokens": 2048
+          },
+          {
+            "at": 7.03099999999904,
+            "tokens": 2048
+          },
+          {
+            "at": 7.561999999999898,
+            "tokens": 2048
+          },
+          {
+            "at": 8.07799999999952,
+            "tokens": 2048
+          },
+          {
+            "at": 8.639999999999418,
+            "tokens": 2048
+          },
+          {
+            "at": 9.186999999999898,
+            "tokens": 2048
+          },
+          {
+            "at": 9.75,
+            "tokens": 2048
+          },
+          {
+            "at": 10.375,
+            "tokens": 2048
+          },
+          {
+            "at": 10.921999999998661,
+            "tokens": 2048
+          },
+          {
+            "at": 11.45299999999952,
+            "tokens": 2048
+          },
+          {
+            "at": 11.968999999999141,
+            "tokens": 2048
+          },
+          {
+            "at": 12.53099999999904,
+            "tokens": 2048
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 512,
+        "items": 8,
+        "elapsed_seconds": 12.375,
+        "provider_reported_tokens": 73728,
+        "completed_requests": 18,
+        "provider_reported_tpm": 357469.0909090909,
+        "completed_rpm": 87.27272727272727,
+        "adapter_latency_ms": {
+          "min": 655.9999999990396,
+          "p50": 686.9999999998981,
+          "p95": 750.0,
+          "max": 750.0
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 0.7029999999995198,
+            "tokens": 4096
+          },
+          {
+            "at": 1.389999999999418,
+            "tokens": 4096
+          },
+          {
+            "at": 2.061999999999898,
+            "tokens": 4096
+          },
+          {
+            "at": 2.7960000000002765,
+            "tokens": 4096
+          },
+          {
+            "at": 3.45299999999952,
+            "tokens": 4096
+          },
+          {
+            "at": 4.109000000000378,
+            "tokens": 4096
+          },
+          {
+            "at": 4.764999999999418,
+            "tokens": 4096
+          },
+          {
+            "at": 5.45299999999952,
+            "tokens": 4096
+          },
+          {
+            "at": 6.125,
+            "tokens": 4096
+          },
+          {
+            "at": 6.811999999999898,
+            "tokens": 4096
+          },
+          {
+            "at": 7.531000000000859,
+            "tokens": 4096
+          },
+          {
+            "at": 8.234000000000378,
+            "tokens": 4096
+          },
+          {
+            "at": 8.906000000000859,
+            "tokens": 4096
+          },
+          {
+            "at": 9.593000000000757,
+            "tokens": 4096
+          },
+          {
+            "at": 10.281000000000859,
+            "tokens": 4096
+          },
+          {
+            "at": 10.936999999999898,
+            "tokens": 4096
+          },
+          {
+            "at": 11.625,
+            "tokens": 4096
+          },
+          {
+            "at": 12.375,
+            "tokens": 4096
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 1024,
+        "items": 8,
+        "elapsed_seconds": 12.04700000000048,
+        "provider_reported_tokens": 106496,
+        "completed_requests": 13,
+        "provider_reported_tpm": 530402.5898563747,
+        "completed_rpm": 64.74640989457698,
+        "adapter_latency_ms": {
+          "min": 890.9999999996217,
+          "p50": 922.0000000004802,
+          "p95": 952.9999999995198,
+          "max": 952.9999999995198
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 0.9380000000001019,
+            "tokens": 8192
+          },
+          {
+            "at": 1.875,
+            "tokens": 8192
+          },
+          {
+            "at": 2.82799999999952,
+            "tokens": 8192
+          },
+          {
+            "at": 3.7340000000003783,
+            "tokens": 8192
+          },
+          {
+            "at": 4.656000000000859,
+            "tokens": 8192
+          },
+          {
+            "at": 5.609000000000378,
+            "tokens": 8192
+          },
+          {
+            "at": 6.531000000000859,
+            "tokens": 8192
+          },
+          {
+            "at": 7.45299999999952,
+            "tokens": 8192
+          },
+          {
+            "at": 8.375,
+            "tokens": 8192
+          },
+          {
+            "at": 9.29700000000048,
+            "tokens": 8192
+          },
+          {
+            "at": 10.234000000000378,
+            "tokens": 8192
+          },
+          {
+            "at": 11.156000000000859,
+            "tokens": 8192
+          },
+          {
+            "at": 12.04700000000048,
+            "tokens": 8192
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 2048,
+        "items": 8,
+        "elapsed_seconds": 12.593999999999141,
+        "provider_reported_tokens": 114688,
+        "completed_requests": 7,
+        "provider_reported_tpm": 546393.5207241916,
+        "completed_rpm": 33.349213911388645,
+        "adapter_latency_ms": {
+          "min": 1702.9999999995198,
+          "p50": 1811.9999999998981,
+          "p95": 1875.0,
+          "max": 1875.0
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 1.7189999999991414,
+            "tokens": 16384
+          },
+          {
+            "at": 3.54700000000048,
+            "tokens": 16384
+          },
+          {
+            "at": 5.343999999999141,
+            "tokens": 16384
+          },
+          {
+            "at": 7.2039999999997235,
+            "tokens": 16384
+          },
+          {
+            "at": 9.015999999999622,
+            "tokens": 16384
+          },
+          {
+            "at": 10.718999999999141,
+            "tokens": 16384
+          },
+          {
+            "at": 12.593999999999141,
+            "tokens": 16384
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 4096,
+        "items": 8,
+        "elapsed_seconds": 12.985000000000582,
+        "provider_reported_tokens": 131072,
+        "completed_requests": 4,
+        "provider_reported_tpm": 605646.5152098304,
+        "completed_rpm": 18.48286484405,
+        "adapter_latency_ms": {
+          "min": 3016.0000000014406,
+          "p50": 3140.49999999952,
+          "p95": 3656.9999999992433,
+          "max": 3656.9999999992433
+        },
+        "full_60_second_completed_tokens": [],
+        "sustainable_candidate_tpm": null,
+        "completions": [
+          {
+            "at": 3.67200000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 6.906999999999243,
+            "tokens": 32768
+          },
+          {
+            "at": 9.968999999999141,
+            "tokens": 32768
+          },
+          {
+            "at": 12.985000000000582,
+            "tokens": 32768
+          }
+        ],
+        "failures": 0
+      }
+    ],
+    "sustained_candidates": [
+      {
+        "tokens_per_item_target": 4096,
+        "items": 8,
+        "elapsed_seconds": 121.3119999999999,
+        "provider_reported_tokens": 1277952,
+        "completed_requests": 39,
+        "provider_reported_tpm": 632065.4180954898,
+        "completed_rpm": 19.2891057768399,
+        "adapter_latency_ms": {
+          "min": 3030.9999999990396,
+          "p50": 3093.0000000007567,
+          "p95": 3235.000000000582,
+          "max": 3297.00000000048
+        },
+        "full_60_second_completed_tokens": [
+          622592,
+          622592
+        ],
+        "sustainable_candidate_tpm": 622592,
+        "completions": [
+          {
+            "at": 3.17200000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 6.234000000000378,
+            "tokens": 32768
+          },
+          {
+            "at": 9.29700000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 12.343999999999141,
+            "tokens": 32768
+          },
+          {
+            "at": 15.42200000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 18.46899999999914,
+            "tokens": 32768
+          },
+          {
+            "at": 21.64099999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 24.76599999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 27.90599999999904,
+            "tokens": 32768
+          },
+          {
+            "at": 31.21899999999914,
+            "tokens": 32768
+          },
+          {
+            "at": 34.3119999999999,
+            "tokens": 32768
+          },
+          {
+            "at": 37.34399999999914,
+            "tokens": 32768
+          },
+          {
+            "at": 40.40599999999904,
+            "tokens": 32768
+          },
+          {
+            "at": 43.4369999999999,
+            "tokens": 32768
+          },
+          {
+            "at": 46.51599999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 49.5619999999999,
+            "tokens": 32768
+          },
+          {
+            "at": 52.6869999999999,
+            "tokens": 32768
+          },
+          {
+            "at": 55.79700000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 58.96899999999914,
+            "tokens": 32768
+          },
+          {
+            "at": 62.04700000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 65.10900000000038,
+            "tokens": 32768
+          },
+          {
+            "at": 68.20299999999952,
+            "tokens": 32768
+          },
+          {
+            "at": 71.26599999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 74.40599999999904,
+            "tokens": 32768
+          },
+          {
+            "at": 77.59399999999914,
+            "tokens": 32768
+          },
+          {
+            "at": 80.8119999999999,
+            "tokens": 32768
+          },
+          {
+            "at": 83.89099999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 87.07799999999952,
+            "tokens": 32768
+          },
+          {
+            "at": 90.14099999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 93.26599999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 96.35900000000038,
+            "tokens": 32768
+          },
+          {
+            "at": 99.4369999999999,
+            "tokens": 32768
+          },
+          {
+            "at": 102.54700000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 105.60900000000038,
+            "tokens": 32768
+          },
+          {
+            "at": 108.67200000000048,
+            "tokens": 32768
+          },
+          {
+            "at": 111.78099999999904,
+            "tokens": 32768
+          },
+          {
+            "at": 115.01599999999962,
+            "tokens": 32768
+          },
+          {
+            "at": 118.15599999999904,
+            "tokens": 32768
+          },
+          {
+            "at": 121.3119999999999,
+            "tokens": 32768
+          }
+        ],
+        "failures": 0
+      },
+      {
+        "tokens_per_item_target": 2048,
+        "items": 8,
+        "elapsed_seconds": 121.1869999999999,
+        "provider_reported_tokens": 1196032,
+        "completed_requests": 73,
+        "provider_reported_tpm": 592158.5648625683,
+        "completed_rpm": 36.142490531162615,
+        "adapter_latency_ms": {
+          "min": 1453.0000000013388,
+          "p50": 1656.0000000008586,
+          "p95": 1827.9999999995198,
+          "max": 1906.0000000008586
+        },
+        "full_60_second_completed_tokens": [
+          573440,
+          606208
+        ],
+        "sustainable_candidate_tpm": 573440,
+        "completions": [
+          {
+            "at": 1.6869999999998981,
+            "tokens": 16384
+          },
+          {
+            "at": 3.2180000000007567,
+            "tokens": 16384
+          },
+          {
+            "at": 4.95299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 6.5460000000002765,
+            "tokens": 16384
+          },
+          {
+            "at": 8.234000000000378,
+            "tokens": 16384
+          },
+          {
+            "at": 9.781000000000859,
+            "tokens": 16384
+          },
+          {
+            "at": 11.32799999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 13.061999999999898,
+            "tokens": 16384
+          },
+          {
+            "at": 14.593000000000757,
+            "tokens": 16384
+          },
+          {
+            "at": 16.15600000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 17.95299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 19.70299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 21.389999999999418,
+            "tokens": 16384
+          },
+          {
+            "at": 23.139999999999418,
+            "tokens": 16384
+          },
+          {
+            "at": 24.875,
+            "tokens": 16384
+          },
+          {
+            "at": 26.45299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 28.061999999999898,
+            "tokens": 16384
+          },
+          {
+            "at": 29.811999999999898,
+            "tokens": 16384
+          },
+          {
+            "at": 31.57799999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 33.125,
+            "tokens": 16384
+          },
+          {
+            "at": 34.6869999999999,
+            "tokens": 16384
+          },
+          {
+            "at": 36.26499999999942,
+            "tokens": 16384
+          },
+          {
+            "at": 38.17100000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 39.92100000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 41.53100000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 43.26499999999942,
+            "tokens": 16384
+          },
+          {
+            "at": 44.78100000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 46.60900000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 48.38999999999942,
+            "tokens": 16384
+          },
+          {
+            "at": 50.10900000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 51.875,
+            "tokens": 16384
+          },
+          {
+            "at": 53.625,
+            "tokens": 16384
+          },
+          {
+            "at": 55.21800000000076,
+            "tokens": 16384
+          },
+          {
+            "at": 57.10900000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 58.96800000000076,
+            "tokens": 16384
+          },
+          {
+            "at": 60.625,
+            "tokens": 16384
+          },
+          {
+            "at": 62.35900000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 64.07799999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 65.73400000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 67.3119999999999,
+            "tokens": 16384
+          },
+          {
+            "at": 69.10900000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 70.70299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 72.46800000000076,
+            "tokens": 16384
+          },
+          {
+            "at": 74.09300000000076,
+            "tokens": 16384
+          },
+          {
+            "at": 75.79600000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 77.53100000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 79.28100000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 80.90600000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 82.51499999999942,
+            "tokens": 16384
+          },
+          {
+            "at": 84.20299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 85.95299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 87.42100000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 89.0619999999999,
+            "tokens": 16384
+          },
+          {
+            "at": 90.6869999999999,
+            "tokens": 16384
+          },
+          {
+            "at": 92.17100000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 93.76499999999942,
+            "tokens": 16384
+          },
+          {
+            "at": 95.42100000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 96.90600000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 98.48400000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 100.15600000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 101.79600000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 103.38999999999942,
+            "tokens": 16384
+          },
+          {
+            "at": 104.96800000000076,
+            "tokens": 16384
+          },
+          {
+            "at": 106.70299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 108.20299999999952,
+            "tokens": 16384
+          },
+          {
+            "at": 109.85900000000038,
+            "tokens": 16384
+          },
+          {
+            "at": 111.65600000000086,
+            "tokens": 16384
+          },
+          {
+            "at": 113.125,
+            "tokens": 16384
+          },
+          {
+            "at": 114.79600000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 116.375,
+            "tokens": 16384
+          },
+          {
+            "at": 118.04600000000028,
+            "tokens": 16384
+          },
+          {
+            "at": 119.5619999999999,
+            "tokens": 16384
+          },
+          {
+            "at": 121.1869999999999,
+            "tokens": 16384
+          }
+        ],
+        "failures": 0
+      }
+    ],
+    "selected": {
+      "tokens_per_item_target": 4096,
+      "items": 8,
+      "elapsed_seconds": 121.3119999999999,
+      "provider_reported_tokens": 1277952,
+      "completed_requests": 39,
+      "provider_reported_tpm": 632065.4180954898,
+      "completed_rpm": 19.2891057768399,
+      "adapter_latency_ms": {
+        "min": 3030.9999999990396,
+        "p50": 3093.0000000007567,
+        "p95": 3235.000000000582,
+        "max": 3297.00000000048
+      },
+      "full_60_second_completed_tokens": [
+        622592,
+        622592
+      ],
+      "sustainable_candidate_tpm": 622592,
+      "completions": [
+        {
+          "at": 3.17200000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 6.234000000000378,
+          "tokens": 32768
+        },
+        {
+          "at": 9.29700000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 12.343999999999141,
+          "tokens": 32768
+        },
+        {
+          "at": 15.42200000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 18.46899999999914,
+          "tokens": 32768
+        },
+        {
+          "at": 21.64099999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 24.76599999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 27.90599999999904,
+          "tokens": 32768
+        },
+        {
+          "at": 31.21899999999914,
+          "tokens": 32768
+        },
+        {
+          "at": 34.3119999999999,
+          "tokens": 32768
+        },
+        {
+          "at": 37.34399999999914,
+          "tokens": 32768
+        },
+        {
+          "at": 40.40599999999904,
+          "tokens": 32768
+        },
+        {
+          "at": 43.4369999999999,
+          "tokens": 32768
+        },
+        {
+          "at": 46.51599999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 49.5619999999999,
+          "tokens": 32768
+        },
+        {
+          "at": 52.6869999999999,
+          "tokens": 32768
+        },
+        {
+          "at": 55.79700000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 58.96899999999914,
+          "tokens": 32768
+        },
+        {
+          "at": 62.04700000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 65.10900000000038,
+          "tokens": 32768
+        },
+        {
+          "at": 68.20299999999952,
+          "tokens": 32768
+        },
+        {
+          "at": 71.26599999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 74.40599999999904,
+          "tokens": 32768
+        },
+        {
+          "at": 77.59399999999914,
+          "tokens": 32768
+        },
+        {
+          "at": 80.8119999999999,
+          "tokens": 32768
+        },
+        {
+          "at": 83.89099999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 87.07799999999952,
+          "tokens": 32768
+        },
+        {
+          "at": 90.14099999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 93.26599999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 96.35900000000038,
+          "tokens": 32768
+        },
+        {
+          "at": 99.4369999999999,
+          "tokens": 32768
+        },
+        {
+          "at": 102.54700000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 105.60900000000038,
+          "tokens": 32768
+        },
+        {
+          "at": 108.67200000000048,
+          "tokens": 32768
+        },
+        {
+          "at": 111.78099999999904,
+          "tokens": 32768
+        },
+        {
+          "at": 115.01599999999962,
+          "tokens": 32768
+        },
+        {
+          "at": 118.15599999999904,
+          "tokens": 32768
+        },
+        {
+          "at": 121.3119999999999,
+          "tokens": 32768
+        }
+      ],
+      "failures": 0
+    },
+    "selection_rule": "highest minimum of two full 60-second windows among the two screened leaders",
+    "denominator_frozen_before_validation": true,
+    "usage_provenance": "provider_reported",
+    "qualification_governor": {
+      "mode": "qualification_only",
+      "production_capacity_status": "NOT_QUALIFIED",
+      "global_external_share_confirmed": false,
+      "max_in_flight": 1,
+      "uncertain_execution": false,
+      "attempts_reserved": 223,
+      "attempts_sent": 223,
+      "attempts_finished": 223,
+      "attempts_successful": 223,
+      "admitted_token_estimates": 2981376,
+      "provider_reported_tokens": 2981376,
+      "tokenizer_counted_proxy_tokens": 0,
+      "unknown_usage_attempts": 0
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4090",
+      "uuid": "GPU-f72a55db-4995-d323-7f02-b2ab24b53b26",
+      "total_mib": 24564,
+      "used_mib": 19142,
+      "driver": "617.42",
+      "sampled_device_peak_used_mib": 22827
+    },
+    "gpu_scope": "shared physical GPU; observed workload and sharing conditions only",
+    "model_and_cached_assets_full_hashes_unchanged": true,
+    "per_item_limit_qualified_tokens": 8192,
+    "max_batch_tokens_exercised": 32768,
+    "max_in_flight": 1,
+    "not_tested": [
+      "concurrency2or4: server permits remain eight individual inputs"
+    ],
+    "donor_implementation_copied": false
+  }
+}

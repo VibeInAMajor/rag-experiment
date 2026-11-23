@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL, Connection
 from sqlalchemy.pool import NullPool
 
-HEAD_REVISION = "0004"
+HEAD_REVISION = "0005"
 EXPECTED_REVISION = HEAD_REVISION
 MIGRATION_TOOL_VERSION = "alembic-1.20.1"
 _EXTENSION_VERSION = "0.8.2"
@@ -27,6 +27,7 @@ _REVISIONS = (
     ("0002", "0002_ingestion_jobs"),
     ("0003", "0003_index_generations"),
     ("0004", "0004_profile_registry"),
+    ("0005", "0005_embedding_jobs"),
 )
 
 
@@ -115,12 +116,24 @@ def _status(connection: Connection) -> MigrationStatus:
         required_tables += ("corpus_index_state", "index_generations", "corpus_source_state")
     if revision >= "0004":
         required_tables += ("retrieval_profile_revisions", "retrieval_profile_rollouts", "profile_rollout_events")
+    if revision >= "0005":
+        required_tables += (
+            "embedding_model_profiles",
+            "embedding_jobs",
+            "embedding_vectors",
+            "chunk_embeddings",
+            "embedding_generations",
+        )
     tables_exist = all(
         connection.execute(text("SELECT to_regclass(:table)"), {"table": f"workbench.{table}"}).scalar_one_or_none()
         is not None
         for table in required_tables
     ) and _scoping_enabled(
-        connection, ingestion=revision >= "0002", indexes=revision >= "0003", profiles=revision >= "0004"
+        connection,
+        ingestion=revision >= "0002",
+        indexes=revision >= "0003",
+        profiles=revision >= "0004",
+        embeddings=revision >= "0005",
     )
     return MigrationStatus(
         revision=revision,
@@ -133,13 +146,26 @@ def _status(connection: Connection) -> MigrationStatus:
 
 
 def _scoping_enabled(
-    connection: Connection, *, ingestion: bool = False, indexes: bool = False, profiles: bool = False
+    connection: Connection,
+    *,
+    ingestion: bool = False,
+    indexes: bool = False,
+    profiles: bool = False,
+    embeddings: bool = False,
 ) -> bool:
     tables = _SCOPED_TABLES + (("ingestion_jobs",) if ingestion else ())
     if indexes:
         tables += ("corpus_index_state", "index_generations", "corpus_source_state")
     if profiles:
         tables += ("retrieval_profile_rollouts", "profile_rollout_events")
+    if embeddings:
+        tables += (
+            "embedding_model_profiles",
+            "embedding_jobs",
+            "embedding_vectors",
+            "chunk_embeddings",
+            "embedding_generations",
+        )
     rows = connection.execute(
         text(
             "SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity, pg_get_userbyid(c.relowner) "
@@ -175,7 +201,17 @@ def _scoping_enabled(
             "('workbench.workspaces'::regclass,'initialize_profile_rollout'))"
         )
     ).scalar_one()
-    return profile_triggers == 4
+    if profile_triggers != 4:
+        return False
+    if embeddings:
+        count: int = connection.execute(
+            text(
+                "SELECT count(*) FROM pg_trigger WHERE tgenabled IN ('O','A') AND tgname IN "
+                "('immutable_embedding_profile','immutable_embedding_vector','immutable_embedding_generation','schedule_version_embeddings','schedule_chunk_embeddings')"
+            )
+        ).scalar_one()
+        return count == 5
+    return True
 
 
 def migration_status(dsn: str) -> MigrationStatus:
@@ -226,6 +262,15 @@ def _grant_application(connection: Connection) -> None:
         "workbench.alembic_version TO workbench_app"
     )
     connection.exec_driver_sql("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
+    if connection.execute(text("SELECT to_regclass('workbench.embedding_jobs')")).scalar_one_or_none() is not None:
+        connection.exec_driver_sql(
+            "GRANT SELECT,INSERT,UPDATE ON "
+            "workbench.embedding_model_profiles,workbench.embedding_jobs,workbench.chunk_embeddings "
+            "TO workbench_app"
+        )
+        connection.exec_driver_sql(
+            "GRANT SELECT,INSERT ON workbench.embedding_vectors,workbench.embedding_generations TO workbench_app"
+        )
     if connection.execute(text("SELECT to_regclass('workbench.ingestion_jobs')")).scalar_one_or_none() is not None:
         connection.exec_driver_sql("GRANT SELECT,INSERT,UPDATE ON workbench.ingestion_jobs TO workbench_app")
     if connection.execute(text("SELECT to_regclass('workbench.corpus_index_state')")).scalar_one_or_none() is not None:

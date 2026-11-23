@@ -1,0 +1,10 @@
+{
+  "contract_revision": "rag-api-v1.0",
+  "request_id": "4e481378be38434a991eb1b37dbbdf97",
+  "trace_id": "64b249c59bf44ca0ac4b5d38cdba49d4",
+  "status": "ready",
+  "backend_revision": "workbench-api-lexical-v1",
+  "ready_profile_ids": [
+    "postgres-fts-baseline"
+  ]
+}

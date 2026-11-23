@@ -45,7 +45,10 @@ class _Governor:
         task_kind: Literal["query", "document"],
         token_count: int,
         deadline: float,
+        workspace_id: str = "development",
     ) -> EmbeddingReservation:
+        if not workspace_id:
+            raise AssertionError("Workspace scope is required")
         self.events.append(("reserve", (profile_id, profile_revision, deployment_id, task_kind, token_count, deadline)))
         if self.reject:
             raise EmbeddingError(EmbeddingErrorCode.CAPACITY_BUSY)
@@ -61,7 +64,10 @@ class _Governor:
         outcome: Literal["success", "failed", "ambiguous", "cancelled"],
         usage_tokens: int | None,
         usage_provenance: UsageProvenance,
+        error_code: EmbeddingErrorCode | None = None,
     ) -> None:
+        if error_code is not None and not isinstance(error_code, EmbeddingErrorCode):
+            raise AssertionError("Provider errors require a safe bounded code")
         self.events.append(("finish", (reservation.reservation_id, outcome, usage_tokens, usage_provenance)))
 
 
@@ -306,6 +312,7 @@ async def test_provider_errors_are_safe_and_never_retry(status: int, code: Embed
         await adapter.embed(_request())
     assert error.value.code == code and str(error.value) == code.value
     assert len(calls) == 1
+    assert governor.events[-1][1][1] == ("failed" if status == 429 else "ambiguous")
     await adapter.close_async()
 
 

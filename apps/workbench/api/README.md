@@ -218,6 +218,8 @@ Tests cover HTTP/schema/security contracts, persistence and the lexical profile.
 
 ## Implemented versus planned
 
+The separate [durable embedding worker](../../../docs-website/docs/architecture/durable-embedding-ingestion.md) adds explicit migration `0005`, leased backfill, same-workspace reuse and actual generation coverage. Its CLI shares measured query/document admission with objective exact-retrieval diagnostics; the fixed multilingual evaluation audits original-source hashes and relevance labels without a model judge. This internal path does not expose Dense HTTP or change lexical publication. [EMBED-002 evidence](../../../tasks/evidence/embedding-2026-11-24/report.md) records accepted backfill/restart/upload/reuse/quality gates and the actual ten-minute run: steady median 92.141081157%, whole-run 91.992753788% explicitly below exact 92%, zero hard breaches.
+
 The internal [local embedding qualification](../../../docs-website/docs/architecture/local-embedding-provider.md) adds a model-neutral port, explicit TEI deployment attestation and one shared bounded admission owner for operator-run query/document smoke. It does not enable vector ingestion or semantic HTTP search. Unknown sustainable TPM remains unqualified; provider-reported usage is distinguished from local tokenizer estimates. See the guide and [execution record](../../../tasks/evidence/embedding-2026-11-23/report.md) before running the explicit qualification command.
 
 The project-owned TEI service uses `rag-workbench-embedding-1` on `127.0.0.1:8082`; it has separate [startup and model evidence](../../../tasks/evidence/embedding-2026-11-23/dedicated-report.md). The original `8081` qualification artifacts describe an existing shared service and remain historical. A dedicated container shares the physical GPU and does not establish production TPM capacity.
@@ -231,7 +233,8 @@ Root `start.ps1` also ensures the owned embedding container is running: a runnin
 - **Existing independent validator:** real Haystack construction/connectivity checks, without execution; see [validator documentation](../validator/README.md).
 - **Existing UI:** fixture document displays, Preview and approved Live keyword search; see [Workbench documentation](../web/README.md).
 - **Ingestion:** synchronous durable backend passed local migration/upload/search/restart gates; upload UI remains separate.
-- **Planned:** Live document-management UI, genuine BM25 if separately justified, durable embedding ingestion, production embedding capacity control, dense/hybrid retrieval and generation. Each needs its own qualification gate.
+- **Internal embedding:** durable vector backfill, measured single-owner capacity control and controlled quality/ten-minute gates are accepted within the execution record's explicit limits. TPM telemetry is CLI/JSON only; broader TPM qualification remains separate.
+- **Planned:** Live document-management UI, genuine BM25 if separately justified, dense/hybrid retrieval and generation. Each needs its own qualification gate.
 
 The initial database migration is explicit; no Haystack public API changes are introduced. Application rollback is stopping the optional API while preserving its database volume. Destructive schema rollback is restricted to explicitly confirmed disposable databases; the constructor validator and standalone UI remain independent.
 

@@ -1,0 +1,12 @@
+{
+  "same_volume": true,
+  "postgres_started_before": "2026-11-23T20:33:36.176500124Z",
+  "container_id_unchanged": true,
+  "checkpoint_database": "rag_test_e22c88e0dcb5477084c8aab212e8e13b",
+  "checkpoint_mappings": 10000,
+  "container": "rag-workbench-postgres-1",
+  "status": "RESTARTED",
+  "own_tei_unchanged": true,
+  "postgres_started_after": "2026-11-23T23:14:29.927225532Z",
+  "other_tei_unchanged": true
+}

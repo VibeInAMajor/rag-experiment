@@ -1,11 +1,11 @@
 # TASK-RAG-TPM-001 — Adaptive embedding TPM/RPM governor with 0.92 target and 0.95 hard ceiling
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
-**Status:** PROPOSED — implementation blueprint; no current Workbench model-capacity measurements  
+**Updated:** 2026-11-24
+**Status:** IN PROGRESS — EMBED-002's measured single-owner prerequisite passes its actual ten-minute steady-window/hard-ceiling gate; broader 30-minute and wider concurrency matrix remain unrun
 **Priority:** P0 — independent prerequisite for high-volume real embedding ingestion  
 **Dependencies:** [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [PROFILE-001](TASK-RAG-PROFILE-001-versioned-retrieval-and-processing-profile-registry.md); block actual real dispatch until EMBED-001 validates runtime; integrate into [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) and [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md).  
-**Recipient repository source inspected:** `fe171f5273b2dfa3db536c8bc8ffeae8f3aa582e`  
+**Recipient repository source inspected:** `4d3292f81e55aa66cda4df97831b7eefe7b1f858` plus this task's working-tree changes (historical proposal: `fe171f5273b2dfa3db536c8bc8ffeae8f3aa582e`)
 **Donor source pinned:** `955fd049949d3fc462d555be14774e4b255aa15c`  
 **Target:** `tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md`  
 **Canonical progress/checklist:** [MVP plan](../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md)
@@ -14,17 +14,25 @@
 
 **EMBED-001 bootstrap boundary (2026-11-23):** this task remains open for production admission. Its J1 exception for an explicit conservative single-test qualification profile is implemented by the app-owned `embedding_dispatch.py` boundary: one in-flight request, exclusive deployment file lock, bounded cumulative requests/native-token estimates and deadlines, shared query/document `reserve → mark_sent → finish`, with no post-send charge refund. This is a finite model-I/O qualification run, not calibrated sustainable capacity. Normal production dispatch remains refused with unknown capacity; no rolling 0.95 ceiling, adaptive 0.92 target, saturation/fairness or steady-window performance acceptance is claimed. See [EMBED-001 evidence](evidence/embedding-2026-11-23/report.md) and its [operator guide](../docs-website/docs/architecture/local-embedding-provider.md).
 
+**EMBED-002 required dependency (2026-11-24):** the user authorizes the measured shared governor needed for real durable backfill and a ten-minute 0.92-target experiment. `embedding_capacity.py` is the sole measured owner, sharing its deployment lease boundary with qualification mode. Calibration, persisted rolling charges, bounded queues/RPM/workspace fairness and expiring runtime-bound capacity are independently implemented; they do not reuse donor quota claims. No acceptance box is checked until actual evidence in [EMBED-002's report](evidence/embedding-2026-11-24/report.md) supports it. The physical GPU remains shared, and no generative quality judge is introduced.
+
+**Qualification scope:** EMBED-002 accepts only its required measured single-owner prerequisite after the actual 600-second gate. This broader task stays IN PROGRESS for the unrun 30-minute and wider batch/concurrency matrix. The observed 622592-token/minute denominator is the highest sustainable result among the declared tested candidates, not a globally proven GPU maximum or an assigned quota over other projects.
+
+**Required-scope result (2026-11-24):** [actual evidence](evidence/embedding-2026-11-24/report.md) records 600.969 seconds, unchanged Q/profile/code hashes, continuous ready backlog, zero errors/unknown usage/hard breaches and an independent event replay. Steady median was 92.141081157%, with 53/55 steady windows in the 90–95% band, satisfying the predeclared gate. Whole-run completed utilization was **91.992753788%, BELOW exact 92%**; this limitation remains visible. This result completes the required EMBED-002 dependency without marking the broader checklist below complete or claiming a TPM UI/global GPU allocation.
+
 Implement an application-owned **shared deployment capacity governor** for text embeddings with desired utilization `0.92` and independent hard **rolling-60-second admission ceiling `0.95`**, reusing/adapting vetted donor components and test scenarios without importing Qdrant, its runtime or an unapproved code license.
 
 ## B. Context / Problem
 
-The target local TEI/Qwen3-Embedding-4B GPU service has finite **measured sustainable capacity**, even without a cloud provider quota. The Workbench currently has token counting and local source ingestion but **not** a qualified real embedding adapter, TPM dispatcher, shared query/document admission or a demonstrably enforced hard reservation ceiling. A query and ingestion worker must not independently send at 92% of the same quota. Token estimates and successful provider usage are different measurements, and the donor TEI adapter may report its own tokenizer-counted usage rather than native provider-reported usage.
+The target local TEI/Qwen3-Embedding-4B GPU service has finite **measured sustainable capacity**, even without a cloud provider quota. At the proposal baseline, Workbench had token counting and local ingestion but lacked a qualified embedding adapter and measured shared admission. EMBED-001 subsequently qualified the real adapter; the EMBED-002 implementation now adds the measured shared dispatcher and actual main-corpus backfill. The current [execution report](evidence/embedding-2026-11-24/report.md) separates completed gates from the pending ten-minute experiment. A query and ingestion worker must not independently send at 92% of the same quota. Token estimates and successful provider usage are different measurements, and the donor TEI adapter may report its own tokenizer-counted usage rather than native provider-reported usage.
 
 The donor code is a valuable starting point but its defaults differ: `EmbeddingCapacityPolicy.target_utilization_ratio = 0.85`, whereas donor `TEIProfile.target_utilization_ratio = 0.9`. In the current donor `EmbeddingDispatchController._wait_needed` the rolling reservation budget is **the full assigned tpm**, not `0.95 * Q_TPM`; configuring target 0.92 alone does not prove a 95% hard ceiling. We must introduce independent policy fields for operating target and hard admission budget, then run deterministic and live capacity tests.
 
 ## C. Current Repository State
 
 ### Recipient: verified existing owners and gaps
+
+The table below records the proposal baseline. Current recipients are `embedding_capacity.py` for the measured shared governor, `embedding_ingestion.py` for leased bounded work and the backfill/calibration CLIs for explicit runtime composition. `embedding_jobs.py` and `postgres_embeddings.py` add generation-fenced persistence through migration `0005`. The qualified adapter/model/tokenizer remain reused; lexical HTTP retrieval remains unchanged. Actual calibration and main backfill are linked in the execution report; they do not by themselves prove a ten-minute 92% completion result.
 
 | Path / symbol | Existing implementation | Reuse / gap |
 | --- | --- | --- |

@@ -192,6 +192,7 @@ class EmbeddingDispatchPort(Protocol):
         task_kind: Literal["query", "document"],
         token_count: int,
         deadline: float,
+        workspace_id: str = "development",
     ) -> EmbeddingReservation:
         """Reserve through the one owner before sending any query/document inference."""
         ...
@@ -207,6 +208,7 @@ class EmbeddingDispatchPort(Protocol):
         outcome: Literal["success", "failed", "ambiguous", "cancelled"],
         usage_tokens: int | None,
         usage_provenance: UsageProvenance,
+        error_code: EmbeddingErrorCode | None = None,
     ) -> None:
         """Reconcile once without confusing tokenizer proxies with actual provider usage."""
         ...

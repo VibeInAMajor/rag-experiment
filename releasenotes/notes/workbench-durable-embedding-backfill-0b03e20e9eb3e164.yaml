@@ -1,0 +1,15 @@
+---
+upgrade:
+  - |
+    Apply Workbench migration ``0005`` explicitly before using durable embedding
+    jobs. Back up the database and use ``hatch run workbench-api:db-migrate``
+    through the existing administrator environment. Worker startup never migrates
+    automatically; lexical source data and qualified model assets are preserved.
+features:
+  - |
+    Add resumable workspace-scoped embedding backfill with leased jobs,
+    compatible same-workspace vector reuse, generation-bound coverage and
+    measured shared query/document admission. An objective multilingual
+    evaluation CLI checks persisted exact retrieval against original-source
+    hashes and fixed relevance labels, without an LLM judge. Dense HTTP search,
+    ANN and answer generation remain separate features.

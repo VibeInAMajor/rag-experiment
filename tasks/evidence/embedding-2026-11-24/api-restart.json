@@ -1,0 +1,15 @@
+{
+  "api_process_changed": true,
+  "persisted_vectors": 44,
+  "expected_lexical_chunk": "demo-identifiers-chunk-1",
+  "main_vectors_identical": true,
+  "pid_after": 10672,
+  "vector_content_digest": "c7fc3a75c955d8787fdfcca3e7c725c9",
+  "status": "PASS",
+  "ready_profiles": [
+    "postgres-fts-baseline"
+  ],
+  "ready_status": "ready",
+  "pid_before": 47448,
+  "provider_calls": 0
+}

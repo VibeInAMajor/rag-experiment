@@ -165,7 +165,7 @@ def test_populated_generation_schema_upgrade_preserves_records_and_bootstraps_ba
     with psycopg.connect(database.admin_dsn) as connection:
         connection.execute("INSERT INTO workbench.workspaces(workspace_id,name) VALUES('development','Existing')")
     checksums = {revision: db_migrations.migration_checksum(revision=revision) for revision in ("0001", "0002", "0003")}
-    assert db_migrations.migrate(database.admin_dsn).revision == "0004"
+    assert db_migrations.migrate(database.admin_dsn).revision == db_migrations.HEAD_REVISION
     assert checksums == {revision: db_migrations.migration_checksum(revision=revision) for revision in checksums}
     with psycopg.connect(database.admin_dsn) as connection:
         assert connection.execute("SELECT workspace_id,name FROM workbench.workspaces").fetchall() == [

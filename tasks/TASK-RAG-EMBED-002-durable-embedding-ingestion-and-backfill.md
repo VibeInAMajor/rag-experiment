@@ -1,11 +1,11 @@
 # TASK-RAG-EMBED-002 — Durable generation-aware embedding ingestion, resumable backfill and initial delta reuse
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
-**Status:** PROPOSED — detailed implementation blueprint; no code changes or runtime tests in this task publication  
+**Updated:** 2026-11-24
+**Status:** COMPLETE — durable backfill/reuse/restarts, controlled source-grounded quality and predeclared ten-minute steady-window gate pass; whole-run utilization 91.992753788% remains explicitly below exact 92%; broader TPM-001 stays IN PROGRESS
 **Priority:** P0  
 **Dependencies:** EMBED-001, INDEX-001; completed RAG-002/DB-001, coordinate PROFILE-001  , **[TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)**
-**Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
+**Repository snapshot inspected:** 4d3292f81e55aa66cda4df97831b7eefe7b1f858 plus this task's working-tree changes
 **Target location:** tasks/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md
 
 ## A. Title
@@ -17,6 +17,8 @@ Durable generation-aware embedding ingestion, resumable backfill and initial del
 Today sources publish successfully as lexical chunks with embedding=None. On adding real vector processing, a document may be searchable lexically before semantic indexing is ready. Embedding failures must not corrupt source publication, claim dense readiness or force reupload of unchanged content. We need a resumable, idempotent, workspace-scoped embedding job path and active generation. Profile/model/chunk text changes must invalidate only relevant vectors.
 
 ## C. Current Repository State
+
+**Implementation reinspection (2026-11-24):** INDEX-001 and PROFILE-001 are complete through applied migrations 0003/0004. EMBED-001 now provides the neutral immutable embedding port/profile, exact Qwen tokenizer, strict local TEI adapter and trusted named-volume deployment attestation. The current dedicated Qwen3-Embedding-4B profile produces actual full 2560-dimensional normalized vectors; main HTTP retrieval remains lexical-only. Its old admission owner is deliberately qualification-only, so it cannot satisfy this task's requested production-style 0.92/0.95 or ten-minute backlog proof. The user explicitly authorizes the necessary measured-capacity TPM-001 prerequisite here. No extra generative model, Ollama dependency or LLM judge is authorized for quality evaluation.
 
 **Source inspection (2026-11-23):** [SQL migration 0001](../apps/workbench/api/migrations/0001_initial.up.sql) contains workbench.sources, source_versions, chunks and nullable public.vector embeddings, generated tsvector and GIN; [migration 0002](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) adds transactional durable jobs. [PostgresPersistence](../apps/workbench/api/postgres.py) owns _publish(), _corpus_snapshot(), lexical_search_snapshot() and vector_search(). [Postgres ingestion](../apps/workbench/api/postgres_ingestion.py) calls _publish in the same transaction as terminal job completion. [FastAPI contracts](../apps/workbench/api/contracts.py), [API route owner](../apps/workbench/api/application.py), [Haystack lexical profile](../apps/workbench/api/lexical.py) and [runtime decision](../docs-website/docs/architecture/rag-runtime-contract.md) are the current authority. The local only workspace resolver is not production multi-tenancy.
 [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) complete_ingestion_with_publication explicitly requires all chunks to have null embedding (lexical ingestion); DO NOT remove that guard blindly. [persistence.py](../apps/workbench/api/persistence.py) validates profile_id/dimensions. [postgres.py](../apps/workbench/api/postgres.py) _validate_embedding verifies registered dimensions, vector_search exact cosine; no job table for embedding backfill. [embedding_profiles](../apps/workbench/api/migrations/0001_initial.up.sql) only has synthetic-test-v1 initially, not a qualified real Qwen profile.
@@ -30,6 +32,8 @@ After a lexical source is published, a durable embedding job can process every e
 ## E. Scope
 
 Add additive schema for semantic model profiles, embedding jobs and generation/coverage (coordinate INDEX-001/PROFILE-001), bounded embedding worker initially in-process or reusable durable queue, batch/admission retries, deterministic idempotency, backfill CLI, source-update scheduling and cancellation, transactional readiness and exact-vector validation.
+
+**User-requested live acceptance:** calibrate actual dedicated endpoint capacity, then run a backlogged ten-minute workload through one shared query/document owner with a 0.92 operating target and independent 0.95 rolling admission ceiling. Distinguish estimates, provider-reported completions, shortages and shared-GPU conditions; do not manufacture a capacity or claim the target merely because it is configured. Evaluate retrieval objectively against fixed original source texts and manually specified relevant chunk IDs using persisted exact cosine, Recall@k/MRR/nDCG and source/version/tenant provenance. Qwen remains the embedding provider; it is not used as a generative correctness judge.
 
 ## F. Non-Goals
 
@@ -51,9 +55,11 @@ All new externally exposed fields require exact Pydantic/OpenAPI agreement and a
 
 MODIFY [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../apps/workbench/api/postgres.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) only through reviewed port; CREATE embedding_ingestion.py, embedding_jobs.py, tests/test_embedding_ingestion.py, next additive migration(s) after INDEX-001 schema; extend profiles.py, application.py capabilities and ops docs. MUST NOT alter lexical chunking and publication atomicity or original evidence links, applied 0001/0002 or static seed.
 
+**Reviewed implementation boundary:** `embedding_jobs.py` owns durable internal types; the PostgreSQL embedding mixin/next additive migration own jobs, generation-fenced vectors and same-tenant cache. `embedding_ingestion.py` owns leased bounded processing through the existing adapter. `embedding_capacity.py` owns the one measured TPM scheduler; the old qualification owner is not a second production limiter. The shared backfill/calibration CLI composes existing assets/runtime attestation. `scripts/workbench_embedding_evaluate.py`, the fixed multilingual JSON fixture and recipient tests own objective quality/provenance checks; no model judge or generator is introduced. Internal exact search and CLI coverage do not enable Dense HTTP/UI or require speculative API fields. Any actual HTTP contract change would require all existing DTO/client gates; leaving the frontend and lexical API unchanged is preferred.
+
 **MUST NOT:** duplicate source registry, migration ownership, transport adapters, file ingestion jobs or framework components. If another component is materially affected, revise this section and its tests before coding.
 
-### I.1. Source-level reuse matrix — refreshed 2026-11-23
+### I.1. Source-level reuse matrix — refreshed 2026-11-24
 
 **Recipient code anchors (real files, inspected):**
 
@@ -81,6 +87,8 @@ MODIFY [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../
 | [`LICENSE.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) | owner permission required for code transplant |
 
 **Reuse decision gate:** compare current component to donor behavior, list reusable algorithm/contract, incompatibilities and the exact owner of PostgreSQL/model/tokenizer state. Code copying requires permission under [donor LICENSE](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md); otherwise independently implement compatible behavior and port test **scenarios**. Existing completed Workbench components must not be replaced without a measurable reason.
+
+**Inspected implementation decision (2026-11-24):** donor preparation blob `42d8dce6970eb3d0ff9df7896a432ece55e3363b`, execution blob `2ebfe78d3b3785708eb0584e1fc7e282f7f036e5` and lifecycle-test blob `9a9ea7696a43ef1bada638b187f2f62e19d49515` were fetched at the pin above. They inform cache-partition, bounded-execution, paid-late-result and restoration scenarios; no donor implementation is copied. PostgreSQL transactions/RLS/generations, the existing neutral port/tokenizer and one shared measured governor retain recipient ownership. No Qdrant/SQLite stack or donor throughput claim is transplanted. Objective retrieval labels/metrics are independently implemented and use no model judge.
 
 ## J. Implementation Requirements — ordered blueprint
 
@@ -125,26 +133,30 @@ Real qualified model optional GPU integration and fake provider deterministic te
 
 ### L.1. Reuse-specific test migration and verification
 
-- [ ] test_embedding_ingestion.py + integration: 8-source seed and actual uploaded 20+ chunks produce eligible semantic coverage exactly 100%, with correct vector dimension and per-workspace RLS.
-- [ ] Fault injection: late paid result after new source generation, interrupted write, duplicate job, complete job with missing vector, ungoverned API client, 429 with retry cooldown; no false-ready profile.
-- [ ] Performance: a backlogged governed 10-minute run records TPM target 0.92 and hard 0.95 admission but only claims success when provider reports/qualified proxy supports the measurement.
+**Executed acceptance (2026-11-24):** [full report](evidence/embedding-2026-11-24/report.md). Main corpus reached 44/44 full 2560-dimensional vectors, retained across actual API/PostgreSQL restarts with unchanged content digests. Real multipart upload produced 50 chunks; a one-word edit regenerated one input and reused 49, returning 58/58 coverage with the seed. The 102-chunk fixture and 52-query before/after exact retrieval audits pass provenance with unchanged measured relevance; no-answer/hard-negative limitations remain explicit. The 600.969-second run passes its predeclared steady-window rule with median 92.141081157%, 53/55 windows in the 90–95% band and zero independently replayed hard breaches. Whole-run utilization is **91.992753788%, BELOW exact 92%**, and is not rounded into achievement. Storage-only 100k and actual 10k server-restart tests use fake 32-dimensional vectors and zero model calls. The 1279-pass full application suite plus late focused regressions are recorded separately. Browser checks are inapplicable because no frontend/HTTP DTO changes were made.
+
+- [x] Objective quality: 102 active main-workspace chunks, 12 historical-version and 12 foreign-workspace sentinels, 52 EN/RU/UK/code/cross-language/no-answer queries; exact original-source SHA/chunk spans/input/profile/generation provenance. Report actual Recall/MRR/nDCG@1/5/10 and primary-evidence recall; raw nearest-neighbor no-answer candidates are not fabricated abstention or truth scores.
+
+- [x] test_embedding_ingestion.py + integration: 8-source seed and actual uploaded 20+ chunks produce eligible semantic coverage exactly 100%, with correct vector dimension and per-workspace RLS.
+- [x] Fault injection: late paid result after new source generation, interrupted write, duplicate job, complete job with missing vector, ungoverned API client, 429 with retry cooldown; no false-ready profile.
+- [x] Performance: a backlogged governed 10-minute run records TPM target 0.92 and hard 0.95 admission but only claims success when provider reports/qualified proxy supports the measurement.
 
 **Proof requirements:** record donor behavior source commit, recipient code and exact executed test commands. Donor unit tests **do not** demonstrate recipient functionality; recipient CI evidence must exercise the actual PostgreSQL/TEI/client paths. Capture a fixture-vs-runtime result matrix, error correlation and no-secrets logs.
 
 ## M. Acceptance Criteria
 
-- [ ] Lexical ingest remains available while embedding worker is offline; no half-ready dense advertised
-- [ ] Every ready vector has exact source/version/chunk/profile digest and finite verified dimension
-- [ ] Small corpus eligible active chunks reach 100% coverage with stable generation and real vector lookup
-- [ ] Stop/restart resumes job without duplicates or stale writes
-- [ ] Same-key retry and unchanged compatible text do not regenerate vectors unnecessarily
-- [ ] Changing source text/model/profile invalidates stale embeddings correctly
-- [ ] Cross-workspace cache reuse forbidden unless separately security-reviewed
-- [ ] Database migrations and existing lexical/Evidence regression pass
+- [x] Lexical ingest remains available while embedding worker is offline; no half-ready dense advertised
+- [x] Every ready vector has exact source/version/chunk/profile digest and finite verified dimension
+- [x] Small corpus eligible active chunks reach 100% coverage with stable generation and real vector lookup
+- [x] Stop/restart resumes job without duplicates or stale writes
+- [x] Same-key retry and unchanged compatible text do not regenerate vectors unnecessarily
+- [x] Changing source text/model/profile invalidates stale embeddings correctly
+- [x] Cross-workspace cache reuse forbidden unless separately security-reviewed
+- [x] Database migrations and existing lexical/Evidence regression pass
 
-- [ ] All provider calls from embedding jobs use exactly the TPM-001 dispatch budget
-- [ ] Stale/superseded source vectors cannot be attached to an active new generation
-- [ ] Original lexical source publisher unchanged and remains operational when TEI is offline
+- [x] All provider calls from embedding jobs use exactly the TPM-001 dispatch budget
+- [x] Stale/superseded source vectors cannot be attached to an active new generation
+- [x] Original lexical source publication contract remains operational when TEI is offline; its null-embedding/atomicity guards are preserved while durable work is queued separately
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -154,13 +166,13 @@ Update [API README](../apps/workbench/api/README.md), architecture and this task
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Section C revalidated against actual repository and completed tasks; gaps identified with source evidence.
-- [ ] Existing ports/services reused without duplicate SQL, tokenizer, registry or provider coupling.
-- [ ] Contracts, state machine and failure/retry/rollback conditions tested.
-- [ ] Tenant isolation, secret hygiene, input bounds and negative scenarios verified.
-- [ ] Real performance/quality baseline and release gate metrics recorded where applicable.
-- [ ] Unit, contract, integration, security and applicable browser tests actually executed.
-- [ ] API/capabilities/documentation reflect only working qualified features.
-- [ ] Non-destructive rollback and data preservation proven.
-- [ ] Actual modified paths, commit, revision and sanitized evidence linked.
-- [ ] Status changed to COMPLETE only with all measurable criteria supported.
+- [x] Section C revalidated against actual repository and completed tasks; gaps identified with source evidence.
+- [x] Existing ports/services reused without duplicate SQL, tokenizer, registry or provider coupling.
+- [x] Contracts, state machine and failure/retry/rollback conditions tested.
+- [x] Tenant isolation, secret hygiene, input bounds and negative scenarios verified.
+- [x] Real performance/quality baseline and release gate metrics recorded where applicable.
+- [x] Unit, contract, integration, security and applicable browser tests actually executed.
+- [x] API/capabilities/documentation reflect only working qualified features.
+- [x] Non-destructive rollback and data preservation proven.
+- [x] Actual modified paths, commit, revision and sanitized evidence linked.
+- [x] Status changed to COMPLETE only with all measurable criteria supported.

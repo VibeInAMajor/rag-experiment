@@ -1,0 +1,54 @@
+Final implementation checks — 2026-11-24
+
+Environment
+hatch --version
+Hatch, version 1.18.2
+
+Final combined lint
+hatch run workbench-api:python -m ruff check apps/workbench/api scripts/workbench_embedding_backfill.py scripts/workbench_embedding_capacity_benchmark.py scripts/workbench_embedding_evaluate.py scripts/workbench_embedding_storage_benchmark.py scripts/workbench_embedding_acceptance.py
+All checks passed!
+
+Final combined formatting
+hatch run workbench-api:python -m ruff format --check apps/workbench/api scripts/workbench_embedding_backfill.py scripts/workbench_embedding_capacity_benchmark.py scripts/workbench_embedding_evaluate.py scripts/workbench_embedding_storage_benchmark.py scripts/workbench_embedding_acceptance.py
+129 files already formatted
+
+Final combined types
+hatch run workbench-api:python -m mypy --explicit-package-bases --follow-imports=silent apps/workbench/api scripts/workbench_embedding_backfill.py scripts/workbench_embedding_capacity_benchmark.py scripts/workbench_embedding_evaluate.py scripts/workbench_embedding_storage_benchmark.py scripts/workbench_embedding_acceptance.py
+Success: no issues found in 129 source files
+
+Full API regression
+hatch run workbench-api:test --override-ini addopts='' --junitxml=tasks/evidence/embedding-2026-11-24/full-tests.xml
+1279 passed, 2 skipped in 296.39s
+Explicit disposable PostgreSQL admin/app test connections and local native-tokenizer assets were configured; credentials are omitted. Live-provider opt-in was unset. The large storage benchmark and actual provider checks were executed separately through their explicit gates.
+
+Late worker fixes
+The full-suite collection preceded the final stable-cache-key and long-heading fixes. stable-reuse-tests.xml records 19 passing final worker/actual IngestionService regressions, including unchanged chunks after a real parser/chunker source edit, processing-policy invalidation, YAML-provenance compatibility and the existing UTF-8 heading bound. Final live preparation additionally proves an actual HTTP/PostgreSQL/model source update generated one input and reused 49 unchanged chunks.
+
+Other focused artifacts
+capacity-unit-tests.xml: 94 passed
+acceptance-guard-tests.xml: 15 passed
+evaluation-tests.xml: 24 passed
+storage-benchmark-tests.xml: 100k storage-only benchmark passed
+storage-server-restart-tests.xml: separate 10k actual PostgreSQL restart benchmark passed
+These overlap the full suite and are not additive test totals.
+
+Live acceptance and independent verification
+acceptance-capacity.json: original steady-window acceptance PASS; whole-run mean remains explicitly below exact 0.92.
+independent-capacity-audit.json: separate PowerShell accounting/admission replay PASS; original totals matched.
+implementation-hashes-verified.json: all 19 frozen runtime hashes unchanged.
+final-integrity-audit.json: 1400 actual inputs = 1400 generated = 1400 processed = 1400 persisted mappings; quality aggregates unchanged; disposable database removed; main API ready.
+
+Documentation and evidence checks
+git diff --check: PASS after removing the new TPM source-line trailing whitespace.
+Strict UTF-8 decode: PASS for all 77 changed/new text files.
+Relative file links: PASS for the new runbook, final report and updated task specifications.
+node --check docs-website/sidebars.js: PASS.
+hatch -e test run python scripts/release_note_backticks.py --check releasenotes/notes/workbench-durable-embedding-backfill-0b03e20e9eb3e164.yaml: PASS.
+Evidence credential-pattern scan: PASS; values were not printed.
+hatch run workbench-api:python -m scripts.workbench_embedding_evaluate: FIXTURE_VALIDATED without --run or provider/database work.
+
+Not run
+Frontend/browser checks: no frontend or public HTTP DTO changes.
+Full upstream Haystack suite: core library is unchanged; scoped API regression and quality gates were used.
+Full Docusaurus build: docs node_modules are absent; scoped link/UTF-8/sidebar checks were performed instead.
+30-minute and wider concurrent-model qualification: outside this completed EMBED-002 acceptance; broader TPM-001 remains in progress.

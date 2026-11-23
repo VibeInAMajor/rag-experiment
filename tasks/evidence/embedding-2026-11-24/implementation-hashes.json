@@ -1,0 +1,83 @@
+{
+  "files": [
+    {
+      "path": "apps/workbench/api/embedding.py",
+      "sha256": "35022452ab30d9291574d28e17434721057ad390c1da9475816622553c2a5981"
+    },
+    {
+      "path": "apps/workbench/api/embedding_adapters.py",
+      "sha256": "1a5db5e95fc90e389311bab55eb813de8b752cd0ccceeb9ff1156d735a849abc"
+    },
+    {
+      "path": "apps/workbench/api/embedding_capacity.py",
+      "sha256": "2739432b037c642d9ea71c934c820ba31c863b3f1ae37b887d9352a2139724bd"
+    },
+    {
+      "path": "apps/workbench/api/embedding_config.py",
+      "sha256": "cf12d4b50622471f89da3657a4de2671d86715abc6a0ef868325b9dd0dc393ba"
+    },
+    {
+      "path": "apps/workbench/api/embedding_dispatch.py",
+      "sha256": "553f1841e50d2ec7cee8c60fd773af566ce3752905c7d6eff1163cc919ec307e"
+    },
+    {
+      "path": "apps/workbench/api/embedding_ingestion.py",
+      "sha256": "87c398cfd6d39b8799b23a2a4fa78841b068a1bc83686619e80021fd119be494"
+    },
+    {
+      "path": "apps/workbench/api/embedding_jobs.py",
+      "sha256": "365bc5f77ac6d4135ecc890db55f0c738702212e3034b0d463e425ba2b6035c8"
+    },
+    {
+      "path": "apps/workbench/api/model_token_counter.py",
+      "sha256": "923233505fb89df98e150ff4095ac7276ba78d914d8939742c149569c1dddf8a"
+    },
+    {
+      "path": "apps/workbench/api/postgres.py",
+      "sha256": "59f53a9de925d668edd471ef9e44aa297dde45886da8d6b9845d4aba475f3bf4"
+    },
+    {
+      "path": "apps/workbench/api/postgres_embeddings.py",
+      "sha256": "0996c3ba73b742dbf68dc36cec45b9fb4737691f2239970aac931ea4ba47f1ab"
+    },
+    {
+      "path": "apps/workbench/api/db_migrations.py",
+      "sha256": "3c40d1a3287d65d77b7a0790a5a338cfc0940f1f6438b0bb468f13483b31dd7f"
+    },
+    {
+      "path": "apps/workbench/api/migrations/0005_embedding_jobs.up.sql",
+      "sha256": "410572064f478cee4cd52632c48fb68c068458c7289a53def4adf518f7a94a10"
+    },
+    {
+      "path": "apps/workbench/api/migrations/0005_embedding_jobs.down.sql",
+      "sha256": "60ae3684ddd0cd3b628fd0b831686eed085e61cf0d2939b5080f4aec4168fb3f"
+    },
+    {
+      "path": "apps/workbench/api/fixtures/embedding-retrieval-evaluation.json",
+      "sha256": "a9e5af753d68a77bfdcc1d1b50c63ca0c3101e0eb749ab89bcbe454e3ef92d7f"
+    },
+    {
+      "path": "scripts/workbench_embedding_qualify.py",
+      "sha256": "ef88b95eb152ffb7ece1d06b7d91622508c6f7996e99edbf5d907fe4f72ecb33"
+    },
+    {
+      "path": "scripts/workbench_embedding_backfill.py",
+      "sha256": "3e1f2548aad0c27eb151157e423836e4517acbe15269e6168861705ba8eda43c"
+    },
+    {
+      "path": "scripts/workbench_embedding_capacity_benchmark.py",
+      "sha256": "e690287c76f89e03c96815e45638a95c2a45b2f6c7813808fa0e51beef13ee13"
+    },
+    {
+      "path": "scripts/workbench_embedding_evaluate.py",
+      "sha256": "0f9021058d7a9a403e732018411586f97fc94f4180dc8b06fe13f1c89f5cdcb9"
+    },
+    {
+      "path": "scripts/workbench_embedding_acceptance.py",
+      "sha256": "ffa628dcb628044507b1e337f3ab876fbc6b0a0eb594d89fda71436da65adf4f"
+    }
+  ],
+  "captured_at_utc": "2026-11-23T23:25:59.9428507Z",
+  "working_tree_uncommitted": true,
+  "base_commit": "4d3292f81e55aa66cda4df97831b7eefe7b1f858"
+}

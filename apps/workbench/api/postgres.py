@@ -47,6 +47,7 @@ from apps.workbench.api.persistence import (
     WorkspaceContext,
     WorkspaceNotFound,
 )
+from apps.workbench.api.postgres_embeddings import PostgresEmbeddingMixin
 from apps.workbench.api.profile_registry import ProfileDefinition, ProfileRollout
 
 _CHUNK_COLUMNS = (
@@ -90,7 +91,7 @@ def _demo_original(source_id: str, source_metadata: dict[str, Any], version_meta
     )
 
 
-class PostgresPersistence:
+class PostgresPersistence(PostgresEmbeddingMixin):
     """Use an application role and short transactions; never run migrations on startup."""
 
     def __init__(

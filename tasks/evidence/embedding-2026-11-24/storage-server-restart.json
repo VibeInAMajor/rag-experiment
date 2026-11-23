@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "kind": "SYNTHETIC_STORAGE_ONLY",
+  "database": "rag_test_e22c88e0dcb5477084c8aab212e8e13b",
+  "real_model_calls": 0,
+  "gpu_inference": false,
+  "tpm_claim": "NOT_MEASURED",
+  "vector_dimensions": 32,
+  "commit_batch_bound": 128,
+  "initial_active_chunks": 10000,
+  "workspaces": 1,
+  "initial": [
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "pool_restart_checkpoint": {
+        "cursor": "benchmark-v1-000127",
+        "mappings_before": 128,
+        "mappings_after": 128,
+        "same_persisted_lease": true
+      },
+      "elapsed_seconds": 21.84400000000096,
+      "coverage": {
+        "workspace_id": "storage-benchmark-00",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    }
+  ],
+  "pool_reopen_counts_before": {
+    "workspaces": 1,
+    "chunks": 10000,
+    "cache_vectors": 1,
+    "chunk_mappings": 10000,
+    "completed_jobs": 1,
+    "legacy_nonnull_vectors": 0
+  },
+  "pool_reopen_counts_after": {
+    "workspaces": 1,
+    "chunks": 10000,
+    "cache_vectors": 1,
+    "chunk_mappings": 10000,
+    "completed_jobs": 1,
+    "legacy_nonnull_vectors": 0
+  },
+  "server_restart": {
+    "before": "2026-11-23T20:33:37.638756+00:00",
+    "after": "2026-11-23T23:14:30.153433+00:00",
+    "changed": true,
+    "counts_unchanged": true
+  },
+  "updated_source": {
+    "mappings_written": 10000,
+    "cache_hit_occurrences": 10000,
+    "batches": 79,
+    "elapsed_seconds": 21.625,
+    "coverage": {
+      "workspace_id": "storage-benchmark-00",
+      "profile_id": "synthetic-storage-benchmark",
+      "profile_revision": "synthetic-storage-r1",
+      "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+      "index_generation": 2,
+      "eligible_active_chunks": 10000,
+      "ready_embeddings": 10000,
+      "stale_embeddings": 10000,
+      "coverage_fraction": 1.0,
+      "ready": true,
+      "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:2"
+    }
+  },
+  "final_counts": {
+    "workspaces": 1,
+    "chunks": 20000,
+    "cache_vectors": 1,
+    "chunk_mappings": 20000,
+    "completed_jobs": 1,
+    "legacy_nonnull_vectors": 0
+  },
+  "publication_seconds": 7.2960000000002765,
+  "total_seconds": 90.78100000000086,
+  "execution_scope": "Direct bounded persistence pages with fake vectors; no embedding worker or provider throughput claim",
+  "restart_scope": "Connection-pool close/reopen; continued persisted lease and cursor, then checked completed coverage",
+  "benchmark_isolation": "Dedicated disposable database; host CPU and storage are not exclusive"
+}

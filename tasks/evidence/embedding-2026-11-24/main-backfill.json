@@ -1,0 +1,44 @@
+{
+  "status": "READY",
+  "coverage": {
+    "workspace_id": "development",
+    "profile_id": "qwen3-embedding-4b-local",
+    "profile_revision": "qwen3-4b-capacity-32k-r1",
+    "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+    "index_generation": 1,
+    "eligible_active_chunks": 44,
+    "ready_embeddings": 44,
+    "stale_embeddings": 0,
+    "coverage_fraction": 1.0,
+    "ready": true,
+    "checkpoint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354:1"
+  },
+  "enqueued": 15,
+  "steps": 31,
+  "worker": {
+    "processed_chunks": 44,
+    "reused_chunks": 0,
+    "generated_inputs": 44,
+    "completed_jobs": 15,
+    "failed_jobs": 0
+  },
+  "admission": {
+    "mode": "measured_production",
+    "capacity_status": "MEASURED",
+    "sustainable_tpm": 622592,
+    "target_tpm": 572784.64,
+    "hard_token_budget": 591462,
+    "attempts_sent": 16,
+    "attempts_successful": 16,
+    "provider_reported_tokens": 12307,
+    "tokenizer_counted_proxy_tokens": 0,
+    "unknown_usage_attempts": 0,
+    "rolling_admitted_tokens": 12307,
+    "queue_depth": 0,
+    "max_in_flight": 1,
+    "effective_ramp": 1.0,
+    "requires_recalibration": false,
+    "global_physical_gpu_capacity_claimed": false
+  },
+  "dense_http_enabled": false
+}

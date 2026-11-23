@@ -1,0 +1,17 @@
+{
+  "status": "READY",
+  "coverage": {
+    "workspace_id": "development",
+    "profile_id": "qwen3-embedding-4b-local",
+    "profile_revision": "qwen3-4b-capacity-32k-r1",
+    "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+    "index_generation": 1,
+    "eligible_active_chunks": 44,
+    "ready_embeddings": 44,
+    "stale_embeddings": 0,
+    "coverage_fraction": 1.0,
+    "ready": true,
+    "checkpoint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354:1"
+  },
+  "provider_calls": 0
+}

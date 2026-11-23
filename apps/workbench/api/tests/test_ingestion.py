@@ -20,6 +20,9 @@ from apps.workbench.api import chunking_adapters as adapters
 from apps.workbench.api import ingestion as ingestion_module
 from apps.workbench.api.chunking_profiles import ChunkingError, ChunkingErrorCode, structural_token_profile
 from apps.workbench.api.document_processing import DocumentProcessingSettings, load_document_processing
+from apps.workbench.api.embedding import EmbeddingProfile
+from apps.workbench.api.embedding_ingestion import embedding_candidate_input
+from apps.workbench.api.embedding_jobs import EmbeddingCandidate
 from apps.workbench.api.ingestion import IngestionError, IngestionService, UploadInput
 from apps.workbench.api.parsing import ParsedDocument
 from apps.workbench.api.persistence import (
@@ -211,6 +214,89 @@ def deny_processing_network(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _upload(content: bytes, *, key: str = "test-upload-key", filename: str = "notes.txt", **kwargs: Any) -> UploadInput:
     return UploadInput(content=content, filename=filename, declared_mime=None, idempotency_key=key, **kwargs)
+
+
+def _embedding_inputs(version: SourceVersion, chunks: list[Chunk]) -> dict[str, tuple[str, str]]:
+    profile = EmbeddingProfile(
+        profile_id="reuse-regression",
+        profile_revision="reuse-regression-r1",
+        provider_adapter_id="tei-openai",
+        model_id="fake-no-inference",
+        model_revision="a" * 40,
+        model_digest="b" * 64,
+        tokenizer_digest="c" * 64,
+        tokenizer_revision="reuse-test-r1",
+        dimensions=32,
+    )
+    return {
+        chunk.content_hash: embedding_candidate_input(
+            EmbeddingCandidate(
+                workspace_id=chunk.workspace_id,
+                source_id=chunk.source_id,
+                version_id=chunk.version_id,
+                chunk_id=chunk.chunk_id,
+                content=chunk.content,
+                content_hash=chunk.content_hash,
+                metadata=chunk.metadata,
+                version_metadata=version.metadata,
+            ),
+            profile,
+        )
+        for chunk in chunks
+    }
+
+
+async def test_actual_source_update_preserves_unchanged_embedding_inputs_and_policy() -> None:
+    """Real parser/chunker occurrence fingerprints change without invalidating unchanged input cache keys."""
+    repository = _Repository()
+    service = IngestionService(repository, profile=replace(structural_token_profile(), target_size=32, overlap=0))
+    content = "# Stable\n\n" + "Unchanged searchable passage. " * 40 + "\n\n# Edited\n\n" + "Original value. " * 40
+    first = await service.ingest(_CONTEXT, upload=_upload(content.encode(), filename="notes.md"))
+    _, old_version, old_chunks = repository.active[first.job.source_id]
+    old_inputs = _embedding_inputs(old_version, old_chunks)
+    await service.ingest(
+        _CONTEXT,
+        upload=_upload(
+            content.replace("Original", "Modified", 1).encode(),
+            filename="notes.md",
+            key="source-edit-reuse-key",
+            source_id=first.job.source_id,
+            expected_active_version_id=first.job.effective_version_id,
+        ),
+    )
+    _, version, chunks = repository.active[first.job.source_id]
+    inputs = _embedding_inputs(version, chunks)
+    unchanged = inputs.keys() & old_inputs.keys()
+    assert unchanged and inputs.keys() - old_inputs.keys()
+    for name in ("processing_profile_fingerprint", "chunking_profile_fingerprint", "source_sha256"):
+        assert version.metadata[name] != old_version.metadata[name]
+    assert all(inputs[key] == old_inputs[key] for key in unchanged)
+    assert chunks[0].chunk_id != old_chunks[0].chunk_id
+
+
+async def test_actual_processing_policy_changes_invalidate_embedding_reuse(tmp_path: Path) -> None:
+    """Effective chunker/native guard policy matters; YAML comments and selection provenance do not."""
+    content = b"Short identical text stays in one chunk."
+
+    async def prepare(settings: DocumentProcessingSettings) -> tuple[SourceVersion, list[Chunk]]:
+        repository = _Repository()
+        result = await IngestionService(repository, processing=settings).ingest(_CONTEXT, upload=_upload(content))
+        _, version, chunks = repository.active[result.job.source_id]
+        return version, chunks
+
+    baseline = await prepare(DocumentProcessingSettings())
+    initial = _embedding_inputs(*baseline)
+    configuration = tmp_path / "processing.yaml"
+    configuration.write_text("# Same effective policy\ndocument_processing: {}\n", encoding="utf-8")
+    loaded = await prepare(load_document_processing({"WORKBENCH_DOCUMENT_PROCESSING_CONFIG": str(configuration)}))
+    assert baseline[0].metadata["document_processing"] != loaded[0].metadata["document_processing"]
+    assert _embedding_inputs(*loaded) == initial
+    for policy in ({"recursive_splitter": {"split_length": 400}}, {"native_model_guard": {"max_tokens": 4096}}):
+        changed = await prepare(DocumentProcessingSettings.model_validate(policy))
+        inputs = _embedding_inputs(*changed)
+        assert inputs.keys() == initial.keys()
+        assert next(iter(inputs.values()))[0] == next(iter(initial.values()))[0]
+        assert next(iter(inputs.values()))[1] != next(iter(initial.values()))[1]
 
 
 @pytest.mark.parametrize("bom", [False, True])

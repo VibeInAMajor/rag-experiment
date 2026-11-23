@@ -1,0 +1,258 @@
+{
+  "status": "PASS",
+  "kind": "SYNTHETIC_STORAGE_ONLY",
+  "database": "rag_test_6fbeb174e706475e8907a1b7ba1f272e",
+  "real_model_calls": 0,
+  "gpu_inference": false,
+  "tpm_claim": "NOT_MEASURED",
+  "vector_dimensions": 32,
+  "commit_batch_bound": 128,
+  "initial_active_chunks": 100000,
+  "workspaces": 10,
+  "initial": [
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "pool_restart_checkpoint": {
+        "cursor": "benchmark-v1-000127",
+        "mappings_before": 128,
+        "mappings_after": 128,
+        "same_persisted_lease": true
+      },
+      "elapsed_seconds": 21.985000000000582,
+      "coverage": {
+        "workspace_id": "storage-benchmark-00",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 21.593000000000757,
+      "coverage": {
+        "workspace_id": "storage-benchmark-01",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 41.89099999999962,
+      "coverage": {
+        "workspace_id": "storage-benchmark-02",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 46.73399999999856,
+      "coverage": {
+        "workspace_id": "storage-benchmark-03",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 21.625,
+      "coverage": {
+        "workspace_id": "storage-benchmark-04",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 38.8130000000001,
+      "coverage": {
+        "workspace_id": "storage-benchmark-05",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 47.28099999999904,
+      "coverage": {
+        "workspace_id": "storage-benchmark-06",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 48.70299999999952,
+      "coverage": {
+        "workspace_id": "storage-benchmark-07",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 48.75,
+      "coverage": {
+        "workspace_id": "storage-benchmark-08",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    },
+    {
+      "mappings_written": 10000,
+      "cache_hit_occurrences": 9872,
+      "batches": 79,
+      "elapsed_seconds": 22.26599999999962,
+      "coverage": {
+        "workspace_id": "storage-benchmark-09",
+        "profile_id": "synthetic-storage-benchmark",
+        "profile_revision": "synthetic-storage-r1",
+        "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+        "index_generation": 1,
+        "eligible_active_chunks": 10000,
+        "ready_embeddings": 10000,
+        "stale_embeddings": 0,
+        "coverage_fraction": 1.0,
+        "ready": true,
+        "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:1"
+      }
+    }
+  ],
+  "pool_reopen_counts_before": {
+    "workspaces": 10,
+    "chunks": 100000,
+    "cache_vectors": 10,
+    "chunk_mappings": 100000,
+    "completed_jobs": 10,
+    "legacy_nonnull_vectors": 0
+  },
+  "pool_reopen_counts_after": {
+    "workspaces": 10,
+    "chunks": 100000,
+    "cache_vectors": 10,
+    "chunk_mappings": 100000,
+    "completed_jobs": 10,
+    "legacy_nonnull_vectors": 0
+  },
+  "updated_source": {
+    "mappings_written": 10000,
+    "cache_hit_occurrences": 10000,
+    "batches": 79,
+    "elapsed_seconds": 22.67200000000048,
+    "coverage": {
+      "workspace_id": "storage-benchmark-00",
+      "profile_id": "synthetic-storage-benchmark",
+      "profile_revision": "synthetic-storage-r1",
+      "profile_fingerprint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3",
+      "index_generation": 2,
+      "eligible_active_chunks": 10000,
+      "ready_embeddings": 10000,
+      "stale_embeddings": 10000,
+      "coverage_fraction": 1.0,
+      "ready": true,
+      "checkpoint": "9c397bc7f925861cf3f1916bf5c672e29d4d7af62365814d973c12cc210ccfe3:2"
+    }
+  },
+  "final_counts": {
+    "workspaces": 10,
+    "chunks": 110000,
+    "cache_vectors": 10,
+    "chunk_mappings": 110000,
+    "completed_jobs": 10,
+    "legacy_nonnull_vectors": 0
+  },
+  "publication_seconds": 73.96899999999914,
+  "total_seconds": 465.875,
+  "execution_scope": "Direct bounded persistence pages with fake vectors; no embedding worker or provider throughput claim",
+  "restart_scope": "Connection-pool close/reopen; continued persisted lease and cursor, then checked completed coverage",
+  "benchmark_isolation": "Dedicated disposable database; host CPU and storage are not exclusive"
+}

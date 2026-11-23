@@ -1,0 +1,23 @@
+{
+  "hard_budget": 591462,
+  "implementation": "Independent PowerShell replay; no Python governor/evaluator imports",
+  "hard_violations": [],
+  "independently_summed_provider_tokens": 5736645.0,
+  "peak_held_plus_rolling_admitted_tokens": 573696,
+  "status": "PASS",
+  "scope": "Accounting consistency and hard-admission replay; the original SLO verdict remains separate",
+  "one_second_window_diagnostic": {
+    "scope": "Additional diagnostic; original predeclared ten-second-step acceptance rule unchanged",
+    "band90to95_share": 0.9741219963031423,
+    "step_seconds": 1,
+    "windows": 541,
+    "median": 0.9214124177631579,
+    "window_seconds": 60
+  },
+  "original_acceptance_status": "PASS",
+  "sustainable_tpm_fixed": 622592,
+  "report_totals_match": true,
+  "elapsed_seconds": 600.9689999999991,
+  "independently_computed_utilization": 0.9199275378836383,
+  "independently_computed_tpm": 572739.5256660501
+}
