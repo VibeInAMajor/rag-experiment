@@ -61,30 +61,71 @@ Query -> FastAPI server-authorized workspace -> approved profile registry
 
 ## 3. Delivery sequence, gates and dependencies
 
-| Order | Task | Gate / outcome |
-| ---: | --- | --- |
-| 1 | [INDEX-001](TASK-RAG-INDEX-001-persisted-revision-and-consistent-search-snapshots.md) | Search uses persistent committed corpus generation instead of query-time O(N) digest scan |
-| 2 | [PROFILE-001](TASK-RAG-PROFILE-001-versioned-retrieval-and-processing-profile-registry.md) | Lexical/Dense/Hybrid and optional BM25 IDs are immutable, qualified and discoverable |
-| 3 | [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md) | Real TEI/Qwen model/dimension/tokenizer, finite vectors and budget measured |
-| 3a | **[TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)** | One shared 0.92 desired throughput / 0.95 rolling hard admission governor, adapted from pinned previous project with explicit rights and real model qualification |
-| 4 | [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) | Durable embedding backfill, coverage, idempotent writes and model-generation pin |
-| 5 | [DENSE-001](TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md) | Actual query embed + Haystack + exact cosine SQL and honest Live results |
-| 6 | [ANN-001](TASK-RAG-ANN-001-hnsw-halfvec-index-and-tenant-recall-gates.md) | HNSW expression with validated dimension and tenant-filter recall vs exact oracle |
-| 7 | [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) | Approved Haystack lexical+dense RRF, no raw-score mixing, provenance intact |
-| Parallel decision | [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md) | A/B benchmark with real BM25, deployment/license assessment and GO/NO-GO |
-| Conditional | [BM25-002](TASK-RAG-BM25-002-conditional-postgresql-bm25-search-profile.md) | Only after benchmark GO; additive BM25 profile, never hidden FTS replacement |
-| Parallel decision | [CONVERT-001](TASK-RAG-CONVERT-001-microsoft-markitdown-evaluation-and-safe-conversion-adapter.md) | Per-format MarkItDown vs Docling/native GO/NO-GO |
-| Evidence foundation | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) | Exact original assets, structured elements and typed representations |
-| Evidence producers | [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) | Qualified OCR, diagrams/chart data and Mermaid structures with verifiable original refs |
-| Evidence consumer | [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) | Authorized original/page/crop/source-range resolution and trust-state verification |
-| UI consumer | [EVIDENCE-001](TASK-RAG-EVIDENCE-001-live-original-evidence-and-diagram-viewer.md) | Real PDF/image/Mermaid evidence pane in Live Workbench, no invented sources |
-| Enterprise security | [SCALE-001](TASK-RAG-SCALE-001-multiworkspace-identity-authorization-and-tenanted-retrieval.md) | Authenticated multiworkspace, RLS and quota/role isolation |
-| Enterprise throughput | [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md) | Real durable queued uploads/workers/backpressure and per-tenant fairness |
-| Efficiency | [DELTA-001](TASK-RAG-DELTA-001-incremental-reindexing-and-embedding-vector-reuse.md) | Safe per-chunk vector reuse only on matching input/model/profile and tenant |
-| Operating model | [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) | Cross-stage redacted traces, quality and cost/latency regression dashboard |
-| Recovery | [OPS-002](TASK-RAG-OPS-002-index-promotion-backup-and-disaster-recovery.md) | Shadow generations, atomically qualified promotion, DB+asset restore and rollback |
+**Delivery update (2026-11-24; source inspected `ce3b331e5869d563b9bfbabc034b2158148990b3`):** INDEX-001, PROFILE-001, EMBED-001, EMBED-002 and DENSE-001 are complete for their documented local scope. [DENSE-001 runtime evidence](evidence/dense-2026-11-24/report.md) proves exact retrieval on 102 active vectors, not 100k production scale. TPM-001 is IN PROGRESS: the measured single-owner prerequisite passed; broader capacity evidence remains pending. ANN is now five atomic specifications; the former omnibus task is replaced in place by ANN-001 feasibility. Every proposed task remains unimplemented until its own evidence is recorded.
 
-INDEX-001 and PROFILE-001 must not depend on BM25 or production ANN. BM25 is a separate decision gate, so Dense/RRF work is not blocked by a search extension legal review. Evidence content work can progress in parallel with vector work, but original assets must be available before any citation claims.
+| Order / track | Task | Gate / outcome |
+| --- | --- | --- |
+| 1 | [INDEX-001](completed/TASK-RAG-INDEX-001-persisted-revision-and-consistent-search-snapshots.md) | COMPLETE (local): persisted corpus generation instead of query-time O(N) digest |
+| 2 | [PROFILE-001](completed/TASK-RAG-PROFILE-001-versioned-retrieval-and-processing-profile-registry.md) | COMPLETE (local): immutable retrieval/profile registry and governed rollout |
+| 3 | [EMBED-001](completed/TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md) | COMPLETE (local): real TEI/Qwen model, 2560 dimensions, native tokenizer and budget |
+| 3a | [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) | IN PROGRESS: shared desired 0.92 / rolling hard 0.95 admission; measured local prerequisite passed, broader concurrency/steady-window qualification remains |
+| 4 | [EMBED-002](completed/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) | COMPLETE (local): durable embedding backfill, coverage and immutable vector/mapping storage |
+| 5 | [DENSE-001](completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md) | COMPLETE (local): actual query embed + Haystack + exact cosine oracle and Live provenance |
+| 6a / ANN feasibility | [ANN-001](TASK-RAG-ANN-001-hnsw-halfvec-index-and-tenant-recall-gates.md) | Independent float32 oracle, halfvec precision and HNSW cohort benchmarks; >=100k physical vectors, 1M optional; measured GO/NO-GO. Disposable SQL does not need production ingestion limits lifted. |
+| Parallel / ingestion foundations | [INGEST-001](TASK-RAG-INGEST-001-streamed-asset-staging.md) → [INGEST-002](TASK-RAG-INGEST-002-atomic-http-202-job-admission.md) → [INGEST-003](TASK-RAG-INGEST-003-leased-workers-and-tenant-backpressure.md) | Streamed immutable assets, durable acceptance, leases/retry/fairness; reuse CONTENT-001, SCALE-001/002 and TPM-001 boundaries |
+| Parallel / PDF scale | [PDF-001](TASK-RAG-PDF-001-bounded-page-window-processing.md) | Seekable bounded PDF windows/checkpointing; prerequisite for large-PDF publication path |
+| Parallel / corpus capacity | [INGEST-004](TASK-RAG-INGEST-004-incremental-index-and-atomic-publication.md) | Bounded staging, atomic publication and measured unified workspace publication/retrieval quotas; actual 100k+ active chunks and no partial generations. Owns current 10k/50 MiB limit replacement, not ANN. |
+| Parallel / ingestion consumers | [UI-004](TASK-UI-004-async-upload-and-job-tracking.md), [OPS-003](TASK-RAG-OPS-003-large-pdf-1000-page-qualification.md) | Durable upload/job tracking and independently measured large-PDF release gate; see [Large-document ingestion map](LARGE_DOCUMENT_ASYNC_INGESTION_PLAN_2026-11-23.md) |
+| 6b / ANN execution | [ANN-002](TASK-RAG-ANN-002-generation-fenced-hnsw-retrieval-and-exact-reranking.md) | After ANN-001 GO: generation-fenced candidate retrieval on canonical vectors and full-precision chunk-level reranking; internal only |
+| 6c / ANN resilience | [ANN-003](TASK-RAG-ANN-003-tenant-selective-routing-and-bounded-fallback.md) | After ANN-002: qualified tenant/corpus routing, shared admission, bounded exact fallback, truthful requested/executed policy; large serving cohort requires INGEST-004 |
+| 6d / ANN qualification | [ANN-004](TASK-RAG-ANN-004-ann-qualification-shadow-evaluation-and-observability.md) | After ANN-003: held-out per-cohort quality, bounded shadow oracle, telemetry and existing rollout qualification; coordinate OPS-001; no production promotion |
+| 6e / ANN operations | [ANN-005](TASK-RAG-ANN-005-index-lifecycle-and-production-qualification.md) | After ANN-004 and enterprise prerequisites: physical lifecycle, canary, rollback/restart/restore and production qualification; reuse OPS-002 shared lifecycle and recovery |
+| 7 / independent retrieval | [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) | Approved lexical + exact dense RRF can proceed from DENSE-001/PROFILE-001/INDEX-001 and applicable TPM admission; ANN-backed hybrid only after explicit ANN qualification/rollout, no raw-score mixing |
+| Parallel decision | [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md) | Genuine BM25 A/B and license/deployment GO/NO-GO |
+| Conditional | [BM25-002](TASK-RAG-BM25-002-conditional-postgresql-bm25-search-profile.md) | Only after GO; additive BM25 profile, never hidden FTS replacement |
+| Parallel decision | [CONVERT-001](TASK-RAG-CONVERT-001-microsoft-markitdown-evaluation-and-safe-conversion-adapter.md) | Per-format MarkItDown vs Docling/native GO/NO-GO |
+| Evidence foundation | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) | Exact originals, structured elements, typed representations |
+| Evidence producers | [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) | Qualified OCR, diagram/chart and Mermaid evidence |
+| Evidence consumer | [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) | Authorized original/page/crop/source-range resolution and trust state |
+| UI consumer | [EVIDENCE-001](TASK-RAG-EVIDENCE-001-live-original-evidence-and-diagram-viewer.md) | Real PDF/image/Mermaid evidence pane, no invented sources |
+| Enterprise security | [SCALE-001](TASK-RAG-SCALE-001-multiworkspace-identity-authorization-and-tenanted-retrieval.md) | Authenticated multiworkspace, RLS and quota/role isolation; mandatory before enterprise activation |
+| Enterprise throughput | [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md) | Parent orchestration of queued uploads/workers/backpressure; deliver via existing atomic ingestion map, not a second implementation |
+| Efficiency | [DELTA-001](TASK-RAG-DELTA-001-incremental-reindexing-and-embedding-vector-reuse.md) | Safe tenant-local compatible per-chunk vector reuse; evidence required for delta optimization claims |
+| Operating model | [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) | Shared redacted tracing, evaluation and quality/cost/latency monitoring; ANN-004 integrates ANN-specific evidence |
+| Recovery | [OPS-002](TASK-RAG-OPS-002-index-promotion-backup-and-disaster-recovery.md) | Shared generation promotion and DB+asset recovery, after ANN-001 physical feasibility and in coordination with ANN-002..004; ANN-005 consumes this gate, not vice versa |
+
+### 3.1. Dependency graph and capacity ownership
+
+```mermaid
+flowchart TD
+    baseline[Completed local exact Dense and durable embeddings] --> feasibility[ANN-001 physical feasibility]
+    feasibility --> decision{GO for measured layout?}
+    decision -->|No| stop[Retain exact and lexical; revise experiment]
+    decision -->|Yes| execution[ANN-002 fenced execution]
+    execution --> routing[ANN-003 bounded routing]
+    routing --> qualification[ANN-004 qualification]
+    qualification --> rollout[ANN-005 production lifecycle]
+    assets[INGEST-001 streaming] --> admission[INGEST-002 durable 202]
+    admission --> workers[INGEST-003 leased workers]
+    workers --> publication[INGEST-004 staged atomic publication and quotas]
+    pdf[PDF-001 windows] --> publication
+    publication -->|Large corpus gate| routing
+    publication -->|100k+ active E2E| qualification
+    publication --> rollout
+    identity[SCALE-001 authorization] --> rollout
+    fairness[SCALE-002 throughput] --> rollout
+    capacity[TPM-001 shared model admission] --> rollout
+    telemetry[OPS-001 observability] --> qualification
+    feasibility --> recovery[OPS-002 shared promotion and recovery]
+    recovery --> rollout
+    baseline --> hybrid[HYBRID-001 exact Dense plus lexical]
+    rollout -->|Optional separately qualified ANN arm| hybrid
+```
+
+- **Capacity is owned by ingestion, not an arbitrary ANN constant:** the inspected publication code and ProfileDefinition each enforce 10,000 active chunks / 50 MiB. INGEST-004 already explicitly owns measured workspace quotas, retrieval profile limit changes, staged batches and atomic publication. Keep current guards until its evidence establishes the replacement; coordinate both publication and serving against one approved capacity policy. Distinguish total physical vector rows, unique compatible cached vectors, mapped eligible active chunks, content bytes and per-query selectivity. A physical index containing 100k vectors does not prove a 100k active-chunk workspace is supported.
+- **Parallel work:** ANN-001 can immediately use disposable SQL fixtures at 10k/100k/optional 1M without bypassing any Live limits. ANN-002 and bounded-routing unit/small-corpus integration can follow a GO before ingestion completion. Large-corpus application qualification (ANN-003/004) and ANN-005 enterprise rollout require INGEST-004 and its upstream staging/admission/worker prerequisites. OPS-003 and DELTA-001 are additionally required for their specific PDF/delta claims; no need to duplicate those implementations.
+- **Quality and safety:** proposed release threshold is mean ANN recall@10 >=0.97 per qualified tenant cohort against independent full-precision chunk oracle; zero unauthorized/stale/wrong-profile results and unexpected underfill; predeclare lower-tail guard and require >25% p95 retrieval improvement on a qualified >=100k eligible corpus. These are gates, not measured outcomes. Failed or insufficient evidence leaves affected cohort disabled. Exact fallback requires remaining deadline and qualified cost/concurrency admission; no unconditional full scan, silent profile change or Preview substitution.
+- **Operations and dependencies:** OPS-002 owns shared promotion and DB+asset restore; its ANN-001 prerequisite is feasibility, not completion of ANN-005. ANN-005 owns physical ANN index DDL/lifecycle and consumes shared recovery proof. OPS-001 owns common tracing; ANN-004 owns ANN-specific gate/shadow evidence. SCALE-001 and SCALE-002 remain enterprise rollout gates. TPM-001 remains sole model admission owner. Hybrid on exact dense, BM25 decisions and evidence content work do not depend on ANN production rollout. Original assets must exist before citation claims.
 
 ## 3a. Pinned related-project reuse: embedding capacity, source deltas, chunking
 
