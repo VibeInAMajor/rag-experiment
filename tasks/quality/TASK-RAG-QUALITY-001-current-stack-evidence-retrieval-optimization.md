@@ -47,6 +47,9 @@ Versioned dataset/fixture digest, original evidence facets/grades and source loc
 
 ## J. Implementation Requirements
 
+**External-domain baseline requirement:** in addition to the preserved synthetic regression and repository-specific dataset, execute the [external multidisciplinary V1 protocol](dataset/EXTERNAL_EVALUATION_PROTOCOL_V1.md) on all admitted EN/RU/UK query variants after DATASET-001 review. Use actual corpus Markdown ingestion, real governed embeddings and existing HTTP/SQL evaluator; report separately by domain, query intent, language and family, including exact formulas/numbers/code and required facets. Do not treat translations as independent samples, tune on sealed holdout or index answer keys. A failure in external evaluation must be explicitly attributed; no quality claim based solely on internal project documents.
+
+
 1. Independently recompute all baseline metrics from preserved reports, including primary misses checksum-en and code-digest at rank six, hard-negative and six no-answer cases. Reproduce on disposable DB with actual model and exact HTTP/SQL; preserve 52-case regression fixture.
 2. Wait for DATASET-001 review freeze; use only its tuning split for iterative decisions. Locked final holdout remains untouched until QUALITY-002. Extend bounded loader/scorer for original spans, grade 0/1/3, facets, unjudged, explicit split, no-answer and provenance; maintain legacy fixture behavior.
 3. Compare same reviewed originals under actual supported parsing/chunking, FTS and exact Dense; report pre-cut candidate coverage and final fixed token budget. Test one variable at a time: Qwen generic vs bounded technical/code instructions, supported chunk lengths 384/500/768 and 0/10/15% overlap where accepted, heading inclusion. Preserve query/document input contract and re-embed/requalify if fingerprint changes; no mismatched vector reuse.
@@ -68,6 +71,8 @@ Independent metric reference, source-span/facet mapping and unjudged semantics, 
 Run hatch --version and configured scoped Hatch workbench-api:check/test/types, actual disposable PostgreSQL/qualified local model tests where applicable; web typecheck, format:check, test and build if touched. Record commands, versions, exit codes, test counts, skips and actual artifacts. A mock is not a runtime measurement.
 
 ## M. Acceptance Criteria
+
+- [ ] External V1 actual API/model/SQL baseline and paired evaluation reports linked, separately by domain/language/family; no source/answer leakage.
 
 - [ ] Original 52-case regression preserved and actual metrics independently reproduced.
 - [ ] Reviewed tuning set, real ingestion/embedding and paired candidate reports with fixed token budget and all required metrics.

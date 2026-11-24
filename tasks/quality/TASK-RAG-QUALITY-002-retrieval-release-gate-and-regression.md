@@ -47,6 +47,9 @@ Run manifest with dataset/labels/corpus digest, source family split, profile/mod
 
 ## J. Implementation Requirements
 
+**External-domain regression and qualification:** [external multidisciplinary V1](dataset/README.md) must be run as a separate source-grounded cohort suite with [execution protocol](dataset/EXTERNAL_EVALUATION_PROTOCOL_V1.md), paired exact/FTS and qualified candidate comparisons, fixed context budget, source-line/facet and no-answer outcomes. The open external set is diagnostic/regression; final GO still requires genuinely independent reviewer-controlled unseen holdout and grouped uncertainty. Report external and internal results separately; no aggregate masking critical domain failures, no treating translated variants as independent gold cases.
+
+
 1. Freeze candidate settings, model assets, gold manifest, allowed cohorts and predeclared gates; independent reviewer releases held-out labels only after candidate commitment. Verify actual supported ingestion and complete current generation. No fixed-fixture shortcut as E2E.
 2. Run FTS and exact baseline plus qualified hybrid/reranked candidates as applicable with equal source scope and final context budget; retain raw arm metrics, candidate ceiling, final pack facets, no-answer and all failure cases. Do not add scores across incompatible algorithms.
 3. Require Primary Evidence Hit@1 >=0.95, Primary Evidence Hit@5 >=0.98, relevant evidence Recall@5 >=0.95, graded nDCG@5 >=0.95, All Required Facets@5 >=0.95; critical adequately sized cohorts Primary@5 >=0.95. Predeclared p95 <=1.20x identical baseline load unless an explicitly approved cost/latency trade-off is recorded. Zero observed unauthorized/stale/wrong-profile/source-hash/citation integrity violations. These are proposed point targets, not achieved results. plus false acceptance/abstention <=5%. Report macro/micro distinctions, primary MRR, nDCG grades, cluster-bootstrap intervals, per-cohort sample sizes and lower-tail failures. For high-risk enterprise claims require independently ratified 95% confidence lower bound >=0.95 on critical binary success metrics or explicit reviewed risk acceptance; local phase point targets remain distinct. Underpowered/incomplete review = BLOCKED, never PASS. No-answer denominator excludes transport errors but report them and count operational failures separately.
@@ -68,6 +71,8 @@ Actual PG/model/HTTP/browser E2E, independent metric recomputation, failure/nega
 Run hatch --version and configured scoped Hatch workbench-api:check/test/types, actual disposable PostgreSQL/qualified local model tests where applicable; web typecheck, format:check, test and build if touched. Record commands, versions, exit codes, test counts, skips and actual artifacts. A mock is not a runtime measurement.
 
 ## M. Acceptance Criteria
+
+- [ ] External V1 diagnostic/regression suite executed with actual runtime and separate domain/language/family metrics; independent final holdout remains separate.
 
 - [ ] Reviewed frozen holdout and actual end-to-end evidence; every gate has numerator/denominator and result.
 - [ ] Targets met for qualified local scope or explicit NO-GO/BLOCKED with no activation.

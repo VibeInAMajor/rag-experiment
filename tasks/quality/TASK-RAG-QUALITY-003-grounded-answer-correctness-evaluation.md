@@ -47,6 +47,9 @@ Reuse reviewed dataset and source/facet contracts, existing evaluation runner/re
 
 ## J. Implementation Requirements
 
+**External answer-quality requirement:** after retrieval and generation prerequisites, use the [external V1 corpus/questions/expected answers](dataset/README.md) as an additional diagnostic set. Review actual answers in EN/RU/UK for source-grounded mathematical formula/numeric/code accuracy, historical attribution, literary interpretation and all required facts. Use [external protocol](dataset/EXTERNAL_EVALUATION_PROTOCOL_V1.md), separate open diagnostic from unseen human-reviewed holdout; do not use answer keys as model inputs or count translations as independent. Report unsupported claims and citation/facet failures separately by domain and language.
+
+
 1. Define predeclared rubric and independent held-out answer questions with verified expected facts; no tuning on answer holdout. Include multi-document, numeric, exact code, contradictory and no-answer cases.
 2. Score each material claim against original evidence (supported/unsupported/contradicted), required fact coverage, citation precision and citation coverage; record all-required-facts rate and exact numeric/unit/code/version correctness. Review actual outputs, not templates. Human adjudication for high-impact; automated judge only as diagnostic with measured agreement.
 3. Proposed local targets >=95% fully correct and complete answerable cases, >=95% supported material claims, >=98% valid supporting citations, <=5% false acceptance/abstention; zero observed cross-tenant/wrong-version fabricated provenance. Report sample counts, uncertainty and critical cohort failures. Ratify before final run; failed gate stays blocked.
@@ -68,6 +71,8 @@ Actual model outputs, human adjudication and reference rubric tests, citation ex
 Run hatch --version and configured scoped Hatch workbench-api:check/test/types, actual disposable PostgreSQL/qualified local model tests where applicable; web typecheck, format:check, test and build if touched. Record commands, versions, exit codes, test counts, skips and actual artifacts. A mock is not a runtime measurement.
 
 ## M. Acceptance Criteria
+
+- [ ] External V1 actual grounded answers evaluated against reviewed localized facts, formulas and citation support; open diagnostics and unseen final holdout reported separately.
 
 - [ ] Actual independently reviewed claim/fact/citation evidence and all metrics with denominator.
 - [ ] Release GO or explicit NO-GO/BLOCKED, no answer-quality claim from retrieval scores.
