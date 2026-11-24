@@ -1,7 +1,7 @@
 # TASK-EVAL-001 — Prove the UI → Haystack → PostgreSQL lexical vertical slice
 
 **Created:** 2026-11-20\
-**Updated:** 2026-11-22\
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — local browser/Haystack/PostgreSQL lexical acceptance verified on 2026-11-22\
 **Priority:** P0 · evidence gate for Live\
 **Dependencies:** TASK-RAG-001, TASK-DB-001, TASK-UI-001, TASK-UI-002\
@@ -26,20 +26,20 @@ The distinction between data and interpretation is essential: `postgres-fts-base
 
 | File/source (repository-relative hyperlink) | Current evidence | Consequence for this task |
 | --- | --- | --- |
-| [Lexical evaluation fixture](../apps/workbench/api/fixtures/lexical-evaluation.json) | `gated_exact_queries` contains **10** query → `expected_source_id` pairs; `diagnostic_paraphrases` contains **3** additional cases. | Treat as the canonical gold set; do not invent another ten-question dataset. |
-| [Explicit development seed](../apps/workbench/api/fixtures/development-corpus.json) and [seed logic](../apps/workbench/api/db_seed.py) | Eight deterministic non-sensitive source records; seed is **explicit** and refuses a mutated/non-demo corpus. | Seed once on a clean development volume; do not reset or reseed after content changes. |
-| [Backend lexical integration tests](../apps/workbench/api/tests/test_lexical_routes.py) | Actual `Pipeline.run_async`, PostgreSQL score parity, 10 gated exact cases, paraphrase diagnostics, zero hits, pagination, authorization, outages and cancellations. | Keep passing; reuse existing assertions, not copy-paste them into new test files. |
-| [Recorded lexical HTTP evidence](../tasks/evidence/postgres-lexical-http-2026-11-21.json) | Captures ready profile, 8 persisted items, real run IDs, raw scores, SQL/result fingerprints and API/DB restart checks. | Establish backend baseline; newly generated UI evidence must add browser observations. |
-| [PostgreSQL-focused test evidence](../tasks/evidence/postgres-lexical-tests-2026-11-21.xml), [database restart evidence](../tasks/evidence/postgresql-restart-2026-11-21.json) | Earlier scoped tests and persistence recovery evidence. | Cite historic baseline separately from the new test run. |
-| [FastAPI contracts](../apps/workbench/api/contracts.py), [routes](../apps/workbench/api/application.py), [projection](../apps/workbench/api/projection.py) | `SearchResponse` returns `run_id`, `request_id`, `trace_id`, `corpus_revision`, timings and actual ranked chunks. | Compare browser-visible fields to live response exactly. |
-| [SQL persistence](../apps/workbench/api/postgres.py) | `lexical_search_snapshot()` evaluates `ts_rank_cd`, active versions, RLS and a consistent source fingerprint in one read-only snapshot. | Optionally cross-check SQL for sampled cases, no independent query engine. |
-| [UI `App.tsx`](../apps/workbench/web/src/App.tsx), [approved graph matcher](../apps/workbench/web/src/domain/approvedExecution.ts), [Live request lifecycle](../apps/workbench/web/src/domain/liveSearch.ts), [hook](../apps/workbench/web/src/hooks/useLiveSearch.ts) | UI-002 already routes explicit Live mode through the exact three-node keyword graph and four-field API request; Preview has a separate fixture path. Request generations reject stale context and Stop reports local interruption. | Verify the existing real browser edge; do not implement a second Live executor. |
-| [Live result presentation](../apps/workbench/web/src/components/LiveRunDetails.tsx), [Results panel](../apps/workbench/web/src/components/ResultsPanel.tsx), [run history](../apps/workbench/web/src/views/RunsView.tsx) | Live cards already expose ordered source/version/chunk/rank/raw-score attributes, exact response JSON, actual server stages and correlation/profile/corpus details; `page == null` renders unavailable. | Reuse existing selectors/presentation for UI ↔ response parity, with fixes only for observed defects. |
-| [Preview fixtures](../apps/workbench/web/src/domain/preview.ts), [Preview browser smoke](../apps/workbench/web/scripts/browser-smoke.js) | Hard-coded retrieval hits/durations and existing browser regressions. | Preview remains independent; no Preview hit may count toward Live metrics. |
-| [Validation client](../apps/workbench/web/src/domain/validation.ts), [validation smoke](../apps/workbench/web/scripts/validation-smoke.js) | Constructor validation on port 8010, unrelated to executable readiness on port 8011. | Preserve and test this third, separate meaning of “valid.” |
-| [Vite proxy](../apps/workbench/web/vite.config.ts) | Both dev and preview already proxy `/api/v1` → 8011 independently of `/api/pipelines/validate` → 8010. | Verify browser requests actually reach FastAPI; no proxy implementation is missing. |
-| [Existing Live smoke](../apps/workbench/web/scripts/live-search-smoke.js) | Real `retention`/`GIN`/empty search capture and parity checks, followed by separately injected fault paths, already exist. | Add the canonical 10+3 acceptance matrix and restart evidence; do not recast the older smoke as the new full evaluation. |
-| [Canonical API contract](../docs-website/docs/architecture/rag-runtime-contract.md), [lexical guide](../docs-website/docs/architecture/postgres-lexical-search.md), [database runbook](../docs-website/docs/architecture/postgresql-foundation.md) | Current authoritative runtime, errors, and start/restart commands. | Specifications and reports MUST follow these contracts, not the dated superseded storage proposal. |
+| [Lexical evaluation fixture](../../apps/workbench/retrieval/fixtures/lexical-evaluation.json) | `gated_exact_queries` contains **10** query → `expected_source_id` pairs; `diagnostic_paraphrases` contains **3** additional cases. | Treat as the canonical gold set; do not invent another ten-question dataset. |
+| [Explicit development seed](../../apps/workbench/postgres/fixtures/development-corpus.json) and [seed logic](../../apps/workbench/postgres/db_seed.py) | Eight deterministic non-sensitive source records; seed is **explicit** and refuses a mutated/non-demo corpus. | Seed once on a clean development volume; do not reset or reseed after content changes. |
+| [Backend lexical integration tests](../../apps/workbench/api/tests/test_lexical_routes.py) | Actual `Pipeline.run_async`, PostgreSQL score parity, 10 gated exact cases, paraphrase diagnostics, zero hits, pagination, authorization, outages and cancellations. | Keep passing; reuse existing assertions, not copy-paste them into new test files. |
+| [Recorded lexical HTTP evidence](../evidence/postgres-lexical-http-2026-11-21.json) | Captures ready profile, 8 persisted items, real run IDs, raw scores, SQL/result fingerprints and API/DB restart checks. | Establish backend baseline; newly generated UI evidence must add browser observations. |
+| [PostgreSQL-focused test evidence](../evidence/postgres-lexical-tests-2026-11-21.xml), [database restart evidence](../evidence/postgresql-restart-2026-11-21.json) | Earlier scoped tests and persistence recovery evidence. | Cite historic baseline separately from the new test run. |
+| [FastAPI contracts](../../apps/workbench/contracts/schemas.py), [routes](../../apps/workbench/api/application.py), [projection](../../apps/workbench/api/projection.py) | `SearchResponse` returns `run_id`, `request_id`, `trace_id`, `corpus_revision`, timings and actual ranked chunks. | Compare browser-visible fields to live response exactly. |
+| [SQL persistence](../../apps/workbench/postgres/postgres.py) | `lexical_search_snapshot()` evaluates `ts_rank_cd`, active versions, RLS and a consistent source fingerprint in one read-only snapshot. | Optionally cross-check SQL for sampled cases, no independent query engine. |
+| [UI `App.tsx`](../../apps/workbench/web/src/App.tsx), [approved graph matcher](../../apps/workbench/web/src/domain/approvedExecution.ts), [Live request lifecycle](../../apps/workbench/web/src/domain/liveSearch.ts), [hook](../../apps/workbench/web/src/hooks/useLiveSearch.ts) | UI-002 already routes explicit Live mode through the exact three-node keyword graph and four-field API request; Preview has a separate fixture path. Request generations reject stale context and Stop reports local interruption. | Verify the existing real browser edge; do not implement a second Live executor. |
+| [Live result presentation](../../apps/workbench/web/src/components/LiveRunDetails.tsx), [Results panel](../../apps/workbench/web/src/components/ResultsPanel.tsx), [run history](../../apps/workbench/web/src/views/RunsView.tsx) | Live cards already expose ordered source/version/chunk/rank/raw-score attributes, exact response JSON, actual server stages and correlation/profile/corpus details; `page == null` renders unavailable. | Reuse existing selectors/presentation for UI ↔ response parity, with fixes only for observed defects. |
+| [Preview fixtures](../../apps/workbench/web/src/domain/preview.ts), [Preview browser smoke](../../apps/workbench/web/scripts/browser-smoke.js) | Hard-coded retrieval hits/durations and existing browser regressions. | Preview remains independent; no Preview hit may count toward Live metrics. |
+| [Validation client](../../apps/workbench/web/src/domain/validation.ts), [validation smoke](../../apps/workbench/web/scripts/validation-smoke.js) | Constructor validation on port 8010, unrelated to executable readiness on port 8011. | Preserve and test this third, separate meaning of “valid.” |
+| [Vite proxy](../../apps/workbench/web/vite.config.ts) | Both dev and preview already proxy `/api/v1` → 8011 independently of `/api/pipelines/validate` → 8010. | Verify browser requests actually reach FastAPI; no proxy implementation is missing. |
+| [Existing Live smoke](../../apps/workbench/web/scripts/live-search-smoke.js) | Real `retention`/`GIN`/empty search capture and parity checks, followed by separately injected fault paths, already exist. | Add the canonical 10+3 acceptance matrix and restart evidence; do not recast the older smoke as the new full evaluation. |
+| [Canonical API contract](../../docs-website/docs/architecture/rag-runtime-contract.md), [lexical guide](../../docs-website/docs/architecture/postgres-lexical-search.md), [database runbook](../../docs-website/docs/architecture/postgresql-foundation.md) | Current authoritative runtime, errors, and start/restart commands. | Specifications and reports MUST follow these contracts, not the dated superseded storage proposal. |
 
 **Reinspection on 2026-11-22:** UI-001/UI-002 are actual implemented prerequisites, verified in the sources above. The three cited 2026-11-21 backend/restart artifacts exist and remain historical evidence. The canonical fixture still contains ten gated exact and three diagnostic records, and the seed fixture contains eight synthetic sources; current database counts must be observed rather than inferred from file presence. The new 10+3 browser evaluation/report remains unexecuted at task creation. Existing CHUNK/parser/AGENTS dirty work is preserved and does not become evaluation evidence by association.
 
@@ -126,7 +126,7 @@ Frontend must NOT replace the raw score with a normalization, percentage or a ro
 
 ### H2. Metric definitions
 
-Let `Q_exact` be the ten **already versioned** exact/identifier questions and `Q_para` the three diagnostic paraphrases from [lexical-evaluation.json](../apps/workbench/api/fixtures/lexical-evaluation.json). Each question labels **one expected source ID**, so metrics measure relevant source presence, not chunk-level relevance judgments:
+Let `Q_exact` be the ten **already versioned** exact/identifier questions and `Q_para` the three diagnostic paraphrases from [lexical-evaluation.json](../../apps/workbench/retrieval/fixtures/lexical-evaluation.json). Each question labels **one expected source ID**, so metrics measure relevant source presence, not chunk-level relevance judgments:
 
 - `hit@5(q) = 1` if the expected `source_id` appears in returned ranks 1..5, otherwise `0`.
 - `Recall@5` for this **single-relevant-source** dataset is `sum(hit@5) / |Q|`. Name the report `expected-source-hit-rate@5` alongside Recall@5 to avoid implying an exhaustively judged corpus.
@@ -205,18 +205,18 @@ Test **400** malformed/invalid request, **404** unauthorized workspace, **409** 
 
 | Path | Expected action | Why |
 | --- | --- | --- |
-| [`apps/workbench/api/fixtures/lexical-evaluation.json`](../apps/workbench/api/fixtures/lexical-evaluation.json) | **Read/reuse**, generally no changes | Source of ten + three gold queries. |
-| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | **Run/reuse** | Baseline HTTP-to-SQL and failure-path suite. |
-| [`tasks/evidence/postgres-lexical-http-2026-11-21.json`](../tasks/evidence/postgres-lexical-http-2026-11-21.json) | **Read/reuse, do not overwrite** | Historical backend evidence. |
-| [`apps/workbench/web/scripts/browser-smoke.js`](../apps/workbench/web/scripts/browser-smoke.js) | **Keep passing** | Preview-only browser baseline. |
-| [`apps/workbench/web/scripts/validation-smoke.js`](../apps/workbench/web/scripts/validation-smoke.js) | **Keep passing** | Independent constructor validator. |
+| [`apps/workbench/retrieval/fixtures/lexical-evaluation.json`](../../apps/workbench/retrieval/fixtures/lexical-evaluation.json) | **Read/reuse**, generally no changes | Source of ten + three gold queries. |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../../apps/workbench/api/tests/test_lexical_routes.py) | **Run/reuse** | Baseline HTTP-to-SQL and failure-path suite. |
+| [`tasks/evidence/postgres-lexical-http-2026-11-21.json`](../evidence/postgres-lexical-http-2026-11-21.json) | **Read/reuse, do not overwrite** | Historical backend evidence. |
+| [`apps/workbench/web/scripts/browser-smoke.js`](../../apps/workbench/web/scripts/browser-smoke.js) | **Keep passing** | Preview-only browser baseline. |
+| [`apps/workbench/web/scripts/validation-smoke.js`](../../apps/workbench/web/scripts/validation-smoke.js) | **Keep passing** | Independent constructor validator. |
 | `apps/workbench/web/scripts/live-evaluation-smoke.js` | **Create** | Real API-browser E2E trace and result parity checks. |
 | `apps/workbench/web/scripts/live-resilience-smoke.js` | **Create** | Supervised real outage/reconnect observations and separately labeled stale-response/inert-text tests. |
 | `scripts/workbench_evaluation_probe.py` | **Create** | Reuse existing lexical HTTP collection and read-only `PostgresPersistence` SQL parity without a second ranking engine. |
 | `scripts/run_workbench_live_evaluation.ps1`, `scripts/run_workbench_recovery_evaluation.ps1` | **Create** | Canonical fixture injection, sanitized artifact retention and guarded same-process/volume recovery supervision. |
 | Optional `src/domain/evaluation.test.ts` | **Not needed** | Metrics remain test-harness code and are independently recomputed in the artifact audit; no additional application ranking/evaluation module. |
-| [`apps/workbench/web/src/App.tsx`](../apps/workbench/web/src/App.tsx), [`components/ResultsPanel.tsx`](../apps/workbench/web/src/components/ResultsPanel.tsx), [`views/RunsView.tsx`](../apps/workbench/web/src/views/RunsView.tsx) | **Read; small fixes only if evidence finds a defect** | Capture actual UI result fields. |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py), [`application.py`](../apps/workbench/api/application.py), [`postgres.py`](../apps/workbench/api/postgres.py) | **Read, must not change merely to green the eval** | Server response and SQL authority. |
+| [`apps/workbench/web/src/App.tsx`](../../apps/workbench/web/src/App.tsx), [`components/ResultsPanel.tsx`](../../apps/workbench/web/src/components/ResultsPanel.tsx), [`views/RunsView.tsx`](../../apps/workbench/web/src/views/RunsView.tsx) | **Read; small fixes only if evidence finds a defect** | Capture actual UI result fields. |
+| [`apps/workbench/contracts/schemas.py`](../../apps/workbench/contracts/schemas.py), [`application.py`](../../apps/workbench/api/application.py), [`postgres.py`](../../apps/workbench/postgres/postgres.py) | **Read, must not change merely to green the eval** | Server response and SQL authority. |
 | `docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md` | **Create** | Current-date Markdown acceptance report with actual commands, two evidence lanes, metrics and limitations. |
 | `tasks/evidence/eval-vertical-2026-11-22/` | **Generate when tests execute** | New sanitized API/SQL/browser/restart/check artifacts; preserve all historical evidence. |
 | `apps/workbench/web/README.md`, `docs-website/PROJECT_MAP.md`, `docs-website/sidebars.js` | **Scoped update** | Document the new evaluation run and report navigation; correct proven discovery-only wording without rewriting existing behavior. |
@@ -228,7 +228,7 @@ Test **400** malformed/invalid request, **404** unauthorized workspace, **409** 
 ### J1. Establish a non-destructive environment baseline
 
 1. Confirm `hatch --version`, Docker, Node 22.12+ and that the API and browser tools are available.
-2. Start the application-owned container through [Compose](../apps/workbench/postgres/compose.yaml) using the [PostgreSQL operations guide](../docs-website/docs/architecture/postgresql-foundation.md); do not use `down -v`.
+2. Start the application-owned container through [Compose](../../apps/workbench/postgres/compose.yaml) using the [PostgreSQL operations guide](../../docs-website/docs/architecture/postgresql-foundation.md); do not use `down -v`.
 3. For an **empty and explicitly disposable** local database, use the runbook to create environment, bootstrap role, apply migration and explicit seed. For a populated volume, **inspect first** and do not re-run `db-seed` after user-supplied sources were published.
 4. Load app-only environment (`use-dev-env.ps1`), start `hatch run workbench-api:serve` and record non-secret schema/backend revision. Do not copy the environment file into evidence.
 5. Verify `/api/v1/health/ready`=200 and `/api/v1/capabilities` advertises `postgres-fts-baseline`, revision `postgres-fts-baseline-r1`, workspace `development`, matching database state.
@@ -238,12 +238,12 @@ Test **400** malformed/invalid request, **404** unauthorized workspace, **409** 
 
 ### J2. Reuse the existing gold questions and executable profile
 
-1. Parse existing [lexical-evaluation.json](../apps/workbench/api/fixtures/lexical-evaluation.json) and validate 10 exact and 3 diagnostic records have nonempty unique queries and expected IDs.
+1. Parse existing [lexical-evaluation.json](../../apps/workbench/retrieval/fixtures/lexical-evaluation.json) and validate 10 exact and 3 diagnostic records have nonempty unique queries and expected IDs.
 2. Take `profile_id` and `profile_revision` from live capabilities—not a stale hard-coded browser setting—and `top_k=5` within advertised bounds.
 3. In the browser, select the task's approved `keyword` graph and run a **fresh** Live request per query. Do not issue raw test-only API requests and count them as UI execution.
 4. Capture the outbound request shape and inbound HTTP response with Playwright in the real-service lane. Assert **exact four request body keys**, live response envelope, score type and workspace.
 5. Verify `results[].source_id` matching by first five ranks. Record every case, including zero hits or HTTP failures. Record MRR using **first** relevant source rank.
-6. Cross-check selected real hit metadata through existing [PostgresPersistence](../apps/workbench/api/postgres.py) or by running existing [test_lexical_routes.py](../apps/workbench/api/tests/test_lexical_routes.py); do not run tests as a privileged SQL bypass against production data.
+6. Cross-check selected real hit metadata through existing [PostgresPersistence](../../apps/workbench/postgres/postgres.py) or by running existing [test_lexical_routes.py](../../apps/workbench/api/tests/test_lexical_routes.py); do not run tests as a privileged SQL bypass against production data.
 
 **Gate:** ten exact cases and three diagnostics attempted; all records counted, none borrowed from Preview.
 
@@ -311,7 +311,7 @@ hatch run workbench-api:serve
 # Run in a separate process/terminal; do not claim this was run in documentation-only work.
 ```
 
-For backend regression use the task-specific Hatch environment and targeted tests from [API README](../apps/workbench/api/README.md) and [lexical guide](../docs-website/docs/architecture/postgres-lexical-search.md); record actual output. For the frontend:
+For backend regression use the task-specific Hatch environment and targeted tests from [API README](../../apps/workbench/api/README.md) and [lexical guide](../../docs-website/docs/architecture/postgres-lexical-search.md); record actual output. For the frontend:
 
 ```powershell
 cd apps/workbench/web
@@ -323,7 +323,7 @@ npm run build
 npm run dev
 ```
 
-The implemented browser scenario uses the runner-configured `apps/workbench/web/scripts/live-evaluation-smoke.js` described in the [Workbench README](../apps/workbench/web/README.md). `scripts/run_workbench_live_evaluation.ps1` loads the canonical fixture and injects its phase configuration; `scripts/run_workbench_recovery_evaluation.ps1` supervises real recovery and repeats the checks. The captured success path uses actual network responses, not hard-coded search results.
+The implemented browser scenario uses the runner-configured `apps/workbench/web/scripts/live-evaluation-smoke.js` described in the [Workbench README](../../apps/workbench/web/README.md). `scripts/run_workbench_live_evaluation.ps1` loads the canonical fixture and injects its phase configuration; `scripts/run_workbench_recovery_evaluation.ps1` supervises real recovery and repeats the checks. The captured success path uses actual network responses, not hard-coded search results.
 
 ### L2. Minimum test matrix
 
@@ -358,12 +358,12 @@ Report environment (OS/tools, API version, relevant commit, PostgreSQL/pgvector 
 - [x] Real API/database outages and nine mock error shapes, local Stop and strengthened late-response cases produce zero fixture fallback/false Live completion.
 - [x] API process replacement and PostgreSQL stop/start preserve the same volume, source/version/chunk identities, content, migration ledger/image and corpus revision; no reseed/migration.
 - [x] Existing Preview and constructor-validator browser regressions pass independently.
-- [x] Sanitized local machine artifacts and the [dated report](../docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) record exact methods, versions, commands, counts, limitations and retained automation incidents.
+- [x] Sanitized local machine artifacts and the [dated report](../../docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md) record exact methods, versions, commands, counts, limitations and retained automation incidents.
 - [x] Haystack implementation, migration `0001`, canonical gold fixture and main corpus are unchanged by evaluation; prior dirty work is preserved.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
-- Produce `docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md` as a durable repository-local acceptance artifact, linking [canonical runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) and [lexical API guide](../docs-website/docs/architecture/postgres-lexical-search.md). New evidence lives under `tasks/evidence/eval-vertical-2026-11-22/`; historical artifacts remain untouched. Update the task with actual PASS/FAIL/NOT TESTED per gate.
+- Produce `docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md` as a durable repository-local acceptance artifact, linking [canonical runtime contract](../../docs-website/docs/architecture/rag-runtime-contract.md) and [lexical API guide](../../docs-website/docs/architecture/postgres-lexical-search.md). New evidence lives under `tasks/evidence/eval-vertical-2026-11-22/`; historical artifacts remain untouched. Update the task with actual PASS/FAIL/NOT TESTED per gate.
 - No schema migration in this evaluation task. Existing `development` seed must not be overwritten. Metrics must pin corpus/profile revisions to permit future comparisons.
 - When a gate fails, leave Live unavailable to general users or roll back only frontend Live exposure; preserve PostgreSQL data, API implementation and Preview/validator paths. Correct the defect and rerun the failed **and** regression cases.
 - Later semantic/hybrid tasks may add metrics under separate profile IDs, but the existing lexical baseline remains valid for regression comparisons.
@@ -379,7 +379,7 @@ Report environment (OS/tools, API version, relevant commit, PostgreSQL/pgvector 
 - [x] Metrics use all-attempt denominators, top-five cutoff, explicit n and nearest-rank p50/p95; coarse observed zero-ms readings remain distinct from missing data.
 - [x] Backend 38 and frontend 259 tests, frontend type/format/build, probe static checks and independent browser smokes actually passed.
 - [x] Independent artifact audit confirms no configured credentials or full passage bodies, current source/build hashes and preserved historical evidence; machine artifacts stay local under the existing ignore policy.
-- [x] The [report](../docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md), generated [summary](evidence/eval-vertical-2026-11-22/acceptance-summary.json), [audit](evidence/eval-vertical-2026-11-22/evidence-audit.json) and raw phase artifacts substantiate completion.
+- [x] The [report](../../docs-website/docs/tasks/RAG_Live_Lexical_Acceptance_2026-11-22.md), generated [summary](../evidence/eval-vertical-2026-11-22/acceptance-summary.json), [audit](../evidence/eval-vertical-2026-11-22/evidence-audit.json) and raw phase artifacts substantiate completion.
 
 ### Completion evidence and boundaries
 

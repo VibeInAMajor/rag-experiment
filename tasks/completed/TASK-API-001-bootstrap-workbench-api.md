@@ -1,7 +1,7 @@
 # TASK-API-001-bootstrap-workbench-api
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-20  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE  
 **Priority:** P0 · integration  
 **Dependencies:** TASK-ARCH-001  
@@ -13,7 +13,7 @@ Bootstrap a thin Workbench API with readiness and capability discovery
 
 ## B. Context / Problem
 
-The Workbench already has a validation-only API client and a separate loopback constructor validator. It has no RAG execution API or executable profile discovery. A distinct bootstrap boundary with truthful liveness/readiness is needed before live search can be integrated. The [canonical runtime/API contract](../docs-website/docs/architecture/rag-runtime-contract.md) owns the v1 schema; the constructor validator's revision and capabilities must not be repurposed as execution readiness.
+The Workbench already has a validation-only API client and a separate loopback constructor validator. It has no RAG execution API or executable profile discovery. A distinct bootstrap boundary with truthful liveness/readiness is needed before live search can be integrated. The [canonical runtime/API contract](../../docs-website/docs/architecture/rag-runtime-contract.md) owns the v1 schema; the constructor validator's revision and capabilities must not be repurposed as execution readiness.
 
 ## C. Current Repository State
 
@@ -89,12 +89,12 @@ New isolated application; no data migration or API compatibility break. API v1 c
 
 Implemented files:
 - `apps/workbench/api/application.py`: typed discovery-only FastAPI composition and lifespan. Default readiness stays 503; the neutral async readiness seam is bounded and rechecks lifecycle after awaiting a snapshot.
-- `apps/workbench/api/config.py`: explicit loopback settings and exact local CORS origins; there is no feature/readiness enable flag.
-- `apps/workbench/api/contracts.py`, `services.py`, `boundary.py`, `__init__.py`, `__main__.py`: provider-neutral capability schemas, app exports, process startup, server-generated IDs, Host/Origin policy, safe errors and operational-only logging.
-- [Published OpenAPI artifact](../apps/workbench/api/openapi.json), generated from `create_app(settings=ApiSettings()).openapi()`; a focused contract test prevents drift. The bootstrap has three routes and does not expose an additional HTTP schema endpoint.
-- `apps/workbench/api/tests/test_configuration.py`, `test_http_contract.py`: configuration, lifecycle, readiness/failure/timeout, late completion after shutdown, duplicate/security headers, request body rejection, error sanitization, schema compatibility and correlation tests.
+- `apps/workbench/configuration/config.py`: explicit loopback settings and exact local CORS origins; there is no feature/readiness enable flag.
+- `apps/workbench/contracts/schemas.py`, `services.py`, `boundary.py`, `__init__.py`, `__main__.py`: provider-neutral capability schemas, app exports, process startup, server-generated IDs, Host/Origin policy, safe errors and operational-only logging.
+- [Published OpenAPI artifact](../../apps/workbench/api/openapi.json), generated from `create_app(settings=ApiSettings()).openapi()`; a focused contract test prevents drift. The bootstrap has three routes and does not expose an additional HTTP schema endpoint.
+- `apps/workbench/configuration/tests/test_configuration.py`, `test_http_contract.py`: configuration, lifecycle, readiness/failure/timeout, late completion after shutdown, duplicate/security headers, request body rejection, error sanitization, schema compatibility and correlation tests.
 - Root `pyproject.toml`: detached `workbench-api` environment with explicit pinned runtime dependencies and `serve`, `test`, `check`, `types` scripts. No web-server dependency was added to the Haystack library distribution.
-- [API README](../apps/workbench/api/README.md), [Workbench README](../apps/workbench/web/README.md), canonical contract, dated plan current-status table, project map and engineering guide: bootstrap is distinguished from execution and the separate validator. Historical architecture remains archived.
+- [API README](../../apps/workbench/api/README.md), [Workbench README](../../apps/workbench/web/README.md), canonical contract, dated plan current-status table, project map and engineering guide: bootstrap is distinguished from execution and the separate validator. Historical architecture remains archived.
 - `releasenotes/notes/workbench-api-bootstrap-6c3c7dc4e9e306b7.yaml`: optional startup and truthful empty readiness/capabilities.
 
 Existing logic and boundaries reused: the canonical `rag-api-v1.0` metadata/error/capability semantics, repository Hatch/Ruff/mypy conventions and existing optional-service runbook structure. The validator's constructor mappings and frontend graph/domain structures remain their existing owners; they are not copied into a second execution interpreter. The API imports neither Haystack nor provider/model/vector SDKs.
@@ -114,7 +114,7 @@ Executed checks:
 | Startup with `WORKBENCH_API_PORT=invalid-port` | Exit 1 with only `Invalid Workbench API configuration.`; no value or traceback exposed |
 | Documentation / release note | MDX/GFM compilation for 8 Markdown files, 47 local links and six typed/JSON fenced examples passed; both READMEs passed Prettier; Git whitespace check and release-note YAML parsing passed |
 
-The temporary HTTP probe ran through `hatch run workbench-api:python` and recorded six actual responses in [the HTTP evidence](evidence/workbench-api-bootstrap-2026-11-20.json). Its helper script is outside the repository in the operating-system temporary directory; no verification dependency was added to application-core contracts.
+The temporary HTTP probe ran through `hatch run workbench-api:python` and recorded six actual responses in [the HTTP evidence](../evidence/workbench-api-bootstrap-2026-11-20.json). Its helper script is outside the repository in the operating-system temporary directory; no verification dependency was added to application-core contracts.
 
 Independent review covered HTTP/source correctness, canonical compatibility, documentation links and the absence of fabricated capabilities. Issues found and corrected before completion: readiness dependency failures initially returned 500 instead of truthful 503; profile probing now has a cooperative timeout and post-shutdown guard; published schema consistency is tested; GET bodies are rejected before parsing; test arguments keep the isolated app test scope; OpenAPI documentation correctly links the artifact rather than a nonexistent HTTP route.
 

@@ -1,7 +1,7 @@
 # TASK-OPS-001 — Local Workbench startup
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — implemented and verified on 2026-11-21
 
 ## A. Goal
@@ -72,4 +72,4 @@ Added root `start.ps1`, startup instructions in the web/API READMEs, a project-m
 
 Passed syntax parsing, actual Windows PowerShell 5.1 cold startup after stopping the three owned service processes and the Workbench PostgreSQL container, and PowerShell 7 repeated startup with unchanged PIDs. HTTP liveness, readiness, validator, website and website-to-API proxy checks returned 200. All eight documents and their corpus revision survived unchanged. Concurrent startup and an occupied unrecognized port are refused without replacing its listener. Frontend typecheck, format, all 259 tests and the production build passed; the build retained existing dependency directive warnings.
 
-See [runtime evidence](evidence/local-startup-2026-11-21.json) and [verification scope](evidence/local-startup-verification-2026-11-21.md). Docker Desktop engine startup and first-install dependency downloads were not exercised; the existing engine/dependencies were available. Python unit/integration suites and browser automation were not rerun for this orchestration-only change. Services are running after verification.
+See [runtime evidence](../evidence/local-startup-2026-11-21.json) and [verification scope](../evidence/local-startup-verification-2026-11-21.md). Docker Desktop engine startup and first-install dependency downloads were not exercised; the existing engine/dependencies were available. Python unit/integration suites and browser automation were not rerun for this orchestration-only change. Services are running after verification.
