@@ -1,7 +1,7 @@
 # TASK-RAG-INGEST-004 — Batch staged chunks and atomically publish verified large-document index generation
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-RAG-INGEST-004-incremental-index-and-atomic-publication.md
@@ -47,7 +47,7 @@ StagedGeneration{workspace_id,source_id,reserved_version_id,expected_pages,compl
 
 ## I. Repository Files / Components Impacted
 
-EDIT ingestion.py, postgres_ingestion.py, postgres.py, persistence.py, contracts/profile limits and new migration/tests; preserve existing ranking and applied migrations.
+EDIT apps/workbench/ingestion/ingestion.py, apps/workbench/postgres/postgres_ingestion.py, apps/workbench/postgres/postgres.py, apps/workbench/persistence/models.py, apps/workbench/contracts/schemas.py and retrieval profile limits; add migration under apps/workbench/postgres/migrations/ and focused tests; preserve existing ranking and applied migrations.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 

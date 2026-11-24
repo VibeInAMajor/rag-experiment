@@ -1,7 +1,7 @@
 # TASK-RAG-TPM-001 — Adaptive embedding TPM/RPM governor with 0.92 target and 0.95 hard ceiling
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24
+**Updated:** 2026-11-24  
 **Status:** IN PROGRESS — EMBED-002's measured single-owner prerequisite passes its actual ten-minute steady-window/hard-ceiling gate; broader 30-minute and wider concurrency matrix remain unrun
 **Priority:** P0 — independent prerequisite for high-volume real embedding ingestion  
 **Dependencies:** [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [PROFILE-001](TASK-RAG-PROFILE-001-versioned-retrieval-and-processing-profile-registry.md); block actual real dispatch until EMBED-001 validates runtime; integrate into [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) and [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md).  
@@ -36,14 +36,14 @@ The table below records the proposal baseline. Current recipients are `embedding
 
 | Path / symbol | Existing implementation | Reuse / gap |
 | --- | --- | --- |
-| [model_token_counter.py](../apps/workbench/api/model_token_counter.py) | Pinned native Qwen tokenizer admission support for processing limits | This counts/model-bounds inputs; it is **not** a TPM dispatcher or completed usage meter. |
-| [document_processing.yaml](../apps/workbench/document_processing.yaml) and [document_processing.py](../apps/workbench/api/document_processing.py) | Explicit 500/50 `o200k_base` token chunking and optional native model guard | Do not conflate splitter tokens with embeddings' actual query/document input token counts. |
-| [ingestion.py](../apps/workbench/api/ingestion.py) | Bounded parse/chunk/publish workflow; no model embedding requests | Future embedding worker must request shared capacity **before** provider send. |
-| [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) | Durable job reservations and active source/version publication | No quota accounting in DB by default; avoid holding write transaction while waiting on capacity. |
-| [profiles.py](../apps/workbench/api/profiles.py) | Only `postgres-fts-baseline-r1` executable profile | New governor settings belong to independently qualified embedding/deployment profile. |
-| [lexical.py](../apps/workbench/api/lexical.py) | Real Haystack lexical retrieval; no query model call | Keep lexical search available on TEI/TPM outage; future Dense QueryEmbedder shares the governor. |
-| [config.py](../apps/workbench/api/config.py), [boundary.py](../apps/workbench/api/boundary.py) | Validated local configuration and safe event logging | Add explicit non-secret TPM policy and redacted diagnostics; never mutate FastAPI readiness to fake success. |
-| [tests/test_model_token_counter.py](../apps/workbench/api/tests/test_model_token_counter.py), [tests/test_ingestion_stability.py](../apps/workbench/api/tests/test_ingestion_stability.py) | Token and upload capacity regression | Add separate scheduler tests without duplicating input-splitting tests. |
+| [model_token_counter.py](../apps/workbench/embedding/model_token_counter.py) | Pinned native Qwen tokenizer admission support for processing limits | This counts/model-bounds inputs; it is **not** a TPM dispatcher or completed usage meter. |
+| [document_processing.yaml](../apps/workbench/document_processing.yaml) and [document_processing.py](../apps/workbench/configuration/document_processing.py) | Explicit 500/50 `o200k_base` token chunking and optional native model guard | Do not conflate splitter tokens with embeddings' actual query/document input token counts. |
+| [ingestion.py](../apps/workbench/ingestion/ingestion.py) | Bounded parse/chunk/publish workflow; no model embedding requests | Future embedding worker must request shared capacity **before** provider send. |
+| [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) | Durable job reservations and active source/version publication | No quota accounting in DB by default; avoid holding write transaction while waiting on capacity. |
+| [profiles.py](../apps/workbench/retrieval/profiles.py) | Only `postgres-fts-baseline-r1` executable profile | New governor settings belong to independently qualified embedding/deployment profile. |
+| [lexical.py](../apps/workbench/retrieval/lexical.py) | Real Haystack lexical retrieval; no query model call | Keep lexical search available on TEI/TPM outage; future Dense QueryEmbedder shares the governor. |
+| [config.py](../apps/workbench/configuration/config.py), [boundary.py](../apps/workbench/api/boundary.py) | Validated local configuration and safe event logging | Add explicit non-secret TPM policy and redacted diagnostics; never mutate FastAPI readiness to fake success. |
+| [tests/test_model_token_counter.py](../apps/workbench/embedding/tests/test_model_token_counter.py), [tests/test_ingestion_stability.py](../apps/workbench/api/tests/test_ingestion_stability.py) | Token and upload capacity regression | Add separate scheduler tests without duplicating input-splitting tests. |
 
 ### Donor: exact code and portability decision
 
@@ -137,12 +137,12 @@ embedding_capacity:
 
 | Existing / proposed location | Required treatment |
 | --- | --- |
-| [recipient model_token_counter.py](../apps/workbench/api/model_token_counter.py) | Reuse pinned tokenizer/output rules; no independent approximate hard quota token counter. |
-| [recipient ingestion.py](../apps/workbench/api/ingestion.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) | Integration seam: future embedding jobs call governed adapter; no SQL transaction across GPU inference. |
-| [recipient document_processing.py](../apps/workbench/api/document_processing.py), [config.py](../apps/workbench/api/config.py) | Separate settings for token input-size and embedding TPM; no hardcoded model vendor in application core. |
-| [recipient tests/test_model_token_counter.py](../apps/workbench/api/tests/test_model_token_counter.py) | Preserve split/admission tests; separate fake clock dispatch tests. |
-| New `apps/workbench/api/embedding_capacity.py`, `embedding_dispatch.py`, `embedding_capacity_windows.py`, `embedding_packet_packing.py` or smaller app-owned equivalents | Adapt **minimum sufficient** donor contracts; no duplicate dispatch if EMBED-001 already adds it. |
-| New `apps/workbench/api/tests/test_embedding_capacity.py`, `test_embedding_dispatch.py`, `test_embedding_telemetry.py` | Port donor invariants and target-specific 0.92/0.95 negative tests. |
+| [recipient model_token_counter.py](../apps/workbench/embedding/model_token_counter.py) | Reuse pinned tokenizer/output rules; no independent approximate hard quota token counter. |
+| [recipient ingestion.py](../apps/workbench/ingestion/ingestion.py), [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) | Integration seam: future embedding jobs call governed adapter; no SQL transaction across GPU inference. |
+| [recipient document_processing.py](../apps/workbench/configuration/document_processing.py), [config.py](../apps/workbench/configuration/config.py) | Separate settings for token input-size and embedding TPM; no hardcoded model vendor in application core. |
+| [recipient tests/test_model_token_counter.py](../apps/workbench/embedding/tests/test_model_token_counter.py) | Preserve split/admission tests; separate fake clock dispatch tests. |
+| Existing `apps/workbench/embedding/embedding_capacity.py` and `apps/workbench/embedding/embedding_dispatch.py`; optional new `apps/workbench/embedding/embedding_capacity_windows.py` and `apps/workbench/embedding/embedding_packet_packing.py` only if existing owner cannot satisfy the contract | Adapt **minimum sufficient** donor contracts; no duplicate dispatch if EMBED-001 already adds it. |
+| New `apps/workbench/embedding/tests/test_embedding_capacity.py`, `test_embedding_dispatch.py`, `test_embedding_telemetry.py` | Port donor invariants and target-specific 0.92/0.95 negative tests. |
 | [donor quota audit](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tasks/TASK-M39-030-embedding-TPM-smoothing-audit.md) | Reference for source-starvation/packing/ramp defects and exact measurement plan; source code cannot be copied without license permission. |
 | [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md), [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md), [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) | MUST coordinate shared governor and actual usage schema; no independent quota governors per request type. |
 

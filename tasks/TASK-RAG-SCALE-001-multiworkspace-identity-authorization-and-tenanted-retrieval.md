@@ -1,7 +1,7 @@
 # TASK-RAG-SCALE-001 — Enterprise multi-workspace identity, permissions and data isolation
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, no runtime claim  
 **Priority:** P0 before non-local access  
 **Dependencies:** completed DB-001/API-001/RAG-002; INDEX-001, PROFILE-001 and CONTENT-001  
@@ -18,8 +18,8 @@ Current single-workspace development access is not a multi-tenant security archi
 
 ## C. Current Repository State
 
-[parsing.py](../apps/workbench/api/parsing.py) and [parser_registry.py](../apps/workbench/api/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/api/chunking.py), [ingestion.py](../apps/workbench/api/ingestion.py) and [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [persistence.py](../apps/workbench/api/persistence.py) and [postgres.py](../apps/workbench/api/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [contracts.py](../apps/workbench/api/contracts.py) own API/capabilities. [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [pdf_models.py](../apps/workbench/api/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
-[resolve_development_workspace](../apps/workbench/api/persistence.py) authorizes one explicit workspace. [postgres.py](../apps/workbench/api/postgres.py) sets transaction-local workbench.workspace_id, RLS is FORCE enabled by schema 0001/0002, [config.py](../apps/workbench/api/config.py) and [boundary.py](../apps/workbench/api/boundary.py) are loopback-focused. [local_sources.py](../apps/workbench/api/local_sources.py) reveals local files in Explorer and must not be exposed to remote users.
+[parsing.py](../apps/workbench/parsing/parsing.py) and [parser_registry.py](../apps/workbench/parsing/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/chunking/chunking.py), [ingestion.py](../apps/workbench/ingestion/ingestion.py) and [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [models.py](../apps/workbench/persistence/models.py) and [postgres.py](../apps/workbench/postgres/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [schemas.py](../apps/workbench/contracts/schemas.py) own API/capabilities. [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
+[resolve_development_workspace](../apps/workbench/persistence/models.py) authorizes one explicit workspace. [postgres.py](../apps/workbench/postgres/postgres.py) sets transaction-local workbench.workspace_id, RLS is FORCE enabled by schema 0001/0002, [config.py](../apps/workbench/configuration/config.py) and [boundary.py](../apps/workbench/api/boundary.py) are loopback-focused. [local_sources.py](../apps/workbench/sources/local_sources.py) reveals local files in Explorer and must not be exposed to remote users.
 
 **Verification limit:** this is a source-backed task, not proof that the proposed feature exists. Re-inspect current code at implementation start.
 
@@ -47,7 +47,7 @@ External schema changes MUST be reviewed in Pydantic/OpenAPI/client and versione
 
 ## I. Repository Files / Components Impacted
 
-MODIFY [persistence.py](../apps/workbench/api/persistence.py), [application.py](../apps/workbench/api/application.py), [boundary.py](../apps/workbench/api/boundary.py), [config.py](../apps/workbench/api/config.py), [postgres.py](../apps/workbench/api/postgres.py) and web workspace selector; CREATE identity.py, workspace_policy.py, additive migration and tests/test_workspace_authorization.py. No historical migrations or unauthorized local source revelation.
+MODIFY [models.py](../apps/workbench/persistence/models.py), [application.py](../apps/workbench/api/application.py), [boundary.py](../apps/workbench/api/boundary.py), [config.py](../apps/workbench/configuration/config.py), [postgres.py](../apps/workbench/postgres/postgres.py) and web workspace selector; CREATE apps/workbench/security/identity.py, apps/workbench/security/workspace_policy.py, an additive migration under apps/workbench/postgres/migrations/ and apps/workbench/api/tests/test_workspace_authorization.py. No historical migrations or unauthorized local source revelation.
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
@@ -55,14 +55,14 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | resolve_development_workspace server boundary and WorkspaceContext |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | SET LOCAL workspace scope in transactions, no BYPASSRLS |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | FORCE RLS workspaces/source_versions/chunks |
-| [`apps/workbench/api/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) | FORCE RLS and job identity |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | resolve_development_workspace server boundary and WorkspaceContext |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | SET LOCAL workspace scope in transactions, no BYPASSRLS |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | FORCE RLS workspaces/source_versions/chunks |
+| [`apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql) | FORCE RLS and job identity |
 | [`apps/workbench/api/boundary.py`](../apps/workbench/api/boundary.py) | host/CORS security and API errors |
-| [`apps/workbench/api/config.py`](../apps/workbench/api/config.py) | local-mode host and secrets |
-| [`apps/workbench/api/local_sources.py`](../apps/workbench/api/local_sources.py) | local Windows Explorer reveal, must remain disabled for remote users |
-| [`apps/workbench/api/tests/test_postgres_persistence.py`](../apps/workbench/api/tests/test_postgres_persistence.py) | RLS/role tests |
+| [`apps/workbench/configuration/config.py`](../apps/workbench/configuration/config.py) | local-mode host and secrets |
+| [`apps/workbench/sources/local_sources.py`](../apps/workbench/sources/local_sources.py) | local Windows Explorer reveal, must remain disabled for remote users |
+| [`apps/workbench/postgres/tests/test_postgres_persistence.py`](../apps/workbench/postgres/tests/test_postgres_persistence.py) | RLS/role tests |
 | [`apps/workbench/web/src/hooks/useBackendDiscovery.ts`](../apps/workbench/web/src/hooks/useBackendDiscovery.ts) | current authorized workspace capability handling |
 
 **Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/independent-multi-workspace-rag-service.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/independent-multi-workspace-rag-service.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).

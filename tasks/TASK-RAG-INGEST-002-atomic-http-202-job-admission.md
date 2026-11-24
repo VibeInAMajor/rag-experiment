@@ -1,7 +1,7 @@
 # TASK-RAG-INGEST-002 — Accept staged originals and durable jobs atomically before HTTP 202
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-RAG-INGEST-002-atomic-http-202-job-admission.md
@@ -48,7 +48,7 @@ IngestionAccepted{job_id,workspace_id,source_id,reserved_version_id,status=queue
 
 ## I. Repository Files / Components Impacted
 
-EDIT ingestion_http.py, contracts.py, postgres_ingestion.py, postgres.py, persistence.py; ADD additive SQL migration and tests. Do not change applied migrations or duplicate ingestion_jobs identities.
+EDIT apps/workbench/api/ingestion_http.py, apps/workbench/contracts/schemas.py, apps/workbench/postgres/postgres_ingestion.py, apps/workbench/postgres/postgres.py, apps/workbench/persistence/models.py; ADD additive SQL migration under apps/workbench/postgres/migrations/ and scoped API/Postgres tests. Do not change applied migrations or duplicate ingestion_jobs identities.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 
