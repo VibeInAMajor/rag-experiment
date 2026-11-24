@@ -1,13 +1,13 @@
 # TASK-RAG-CHUNK-001 — Content-aware chunking policy resolver and typed processing profiles
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-22\
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — EN/RU/UK preparation and optional pinned local Qwen admission verified on 2026-11-22\
 **Priority:** P1 · before first generalizable ingestion splitter  
 **Dependencies:** TASK-ARCH-001, TASK-API-001, TASK-DB-001, TASK-RAG-PARSE-001; coordinate integration contract with TASK-RAG-002  
 **Repository snapshot reviewed:** implementation base `deb9fb63dde97f68db6dd856d1fc2a13a2af2255`; original blueprint snapshot `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`\
 **Target path:** `tasks/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md`  
-**Existing runtime contract:** [RAG runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md)  
+**Existing runtime contract:** [RAG runtime contract](../../docs-website/docs/architecture/rag-runtime-contract.md)  
 **Algorithm reference:** [LangChain RecursiveCharacterTextSplitter guide](https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter)  
 **Documentation state:** The parser architecture/implementation exist at the implementation base. The referenced ingestion task was absent; this change creates an explicitly planned TASK-RAG-002 handoff, without claiming an implemented ingestion workflow.
 
@@ -29,16 +29,16 @@ The source review was refreshed against implementation base `deb9fb63dde97f68db6
 
 | Exact source | Existing symbol / behavior | Reuse or gap |
 | --- | --- | --- |
-| [API records](../apps/workbench/api/persistence.py) | `Source`, `SourceVersion`, `Chunk`, `WorkspaceContext`, `PersistencePort` | `Chunk.metadata` holds JSON; profile identity and structural properties may be persisted there without another table initially. |
-| [PostgreSQL writer](../apps/workbench/api/postgres.py) | `PostgresPersistence._publish()`, `publish_source()`, `lexical_search_snapshot()` | Reuse atomic version activation; do not create a second writer. |
-| [Initial schema](../apps/workbench/api/migrations/0001_initial.up.sql) | `workbench.sources`, `source_versions`, `chunks` with `metadata` JSONB and existing ID constraints | No task-specific schema changes unless measured need. Do not modify applied migration. |
-| [API HTTP boundary](../apps/workbench/api/application.py) | `create_app()` / `_Routes`, approved read-only lexical API | No upload API currently in snapshot. Integration belongs to TASK-RAG-002, not this task. |
-| [Recursive splitter](../haystack/components/preprocessors/recursive_splitter.py) | `RecursiveDocumentSplitter(split_length, split_overlap, split_unit, separators, tokenizer_encoding)` | **Supports NLTK sentence boundaries and tiktoken token counting in the same instance** with `split_unit="token"` and `"sentence"` in `separators`; use this combined algorithm. The default tiktoken `o200k_base` is not the Qwen model tokenizer. |
-| [Markdown splitter](../haystack/components/preprocessors/markdown_header_splitter.py) | `MarkdownHeaderSplitter`, `parent_headers`/`header`, `split_id`; `secondary_split` accepts `word`, `passage`, `period`, `line` | Reuse headers; **no** secondary `token` parameter in inspected version. |
-| [Document splitter](../haystack/components/preprocessors/document_splitter.py) | `DocumentSplitter(split_by="word" or "token")` | Do not relabel word counts as model tokens or use `o200k_base` as Qwen tokens. |
-| [Qualified parser](../apps/workbench/api/parsing.py), [parser adapter](../apps/workbench/api/parsing_adapters.py), [registry](../apps/workbench/api/parser_registry.py) | Immutable verified TXT/Markdown elements, conservative heading/protected-raw spans, bounded UTF-8 inspection; `TextFileToDocument` must return exactly one nonempty, source-preserving extraction | Consume `ParsedDocument`; no duplicate MIME classifier, flattening or fabricated pages. |
-| [Existing Python AST component](../haystack/components/preprocessors/python_code_splitter.py) | `PythonCodeSplitter` already exists; extracts class/function structures and line metadata | Future code ingestion MUST reuse it; not implemented in this task. |
-| [Workbench editor catalog](../apps/workbench/web/src/domain/catalog.ts) | UI displays a `chunker` with `size=500`, `overlap=50` but lacks exact unit declaration | UI labels are not server policy authority; do not change editor to claim token correctness. |
+| [API records](../../apps/workbench/persistence/models.py) | `Source`, `SourceVersion`, `Chunk`, `WorkspaceContext`, `PersistencePort` | `Chunk.metadata` holds JSON; profile identity and structural properties may be persisted there without another table initially. |
+| [PostgreSQL writer](../../apps/workbench/postgres/postgres.py) | `PostgresPersistence._publish()`, `publish_source()`, `lexical_search_snapshot()` | Reuse atomic version activation; do not create a second writer. |
+| [Initial schema](../../apps/workbench/postgres/migrations/0001_initial.up.sql) | `workbench.sources`, `source_versions`, `chunks` with `metadata` JSONB and existing ID constraints | No task-specific schema changes unless measured need. Do not modify applied migration. |
+| [API HTTP boundary](../../apps/workbench/api/application.py) | `create_app()` / `_Routes`, approved read-only lexical API | No upload API currently in snapshot. Integration belongs to TASK-RAG-002, not this task. |
+| [Recursive splitter](../../haystack/components/preprocessors/recursive_splitter.py) | `RecursiveDocumentSplitter(split_length, split_overlap, split_unit, separators, tokenizer_encoding)` | **Supports NLTK sentence boundaries and tiktoken token counting in the same instance** with `split_unit="token"` and `"sentence"` in `separators`; use this combined algorithm. The default tiktoken `o200k_base` is not the Qwen model tokenizer. |
+| [Markdown splitter](../../haystack/components/preprocessors/markdown_header_splitter.py) | `MarkdownHeaderSplitter`, `parent_headers`/`header`, `split_id`; `secondary_split` accepts `word`, `passage`, `period`, `line` | Reuse headers; **no** secondary `token` parameter in inspected version. |
+| [Document splitter](../../haystack/components/preprocessors/document_splitter.py) | `DocumentSplitter(split_by="word" or "token")` | Do not relabel word counts as model tokens or use `o200k_base` as Qwen tokens. |
+| [Qualified parser](../../apps/workbench/parsing/parsing.py), [parser adapter](../../apps/workbench/parsing/parsing_adapters.py), [registry](../../apps/workbench/parsing/parser_registry.py) | Immutable verified TXT/Markdown elements, conservative heading/protected-raw spans, bounded UTF-8 inspection; `TextFileToDocument` must return exactly one nonempty, source-preserving extraction | Consume `ParsedDocument`; no duplicate MIME classifier, flattening or fabricated pages. |
+| [Existing Python AST component](../../haystack/components/preprocessors/python_code_splitter.py) | `PythonCodeSplitter` already exists; extracts class/function structures and line metadata | Future code ingestion MUST reuse it; not implemented in this task. |
+| [Workbench editor catalog](../../apps/workbench/web/src/domain/catalog.ts) | UI displays a `chunker` with `size=500`, `overlap=50` but lacks exact unit declaration | UI labels are not server policy authority; do not change editor to claim token correctness. |
 | [Ingestion handoff](TASK-RAG-002-ingest-text-and-markdown.md) | The referenced task file was absent at implementation base; the earlier detailed plan's word-based 500/50 is superseded | This change creates a planned J3 handoff requiring `prepare_chunks(...)`, not direct word splitter construction. |
 
 **Confirmed comparison with the linked LangChain guide:**
@@ -55,7 +55,7 @@ The source review was refreshed against implementation base `deb9fb63dde97f68db6
 
 **Known misleading configuration:** a fixed 500/50 parameter pair without a `unit` is ambiguous. The desired `RecursiveDocumentSplitter(split_unit="token", split_length=500, split_overlap=50)` counts **tiktoken tokens** with the explicitly recorded encoding, while the previous `DocumentSplitter(split_by="word")` counts **words**. Keep these separate; do not mislabel generic tiktoken counts as Qwen-native tokens. No observed runtime data-quality failure from this missing layer has been demonstrated yet because upload ingestion is not implemented.
 
-**Repository-evidence correction (2026-11-22):** [`FileTypeRouter`](../haystack/components/routers/file_type_router.py) and [`MultiFileConverter`](../haystack/components/converters/multi_file_converter.py) provide trusted-pipeline MIME routing/converters, not adversarial-upload verification. The app now has a qualified immutable TXT/Markdown parser registry from [PARSE-001](TASK-RAG-PARSE-001-format-detection-and-parser-registry.md), with other formats explicitly planned/unavailable. [`EmbeddingBasedDocumentSplitter`](../haystack/components/preprocessors/embedding_based_document_splitter.py) exists upstream, but no qualified application embedding connection does. No `chunking.py`, chunking profiles/adapter or ingestion implementation existed at this task's base; this change implements internal chunk preparation only.
+**Repository-evidence correction (2026-11-22):** [`FileTypeRouter`](../../haystack/components/routers/file_type_router.py) and [`MultiFileConverter`](../../haystack/components/converters/multi_file_converter.py) provide trusted-pipeline MIME routing/converters, not adversarial-upload verification. The app now has a qualified immutable TXT/Markdown parser registry from [PARSE-001](TASK-RAG-PARSE-001-format-detection-and-parser-registry.md), with other formats explicitly planned/unavailable. [`EmbeddingBasedDocumentSplitter`](../../haystack/components/preprocessors/embedding_based_document_splitter.py) exists upstream, but no qualified application embedding connection does. No `chunking.py`, chunking profiles/adapter or ingestion implementation existed at this task's base; this change implements internal chunk preparation only.
 
 **Structural qualification:** `MarkdownHeaderSplitter` recognizes ATX headings with different syntax from the parser and has no Setext support. Parser elements remain authoritative for safe section/protected-span boundaries. Library heading/page metadata cannot invent structure or physical pages. Repeated-text offsets must be validated against known source spans rather than a global first-match search.
 
@@ -179,23 +179,23 @@ Constraints: `0 <= overlap < target_size`, component-instantiation allowlist, bo
 
 | Path | Action | Expected diff |
 | --- | --- | --- |
-| `apps/workbench/api/chunking.py` | CREATE | Verified-source validation, prepared contracts/provenance, deterministic orchestration and optional exact-model admission; no writes. |
-| `apps/workbench/api/chunking_profiles.py` | CREATE | Pure immutable profile/resource/feature/decision contracts and deterministic policy validation/resolution. |
-| `apps/workbench/api/chunking_adapters.py` | CREATE | Pinned offline Haystack/tiktoken/NLTK boundary, native-output validation and declared Unicode-safe terminal repair. |
-| `apps/workbench/api/model_token_counter.py` | CREATE | Optional offline `LocalQwenTokenCounter` using an operator-explicit directory, reviewed model revision and three fixed-hash JSON assets; no inference/downloads. |
-| `apps/workbench/api/tests/test_chunking.py` | CREATE | Unit/golden tests with no PostgreSQL or model service; compare ordered delimiters and length/overlap invariants against the *conceptual* LangChain reference. |
-| `apps/workbench/api/tests/test_chunking_profiles.py`, `test_chunking_adapters.py` | CREATE | Pure resolver/refusal matrix and real offline Haystack/counter/resource invariants; no model service or PostgreSQL. |
-| `apps/workbench/api/tests/test_model_token_counter.py` | CREATE | Actual configured local-Qwen counts/special-token policy and safe missing/mismatched asset/dependency/input refusals; asset-backed cases use explicit test configuration. |
+| `apps/workbench/chunking/chunking.py` | CREATE | Verified-source validation, prepared contracts/provenance, deterministic orchestration and optional exact-model admission; no writes. |
+| `apps/workbench/chunking/chunking_profiles.py` | CREATE | Pure immutable profile/resource/feature/decision contracts and deterministic policy validation/resolution. |
+| `apps/workbench/chunking/chunking_adapters.py` | CREATE | Pinned offline Haystack/tiktoken/NLTK boundary, native-output validation and declared Unicode-safe terminal repair. |
+| `apps/workbench/embedding/model_token_counter.py` | CREATE | Optional offline `LocalQwenTokenCounter` using an operator-explicit directory, reviewed model revision and three fixed-hash JSON assets; no inference/downloads. |
+| `apps/workbench/chunking/tests/test_chunking.py` | CREATE | Unit/golden tests with no PostgreSQL or model service; compare ordered delimiters and length/overlap invariants against the *conceptual* LangChain reference. |
+| `apps/workbench/chunking/tests/test_chunking_profiles.py`, `test_chunking_adapters.py` | CREATE | Pure resolver/refusal matrix and real offline Haystack/counter/resource invariants; no model service or PostgreSQL. |
+| `apps/workbench/embedding/tests/test_model_token_counter.py` | CREATE | Actual configured local-Qwen counts/special-token policy and safe missing/mismatched asset/dependency/input refusals; asset-backed cases use explicit test configuration. |
 | `apps/workbench/api/tests/fixtures/chunking/` | CREATE | 25 curated EN/RU/UK TXT/Markdown inputs in bounded UTF-8 manifest plus fixture contract README; maximum expanded source 24,480 bytes. |
 | `scripts/workbench_chunking_setup.py` | CREATE | Explicit fixed-hash official-asset provisioning for offline EN/RU Punkt and o200k_base use; no source content. |
 | `pyproject.toml` | MODIFY APP ENVIRONMENT ONLY | Pin NLTK/tiktoken and the optional local-counter `tokenizers` dependency; expose `chunking-setup`; no global distribution or LangChain dependency. |
-| [`haystack/components/preprocessors/sentence_tokenizer.py`](../haystack/components/preprocessors/sentence_tokenizer.py) | READ / REUSE | Inspect supported languages and NLTK `punkt_tab` loading; never alter framework source for application policy. |
+| [`haystack/components/preprocessors/sentence_tokenizer.py`](../../haystack/components/preprocessors/sentence_tokenizer.py) | READ / REUSE | Inspect supported languages and NLTK `punkt_tab` loading; never alter framework source for application policy. |
 | `docs-website/docs/architecture/content-aware-chunking-strategy.md` | USE/UPDATE | Single decision record, truthful implemented versus planned status. |
 | `tasks/TASK-RAG-002-ingest-text-and-markdown.md` | CREATE PLANNED HANDOFF | Referenced file absent at base; J3 consumes the shared `prepare_chunks(...)` contract, not local word-splitter construction. |
 
-**Must not change:** `haystack/` core splitters or validators, `apps/workbench/api/migrations/0001_initial.up.sql`, existing lexical scores and OpenAPI, database records/volume, fixture Preview and unrelated UI. Any materially required migration/API change must update the task specification before coding.
+**Must not change:** `haystack/` core splitters or validators, `apps/workbench/postgres/migrations/0001_initial.up.sql`, existing lexical scores and OpenAPI, database records/volume, fixture Preview and unrelated UI. Any materially required migration/API change must update the task specification before coding.
 
-**Expanded parser matrix constraint:** this task implements only qualified TXT/Markdown chunking. The canonical [format-to-parser matrix](../docs-website/docs/architecture/content-aware-chunking-strategy.md#format-matrix) covers PDF, Office, tabular, structured data, code, email and transcripts as **future** parser profiles. No format becomes Live-supported because its extension is listed in architecture or a Haystack converter class exists.
+**Expanded parser matrix constraint:** this task implements only qualified TXT/Markdown chunking. The canonical [format-to-parser matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md#format-matrix) covers PDF, Office, tabular, structured data, code, email and transcripts as **future** parser profiles. No format becomes Live-supported because its extension is listed in architecture or a Haystack converter class exists.
 
 ## J. Implementation Requirements — ordered executable blueprint
 
@@ -324,7 +324,7 @@ Record actual command output in task evidence; do not claim pass based solely on
 
 ### Executed verification and evidence
 
-The [evidence directory](evidence/chunking-2026-11-22/) records final EN/RU/UK-only output, JUnit reports, provisioned-resource setup, measured quality and actual baseline/local-Qwen HTTP runs. Earlier larger-locale totals are superseded by these narrowed-scope measurements. The inspected implementation base is `deb9fb63dde97f68db6dd856d1fc2a13a2af2255` plus this working-tree implementation; no implementation commit was created or invented.
+The [evidence directory](../evidence/chunking-2026-11-22/) records final EN/RU/UK-only output, JUnit reports, provisioned-resource setup, measured quality and actual baseline/local-Qwen HTTP runs. Earlier larger-locale totals are superseded by these narrowed-scope measurements. The inspected implementation base is `deb9fb63dde97f68db6dd856d1fc2a13a2af2255` plus this working-tree implementation; no implementation commit was created or invented.
 
 | Executed gate | Observed result |
 | --- | --- |

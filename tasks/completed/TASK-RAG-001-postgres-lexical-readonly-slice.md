@@ -1,7 +1,7 @@
 # TASK-RAG-001-postgres-lexical-readonly-slice
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-21
+**Updated:** 2026-11-24  
 **Status:** COMPLETE
 **Priority:** P0 · integration  
 **Dependencies:** TASK-API-001, TASK-DB-001  
@@ -105,7 +105,7 @@ Reuse the database migration/seed lifecycle from `TASK-DB-001`; this task does n
 ### Completion evidence — 2026-11-21
 
 Implemented files and ownership:
-- `apps/workbench/api/lexical.py`: allowlisted real Haystack component and a fresh one-component `Pipeline.run_async()` per search; it delegates to the existing PostgreSQL persistence adapter. Its synchronous `run()` explicitly refuses execution because the owned async pool is event-loop bound.
+- `apps/workbench/retrieval/lexical.py`: allowlisted real Haystack component and a fresh one-component `Pipeline.run_async()` per search; it delegates to the existing PostgreSQL persistence adapter. Its synchronous `run()` explicitly refuses execution because the owned async pool is event-loop bound.
 - `persistence.py`, `postgres.py`: minimal read extensions for authoritative document metadata, valid GIN qualification, bounded corpus fingerprints and native ranked hits from one read-only REPEATABLE READ SQL snapshot. No schema, migration, seed or parallel document store was introduced.
 - `application.py`, `boundary.py`, `contracts.py`, `services.py`, `profiles.py`, `projection.py`: six typed routes, immutable task-selected profile/revision, signed scoped pagination, strict UTF-8/JSON/body boundaries, actual measured projection/stages, safe failures, two-search admission and cancellation/deadline accounting.
 - `__init__.py`, `__main__.py`, `config.py`: local runtime revision, telemetry/content tracing disabled before SDK imports, normal interactive shutdown without a traceback, and unchanged loopback-only listener policy. No model client or inference is initialized.
@@ -137,9 +137,9 @@ Actual verification:
 | Raw ASGI client disconnect regression | Confirmed transport disconnect cancels/awaits owned SQL cleanup, preserves slot accounting, returns no HTTP payload or traceback and records operational 499; unrelated external cancellation still propagates |
 
 Evidence:
-- [JUnit with evaluation properties and test cases](evidence/postgres-lexical-tests-2026-11-21.xml).
-- [Actual HTTP, quality, outage and restart responses](evidence/postgres-lexical-http-2026-11-21.json). Real network corpus revision: `corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac`; stable ranked-result/content-hash fingerprint: `4d61e3ebcf3313e910b7c0b3e3e78ebc1d3df41598de0570fbddf4e89407068b`. Temporary test databases have their own metadata timestamps and recorded revisions; their identical seed content is not falsely asserted to share the main database's full metadata fingerprint.
-- [Lexical operations and limits](../docs-website/docs/architecture/postgres-lexical-search.md).
+- [JUnit with evaluation properties and test cases](../evidence/postgres-lexical-tests-2026-11-21.xml).
+- [Actual HTTP, quality, outage and restart responses](../evidence/postgres-lexical-http-2026-11-21.json). Real network corpus revision: `corpus-b30ac0b84585409663a73375da38f9e1b74d5ca288c6b2139c69c6975c1b21ac`; stable ranked-result/content-hash fingerprint: `4d61e3ebcf3313e910b7c0b3e3e78ebc1d3df41598de0570fbddf4e89407068b`. Temporary test databases have their own metadata timestamps and recorded revisions; their identical seed content is not falsely asserted to share the main database's full metadata fingerprint.
+- [Lexical operations and limits](../../docs-website/docs/architecture/postgres-lexical-search.md).
 
 The real HTTP probe was executed through `hatch run workbench-api:python -m scripts.workbench_lexical_smoke` with phases `baseline`, `after-api`, `database-unavailable`, `after-database`. The API was restarted independently; the dedicated PostgreSQL service was stopped/restarted without removing the named volume. The ten query cases, no-hit case and negative profile/workspace/input cases were rerun over the same persisted records after restarts.
 

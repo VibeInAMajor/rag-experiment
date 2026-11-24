@@ -1,7 +1,7 @@
 # TASK-RAG-CHUNK-004 — Cohort-based chunking evaluation, hierarchy and optional enrichment
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — evaluation and rollout blueprint; not an implemented agent  
 **Priority:** P2 — optimize only after baselines are actually indexed  
 **Dependencies:** completed TASK-RAG-CHUNK-001, TASK-RAG-CHUNK-002, TASK-RAG-002, TASK-EVAL-001, TASK-RAG-PARSE-001; qualified text-layer PDF via TASK-RAG-CHUNK-003; original-evidence and multimodal cohorts additionally require implemented TASK-RAG-CONTENT-001/002/003/004/005 as applicable. Experimental cohorts may be reported NOT_EVALUABLE until their producer is qualified.  
@@ -29,19 +29,19 @@ The supplied decision tree says static single-fact should use agentic chunking, 
 
 | Inspected path / state | Actual current behavior | Impact on the benchmark |
 | --- | --- | --- |
-| [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py) | `ChunkingProfile` has actual token unit and `text-token-r1/r2` revisions; `PythonChunkingProfile` measures **effective lines**; `PdfChunkingProfile` supports approved 512/64, 768/0, 768/64 token child configurations. | Benchmark by **actual declared unit**, not assumed 500 Qwen tokens or words. No converting effective lines to tokens by guess. |
-| [document_processing.py](../apps/workbench/api/document_processing.py) | `DocumentProcessingSettings.to_profile()` supplies the configured `text-token-r2` profile with sentence/language restrictions and guarded resources. | Pin actual resolved YAML, language policy and tokenizer identity/revision; never claim `o200k_base` equals a qualified Qwen tokenizer. |
-| [chunking.py](../apps/workbench/api/chunking.py) | `prepare_chunks`, `PreparedChunk.metadata()`, `resolve_chunking` and optional `ModelTokenAdmission` already produce deterministic fingerprints, source spans, headings and parent structural IDs. | **Reuse** production manifests and fingerprints instead of a second splitter implementation. |
-| [chunking_adapters.py](../apps/workbench/api/chunking_adapters.py) | Existing recursive/Markdown splitting and protected structural boundaries. | Compare policy variants using real split behavior, not reconstructed counts from fixture strings. |
-| [parser_registry.py](../apps/workbench/api/parser_registry.py) | TXT, Markdown, Python AST and PDF registry are qualified, subject to runtime assets. | Do not call these missing or implement another format detector. |
-| [pdf_chunk_preparation.py](../apps/workbench/api/pdf_chunk_preparation.py) | Real PDF child metadata contains `page_number`, `bbox`, `source_span_basis`, `original_excerpt`, `retrieval_sha256`, and `visual_processing_status`. | Page/table provenance tests can run **now**; original asset bytes and diagram semantics cannot be inferred from these metadata fields. |
+| [chunking_profiles.py](../apps/workbench/chunking/chunking_profiles.py) | `ChunkingProfile` has actual token unit and `text-token-r1/r2` revisions; `PythonChunkingProfile` measures **effective lines**; `PdfChunkingProfile` supports approved 512/64, 768/0, 768/64 token child configurations. | Benchmark by **actual declared unit**, not assumed 500 Qwen tokens or words. No converting effective lines to tokens by guess. |
+| [document_processing.py](../apps/workbench/configuration/document_processing.py) | `DocumentProcessingSettings.to_profile()` supplies the configured `text-token-r2` profile with sentence/language restrictions and guarded resources. | Pin actual resolved YAML, language policy and tokenizer identity/revision; never claim `o200k_base` equals a qualified Qwen tokenizer. |
+| [chunking.py](../apps/workbench/chunking/chunking.py) | `prepare_chunks`, `PreparedChunk.metadata()`, `resolve_chunking` and optional `ModelTokenAdmission` already produce deterministic fingerprints, source spans, headings and parent structural IDs. | **Reuse** production manifests and fingerprints instead of a second splitter implementation. |
+| [chunking_adapters.py](../apps/workbench/chunking/chunking_adapters.py) | Existing recursive/Markdown splitting and protected structural boundaries. | Compare policy variants using real split behavior, not reconstructed counts from fixture strings. |
+| [parser_registry.py](../apps/workbench/parsing/parser_registry.py) | TXT, Markdown, Python AST and PDF registry are qualified, subject to runtime assets. | Do not call these missing or implement another format detector. |
+| [pdf_chunk_preparation.py](../apps/workbench/chunking/pdf/pdf_chunk_preparation.py) | Real PDF child metadata contains `page_number`, `bbox`, `source_span_basis`, `original_excerpt`, `retrieval_sha256`, and `visual_processing_status`. | Page/table provenance tests can run **now**; original asset bytes and diagram semantics cannot be inferred from these metadata fields. |
 | [test_pdf_ingestion.py](../apps/workbench/api/tests/test_pdf_ingestion.py) | PDF upload/real SQL tests, negative scanned PDF and a mixed figure fixture that reports `visual_processing_status="incomplete"`. | Reuse baseline and add a false-completeness regression; do not treat figure detection as vision understanding. |
-| [test_chunking.py](../apps/workbench/api/tests/test_chunking.py), [test_python_chunking.py](../apps/workbench/api/tests/test_python_chunking.py), [test_pdf_chunking.py](../apps/workbench/api/tests/test_pdf_chunking.py) and [chunking fixture manifest](../apps/workbench/api/tests/fixtures/chunking/manifest.json) | Existing real splitter/format fixtures and regressions. | Reuse and extend labelled cohorts rather than making duplicate baselines. |
+| [test_chunking.py](../apps/workbench/chunking/tests/test_chunking.py), [test_python_chunking.py](../apps/workbench/chunking/tests/test_python_chunking.py), [test_pdf_chunking.py](../apps/workbench/chunking/pdf/tests/test_pdf_chunking.py) and [chunking fixture manifest](../apps/workbench/chunking/tests/fixtures/chunking/manifest.json) | Existing real splitter/format fixtures and regressions. | Reuse and extend labelled cohorts rather than making duplicate baselines. |
 | [completed CHUNK-001](completed/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md), [completed CHUNK-002](completed/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md), [completed EVAL-001](completed/TASK-EVAL-001-prove-vertical-slice.md) | Repository task status is complete for routing, Python AST and baseline lexical UI/SQL evaluation. | The benchmark adds format-specific **paired comparative evidence**, not replacement implementations. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md), [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md), [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) | These are detailed **PROPOSED** producer/evidence tasks, not currently implemented proof of original asset or multimodal search. | Benchmark prerequisites for specific visual/OCR/Mermaid metrics; missing capability must be marked NOT_EVALUABLE. |
 | [content-aware architecture](../docs-website/docs/architecture/content-aware-chunking-strategy.md) | Source matrix now calls PDF text-layer qualified but reports scan/OCR and original evidence as unavailable. | Preserve this capability truth in the benchmark report and policy promotion decision. |
 
-No application-owned cohort evaluation runner was identified under `apps/workbench/api/evaluation/` in the inspected tree. Existing tests are correctness baselines, **not** an already completed multi-profile paired benchmark. The older source table below documents the original plan; this refreshed evidence controls implementation decisions.
+No application-owned cohort evaluation runner was identified under `apps/workbench/evaluation/` in the inspected tree. Existing tests are correctness baselines, **not** an already completed multi-profile paired benchmark. The older source table below documents the original plan; this refreshed evidence controls implementation decisions.
 
 
 
@@ -50,9 +50,9 @@ No application-owned cohort evaluation runner was identified under `apps/workben
 | [`haystack/components/preprocessors/embedding_based_document_splitter.py`](../haystack/components/preprocessors/embedding_based_document_splitter.py) `EmbeddingBasedDocumentSplitter` | Cosine distance between sentence-group embeddings; supports percentile, min/max length and language. | Already implemented in Haystack; not connected to a qualified TEI/Qwen service or benchmark. Do **not** reimplement. |
 | [`haystack/components/preprocessors/hierarchical_document_splitter.py`](../haystack/components/preprocessors/hierarchical_document_splitter.py) | Parent/child chunk metadata. | Parent expansion/query-time service and durable parent relationship not app-qualified. |
 | [`haystack/components/preprocessors/recursive_splitter.py`](../haystack/components/preprocessors/recursive_splitter.py) | Reusable recursive baseline. | Word/token units must be honest; default tiktoken != Qwen tokenizer. |
-| [`apps/workbench/api/fixtures/lexical-evaluation.json`](../apps/workbench/api/fixtures/lexical-evaluation.json) | 10 exact keyword + 3 diagnostic paraphrase labeled queries. | Good for first lexical baseline, **not** broad evidence for agentic/semantic or format cohorts. |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | Genuine PostgreSQL `ts_rank_cd` retrieval. | Cannot claim semantic/multi-hop answer evaluation without a separately qualified retrieval/generation runtime. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | Source/version/chunk identities; `Chunk.metadata` for fingerprints. | No currently persisted alternate parent-child index with run-time expansion guarantees. |
+| [`apps/workbench/retrieval/fixtures/lexical-evaluation.json`](../apps/workbench/retrieval/fixtures/lexical-evaluation.json) | 10 exact keyword + 3 diagnostic paraphrase labeled queries. | Good for first lexical baseline, **not** broad evidence for agentic/semantic or format cohorts. |
+| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | Genuine PostgreSQL `ts_rank_cd` retrieval. | Cannot claim semantic/multi-hop answer evaluation without a separately qualified retrieval/generation runtime. |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | Source/version/chunk identities; `Chunk.metadata` for fingerprints. | No currently persisted alternate parent-child index with run-time expansion guarantees. |
 | [Parser/strategy architecture](../docs-website/docs/architecture/content-aware-chunking-strategy.md) | Explicit candidates for prose, code, page/table, transcript and structured data. | Need real performance and indexing costs before policy promotion. |
 
 ## D. Goal
@@ -153,13 +153,13 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 
 | Path | Impact |
 | --- | --- |
-| [chunking.py](../apps/workbench/api/chunking.py), [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py), [chunking_adapters.py](../apps/workbench/api/chunking_adapters.py) | READ/reuse real `PreparedChunk`, fingerprints, actual token units, profile revisions and splitters; avoid changing production code just to win a benchmark. |
-| [document_processing.py](../apps/workbench/api/document_processing.py) | READ current configured r2 sentence/tokenizer policy; snapshot effective config; do not expose private YAML to reports. |
-| [pdf_chunk_preparation.py](../apps/workbench/api/pdf_chunk_preparation.py), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py), [pdf_models.py](../apps/workbench/api/pdf_models.py) | READ page/table/visual-incomplete provenance and approved PDF policy choices. |
-| [tests/test_pdf_ingestion.py](../apps/workbench/api/tests/test_pdf_ingestion.py), [tests/test_chunking.py](../apps/workbench/api/tests/test_chunking.py), [tests/test_python_chunking.py](../apps/workbench/api/tests/test_python_chunking.py) | REUSE existing fixtures/tests as regression controls; add gold labels, not duplicate splitter implementations. |
-| `apps/workbench/api/evaluation/chunking.py`, `apps/workbench/api/evaluation/metrics.py`, `apps/workbench/api/evaluation/cohorts.py` | CREATE **minimal** evaluation modules after inspecting actual app package; avoid parallel search/persistence stacks. |
-| `apps/workbench/api/tests/test_chunking_evaluation.py`, `tests/test_chunking_evidence.py`, `tests/test_chunking_promotion.py` | CREATE unit/integration/evidence and policy-promotion tests using test-only corpora. |
-| `apps/workbench/api/fixtures/chunking-evaluation/` | CREATE labeled fixtures/manifests for new cohorts with non-sensitive source and original evidence. |
+| [chunking.py](../apps/workbench/chunking/chunking.py), [chunking_profiles.py](../apps/workbench/chunking/chunking_profiles.py), [chunking_adapters.py](../apps/workbench/chunking/chunking_adapters.py) | READ/reuse real `PreparedChunk`, fingerprints, actual token units, profile revisions and splitters; avoid changing production code just to win a benchmark. |
+| [document_processing.py](../apps/workbench/configuration/document_processing.py) | READ current configured r2 sentence/tokenizer policy; snapshot effective config; do not expose private YAML to reports. |
+| [pdf_chunk_preparation.py](../apps/workbench/chunking/pdf/pdf_chunk_preparation.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py), [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py) | READ page/table/visual-incomplete provenance and approved PDF policy choices. |
+| [tests/test_pdf_ingestion.py](../apps/workbench/api/tests/test_pdf_ingestion.py), [tests/test_chunking.py](../apps/workbench/chunking/tests/test_chunking.py), [tests/test_python_chunking.py](../apps/workbench/chunking/tests/test_python_chunking.py) | REUSE existing fixtures/tests as regression controls; add gold labels, not duplicate splitter implementations. |
+| `apps/workbench/evaluation/chunking.py`, `apps/workbench/evaluation/metrics.py`, `apps/workbench/evaluation/cohorts.py` | CREATE **minimal** evaluation modules after inspecting actual app package; avoid parallel search/persistence stacks. |
+| `apps/workbench/chunking/tests/test_chunking_evaluation.py`, `apps/workbench/chunking/tests/test_chunking_evidence.py`, `apps/workbench/chunking/tests/test_chunking_promotion.py` | CREATE unit/integration/evidence and policy-promotion tests using test-only corpora. |
+| `apps/workbench/chunking/tests/fixtures/chunking-evaluation/` | CREATE labeled fixtures/manifests for new cohorts with non-sensitive source and original evidence. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md), [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) | READ provider-neutral element/asset/representation and evidence resolver once implemented; no duplicate ContentRepresentation or EvidenceReference models. |
 | [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) | Import their actual approved gold source/quality fixtures only after capabilities pass; do not implement visual/semantic adapters in the benchmark. |
 | `docs-website/docs/architecture/content-aware-chunking-strategy.md` | UPDATE with measured results, cohort decisions and **real** modality availability; no blanket claims. |
@@ -169,9 +169,9 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 
 
 
-- CREATE `apps/workbench/api/evaluation/chunking.py` or the existing evaluation package's cohesive location; avoid second score calculation if present.
-- ADD versioned curated cohort fixtures under `apps/workbench/api/fixtures/` (non-sensitive, properly licensed) and exact labels.
-- ADD `apps/workbench/api/tests/test_chunking_evaluation.py` and separate integration benchmark command under app-specific Hatch environment.
+- CREATE `apps/workbench/evaluation/chunking.py` or the existing evaluation package's cohesive location; avoid second score calculation if present.
+- ADD versioned curated cohort fixtures under `apps/workbench/chunking/tests/fixtures/` (non-sensitive, properly licensed) and exact labels.
+- ADD `apps/workbench/chunking/tests/test_chunking_evaluation.py` and separate integration benchmark command under app-specific Hatch environment.
 - EXTEND only approved retrieval parent-expansion adapter after reviewing source/version parent metadata contract; possible **separate** migration.
 - UPDATE `docs-website/docs/architecture/content-aware-chunking-strategy.md` and per-cohort result `.md` summaries, not core Haystack.
 
@@ -181,14 +181,14 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 
 | Repository file | Existing owner; exact integration role |
 | --- | --- |
-| [`apps/workbench/api/chunking.py`](../apps/workbench/api/chunking.py) | current approved recursive/heading-aware prepared chunk policies |
-| [`apps/workbench/api/chunking_adapters.py`](../apps/workbench/api/chunking_adapters.py) | semantic element-aware part building; avoid second chunker |
-| [`apps/workbench/api/chunking_profiles.py`](../apps/workbench/api/chunking_profiles.py) | token/section/policy revisions and PDF profile parameters |
-| [`apps/workbench/api/parsing.py`](../apps/workbench/api/parsing.py) | typed ParsedElement/SourceSpan |
-| [`apps/workbench/api/python_code.py`](../apps/workbench/api/python_code.py) | PythonCodeSplitter integration and symbol metadata |
-| [`apps/workbench/api/pdf_chunking_adapter.py`](../apps/workbench/api/pdf_chunking_adapter.py) | Docling HybridChunker for PDF page/table chunks |
-| [`apps/workbench/api/tests/test_chunking.py`](../apps/workbench/api/tests/test_chunking.py) | current invariant/golden tests |
-| [`apps/workbench/api/tests/test_pdf_chunking.py`](../apps/workbench/api/tests/test_pdf_chunking.py) | current page/cell/heading regressions |
+| [`apps/workbench/chunking/chunking.py`](../apps/workbench/chunking/chunking.py) | current approved recursive/heading-aware prepared chunk policies |
+| [`apps/workbench/chunking/chunking_adapters.py`](../apps/workbench/chunking/chunking_adapters.py) | semantic element-aware part building; avoid second chunker |
+| [`apps/workbench/chunking/chunking_profiles.py`](../apps/workbench/chunking/chunking_profiles.py) | token/section/policy revisions and PDF profile parameters |
+| [`apps/workbench/parsing/parsing.py`](../apps/workbench/parsing/parsing.py) | typed ParsedElement/SourceSpan |
+| [`apps/workbench/chunking/python_code.py`](../apps/workbench/chunking/python_code.py) | PythonCodeSplitter integration and symbol metadata |
+| [`apps/workbench/chunking/pdf/pdf_chunking_adapter.py`](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) | Docling HybridChunker for PDF page/table chunks |
+| [`apps/workbench/chunking/tests/test_chunking.py`](../apps/workbench/chunking/tests/test_chunking.py) | current invariant/golden tests |
+| [`apps/workbench/chunking/pdf/tests/test_pdf_chunking.py`](../apps/workbench/chunking/pdf/tests/test_pdf_chunking.py) | current page/cell/heading regressions |
 
 **Pinned previous-project candidates (do NOT copy unlicensed code or Qdrant/SQLite infrastructure):** donor commit `955fd049949d3fc462d555be14774e4b255aa15c`.
 

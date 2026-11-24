@@ -1,13 +1,13 @@
 # TASK-UI-003 — Connect Workbench Documents to persisted uploads, chunks and jobs
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — Live Documents implemented; real browser / HTTP / PostgreSQL / API and same-volume DB restart acceptance passed on 2026-11-23
 **Priority:** P1 · frontend integration and contract-compatibility gate  
-**Dependencies:** [completed UI-001](completed/TASK-UI-001-typed-api-and-execution-mode.md), [completed UI-002](completed/TASK-UI-002-execute-live-lexical-pipeline.md), [completed EVAL-001](completed/TASK-EVAL-001-prove-vertical-slice.md), [completed RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md), [completed CHUNK-002 Python](completed/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md); PDF is runtime-conditional via [CHUNK-003](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md)  
+**Dependencies:** [completed UI-001](TASK-UI-001-typed-api-and-execution-mode.md), [completed UI-002](TASK-UI-002-execute-live-lexical-pipeline.md), [completed EVAL-001](TASK-EVAL-001-prove-vertical-slice.md), [completed RAG-002](TASK-RAG-002-ingest-text-and-markdown.md), [completed CHUNK-002 Python](TASK-RAG-CHUNK-002-python-code-ast-ingestion.md); PDF is runtime-conditional via [CHUNK-003](../TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md)  
 **Repository snapshot inspected:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
 **Target:** `tasks/TASK-UI-003-live-document-management.md`  
-**Backend contract:** [`contracts.py`](../apps/workbench/api/contracts.py), [`ingestion_http.py`](../apps/workbench/api/ingestion_http.py), [OpenAPI](../apps/workbench/api/openapi.json)
+**Backend contract:** [`contracts.py`](../../apps/workbench/contracts/schemas.py), [`ingestion_http.py`](../../apps/workbench/api/ingestion_http.py), [OpenAPI](../../apps/workbench/api/openapi.json)
 
 ## Completion audit — 2026-11-23
 
@@ -17,7 +17,7 @@ All Section M acceptance criteria and Section O completion items are checked bel
 - Actual browser uploads of repository TXT/Markdown/Python and qualified public PDF returned 201 with 6/58/2/6 active chunks. Markdown chunk paging, indexed text/report/job and exact source/version Keyword results were verified.
 - Real HTTP/SQL parity, four unchanged/replay operations, nine negative HTTP cases, a committed-response browser abort followed by same-key replay, actual API/DB outages and same-volume restarts passed. Test checkpoint: 12 sources / 12 versions / 80 chunks / 10 jobs; the main corpus of 15 sources was preserved.
 - Final frontend typecheck/format/build and 336 tests passed; backend check/types, 82 focused API tests and 33 validator tests passed. Unit fault/security tests and controlled response interception are explicitly distinguished from real service outages.
-- [Acceptance report and exact limitations](evidence/live-documents-2026-11-23/REPORT.md), [HTTP/SQL proof](evidence/live-documents-2026-11-23/http-sql-verification.json), [restart proof](evidence/live-documents-2026-11-23/restart-parity.json), [browser result](evidence/live-documents-2026-11-23/browser-final.jpg).
+- [Acceptance report and exact limitations](../evidence/live-documents-2026-11-23/REPORT.md), [HTTP/SQL proof](../evidence/live-documents-2026-11-23/http-sql-verification.json), [restart proof](../evidence/live-documents-2026-11-23/restart-parity.json), [browser result](../evidence/live-documents-2026-11-23/browser-final.jpg).
 
 The standalone repeatable Playwright harness was syntax/format checked, not executed; the actual browser scenario was run through the desktop browser tool. The full upstream Haystack suite was not run. PDF original binary/visual evidence, OCR, async workers and production multi-tenant authentication remain outside this task's scope.
 
@@ -27,11 +27,11 @@ The standalone repeatable Playwright harness was syntax/format checked, not exec
 
 ## B. Context / Problem
 
-The previous blueprint described the document upload/detail/job API as **not implemented**. That premise is now false. [RAG-002 completed](completed/TASK-RAG-002-ingest-text-and-markdown.md), and Python AST ingestion is also [completed](completed/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md). The source under [ingestion_http.py](../apps/workbench/api/ingestion_http.py) exposes the real routes; [contracts.py](../apps/workbench/api/contracts.py) gives exact models. The missing delivery is the **React Live Documents experience and typed client methods**, not another backend writer.
+The previous blueprint described the document upload/detail/job API as **not implemented**. That premise is now false. [RAG-002 completed](TASK-RAG-002-ingest-text-and-markdown.md), and Python AST ingestion is also [completed](TASK-RAG-CHUNK-002-python-code-ast-ingestion.md). The source under [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) exposes the real routes; [schemas.py](../../apps/workbench/contracts/schemas.py) gives exact models. The missing delivery is the **React Live Documents experience and typed client methods**, not another backend writer.
 
-The frontend is currently misleading in a different way: [App.tsx](../apps/workbench/web/src/App.tsx) renders `DocumentsView` only for Preview and a separate “Live document listing is not connected yet” placeholder for Live, while [DocumentsView.tsx](../apps/workbench/web/src/views/DocumentsView.tsx) consumes `PreviewDocument[]` fields which have **no equivalent** on a real list response (pages, size label, parser strings, full content and fake chunk snippets).
+The frontend is currently misleading in a different way: [App.tsx](../../apps/workbench/web/src/App.tsx) renders `DocumentsView` only for Preview and a separate “Live document listing is not connected yet” placeholder for Live, while [DocumentsView.tsx](../../apps/workbench/web/src/views/DocumentsView.tsx) consumes `PreviewDocument[]` fields which have **no equivalent** on a real list response (pages, size label, parser strings, full content and fake chunk snippets).
 
-There are two distinct original-source capabilities: [LocalSources](../apps/workbench/api/local_sources.py) supports narrowly scoped, registered host-local file reveal; [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) will supply durable asset/evidence resolution later. **Neither implies byte-for-byte original download is provided by the current document detail route.**
+There are two distinct original-source capabilities: [LocalSources](../../apps/workbench/sources/local_sources.py) supports narrowly scoped, registered host-local file reveal; [CONTENT-001](../TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and [CONTENT-005](../TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) will supply durable asset/evidence resolution later. **Neither implies byte-for-byte original download is provided by the current document detail route.**
 
 The target task is therefore: keep Preview fully functional; make Live show exactly what PostgreSQL confirms; perform real uploads and active-chunk inspection through the shared client; and display distinct missing/partial/evidence status instead of inventing data.
 
@@ -43,20 +43,20 @@ The target task is therefore: keep Preview fully functional; make Live show exac
 
 | File / symbol | Existing verified behavior | Required UI action |
 | --- | --- | --- |
-| [`api/contracts.py`](../apps/workbench/api/contracts.py) `Features`, `CapabilitiesResponse`, `PdfIngestionCapabilities` | `features` exposes `documents/search/upload/document_details/jobs`; `pdf_ingestion` separately reports `available/text_layer/page_provenance/table_rows/original_evidence=false/ocr=false/visual_understanding=false/max_bytes=8388608/max_pages=32`. | Extend typed capabilities/decoder **without fabricating PDF/OCR or original asset support**. |
-| [`api/application.py`](../apps/workbench/api/application.py) `_documents`, `_capabilities` | GET document list is real PostgreSQL; `limit=1..100`, cursor opaque and corpus-revision-bound. Capability upload requires service+schema+parser readiness; PDF depends additionally on pinned local assets. | Reuse; do not create second documents listing or assume `features.documents` authorizes writes. |
-| [`api/ingestion_http.py`](../apps/workbench/api/ingestion_http.py) `IngestionRoutes.upload/detail/chunks/job` and `register_ingestion_routes` | **Existing** POST upload and GET detail, active chunks and job status. 201 new, 200 updated/unchanged/replayed. Chunk cursor invalidation yields 400 INVALID_CURSOR. | Use these routes verbatim; no new document REST family. |
-| [`api/upload_transport.py`](../apps/workbench/api/upload_transport.py) `read_upload` | One file, strict multipart, header `Idempotency-Key` 8–128 `[A-Za-z0-9_-]`; optional `source_id` AND `expected_active_version_id` together. | Submit browser-owned multipart boundary; preserve operation key across uncertain retry. |
-| [`api/upload_policy.py`](../apps/workbench/api/upload_policy.py) | Text/Python 1 MiB file limit; PDF candidate up to 8 MiB; 8 MiB+64 KiB total multipart guard. | Match verified formats and advisory client caps; never enable planned Office/CSV formats from extension alone. |
-| [`api/parser_registry.py`](../apps/workbench/api/parser_registry.py) `parser_descriptors` | TXT, Markdown and Python are qualified. PDF `docling-pdf-r2` descriptor is qualified but availability depends on model assets/runtime; OCR and visual semantic understanding remain unavailable. Other formats are only catalogued, not qualified. | Allow `.txt/.md/.markdown/.py` per verified MIME rules; enable `.pdf` only if `pdf_ingestion.available=true`. Never claim arbitrary format support. |
-| [`api/contracts.py`](../apps/workbench/api/contracts.py) `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionResponse`, `IngestionJobResponse` | Real metadata: `processing_profile`, `processing_profile_fingerprint`, `document_processing`, `source_content_sha256`, `source_bytes`, `parsed_element_count`, `language_policy`, `parser`, `warnings`; chunk `order/content_hash/section_path/metadata/page?`; upload `replayed`; job `reserved_version_id/outcome/status/stage/timestamps`. | Decode fields with strict types and nullable/optional semantics, no `PreviewDocument` cast. |
-| [`web/src/api/contracts.ts`](../apps/workbench/web/src/api/contracts.ts) | `BackendCapabilities.features` declares only `documents/search`; no typed upload/detail/job/chunk models; `ApiFailure` omits optional `error.job_id`. | Extend wire types additively. Do not change `rag-api-v1.0` revision without backend approval. |
-| [`web/src/api/decode.ts`](../apps/workbench/web/src/api/decode.ts) | `decodeCapabilities` **drops** `upload/document_details/jobs/pdf_ingestion`, even when returned by backend; no document page/upload/detail/chunks/jobs runtime decoder. | Implement strict decoding and error `job_id`; capability false-closed if unavailable. |
-| [`web/src/api/client.ts`](../apps/workbench/web/src/api/client.ts) `request` | Currently JSON-serializes `transport.body`, adds `Content-Type: application/json`, and rejects **all** successful statuses except 200. No document methods, multipart or upload timeout up to PDF duration. | Extend shared transport to support `FormData` and **201** for upload without regressing JSON or search; no second generic fetch inside view. |
-| [`web/src/App.tsx`](../apps/workbench/web/src/App.tsx) | Preview Documents uses fixtures; Live shows explicit “not connected” placeholder. Workbench mode and authorized workspace supplied by existing `useBackendDiscovery`; `useLiveSearch` already handles abort/stale search. | Route a mode-discriminated Documents component and reuse scope/mode controller. |
-| [`web/src/views/DocumentsView.tsx`](../apps/workbench/web/src/views/DocumentsView.tsx) | Fixture-only `PreviewDocument[]`, local filter and status + content/chunks/report tabs. | Reuse table and tabs, add real Live states and upload. Do not create a competing Live page. |
-| [`web/src/components/sourceFiles.ts`](../apps/workbench/web/src/components/sourceFiles.ts), [`api/local_sources.py`](../apps/workbench/api/local_sources.py) | Version-scoped optional registered **local-file reveal** with guarded operating-system behavior; not general evidence storage. | Optional “Reveal in Explorer” only when `can_reveal` true for exact source/version. Never treat hint as original asset bytes. |
-| [`api/tests/test_ingestion_routes.py`](../apps/workbench/api/tests/test_ingestion_routes.py), [`test_pdf_ingestion.py`](../apps/workbench/api/tests/test_pdf_ingestion.py), [`test_local_sources.py`](../apps/workbench/api/tests/test_local_sources.py) | Executable tests for real upload/replace/replay/errors, PDF candidate and local file hint. | Reuse as backend source of truth; add browser tests, not duplicate SQL ranking logic. |
+| [`api/contracts.py`](../../apps/workbench/contracts/schemas.py) `Features`, `CapabilitiesResponse`, `PdfIngestionCapabilities` | `features` exposes `documents/search/upload/document_details/jobs`; `pdf_ingestion` separately reports `available/text_layer/page_provenance/table_rows/original_evidence=false/ocr=false/visual_understanding=false/max_bytes=8388608/max_pages=32`. | Extend typed capabilities/decoder **without fabricating PDF/OCR or original asset support**. |
+| [`api/application.py`](../../apps/workbench/api/application.py) `_documents`, `_capabilities` | GET document list is real PostgreSQL; `limit=1..100`, cursor opaque and corpus-revision-bound. Capability upload requires service+schema+parser readiness; PDF depends additionally on pinned local assets. | Reuse; do not create second documents listing or assume `features.documents` authorizes writes. |
+| [`api/ingestion_http.py`](../../apps/workbench/api/ingestion_http.py) `IngestionRoutes.upload/detail/chunks/job` and `register_ingestion_routes` | **Existing** POST upload and GET detail, active chunks and job status. 201 new, 200 updated/unchanged/replayed. Chunk cursor invalidation yields 400 INVALID_CURSOR. | Use these routes verbatim; no new document REST family. |
+| [`api/upload_transport.py`](../../apps/workbench/api/upload_transport.py) `read_upload` | One file, strict multipart, header `Idempotency-Key` 8–128 `[A-Za-z0-9_-]`; optional `source_id` AND `expected_active_version_id` together. | Submit browser-owned multipart boundary; preserve operation key across uncertain retry. |
+| [`api/upload_policy.py`](../../apps/workbench/ingestion/upload_policy.py) | Text/Python 1 MiB file limit; PDF candidate up to 8 MiB; 8 MiB+64 KiB total multipart guard. | Match verified formats and advisory client caps; never enable planned Office/CSV formats from extension alone. |
+| [`api/parser_registry.py`](../../apps/workbench/parsing/parser_registry.py) `parser_descriptors` | TXT, Markdown and Python are qualified. PDF `docling-pdf-r2` descriptor is qualified but availability depends on model assets/runtime; OCR and visual semantic understanding remain unavailable. Other formats are only catalogued, not qualified. | Allow `.txt/.md/.markdown/.py` per verified MIME rules; enable `.pdf` only if `pdf_ingestion.available=true`. Never claim arbitrary format support. |
+| [`api/contracts.py`](../../apps/workbench/contracts/schemas.py) `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionResponse`, `IngestionJobResponse` | Real metadata: `processing_profile`, `processing_profile_fingerprint`, `document_processing`, `source_content_sha256`, `source_bytes`, `parsed_element_count`, `language_policy`, `parser`, `warnings`; chunk `order/content_hash/section_path/metadata/page?`; upload `replayed`; job `reserved_version_id/outcome/status/stage/timestamps`. | Decode fields with strict types and nullable/optional semantics, no `PreviewDocument` cast. |
+| [`web/src/api/contracts.ts`](../../apps/workbench/web/src/api/contracts.ts) | `BackendCapabilities.features` declares only `documents/search`; no typed upload/detail/job/chunk models; `ApiFailure` omits optional `error.job_id`. | Extend wire types additively. Do not change `rag-api-v1.0` revision without backend approval. |
+| [`web/src/api/decode.ts`](../../apps/workbench/web/src/api/decode.ts) | `decodeCapabilities` **drops** `upload/document_details/jobs/pdf_ingestion`, even when returned by backend; no document page/upload/detail/chunks/jobs runtime decoder. | Implement strict decoding and error `job_id`; capability false-closed if unavailable. |
+| [`web/src/api/client.ts`](../../apps/workbench/web/src/api/client.ts) `request` | Currently JSON-serializes `transport.body`, adds `Content-Type: application/json`, and rejects **all** successful statuses except 200. No document methods, multipart or upload timeout up to PDF duration. | Extend shared transport to support `FormData` and **201** for upload without regressing JSON or search; no second generic fetch inside view. |
+| [`web/src/App.tsx`](../../apps/workbench/web/src/App.tsx) | Preview Documents uses fixtures; Live shows explicit “not connected” placeholder. Workbench mode and authorized workspace supplied by existing `useBackendDiscovery`; `useLiveSearch` already handles abort/stale search. | Route a mode-discriminated Documents component and reuse scope/mode controller. |
+| [`web/src/views/DocumentsView.tsx`](../../apps/workbench/web/src/views/DocumentsView.tsx) | Fixture-only `PreviewDocument[]`, local filter and status + content/chunks/report tabs. | Reuse table and tabs, add real Live states and upload. Do not create a competing Live page. |
+| [`web/src/components/sourceFiles.ts`](../../apps/workbench/web/src/components/sourceFiles.ts), [`api/local_sources.py`](../../apps/workbench/sources/local_sources.py) | Version-scoped optional registered **local-file reveal** with guarded operating-system behavior; not general evidence storage. | Optional “Reveal in Explorer” only when `can_reveal` true for exact source/version. Never treat hint as original asset bytes. |
+| [`api/tests/test_ingestion_routes.py`](../../apps/workbench/api/tests/test_ingestion_routes.py), [`test_pdf_ingestion.py`](../../apps/workbench/api/tests/test_pdf_ingestion.py), [`test_local_sources.py`](../../apps/workbench/api/tests/test_local_sources.py) | Executable tests for real upload/replace/replay/errors, PDF candidate and local file hint. | Reuse as backend source of truth; add browser tests, not duplicate SQL ranking logic. |
 
 ### C2. Concrete contract drift and failures it would cause
 
@@ -66,7 +66,7 @@ The target task is therefore: keep Preview fully functional; make Live show exac
 4. **Unsupported source types:** old spec assumes only TXT/Markdown; Python AST is already qualified and PDF text-layer parser is conditionally qualified. Office/CSV/YAML from pending PARSE tasks are not.
 5. **Incorrect chunk schema:** `ActiveChunkItem` has `chunk_id`, `order`, `content`, `content_hash`, `page?`, `section_path[]`, `metadata{}`. `source_version_id` belongs to the **page envelope**, not to every chunk. Creating `chunk.sourceVersionId` as a required wire field causes decoder failure on valid backend response.
 6. **Misleading provenance:** `DocumentDetail.original_content_available` is currently `false`. A local source `can_reveal` hint is not a binary download. Original Asset/Evidence APIs must be implemented separately.
-7. **OpenAPI detail caveat:** [ingestion_http.py](../apps/workbench/api/ingestion_http.py) still has historical multipart description “One UTF-8 TXT or Markdown, at most 1 MiB” despite qualified Python and conditionally qualified PDF. **The request schema is correct but its prose is stale**; fix this documentation-only inconsistency in a small backend API-doc patch, with a schema regression test. UI must follow runtime capabilities, not that obsolete prose.
+7. **OpenAPI detail caveat:** [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) still has historical multipart description “One UTF-8 TXT or Markdown, at most 1 MiB” despite qualified Python and conditionally qualified PDF. **The request schema is correct but its prose is stale**; fix this documentation-only inconsistency in a small backend API-doc patch, with a schema regression test. UI must follow runtime capabilities, not that obsolete prose.
 8. No new actual browser E2E was run for this audit; these are source-proven contract mismatches and prospective UI failure modes, not observed production outage counts.
 
 ## D. Goal
@@ -141,7 +141,7 @@ Original immutable assets / evidence -> future CONTENT-001/005, NOT this task
 | GET | `/api/v1/workspaces/{workspace_id}/sources/{source_id}/versions/{version_id}/local-file` | `LocalSourceFileResponse` | Optional registered host-local hint, no byte response |
 | POST | `.../local-file/reveal` | `RevealSourceResponse` | Local guarded native behavior, no remote evidence download |
 
-Use [OpenAPI](../apps/workbench/api/openapi.json), [contracts.py](../apps/workbench/api/contracts.py) and [ingestion_http.py](../apps/workbench/api/ingestion_http.py) as authoritative. **Do not add a new API route family.**
+Use [OpenAPI](../../apps/workbench/api/openapi.json), [schemas.py](../../apps/workbench/contracts/schemas.py) and [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) as authoritative. **Do not add a new API route family.**
 
 ### H2. Exact wire DTOs and browser view models
 
@@ -177,7 +177,7 @@ The operation stores the initial `File` object and key in memory until definitiv
 | `.pdf` (`application/pdf`) | Text-layer Docling parser qualified **when runtime models available**, 8 MiB/32 pages; no OCR/visual semantic claims | Allow only if `features.upload && pdf_ingestion.available`; show text-layer-only and `original_evidence/ocr/visual_understanding=false`. Display parser warnings and incomplete visual coverage. |
 | `.docx/.pptx/.html/.xlsx/.csv/.json/.yaml/.eml/.srt/.vtt` | Catalogued or under review, but not qualified today | **Disabled until separately completed PARSE-002..005 and explicit runtime capability**; no extension-only opt-in. |
 
-The current `CapabilitiesResponse` does not publish a generalized list of all upload formats; for this release the explicit app-supported allowlist above must be reviewed against [parser_registry.py](../apps/workbench/api/parser_registry.py) and covered by integration tests. A future general `supported_upload_formats` discovery contract is a **separate, additive backend/API task**, not a field the frontend may invent now. If new parser formats become qualified before UI implementation, update this task and tests first.
+The current `CapabilitiesResponse` does not publish a generalized list of all upload formats; for this release the explicit app-supported allowlist above must be reviewed against [parser_registry.py](../../apps/workbench/parsing/parser_registry.py) and covered by integration tests. A future general `supported_upload_formats` discovery contract is a **separate, additive backend/API task**, not a field the frontend may invent now. If new parser formats become qualified before UI implementation, update this task and tests first.
 
 ### H5. Cursor, list filtering and job behavior
 
@@ -209,21 +209,21 @@ All server errors preserve actual `error.job_id` and trace/request IDs if provid
 
 | Repository file | Required action |
 | --- | --- |
-| [`web/src/api/contracts.ts`](../apps/workbench/web/src/api/contracts.ts) | MODIFY: add `features.upload/document_details/jobs`, `PdfIngestionCapabilities`, `IngestionResponse`, `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionJobResponse`, optional `error.job_id`. Preserve existing search wire type. |
-| [`web/src/api/decode.ts`](../apps/workbench/web/src/api/decode.ts) | MODIFY: robust runtime decoding and independent validation of new capability/DTOs; do not discard feature flags. |
-| [`web/src/api/client.ts`](../apps/workbench/web/src/api/client.ts) | MODIFY: add five real document methods; bounded form transport and 201 permitted only for upload; reuse `request`, correlations, timeouts and AbortController. |
-| [`web/src/hooks/useBackendDiscovery.ts`](../apps/workbench/web/src/hooks/useBackendDiscovery.ts) | READ/MODIFY minimally: server-owned workspace and capabilities are sole Live authority; don't duplicate GET capabilities. |
-| [`web/src/hooks/useLiveSearch.ts`](../apps/workbench/web/src/hooks/useLiveSearch.ts) | READ/reuse stale-run control pattern, no duplicate lexical logic. |
+| [`web/src/api/contracts.ts`](../../apps/workbench/web/src/api/contracts.ts) | MODIFY: add `features.upload/document_details/jobs`, `PdfIngestionCapabilities`, `IngestionResponse`, `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionJobResponse`, optional `error.job_id`. Preserve existing search wire type. |
+| [`web/src/api/decode.ts`](../../apps/workbench/web/src/api/decode.ts) | MODIFY: robust runtime decoding and independent validation of new capability/DTOs; do not discard feature flags. |
+| [`web/src/api/client.ts`](../../apps/workbench/web/src/api/client.ts) | MODIFY: add five real document methods; bounded form transport and 201 permitted only for upload; reuse `request`, correlations, timeouts and AbortController. |
+| [`web/src/hooks/useBackendDiscovery.ts`](../../apps/workbench/web/src/hooks/useBackendDiscovery.ts) | READ/MODIFY minimally: server-owned workspace and capabilities are sole Live authority; don't duplicate GET capabilities. |
+| [`web/src/hooks/useLiveSearch.ts`](../../apps/workbench/web/src/hooks/useLiveSearch.ts) | READ/reuse stale-run control pattern, no duplicate lexical logic. |
 | `apps/workbench/web/src/hooks/useLiveDocuments.ts` | **CREATE** (unless existing equivalent at implementation start): mode/scope-bound list/detail/chunks/job/upload operations, abort/generation, cursor and errors. |
-| [`web/src/App.tsx`](../apps/workbench/web/src/App.tsx) | MODIFY: replace Live “not connected” placeholder with mode-aware DocumentsView and shared state, keep Preview and other pages. |
-| [`web/src/views/DocumentsView.tsx`](../apps/workbench/web/src/views/DocumentsView.tsx) | MODIFY: reuse table/tabs/search and accessible headings; real documents in Live, separate Preview fixture UI. |
-| [`web/src/views/views.css`](../apps/workbench/web/src/views/views.css) and [`web/src/styles.css`](../apps/workbench/web/src/styles.css) | MODIFY minimal tokens/styles; no palette reset. |
-| [`web/src/components/sourceFiles.ts`](../apps/workbench/web/src/components/sourceFiles.ts) | REUSE only for optional registered host-local source hint/reveal; do not equate with CONTENT evidence download. |
+| [`web/src/App.tsx`](../../apps/workbench/web/src/App.tsx) | MODIFY: replace Live “not connected” placeholder with mode-aware DocumentsView and shared state, keep Preview and other pages. |
+| [`web/src/views/DocumentsView.tsx`](../../apps/workbench/web/src/views/DocumentsView.tsx) | MODIFY: reuse table/tabs/search and accessible headings; real documents in Live, separate Preview fixture UI. |
+| [`web/src/views/views.css`](../../apps/workbench/web/src/views/views.css) and [`web/src/styles.css`](../../apps/workbench/web/src/styles.css) | MODIFY minimal tokens/styles; no palette reset. |
+| [`web/src/components/sourceFiles.ts`](../../apps/workbench/web/src/components/sourceFiles.ts) | REUSE only for optional registered host-local source hint/reveal; do not equate with CONTENT evidence download. |
 | `apps/workbench/web/src/api/documents.test.ts`, `src/hooks/useLiveDocuments.test.ts`, `scripts/live-documents-smoke.js` | **CREATE** contract, race, upload/timeout, real browser/API/PostgreSQL tests. |
-| [`web/src/api/client.test.ts`](../apps/workbench/web/src/api/client.test.ts), [`web/src/api/sourceFiles.test.ts`](../apps/workbench/web/src/api/sourceFiles.test.ts) | EXTEND existing JSON transport/local hint regression where needed. |
-| [`api/ingestion_http.py`](../apps/workbench/api/ingestion_http.py) `register_ingestion_routes` | **Docs-only conditional patch:** correct outdated OpenAPI multipart prose listing only TXT/Markdown, with strict schema test; no upload behavior change in frontend task. |
-| [`api/tests/test_ingestion_routes.py`](../apps/workbench/api/tests/test_ingestion_routes.py), [`test_pdf_ingestion.py`](../apps/workbench/api/tests/test_pdf_ingestion.py), [`test_local_sources.py`](../apps/workbench/api/tests/test_local_sources.py) | RUN existing API/Postgres test baselines; no duplicate SQL writer. |
-| [`api/openapi.json`](../apps/workbench/api/openapi.json), [`web/README.md`](../apps/workbench/web/README.md), [`durable-text-ingestion.md`](../docs-website/docs/architecture/durable-text-ingestion.md) | UPDATE generated schema only for docs correction and frontend operator guide; backend contract is already published. |
+| [`web/src/api/client.test.ts`](../../apps/workbench/web/src/api/client.test.ts), [`web/src/api/sourceFiles.test.ts`](../../apps/workbench/web/src/api/sourceFiles.test.ts) | EXTEND existing JSON transport/local hint regression where needed. |
+| [`api/ingestion_http.py`](../../apps/workbench/api/ingestion_http.py) `register_ingestion_routes` | **Docs-only conditional patch:** correct outdated OpenAPI multipart prose listing only TXT/Markdown, with strict schema test; no upload behavior change in frontend task. |
+| [`api/tests/test_ingestion_routes.py`](../../apps/workbench/api/tests/test_ingestion_routes.py), [`test_pdf_ingestion.py`](../../apps/workbench/api/tests/test_pdf_ingestion.py), [`test_local_sources.py`](../../apps/workbench/api/tests/test_local_sources.py) | RUN existing API/Postgres test baselines; no duplicate SQL writer. |
+| [`api/openapi.json`](../../apps/workbench/api/openapi.json), [`web/README.md`](../../apps/workbench/web/README.md), [`durable-text-ingestion.md`](../../docs-website/docs/architecture/durable-text-ingestion.md) | UPDATE generated schema only for docs correction and frontend operator guide; backend contract is already published. |
 
 **MUST NOT modify:** `haystack/` core, applied migrations `0001/0002`, `PostgresPersistence._publish` transaction owner, embedding model service, PDF/OCR/VLM workers, ranking profile, other parser adapters, `previewDocuments` fixture contents or unsupported workspace authorization. If new API endpoints or generic format discovery become necessary, amend this A–O task **before** implementing them.
 
@@ -231,9 +231,9 @@ All server errors preserve actual `error.job_id` and trace/request IDs if provid
 
 ### J1. Freeze actual backend/CI and frontend contract drift
 
-1. Read [contracts.py](../apps/workbench/api/contracts.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py), [application.py](../apps/workbench/api/application.py) and their OpenAPI exports. Confirm `rag-api-v1.0`, all five methods, `pdf_ingestion`, local-source hint and true 200/201/4xx states. Inspect the current `parser_registry` and built runtime for PDF qualification; do not infer from filename alone.
+1. Read [schemas.py](../../apps/workbench/contracts/schemas.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [application.py](../../apps/workbench/api/application.py) and their OpenAPI exports. Confirm `rag-api-v1.0`, all five methods, `pdf_ingestion`, local-source hint and true 200/201/4xx states. Inspect the current `parser_registry` and built runtime for PDF qualification; do not infer from filename alone.
 2. Run existing `test_ingestion_routes.py`, `test_pdf_ingestion.py` and `test_local_sources.py` against a **disposable** DB/asset environment; record actual output. If they fail, classify backend defect separately instead of adding a duplicate server implementation.
-3. Inspect current [App.tsx](../apps/workbench/web/src/App.tsx), [DocumentsView.tsx](../apps/workbench/web/src/views/DocumentsView.tsx), client and decoder. Snapshot current Preview document interactions and status filters. The source confirmed the Live placeholder and missing multipart support; do not claim UI3 is implemented.
+3. Inspect current [App.tsx](../../apps/workbench/web/src/App.tsx), [DocumentsView.tsx](../../apps/workbench/web/src/views/DocumentsView.tsx), client and decoder. Snapshot current Preview document interactions and status filters. The source confirmed the Live placeholder and missing multipart support; do not claim UI3 is implemented.
 
 **Gate:** backend contract and tested formats are the authority; the work list excludes reinventing REST/SQL routes.
 
@@ -270,11 +270,11 @@ All server errors preserve actual `error.job_id` and trace/request IDs if provid
 
 ### J5. Preserve existing DocumentsView and truthful metadata
 
-1. Refactor the **existing** [DocumentsView.tsx](../apps/workbench/web/src/views/DocumentsView.tsx) to accept discriminated `Preview` and `Live` model. Keep table, filter, tabs, keyboard navigation and current palette; label PREVIEW and LIVE explicitly.
+1. Refactor the **existing** [DocumentsView.tsx](../../apps/workbench/web/src/views/DocumentsView.tsx) to accept discriminated `Preview` and `Live` model. Keep table, filter, tabs, keyboard navigation and current palette; label PREVIEW and LIVE explicitly.
 2. Preview stays `PreviewDocument[]` with existing fake docs and statuses. Live table uses actual `DocumentPage.items`: `source_id`, `title`, `media_type`, `ready/processing/error`, actual `chunk_count`, `updated_at`; show `size` only when `DocumentDetail.source_bytes` actually exists.
 3. Live Content tab becomes **Indexed text** (actual chunks) and never claims original file exact bytes. Chunk tab shows actual chunk content, `chunk_id`, `order`, `content_hash`, `section_path`, optional 1-based page and allowlisted `metadata`, plus Load more.
 4. Report tab presents actual `processing_profile`, parser ID/revision, `language_policy`, default language, PDF `visual_processing_status` and `original_evidence_status` if present, warnings and measured stages only. If a property is absent, show “Not reported”; never invent Docling pages/false OCR.
-5. For exact registered **local** original, optionally reuse [SourceFilesRequests](../apps/workbench/web/src/components/sourceFiles.ts) with current source_version and separate local reveal hint. If `can_reveal=false`, do not show a clickable fake file. Do not call this a downloadable original or CONTENT Evidence API.
+5. For exact registered **local** original, optionally reuse [SourceFilesRequests](../../apps/workbench/web/src/components/sourceFiles.ts) with current source_version and separate local reveal hint. If `can_reveal=false`, do not show a clickable fake file. Do not call this a downloadable original or CONTENT Evidence API.
 6. Render source title, Markdown, JSON metadata and Mermaid-like text as inert React text without `dangerouslySetInnerHTML` or network URL execution. Include accessible empty/loading/errors with ARIA live regions and focus restoration.
 
 **Gate:** Live never reads `previewDocuments` and required `DocumentDetail.original_content_available=false` is never misrepresented.
@@ -293,11 +293,11 @@ All server errors preserve actual `error.job_id` and trace/request IDs if provid
 
 ### J7. Contract-doc correction, tests, evidence and safe rollback
 
-1. Fix only stale descriptive upload OpenAPI text in [ingestion_http.py](../apps/workbench/api/ingestion_http.py): it currently says TXT/Markdown <=1 MiB even though Python and optional PDF are accepted. Keep transport/body structure and security unchanged; regenerate [openapi.json](../apps/workbench/api/openapi.json) and add schema test. If backend source moved, revise task Section I first.
+1. Fix only stale descriptive upload OpenAPI text in [ingestion_http.py](../../apps/workbench/api/ingestion_http.py): it currently says TXT/Markdown <=1 MiB even though Python and optional PDF are accepted. Keep transport/body structure and security unchanged; regenerate [openapi.json](../../apps/workbench/api/openapi.json) and add schema test. If backend source moved, revise task Section I first.
 2. Add detailed frontend tests and the real browser smoke, run source in a **disposable PostgreSQL** database with explicit seed and pinned PDF assets where qualified. Never use `docker compose down -v` or re-run demo seed against user data. Capture HTTP source/job/version/chunk IDs.
 3. Test signed cursor mismatch, malformed 201/200, POST already committed then browser network abort, wrong workspace, PDF capability false, 8 MiB candidate file, invalid MIME, 413/415/400/404/409/429/503/504, XSS, local hint unavailable and Preview regressions.
 4. Run full frontend typecheck/format/test/build, existing Preview/validator Live search smokes and backend ingestion/PDF/source tests. Record actual command outputs, NOT TESTED where environment absent.
-5. Update [Workbench README](../apps/workbench/web/README.md) with exact startup/scope, files/limits, idempotent retry, synchronous jobs, original download limitations, user-visible warnings and rollback.
+5. Update [Workbench README](../../apps/workbench/web/README.md) with exact startup/scope, files/limits, idempotent retry, synchronous jobs, original download limitations, user-visible warnings and rollback.
 
 **Gate:** all measurable acceptance criteria and reports pass; no false status based on spec-only source review.
 
@@ -316,7 +316,7 @@ All server errors preserve actual `error.job_id` and trace/request IDs if provid
 
 ### L1. Repo-scoped commands and preconditions
 
-Use the existing [API README](../apps/workbench/api/README.md) and [database runbook](../docs-website/docs/architecture/postgresql-foundation.md); test upload against an **isolated disposable** database and temporary resources. Existing API tests must be run, not rewritten. Example commands from repository root:
+Use the existing [API README](../../apps/workbench/api/README.md) and [database runbook](../../docs-website/docs/architecture/postgresql-foundation.md); test upload against an **isolated disposable** database and temporary resources. Existing API tests must be run, not rewritten. Example commands from repository root:
 
 ```powershell
 hatch run workbench-api:check
@@ -331,7 +331,7 @@ npm test
 npm run build
 ```
 
-Do not claim these commands passed until actually executed. For browser E2E use the current Playwright script pattern in [web/scripts](../apps/workbench/web/scripts/live-evaluation-smoke.js); implement `live-documents-smoke.js` and record browser/network/SQL parity with sanitized fixture inputs.
+Do not claim these commands passed until actually executed. For browser E2E use the current Playwright script pattern in [web/scripts](../../apps/workbench/web/scripts/live-evaluation-smoke.js); implement `live-documents-smoke.js` and record browser/network/SQL parity with sanitized fixture inputs.
 
 ### L2. Mandatory contract/unit/security test matrix
 
@@ -363,7 +363,7 @@ Upload at least TXT, Markdown and Python via browser against disposable PostgreS
 
 ## M. Acceptance Criteria
 
-- [x] [RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md) and actual API `IngestionRoutes` are **reused**; no second backend upload/details/chunks/jobs implementation or document store.
+- [x] [RAG-002](TASK-RAG-002-ingest-text-and-markdown.md) and actual API `IngestionRoutes` are **reused**; no second backend upload/details/chunks/jobs implementation or document store.
 - [x] `BackendCapabilities` and runtime `decodeCapabilities` preserve `upload/document_details/jobs/pdf_ingestion` and fail closed on invalid data; `rag-api-v1.0` remains the server contract.
 - [x] Shared frontend request helper handles **FormData** and success **201 for upload only**, while existing JSON/search/configuration/client errors remain unchanged.
 - [x] Typed `DocumentDetail`, `ActiveChunkPageResponse`, `IngestionResponse`, `IngestionJobResponse` and nested `error.job_id` decoders agree with actual Pydantic schema; no fictitious per-chunk source_version_id.
@@ -380,7 +380,7 @@ Upload at least TXT, Markdown and Python via browser against disposable PostgreS
 
 - **Compatibility:** backend upload/detail/chunk/job endpoints are implemented; this task consumes them. No new API release, migration or source table is required to connect Live Documents. Additive typed frontend contracts must use existing `rag-api-v1.0` fields. A new backend generalized format discovery, if needed later, requires separately approved schema/version work.
 - **OpenAPI prose:** update the stale multipart narrative in `ingestion_http.py` (says only TXT/Markdown) to list qualified Python and PDF **conditional availability** without changing its schema or existing request validation. Regenerate OpenAPI in a controlled docs change and run API contract tests.
-- **Documentation:** update [Workbench README](../apps/workbench/web/README.md), [durable ingestion operations](../docs-website/docs/architecture/durable-text-ingestion.md) and links to [parser registry](../apps/workbench/api/parser_registry.py); explain single-workspace development scope, file limits, PDF model asset conditions, no original asset API and local-source reveal limitation.
+- **Documentation:** update [Workbench README](../../apps/workbench/web/README.md), [durable ingestion operations](../../docs-website/docs/architecture/durable-text-ingestion.md) and links to [parser registry](../../apps/workbench/parsing/parser_registry.py); explain single-workspace development scope, file limits, PDF model asset conditions, no original asset API and local-source reveal limitation.
 - **Rollout:** enable Live listing first, detail/chunks second, multipart+jobs third; each behind real `features` and client test gate. Mode remains explicit; never turn Live failure into Preview success.
 - **Rollback:** disable only Live Documents UI and return to preview-only; preserve all PostgreSQL source/version/chunk/job rows, existing FastAPI ingestion, local original registrations and named DB volume. No `down -v`, no reseed, no destructive downgrade.
 - **Future integration:** CONTENT-001/005 plus EVIDENCE-001 will provide original binary/diagram viewing. PARSE-002..005 can add formats only after format-qualified backend and capability changes. Async ingestion/202 requires its own durable worker/task and cannot be inferred from current jobs.

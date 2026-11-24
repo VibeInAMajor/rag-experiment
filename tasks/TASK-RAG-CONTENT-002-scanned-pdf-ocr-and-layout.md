@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-002 — Scanned and mixed PDF OCR with page-accurate provenance
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint; scanned-PDF support not qualified  
 **Priority:** P1 — after evidence storage and existing PDF parser qualification  
 **Dependencies:** TASK-RAG-CONTENT-001; coordinate with active TASK-RAG-CHUNK-003 and completed TASK-RAG-PARSE-001/TASK-RAG-002  
@@ -20,19 +20,19 @@ Scanned PDF pages contain image pixels rather than a reliable text layer. Existi
 
 ### C0. Source and parser-family status reconciliation
 
-**Source reinspection 2026-11-23:** [parser_registry.py](../apps/workbench/api/parser_registry.py) now sets PDF descriptor `qualified=true` and gates actual `available` on pinned runtime asset discovery; [pdf_worker.py](../apps/workbench/api/pdf_worker.py) and [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) implement text-layer/page/table processing. The current [PDF task](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) reports **Gate A locally qualified** and **original evidence/OCR/vision unavailable**. Older rows in this task describing all PDF as unqualified are historical. Scanned-page OCR remains a new, separate producer.
+**Source reinspection 2026-11-23:** [parser_registry.py](../apps/workbench/parsing/parser_registry.py) now sets PDF descriptor `qualified=true` and gates actual `available` on pinned runtime asset discovery; [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py) and [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) implement text-layer/page/table processing. The current [PDF task](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) reports **Gate A locally qualified** and **original evidence/OCR/vision unavailable**. Older rows in this task describing all PDF as unqualified are historical. Scanned-page OCR remains a new, separate producer.
 
 | Inspected source | Current behavior and reuse |
 | --- | --- |
-| [pdf_models.py](../apps/workbench/api/pdf_models.py) | PdfLimits defaults: 8 MiB, 32 pages, 180 seconds, bounded blocks/cells/memory; PdfPage, PdfBox, PdfBlock and PdfDocument represent verified page geometry and text/table blocks. No OCR-layer provenance or detected-scanned status is modeled yet. |
-| [pdf_worker.py](../apps/workbench/api/pdf_worker.py) | Isolated Docling worker preflights PDF text, forbids embedded JavaScript/actions/attachments, enforces no network, and builds text/heading/caption/table projections. Existing OCR capability is NOT enabled by virtue of installing Docling. |
-| [pdf_parser.py](../apps/workbench/api/pdf_parser.py) | extract_pdf runs quota-limited subprocess; guarded runtime availability and a single parser concurrency slot. |
-| [pdf_assets.py](../apps/workbench/api/pdf_assets.py), [pdf_asset_manifest.json](../apps/workbench/api/pdf_asset_manifest.json) | Pin Docling layout/table artifacts; no approved OCR language model assets or OCR engine configuration in current manifest. |
-| [pdf_sandbox.py](../apps/workbench/api/pdf_sandbox.py) | OS child process budget, useful for an OCR child extension without spawning unbounded subprocesses. |
-| [parser_registry.py](../apps/workbench/api/parser_registry.py) | FormatId.PDF and error taxonomy exist, PDF remains unqualified in this registry; NO_EXTRACTABLE_TEXT is already available. |
-| [parsing.py](../apps/workbench/api/parsing.py) | ParsedElement/ParsedDocument typed projections and bounded inspection; TXT/MD/Python currently registered. |
-| [chunking.py](../apps/workbench/api/chunking.py), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) | Existing unit-honest prepared chunks and PDF page/table adapter; should consume verified OCR observations, not re-OCR text. |
-| [ingestion.py](../apps/workbench/api/ingestion.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) | Durable jobs and version publication; use same upload/commit transaction. |
+| [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py) | PdfLimits defaults: 8 MiB, 32 pages, 180 seconds, bounded blocks/cells/memory; PdfPage, PdfBox, PdfBlock and PdfDocument represent verified page geometry and text/table blocks. No OCR-layer provenance or detected-scanned status is modeled yet. |
+| [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py) | Isolated Docling worker preflights PDF text, forbids embedded JavaScript/actions/attachments, enforces no network, and builds text/heading/caption/table projections. Existing OCR capability is NOT enabled by virtue of installing Docling. |
+| [pdf_parser.py](../apps/workbench/parsing/pdf/pdf_parser.py) | extract_pdf runs quota-limited subprocess; guarded runtime availability and a single parser concurrency slot. |
+| [pdf_assets.py](../apps/workbench/parsing/pdf/pdf_assets.py), [pdf_asset_manifest.json](../apps/workbench/parsing/pdf/pdf_asset_manifest.json) | Pin Docling layout/table artifacts; no approved OCR language model assets or OCR engine configuration in current manifest. |
+| [pdf_sandbox.py](../apps/workbench/parsing/pdf/pdf_sandbox.py) | OS child process budget, useful for an OCR child extension without spawning unbounded subprocesses. |
+| [parser_registry.py](../apps/workbench/parsing/parser_registry.py) | FormatId.PDF and error taxonomy exist, PDF remains unqualified in this registry; NO_EXTRACTABLE_TEXT is already available. |
+| [parsing.py](../apps/workbench/parsing/parsing.py) | ParsedElement/ParsedDocument typed projections and bounded inspection; TXT/MD/Python currently registered. |
+| [chunking.py](../apps/workbench/chunking/chunking.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) | Existing unit-honest prepared chunks and PDF page/table adapter; should consume verified OCR observations, not re-OCR text. |
+| [ingestion.py](../apps/workbench/ingestion/ingestion.py), [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) | Durable jobs and version publication; use same upload/commit transaction. |
 | [TASK-RAG-CHUNK-003](TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md) | Active text-layer PDF parser/chunking qualification; scanned pages intentionally excluded and must remain unsupported until this task passes. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) | New original asset and observed-versus-derived representation contracts; this task depends on those contracts being implemented. |
 

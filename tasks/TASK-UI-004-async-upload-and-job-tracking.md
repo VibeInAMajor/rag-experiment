@@ -1,7 +1,7 @@
 # TASK-UI-004 — Live Documents 202, upload progress and durable processing status
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-UI-004-async-upload-and-job-tracking.md
@@ -48,7 +48,7 @@ Discriminated accepted/complete DTOs, job_id/status_url, version identity, optio
 
 ## I. Repository Files / Components Impacted
 
-EDIT apps/workbench/web/src/api/client.ts, contracts.ts, decode.ts, document controller, DocumentUploadDialog, IngestionStatus, tests and README.
+EDIT apps/workbench/web/src/api/client.ts, apps/workbench/web/src/api/contracts.ts, apps/workbench/web/src/api/decode.ts, existing apps/workbench/web/src/hooks/useLiveDocuments.ts, apps/workbench/web/src/views/DocumentUploadDialog.tsx; ADD apps/workbench/web/src/components/IngestionStatus.tsx only if not covered by existing UI components; update focused apps/workbench/web/src/api/documents.test.ts and apps/workbench/web/src/views/DocumentsView.test.tsx plus apps/workbench/web/README.md.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 

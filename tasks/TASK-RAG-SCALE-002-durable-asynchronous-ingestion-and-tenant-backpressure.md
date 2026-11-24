@@ -1,7 +1,7 @@
 # TASK-RAG-SCALE-002 — Enterprise durable ingestion workers, queue and tenant resource fairness
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, no runtime claim  
 **Priority:** P1  
 **Dependencies:** INDEX-001, EMBED-002, SCALE-001, CONTENT-001; completed RAG-002  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
@@ -20,8 +20,8 @@ Current bounded synchronous ingestion works for local TXT/Markdown, not thousand
 
 ## C. Current Repository State
 
-[parsing.py](../apps/workbench/api/parsing.py) and [parser_registry.py](../apps/workbench/api/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/api/chunking.py), [ingestion.py](../apps/workbench/api/ingestion.py) and [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [persistence.py](../apps/workbench/api/persistence.py) and [postgres.py](../apps/workbench/api/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [contracts.py](../apps/workbench/api/contracts.py) own API/capabilities. [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [pdf_models.py](../apps/workbench/api/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
-Current [ingestion.py](../apps/workbench/api/ingestion.py) stages parse/chunk/publish in one request and [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) provides durable owned jobs/idempotency but not independent queued original bytes for arbitrary replay. [upload_transport.py](../apps/workbench/api/upload_transport.py) is in-memory and bounded; [pdf_parser.py](../apps/workbench/api/pdf_parser.py) has a bounded heavy-process slot.
+[parsing.py](../apps/workbench/parsing/parsing.py) and [parser_registry.py](../apps/workbench/parsing/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/chunking/chunking.py), [ingestion.py](../apps/workbench/ingestion/ingestion.py) and [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [models.py](../apps/workbench/persistence/models.py) and [postgres.py](../apps/workbench/postgres/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [schemas.py](../apps/workbench/contracts/schemas.py) own API/capabilities. [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
+Current [ingestion.py](../apps/workbench/ingestion/ingestion.py) stages parse/chunk/publish in one request and [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) provides durable owned jobs/idempotency but not independent queued original bytes for arbitrary replay. [upload_transport.py](../apps/workbench/api/upload_transport.py) is in-memory and bounded; [pdf_parser.py](../apps/workbench/parsing/pdf/pdf_parser.py) has a bounded heavy-process slot.
 
 **Verification limit:** this is a source-backed task, not proof that the proposed feature exists. Re-inspect current code at implementation start.
 
@@ -49,7 +49,7 @@ External schema changes MUST be reviewed in Pydantic/OpenAPI/client and versione
 
 ## I. Repository Files / Components Impacted
 
-REUSE [ingestion.py](../apps/workbench/api/ingestion.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py), [upload_transport.py](../apps/workbench/api/upload_transport.py), CONTENT-001 AssetStorePort. CREATE worker.py, queue module, tests/test_async_ingestion.py, reviewed additive outbox migration, operator runbook. Do not duplicate source registry.
+REUSE [ingestion.py](../apps/workbench/ingestion/ingestion.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py), [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py), [upload_transport.py](../apps/workbench/api/upload_transport.py), CONTENT-001 AssetStorePort. CREATE apps/workbench/ingestion/worker.py and a narrowly scoped queue module under apps/workbench/ingestion/, apps/workbench/ingestion/tests/test_async_ingestion.py, reviewed additive outbox migration under apps/workbench/postgres/migrations/, operator runbook. Do not duplicate source registry.
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
@@ -57,12 +57,12 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | _execute parse/chunk/publish is synchronous |
-| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | durable leased/owned ingestion job and terminal atomic commit |
+| [`apps/workbench/ingestion/ingestion.py`](../apps/workbench/ingestion/ingestion.py) | _execute parse/chunk/publish is synchronous |
+| [`apps/workbench/postgres/postgres_ingestion.py`](../apps/workbench/postgres/postgres_ingestion.py) | durable leased/owned ingestion job and terminal atomic commit |
 | [`apps/workbench/api/ingestion_http.py`](../apps/workbench/api/ingestion_http.py) | HTTP upload, jobs/status route semantics |
 | [`apps/workbench/api/upload_transport.py`](../apps/workbench/api/upload_transport.py) | bounded in-memory multipart |
-| [`apps/workbench/api/pdf_parser.py`](../apps/workbench/api/pdf_parser.py) | sandboxed expensive PDF stage, separate capacity |
-| [`apps/workbench/api/pdf_sandbox.py`](../apps/workbench/api/pdf_sandbox.py) | CPU/memory/time quotas |
+| [`apps/workbench/parsing/pdf/pdf_parser.py`](../apps/workbench/parsing/pdf/pdf_parser.py) | sandboxed expensive PDF stage, separate capacity |
+| [`apps/workbench/parsing/pdf/pdf_sandbox.py`](../apps/workbench/parsing/pdf/pdf_sandbox.py) | CPU/memory/time quotas |
 | [`apps/workbench/api/tests/test_ingestion_resilience.py`](../apps/workbench/api/tests/test_ingestion_resilience.py) | timeout and incomplete job recovery |
 | [`apps/workbench/api/tests/test_ingestion_process.py`](../apps/workbench/api/tests/test_ingestion_process.py) | process crash behavior |
 | [`apps/workbench/api/tests/test_ingestion_routes.py`](../apps/workbench/api/tests/test_ingestion_routes.py) | source upload HTTP contract |

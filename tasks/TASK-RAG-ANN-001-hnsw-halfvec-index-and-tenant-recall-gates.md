@@ -1,7 +1,7 @@
 # TASK-RAG-ANN-001 — Production HNSW ANN index with 2560-dimensional halfvec and per-tenant recall controls
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P1  
 **Dependencies:** EMBED-002, DENSE-001, INDEX-001, SCALE-001 policy design; coordinate OPS-002  
@@ -18,7 +18,7 @@ The Qwen3-Embedding-4B model card allows full 2560-dimensional output, but pgvec
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/api/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/api/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/api/profiles.py) exposes only postgres-fts-baseline-r1. [contracts.py](../apps/workbench/api/contracts.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/api/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
+**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
 Existing index chunks_search_vector is GIN for PostgreSQL FTS, not vector ANN. The current vector_search orders c.embedding <=> query and filters workspace_id, active source_version, embedding_profile_id. The pinned container uses PostgreSQL 17.10/pgvector 0.8.2 as recorded in [database runbook](../docs-website/docs/architecture/postgresql-foundation.md). pgvector official docs explicitly warn that approximate index filtering happens after candidate selection and may return too few tenant hits without iterative scans/partition strategy.
 
 ## D. Goal
@@ -43,17 +43,17 @@ AnnIndexProfile{index_profile_id,embedding_profile_id,dimensions=2560,index_kind
 
 ## I. Repository Files / Components Impacted
 
-CREATE next sequential additive SQL migration for ANN metadata and offline admin index DDL task, scripts under apps/workbench/postgres/ or reviewed ops folder, tests/test_ann_indexes.py; MODIFY postgres.py vector query adapter and profiles.py/profile registry, operator docs. REUSE migration guard in db_migrations.py. MUST NOT create 2560-dim HNSW on vector_cosine_ops, modify applied migrations or lie in SearchResult.score_type.
+CREATE next sequential additive SQL migration for ANN metadata and offline admin index DDL task, scripts under apps/workbench/postgres/ or reviewed ops folder, apps/workbench/postgres/tests/test_ann_indexes.py; MODIFY postgres.py vector query adapter and profiles.py/profile registry, operator docs. REUSE migration guard in db_migrations.py. MUST NOT create 2560-dim HNSW on vector_cosine_ops, modify applied migrations or lie in SearchResult.score_type.
 
 ### I.1. Concrete implementation ownership — source reinspection 2026-11-23
 
 | Existing file (direct link) | Symbol, contract and test reuse |
 | --- | --- |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | vector_search exact cosine oracle |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | nullable vector + GIN but no ANN |
-| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | migration guards |
-| [`apps/workbench/api/tests/test_postgres_persistence.py`](../apps/workbench/api/tests/test_postgres_persistence.py) | source/version RLS and pgvector tests |
-| [`apps/workbench/api/tests/test_database_migrations.py`](../apps/workbench/api/tests/test_database_migrations.py) | schema compatibility checks |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | vector_search exact cosine oracle |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | nullable vector + GIN but no ANN |
+| [`apps/workbench/postgres/db_migrations.py`](../apps/workbench/postgres/db_migrations.py) | migration guards |
+| [`apps/workbench/postgres/tests/test_postgres_persistence.py`](../apps/workbench/postgres/tests/test_postgres_persistence.py) | source/version RLS and pgvector tests |
+| [`apps/workbench/postgres/tests/test_database_migrations.py`](../apps/workbench/postgres/tests/test_database_migrations.py) | schema compatibility checks |
 | [`docs-website/docs/architecture/postgresql-foundation.md`](../docs-website/docs/architecture/postgresql-foundation.md) | pinned pgvector version and backup/restart |
 
 **Related project, pinned audit sources (architecture/test patterns only):** [`docs/77-m39-scalable-rag-ingestion-and-serving.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/77-m39-scalable-rag-ingestion-and-serving.md); [`docs/63-progressive-repository-indexing-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/63-progressive-repository-indexing-architecture.md). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.

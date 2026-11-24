@@ -1,7 +1,7 @@
 # TASK-RAG-OPS-001 — Cross-stage tracing, quality evaluation and operational observability
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, not implemented  
 **Priority:** P1  
 **Dependencies:** INDEX-001, PROFILE-001; integrate EMBED/DENSE/ANN/HYBRID and CONTENT pipelines as qualified  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
@@ -18,7 +18,7 @@ Structured safe logs already exist, but query-time Haystack, SQL, embedding infe
 
 ## C. Current Repository State
 
-[boundary.py](../apps/workbench/api/boundary.py) already emits safe structured events and request/trace IDs; [postgres.py](../apps/workbench/api/postgres.py) logs database_operation duration and status; [lexical.py](../apps/workbench/api/lexical.py) currently disables Haystack tracing in local use. [application.py](../apps/workbench/api/application.py) emits run_id, profile and duration for search. Existing [lexical fixture](../apps/workbench/api/fixtures/lexical-evaluation.json) contains ten exact and three diagnostic queries, insufficient to evaluate multimodal enterprise quality. No full per-stage trace/quality dashboard is qualified.
+[boundary.py](../apps/workbench/api/boundary.py) already emits safe structured events and request/trace IDs; [postgres.py](../apps/workbench/postgres/postgres.py) logs database_operation duration and status; [lexical.py](../apps/workbench/retrieval/lexical.py) currently disables Haystack tracing in local use. [application.py](../apps/workbench/api/application.py) emits run_id, profile and duration for search. Existing [lexical fixture](../apps/workbench/retrieval/fixtures/lexical-evaluation.json) contains ten exact and three diagnostic queries, insufficient to evaluate multimodal enterprise quality. No full per-stage trace/quality dashboard is qualified.
 
 **Evidence rule:** this source audit is not proof that the proposed new feature is working. Re-read code and tests at task start.
 
@@ -46,7 +46,7 @@ Span{trace_id,run_id?,job_id?,workspace_hash,source_version?,profile_id/revision
 
 ## I. Repository Files / Components Impacted
 
-CREATE apps/workbench/api/observability.py, tests/test_observability_redaction.py and tests/test_rag_evaluation.py, docs-website/docs/architecture/rag-observability.md after approval. MODIFY [boundary.py](../apps/workbench/api/boundary.py), [lexical.py](../apps/workbench/api/lexical.py), [postgres.py](../apps/workbench/api/postgres.py) and qualifying new components through one port. Reuse tasks/evidence and existing logs, do not modify Haystack framework internals.
+CREATE apps/workbench/observability/tracing.py, apps/workbench/observability/tests/test_observability_redaction.py and apps/workbench/evaluation/tests/test_rag_evaluation.py, docs-website/docs/architecture/rag-observability.md after approval. MODIFY [boundary.py](../apps/workbench/api/boundary.py), [lexical.py](../apps/workbench/retrieval/lexical.py), [postgres.py](../apps/workbench/postgres/postgres.py) and qualifying new components through one port. Reuse tasks/evidence and existing logs, do not modify Haystack framework internals.
 
 MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated Preview/validator implementations as a shortcut.
 
@@ -55,9 +55,9 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
 | [`apps/workbench/api/boundary.py`](../apps/workbench/api/boundary.py) | request_meta and log_event safe correlation |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | database_operation duration, outcome, workspace_id, trace_id |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | database_operation duration, outcome, workspace_id, trace_id |
 | [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | run_id and search_completed status |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | tracing disabled in current local baseline; no per-stage OTEL |
+| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | tracing disabled in current local baseline; no per-stage OTEL |
 | [`apps/workbench/api/tests/test_http_contract.py`](../apps/workbench/api/tests/test_http_contract.py) | request/error correlation and safe envelope |
 | [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | verified score/latency cases |
 | [`apps/workbench/api/tests/test_ingestion_stability.py`](../apps/workbench/api/tests/test_ingestion_stability.py) | job/error paths |

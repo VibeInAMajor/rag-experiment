@@ -1,7 +1,7 @@
 # TASK-RAG-HYBRID-001 — Live hybrid retrieval combining genuine lexical and dense ranks with explicit RRF
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P1  
 **Dependencies:** DENSE-001, PROFILE-001, INDEX-001; BM25-002 optional and not a prerequisite  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
@@ -18,7 +18,7 @@ Dense semantic retrieval and lexical exact term recall have complementary failur
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/api/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/api/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/api/profiles.py) exposes only postgres-fts-baseline-r1. [contracts.py](../apps/workbench/api/contracts.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/api/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
+**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
 The source library has [DocumentJoiner](../haystack/components/joiners/document_joiner.py) with RRF mode, and a query-dependent lexical Haystack pipeline. No cross-retriever profile/execution exists in the application. Current source-aware identities and active version constraints must be shared by both retrievers.
 
 ## D. Goal
@@ -43,17 +43,17 @@ HybridProfile{profile_id,profile_revision,index_generation,lexical_profile_id,de
 
 ## I. Repository Files / Components Impacted
 
-CREATE apps/workbench/api/hybrid.py, tests/test_hybrid_retrieval.py, tests/test_hybrid_routes.py; MODIFY profiles.py/registry, services.py, application.py, contracts.py, projection.py and shared UI approved matcher/template; REUSE lexical.py, dense.py, PostgresPersistence, Haystack DocumentJoiner. MUST NOT silently change existing keyword flow, DocumentJoiner defaults or raw score labels.
+CREATE apps/workbench/retrieval/hybrid.py, apps/workbench/retrieval/tests/test_hybrid_retrieval.py, apps/workbench/api/tests/test_hybrid_routes.py; MODIFY profiles.py/registry, services.py, application.py, contracts.py, projection.py and shared UI approved matcher/template; REUSE lexical.py, dense.py, PostgresPersistence, Haystack DocumentJoiner. MUST NOT silently change existing keyword flow, DocumentJoiner defaults or raw score labels.
 
 ### I.1. Concrete implementation ownership — source reinspection 2026-11-23
 
 | Existing file (direct link) | Symbol, contract and test reuse |
 | --- | --- |
 | [`haystack/components/joiners/document_joiner.py`](../haystack/components/joiners/document_joiner.py) | DocumentJoiner default CONCATENATE; explicit RRF needed |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | existing Haystack lexical retriever |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | separate FTS/pgvector search paths |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | stable Chunk identity |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | profile/score version contract |
+| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | existing Haystack lexical retriever |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | separate FTS/pgvector search paths |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | stable Chunk identity |
+| [`apps/workbench/contracts/schemas.py`](../apps/workbench/contracts/schemas.py) | profile/score version contract |
 | [`apps/workbench/api/projection.py`](../apps/workbench/api/projection.py) | actual stage timing and identifiers |
 | [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | only vetted graph topology executable |
 

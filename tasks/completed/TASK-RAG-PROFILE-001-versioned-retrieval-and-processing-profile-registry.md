@@ -1,7 +1,7 @@
 # TASK-RAG-PROFILE-001 — Approved versioned lexical, dense, hybrid and indexing profile registry
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — immutable registry, durable rollout, API/client fences, real PostgreSQL/browser checks and local migration passed
 **Priority:** P0  
 **Dependencies:** Completed API-001 and ARCH-001; coordinate INDEX-001 and EMBED-001 before new mode activation  
@@ -18,12 +18,12 @@ The current public contract supports one approved lexical profile via constant P
 
 ## C. Current Repository State
 
-**Source inspection (2026-11-23):** [SQL migration 0001](../apps/workbench/api/migrations/0001_initial.up.sql) contains workbench.sources, source_versions, chunks and nullable public.vector embeddings, generated tsvector and GIN; [migration 0002](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) adds transactional durable jobs. [PostgresPersistence](../apps/workbench/api/postgres.py) owns _publish(), _corpus_snapshot(), lexical_search_snapshot() and vector_search(). [Postgres ingestion](../apps/workbench/api/postgres_ingestion.py) calls _publish in the same transaction as terminal job completion. [FastAPI contracts](../apps/workbench/api/contracts.py), [API route owner](../apps/workbench/api/application.py), [Haystack lexical profile](../apps/workbench/api/lexical.py) and [runtime decision](../docs-website/docs/architecture/rag-runtime-contract.md) are the current authority. The local only workspace resolver is not production multi-tenancy.
-[profiles.py](../apps/workbench/api/profiles.py) declares only postgres-fts-baseline-r1; [application.py](../apps/workbench/api/application.py) _capabilities and _search check fixed lexical IDs and fields; [apps/workbench/document_processing.yaml](../apps/workbench/document_processing.yaml) selects tiktoken o200k_base and independently guarded native Qwen tokens, not a working embedding service. [web App.tsx](../apps/workbench/web/src/App.tsx) has Preview and Live logic. Existing constructor validator on another port checks component construction, not execution authorization.
+**Source inspection (2026-11-23):** [SQL migration 0001](../../apps/workbench/postgres/migrations/0001_initial.up.sql) contains workbench.sources, source_versions, chunks and nullable public.vector embeddings, generated tsvector and GIN; [migration 0002](../../apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql) adds transactional durable jobs. [PostgresPersistence](../../apps/workbench/postgres/postgres.py) owns _publish(), _corpus_snapshot(), lexical_search_snapshot() and vector_search(). [Postgres ingestion](../../apps/workbench/postgres/postgres_ingestion.py) calls _publish in the same transaction as terminal job completion. [FastAPI contracts](../../apps/workbench/contracts/schemas.py), [API route owner](../../apps/workbench/api/application.py), [Haystack lexical profile](../../apps/workbench/retrieval/lexical.py) and [runtime decision](../../docs-website/docs/architecture/rag-runtime-contract.md) are the current authority. The local only workspace resolver is not production multi-tenancy.
+[profiles.py](../../apps/workbench/retrieval/profiles.py) declares only postgres-fts-baseline-r1; [application.py](../../apps/workbench/api/application.py) _capabilities and _search check fixed lexical IDs and fields; [apps/workbench/document_processing.yaml](../../apps/workbench/document_processing.yaml) selects tiktoken o200k_base and independently guarded native Qwen tokens, not a working embedding service. [web App.tsx](../../apps/workbench/web/src/App.tsx) has Preview and Live logic. Existing constructor validator on another port checks component construction, not execution authorization.
 
 **Evidence discipline:** paths and symbols above were read from the inspected commit; readiness/throughput on another machine have not been measured by creating this task. At implementation start recheck source, tests and manifest against working tree; when source differs, update this A–O blueprint before expanding scope.
 
-**Implementation reinspection (2026-11-23):** working-tree base is `44866bb7e7dc01993bbaefefdec1ab1985951cc7`, including the completed INDEX-001 changes. Additive migration `0003`, `postgres_indexes.py`, `PersistencePort.current_index_generation()` and `corpus_summary()` now own persisted lexical generations; `0003` was explicitly applied to the existing development database. Preserve the applied SQL and all prior working-tree changes. The HTTP and browser still hardcode the single lexical profile. Real embedding, ANN, hybrid and BM25 execution are absent and must remain unavailable. Navigation references actually live in [`docs-website/PROJECT_MAP.md`](../docs-website/PROJECT_MAP.md) and [`docs-website/ENGINEERING.md`](../docs-website/ENGINEERING.md).
+**Implementation reinspection (2026-11-23):** working-tree base is `44866bb7e7dc01993bbaefefdec1ab1985951cc7`, including the completed INDEX-001 changes. Additive migration `0003`, `postgres_indexes.py`, `PersistencePort.current_index_generation()` and `corpus_summary()` now own persisted lexical generations; `0003` was explicitly applied to the existing development database. Preserve the applied SQL and all prior working-tree changes. The HTTP and browser still hardcode the single lexical profile. Real embedding, ANN, hybrid and BM25 execution are absent and must remain unavailable. Navigation references actually live in [`docs-website/PROJECT_MAP.md`](../../docs-website/PROJECT_MAP.md) and [`docs-website/ENGINEERING.md`](../../docs-website/ENGINEERING.md).
 
 ## D. Goal
 
@@ -41,7 +41,7 @@ No database/rank improvements or new embedding provider by this task; no dynamic
 
 Application policy selects approved ProfileDefinition -> provider-neutral EmbeddingPort/RetrievalPort/IndexGeneration -> concrete adapters. Infra and model IDs live in the composition layer. Server Workbench API owns readiness and validation; UI is a consumer only. Keep existing validator separate.
 
-**Mandatory boundaries:** domain/application must not import provider-specific SDKs, HTTP does not execute browser-authored graph JSON or raw SQL, persistence stays behind app-owned ports. Review [canonical runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) and previously delivered [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) when evidence is relevant.
+**Mandatory boundaries:** domain/application must not import provider-specific SDKs, HTTP does not execute browser-authored graph JSON or raw SQL, persistence stays behind app-owned ports. Review [canonical runtime contract](../../docs-website/docs/architecture/rag-runtime-contract.md) and previously delivered [CONTENT-001](../TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) when evidence is relevant.
 
 ## H. Contracts / Interfaces / Data Model
 
@@ -51,7 +51,7 @@ All new externally exposed fields require exact Pydantic/OpenAPI agreement and a
 
 ## I. Repository Files / Components Impacted
 
-MODIFY [profiles.py](../apps/workbench/api/profiles.py), [contracts.py](../apps/workbench/api/contracts.py), [application.py](../apps/workbench/api/application.py), [services.py](../apps/workbench/api/services.py), [lexical.py](../apps/workbench/api/lexical.py), [apps/workbench/document_processing.yaml](../apps/workbench/document_processing.yaml) only for linked provenance; CREATE app-owned profile_registry.py and tests/test_profile_registry.py; UI use [App.tsx](../apps/workbench/web/src/App.tsx) and shared typed API client when ready. MUST NOT edit framework haystack/, existing graph schemaVersion:1 silently or enable unsupported profiles.
+MODIFY [profiles.py](../../apps/workbench/retrieval/profiles.py), [schemas.py](../../apps/workbench/contracts/schemas.py), [application.py](../../apps/workbench/api/application.py), [services.py](../../apps/workbench/retrieval/services.py), [lexical.py](../../apps/workbench/retrieval/lexical.py), [apps/workbench/document_processing.yaml](../../apps/workbench/document_processing.yaml) only for linked provenance; CREATE app-owned profile_registry.py and tests/test_profile_registry.py; UI use [App.tsx](../../apps/workbench/web/src/App.tsx) and shared typed API client when ready. MUST NOT edit framework haystack/, existing graph schemaVersion:1 silently or enable unsupported profiles.
 
 **Reconciled implementation ownership:** the pure typed registry belongs in `profile_registry.py`; durable revisions, workspace rollout/audit state and explicit operator commands belong in a PostgreSQL adapter and the next additive `0004` migration, reusing `db_migrations.py`. Extend persistence/configuration seams and runtime composition without moving SQL into application policy. Focused integration tests cover the registry's actual route/lifecycle behavior. The browser selector extends existing discovery/cancellation and typed decoders. The existing document-processing settings and fingerprint remain the processor source of truth; this task links their provenance rather than creating another parser/chunker registry.
 
@@ -61,13 +61,13 @@ MODIFY [profiles.py](../apps/workbench/api/profiles.py), [contracts.py](../apps/
 
 | Existing file (direct link) | Symbol, contract and test reuse |
 | --- | --- |
-| [`apps/workbench/api/profiles.py`](../apps/workbench/api/profiles.py) | currently only postgres-fts-baseline-r1 |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | SearchRequest.expected_profile_revision and CapabilitiesResponse |
-| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | _capabilities/_search fixed allowlist |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | approved Haystack baseline |
-| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | strict client graph matcher |
-| [`apps/workbench/web/src/api/decode.ts`](../apps/workbench/web/src/api/decode.ts) | runtime API contract validation |
-| [`apps/workbench/api/tests/test_http_contract.py`](../apps/workbench/api/tests/test_http_contract.py) | profile revision and 409/503 tests |
+| [`apps/workbench/retrieval/profiles.py`](../../apps/workbench/retrieval/profiles.py) | currently only postgres-fts-baseline-r1 |
+| [`apps/workbench/contracts/schemas.py`](../../apps/workbench/contracts/schemas.py) | SearchRequest.expected_profile_revision and CapabilitiesResponse |
+| [`apps/workbench/api/application.py`](../../apps/workbench/api/application.py) | _capabilities/_search fixed allowlist |
+| [`apps/workbench/retrieval/lexical.py`](../../apps/workbench/retrieval/lexical.py) | approved Haystack baseline |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../../apps/workbench/web/src/domain/approvedExecution.ts) | strict client graph matcher |
+| [`apps/workbench/web/src/api/decode.ts`](../../apps/workbench/web/src/api/decode.ts) | runtime API contract validation |
+| [`apps/workbench/api/tests/test_http_contract.py`](../../apps/workbench/api/tests/test_http_contract.py) | profile revision and 409/503 tests |
 
 **Related project, pinned audit sources (architecture/test patterns only):** [`src/enterprise_ai_pipeline/rag/embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embeddings.py); [`src/enterprise_ai_pipeline/rag/embedding_capacity.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_capacity.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
 
@@ -98,7 +98,7 @@ All implementation methods use descriptive domain names (not task identifiers); 
 
 **J13.** Test 409 stale, unknown RRF, mixed model versions, missing TPM policy, 503 unready, wrong workspace and old lexical golden regression.
 
-**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](../RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
 ## K. Security / Governance / Observability
 
@@ -132,7 +132,7 @@ Registry decoder/unit tests; malformed profiles; unsupported score/profile pairi
 
 Registry migrations additive if durable state is required. Roll out as read-only capabilities then approved execution. Disable new profile on error while leaving previous lexical generation visible; never rewrite historical profile identity. Model changes require independent embedding generations, not mutating old rows in place.
 
-Update [API README](../apps/workbench/api/README.md), architecture and this task with exact evidence and compatibility details before marking ready.
+Update [API README](../../apps/workbench/api/README.md), architecture and this task with exact evidence and compatibility details before marking ready.
 
 ## O. Mandatory Completion Checklist
 
@@ -149,7 +149,7 @@ Update [API README](../apps/workbench/api/README.md), architecture and this task
 
 ## P. Implementation and qualification record — 2026-11-23
 
-Implementation uses working-tree base `44866bb7e7dc01993bbaefefdec1ab1985951cc7` and preserves preceding INDEX-001 changes and applied `0001`–`0003` SQL. The [profile operations guide](../docs-website/docs/architecture/profile-registry.md) owns exact configuration/lifecycle/rollback commands. The [qualification report](evidence/profile-2026-11-23/report.md) links actual HTTP, SQL, browser and regression artifacts; this task does not imply a commit or production deployment.
+Implementation uses working-tree base `44866bb7e7dc01993bbaefefdec1ab1985951cc7` and preserves preceding INDEX-001 changes and applied `0001`–`0003` SQL. The [profile operations guide](../../docs-website/docs/architecture/profile-registry.md) owns exact configuration/lifecycle/rollback commands. The [qualification report](../evidence/profile-2026-11-23/report.md) links actual HTTP, SQL, browser and regression artifacts; this task does not imply a commit or production deployment.
 
 ### Reuse, changed owners and intentional contract decisions
 
@@ -162,11 +162,11 @@ Implementation uses working-tree base `44866bb7e7dc01993bbaefefdec1ab1985951cc7`
 
 ### Executed focused and runtime checks
 
-`hatch run workbench-api:python -m pytest -q apps/workbench/api/tests/test_profile_routes.py --tb=short --junitxml=tasks/evidence/profile-2026-11-23/profile-routes.xml` passed **24 real PostgreSQL tests** in 18.44 seconds, after explicit disposable-test DSN configuration. The registry owner additionally tested malformed policies/configuration, immutable drift, populated migration/backfill and the workspace-binding budget. The [route artifact](evidence/profile-2026-11-23/profile-routes.xml) and [focused registry/route artifact](evidence/profile-2026-11-23/profile-regressions.xml) preserve exact case results.
+`hatch run workbench-api:python -m pytest -q apps/workbench/api/tests/test_profile_routes.py --tb=short --junitxml=tasks/evidence/profile-2026-11-23/profile-routes.xml` passed **24 real PostgreSQL tests** in 18.44 seconds, after explicit disposable-test DSN configuration. The registry owner additionally tested malformed policies/configuration, immutable drift, populated migration/backfill and the workspace-binding budget. The [route artifact](../evidence/profile-2026-11-23/profile-routes.xml) and [focused registry/route artifact](../evidence/profile-2026-11-23/profile-regressions.xml) preserve exact case results.
 
-The [isolated HTTP artifact](evidence/profile-2026-11-23/http-rollout.json) records two actual lexical profiles on an owned UUID-named database and API port 8021, administrator retirement/reactivation, retired-request HTTP 409, independent application-role SQL identity/score parity, and actual API process restart with the same corpus/results. The owned API/database were cleaned up. No main application data is used as synthetic test input.
+The [isolated HTTP artifact](../evidence/profile-2026-11-23/http-rollout.json) records two actual lexical profiles on an owned UUID-named database and API port 8021, administrator retirement/reactivation, retired-request HTTP 409, independent application-role SQL identity/score parity, and actual API process restart with the same corpus/results. The owned API/database were cleaned up. No main application data is used as synthetic test input.
 
-The [sanitized browser artifact](evidence/profile-2026-11-23/browser-smoke.json) records real selection of `postgres-fts-focused` / `focused-r1` with top-K ceiling 3 and truthful FTS output. Actual withdrawal leaves no selected replacement, disables Run and hides old results; explicit baseline recovery works. Existing Preview/validator smokes and Live regression passed separately; the Live regression includes three real queries, nine injected failures and Stop/late-response behavior. Screenshots cover 1440/1100 selection and explicit baseline recovery. Frontend typecheck/format/build and 350 tests in 18 files passed; regenerated OpenAPI/client-focused checks passed 97 tests.
+The [sanitized browser artifact](../evidence/profile-2026-11-23/browser-smoke.json) records real selection of `postgres-fts-focused` / `focused-r1` with top-K ceiling 3 and truthful FTS output. Actual withdrawal leaves no selected replacement, disables Run and hides old results; explicit baseline recovery works. Existing Preview/validator smokes and Live regression passed separately; the Live regression includes three real queries, nine injected failures and Stop/late-response behavior. Screenshots cover 1440/1100 selection and explicit baseline recovery. Frontend typecheck/format/build and 350 tests in 18 files passed; regenerated OpenAPI/client-focused checks passed 97 tests.
 
 ### Risks and bugs addressed
 
@@ -176,12 +176,12 @@ Native model/TPM/ANN/semantic qualification remains owned by its separate tasks.
 
 ### Final regression and quality results
 
-The final `hatch run workbench-api:test --tb=short --junitxml=tasks/evidence/profile-2026-11-23/full-tests.xml` run passed **984 tests**, with **16 skipped**, zero failures/errors, in 253.44 seconds. All profile/PostgreSQL cases executed. Every skip is a native Qwen tokenizer counting/provisioning case requiring absent `WORKBENCH_TEST_QWEN_TOKENIZER_DIR`; no model admission is certified. The [JUnit property](evidence/profile-2026-11-23/full-tests.xml) records lexical exact 10/10 and the same three diagnostic paraphrase misses. HTTP 400/404/409/429/503/504, cancellation, source-version, RLS and SQL parity regression cases passed.
+The final `hatch run workbench-api:test --tb=short --junitxml=tasks/evidence/profile-2026-11-23/full-tests.xml` run passed **984 tests**, with **16 skipped**, zero failures/errors, in 253.44 seconds. All profile/PostgreSQL cases executed. Every skip is a native Qwen tokenizer counting/provisioning case requiring absent `WORKBENCH_TEST_QWEN_TOKENIZER_DIR`; no model admission is certified. The [JUnit property](../evidence/profile-2026-11-23/full-tests.xml) records lexical exact 10/10 and the same three diagnostic paraphrase misses. HTTP 400/404/409/429/503/504, cancellation, source-version, RLS and SQL parity regression cases passed.
 
-`hatch run workbench-api:check` and `hatch run workbench-api:types` passed across 100 API source files; [quality output](evidence/profile-2026-11-23/quality-checks.txt) is retained. The combined focused [registry/route artifact](evidence/profile-2026-11-23/profile-regressions.xml) records 54 passes and zero skips. The new script/route suite also passed focused Ruff/format and mypy checks. Documentation relative targets, strict UTF-8/newlines, unique sidebar entry, Node sidebar syntax, release-note backticks and `git diff --check` passed. Docusaurus full build was not run because its `node_modules` is absent; Haystack core checks were not run because framework code is unchanged. Actual frontend/browser gates are recorded above.
+`hatch run workbench-api:check` and `hatch run workbench-api:types` passed across 100 API source files; [quality output](../evidence/profile-2026-11-23/quality-checks.txt) is retained. The combined focused [registry/route artifact](../evidence/profile-2026-11-23/profile-regressions.xml) records 54 passes and zero skips. The new script/route suite also passed focused Ruff/format and mypy checks. Documentation relative targets, strict UTF-8/newlines, unique sidebar entry, Node sidebar syntax, release-note backticks and `git diff --check` passed. Docusaurus full build was not run because its `node_modules` is absent; Haystack core checks were not run because framework code is unchanged. Actual frontend/browser gates are recorded above.
 
 ### Existing local upgrade and completion
 
 After stopping the verified old API, the existing development database was backed up to `workbench-before-0004-20261123-210904.dump` and its archive list verified. The explicit migrator upgraded `0003` → `0004` compatibly. Counts and full-record SHA-256 signatures matched for all nine preceding tables, including source/vector data and persisted generation history. Manifest reconciliation remained consistent at generation 1, with 15 active sources and 44 active chunks. No reseed or extra main profile alias was introduced.
 
-The restarted actual API 8011 returned readiness 200 and the qualified baseline. Its real PostgreSQL query returned three results matching independently checked SQL identities/raw scores. [Local deployment evidence](evidence/profile-2026-11-23/deployment.json) records backup hash, table signatures, profile/corpus identity and safe trace `8991171fa702478ab512d8e3a8cf1df1`; [the full report](evidence/profile-2026-11-23/report.md) records boundaries and reproduction. Status is COMPLETE for this profile-registry task, without implying semantic inference, ANN, new production authentication or a production deployment.
+The restarted actual API 8011 returned readiness 200 and the qualified baseline. Its real PostgreSQL query returned three results matching independently checked SQL identities/raw scores. [Local deployment evidence](../evidence/profile-2026-11-23/deployment.json) records backup hash, table signatures, profile/corpus identity and safe trace `8991171fa702478ab512d8e3a8cf1df1`; [the full report](../evidence/profile-2026-11-23/report.md) records boundaries and reproduction. Status is COMPLETE for this profile-registry task, without implying semantic inference, ANN, new production authentication or a production deployment.

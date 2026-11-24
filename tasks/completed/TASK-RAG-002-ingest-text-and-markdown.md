@@ -1,7 +1,7 @@
 # TASK-RAG-002 — Durable TXT/Markdown ingestion into the existing PostgreSQL RAG corpus
 
 **Created:** 2026-11-20\
-**Updated:** 2026-11-22\
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — bounded local TXT/Markdown ingestion and all required acceptance gates qualified\
 **Priority:** P1 · first real document-write vertical slice\
 **Dependencies:** TASK-ARCH-001, TASK-API-001, TASK-DB-001, TASK-RAG-001, TASK-EVAL-001, TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001\
@@ -30,26 +30,26 @@ This workflow has nontrivial failure boundaries: an upload can be retried, parsi
 
 | Actual repository path | Verified existing implementation | Required work / constraint |
 | --- | --- | --- |
-| [API `application.py`](../apps/workbench/api/application.py) | `create_app()`, `_Routes._workspaces`, `_Routes._documents`, `_Routes._search`; GET document list and POST lexical `/search` already exist. | **Add** POST document upload, GET source detail, GET source chunks, GET durable job status. Do not replace existing routes. |
-| [API `contracts.py`](../apps/workbench/api/contracts.py) | Pydantic strict `ContractModel`, `Meta`, `DocumentItem`, `DocumentPage`, `SearchRequest`, `SearchResponse`, nested `ErrorResponse`. | Extend contracts additively using snake_case and `rag-api-v1.0`; preserve existing JSON behavior. |
-| [API `boundary.py`](../apps/workbench/api/boundary.py) | `RequestBoundary` strict host/origin/CORS and **32 KiB JSON search** body framing; OPTIONS allows POST only for the search route. | Multipart needs a separate **bounded route policy** and CORS allowlist. Do not weaken lexical JSON handling. |
-| [API `config.py`](../apps/workbench/api/config.py) | Loopback-only API host and allowed origins; DB DSN is secret and validated. | Reuse config pattern; explicit ingestion limits may be added with validation, never a force-ready flag. |
-| [API `persistence.py`](../apps/workbench/api/persistence.py) | `WorkspaceContext`, `Source`, `SourceVersion`, `Chunk`, `DocumentRecord`, `CorpusSnapshot`, `PersistencePort`; `publish_source`, `list_sources`, `get_chunk` already declared. | Extend the existing port minimally with durable job/idempotency and source-detail/chunk-list operations. |
-| [API `postgres.py`](../apps/workbench/api/postgres.py) | `_transaction`, `_require_workspace`, `_verify_schema`, `_publish`, `publish_source`, `get_chunk`, `lexical_search_snapshot`, `corpus_snapshot`; SQL bounded pool and transactions. | Reuse **one** publication implementation. Make commit of new active version + job COMPLETE atomic; preserve RLS. |
-| [SQL migration `0001`](../apps/workbench/api/migrations/0001_initial.up.sql) | `workbench.workspaces`, `sources`, `source_versions`, `chunks`, `embedding_profiles`; compound FKs, forced RLS, GIN `tsvector` and single-active-version index. | **Keep immutable**; new job/ingest metadata through migration `0002`. |
-| [Migration manager](../apps/workbench/api/db_migrations.py) and [Alembic versions](../apps/workbench/api/migrations/versions/0001_initial.py) | Current status/checksum code is based on applied `0001`; migrations are explicit, not automatic. | Extend revision/checksum validation for `0002` while preserving historic compatibility and disposable-only rollback. |
-| [API `lexical.py`](../apps/workbench/api/lexical.py) and [`profiles.py`](../apps/workbench/api/profiles.py) | Fixed approved `postgres-fts-baseline` Haystack pipeline and `postgres-fts-baseline-r1`. | A newly indexed term must be searchable **without** a second corpus or graph executor. |
-| [API `projection.py`](../apps/workbench/api/projection.py) | Projects authoritative source/version/chunk IDs, raw `postgres_ts_rank_cd` and timing. | Reuse unchanged for search verification. |
-| [Readiness integration](../apps/workbench/api/database_dependency.py) | Distinguishes schema/data dependency from executable search profiles. | Add truthfully separate ingestion availability; a running database is not proof that upload is enabled. |
-| [Qualified parsing](../apps/workbench/api/parsing.py), [registry](../apps/workbench/api/parser_registry.py), [adapter](../apps/workbench/api/parsing_adapters.py) | Bounded verified TXT/Markdown, immutable typed elements/raw protected spans, byte SHA256 and versioned parser evidence already exist. | Call `parse_source()` once; do not duplicate MIME, extension, Unicode or structural classification. |
-| [Prepared chunks](../apps/workbench/api/chunking.py), [profiles](../apps/workbench/api/chunking_profiles.py) | Real 500/50 `tiktoken:o200k_base` preparation, source coverage, protected-span refusals, immutable IDs/metadata and existing `Chunk` projection. | Call `prepare_chunks(...)` through the reviewed explicit structural token profile for unknown upload locale; no word-size substitute or language guessing. |
-| [Haystack TXT converter](../haystack/components/converters/txt.py) | `TextFileToDocument.run(sources)` returns documents but **logs and skips** invalid text input. | Must detect missing result and record FAILED; no successful empty ingestion. |
-| [Haystack Markdown converter](../haystack/components/converters/markdown.py) | `MarkdownToDocument` may flatten Markdown structure and also **skip/log** invalid input. | Must not silently discard headings or failures; use selected structural extraction strategy and validate output. |
-| [Haystack Markdown header splitter](../haystack/components/preprocessors/markdown_header_splitter.py) | `MarkdownHeaderSplitter` is already qualified behind the CHUNK adapter. | Consume parser-authoritative heading paths through `prepare_chunks`; do not rerun a conflicting Markdown parser or fabricate pages. |
-| [Haystack recursive splitter](../haystack/components/preprocessors/recursive_splitter.py) | The existing CHUNK adapter qualifies real token sizing and Unicode-safe validation/repair. | Reuse the app seam at 500 tokens/target overlap 50; these are tiktoken units, not Qwen-native counts. |
-| [SQL/HTTP tests](../apps/workbench/api/tests/test_postgres_persistence.py) and [lexical route tests](../apps/workbench/api/tests/test_lexical_routes.py) | Have real PostgreSQL transaction, version and ranking tests, plus request failures/cancellation. | Extend in the existing test style with disposable database and live API. |
-| [Development seed](../apps/workbench/api/db_seed.py) and [database runbook](../docs-website/docs/architecture/postgresql-foundation.md) | Explicit, immutable 8-source demo seed. **Re-running seed after adding real sources will refuse modified data.** | Upload must never call seed and must not require reseeding after restart. |
-| [Canonical runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) | PostgreSQL + pgvector, TEI **planned**, actual lexical-only capability, local single `development` workspace. | Preserve model neutrality, no vectors/inference fabricated during lexical ingestion. |
+| [API `application.py`](../../apps/workbench/api/application.py) | `create_app()`, `_Routes._workspaces`, `_Routes._documents`, `_Routes._search`; GET document list and POST lexical `/search` already exist. | **Add** POST document upload, GET source detail, GET source chunks, GET durable job status. Do not replace existing routes. |
+| [API `contracts.py`](../../apps/workbench/contracts/schemas.py) | Pydantic strict `ContractModel`, `Meta`, `DocumentItem`, `DocumentPage`, `SearchRequest`, `SearchResponse`, nested `ErrorResponse`. | Extend contracts additively using snake_case and `rag-api-v1.0`; preserve existing JSON behavior. |
+| [API `boundary.py`](../../apps/workbench/api/boundary.py) | `RequestBoundary` strict host/origin/CORS and **32 KiB JSON search** body framing; OPTIONS allows POST only for the search route. | Multipart needs a separate **bounded route policy** and CORS allowlist. Do not weaken lexical JSON handling. |
+| [API `config.py`](../../apps/workbench/configuration/config.py) | Loopback-only API host and allowed origins; DB DSN is secret and validated. | Reuse config pattern; explicit ingestion limits may be added with validation, never a force-ready flag. |
+| [API `persistence.py`](../../apps/workbench/persistence/models.py) | `WorkspaceContext`, `Source`, `SourceVersion`, `Chunk`, `DocumentRecord`, `CorpusSnapshot`, `PersistencePort`; `publish_source`, `list_sources`, `get_chunk` already declared. | Extend the existing port minimally with durable job/idempotency and source-detail/chunk-list operations. |
+| [API `postgres.py`](../../apps/workbench/postgres/postgres.py) | `_transaction`, `_require_workspace`, `_verify_schema`, `_publish`, `publish_source`, `get_chunk`, `lexical_search_snapshot`, `corpus_snapshot`; SQL bounded pool and transactions. | Reuse **one** publication implementation. Make commit of new active version + job COMPLETE atomic; preserve RLS. |
+| [SQL migration `0001`](../../apps/workbench/postgres/migrations/0001_initial.up.sql) | `workbench.workspaces`, `sources`, `source_versions`, `chunks`, `embedding_profiles`; compound FKs, forced RLS, GIN `tsvector` and single-active-version index. | **Keep immutable**; new job/ingest metadata through migration `0002`. |
+| [Migration manager](../../apps/workbench/postgres/db_migrations.py) and [Alembic versions](../../apps/workbench/postgres/migrations/versions/0001_initial.py) | Current status/checksum code is based on applied `0001`; migrations are explicit, not automatic. | Extend revision/checksum validation for `0002` while preserving historic compatibility and disposable-only rollback. |
+| [API `lexical.py`](../../apps/workbench/retrieval/lexical.py) and [`profiles.py`](../../apps/workbench/retrieval/profiles.py) | Fixed approved `postgres-fts-baseline` Haystack pipeline and `postgres-fts-baseline-r1`. | A newly indexed term must be searchable **without** a second corpus or graph executor. |
+| [API `projection.py`](../../apps/workbench/api/projection.py) | Projects authoritative source/version/chunk IDs, raw `postgres_ts_rank_cd` and timing. | Reuse unchanged for search verification. |
+| [Readiness integration](../../apps/workbench/api/database_dependency.py) | Distinguishes schema/data dependency from executable search profiles. | Add truthfully separate ingestion availability; a running database is not proof that upload is enabled. |
+| [Qualified parsing](../../apps/workbench/parsing/parsing.py), [registry](../../apps/workbench/parsing/parser_registry.py), [adapter](../../apps/workbench/parsing/parsing_adapters.py) | Bounded verified TXT/Markdown, immutable typed elements/raw protected spans, byte SHA256 and versioned parser evidence already exist. | Call `parse_source()` once; do not duplicate MIME, extension, Unicode or structural classification. |
+| [Prepared chunks](../../apps/workbench/chunking/chunking.py), [profiles](../../apps/workbench/chunking/chunking_profiles.py) | Real 500/50 `tiktoken:o200k_base` preparation, source coverage, protected-span refusals, immutable IDs/metadata and existing `Chunk` projection. | Call `prepare_chunks(...)` through the reviewed explicit structural token profile for unknown upload locale; no word-size substitute or language guessing. |
+| [Haystack TXT converter](../../haystack/components/converters/txt.py) | `TextFileToDocument.run(sources)` returns documents but **logs and skips** invalid text input. | Must detect missing result and record FAILED; no successful empty ingestion. |
+| [Haystack Markdown converter](../../haystack/components/converters/markdown.py) | `MarkdownToDocument` may flatten Markdown structure and also **skip/log** invalid input. | Must not silently discard headings or failures; use selected structural extraction strategy and validate output. |
+| [Haystack Markdown header splitter](../../haystack/components/preprocessors/markdown_header_splitter.py) | `MarkdownHeaderSplitter` is already qualified behind the CHUNK adapter. | Consume parser-authoritative heading paths through `prepare_chunks`; do not rerun a conflicting Markdown parser or fabricate pages. |
+| [Haystack recursive splitter](../../haystack/components/preprocessors/recursive_splitter.py) | The existing CHUNK adapter qualifies real token sizing and Unicode-safe validation/repair. | Reuse the app seam at 500 tokens/target overlap 50; these are tiktoken units, not Qwen-native counts. |
+| [SQL/HTTP tests](../../apps/workbench/postgres/tests/test_postgres_persistence.py) and [lexical route tests](../../apps/workbench/api/tests/test_lexical_routes.py) | Have real PostgreSQL transaction, version and ranking tests, plus request failures/cancellation. | Extend in the existing test style with disposable database and live API. |
+| [Development seed](../../apps/workbench/postgres/db_seed.py) and [database runbook](../../docs-website/docs/architecture/postgresql-foundation.md) | Explicit, immutable 8-source demo seed. **Re-running seed after adding real sources will refuse modified data.** | Upload must never call seed and must not require reseeding after restart. |
+| [Canonical runtime contract](../../docs-website/docs/architecture/rag-runtime-contract.md) | PostgreSQL + pgvector, TEI **planned**, actual lexical-only capability, local single `development` workspace. | Preserve model neutrality, no vectors/inference fabricated during lexical ingestion. |
 
 **Important existing behavior:** `PostgresPersistence._publish()` inserts new source/version/chunks and changes the previous active version to superseded within one transaction. It expects `SourceVersion` and `Chunk` with matching workspace/source/version IDs and validates optional embeddings; it **does not itself** own a durable ingestion job or idempotency reservation. That missing piece must be added, not implemented as a second independent writer.
 
@@ -108,10 +108,10 @@ Upload failures are visible through a safe HTTP error and a persistent terminal 
 
 **Ownership and dependency direction**:
 
-- HTTP request framing, status codes and output schemas belong to [`application.py`](../apps/workbench/api/application.py), [`boundary.py`](../apps/workbench/api/boundary.py) and [`contracts.py`](../apps/workbench/api/contracts.py).
+- HTTP request framing, status codes and output schemas belong to [`application.py`](../../apps/workbench/api/application.py), [`boundary.py`](../../apps/workbench/api/boundary.py) and [`contracts.py`](../../apps/workbench/contracts/schemas.py).
 - Content parsing/chunking/rules belong to an **app-owned orchestration module**, not SQL and not the React component. It uses Haystack building blocks with explicit parameters.
 - `PersistencePort` defines neutral atomic job/source operations; PostgreSQL adapter implements them. Parsing service must not import `psycopg` or SQLAlchemy.
-- Authorization remains at server-resolved [`WorkspaceContext`](../apps/workbench/api/persistence.py) plus forced RLS. Frontend provides no authoritative permissions.
+- Authorization remains at server-resolved [`WorkspaceContext`](../../apps/workbench/persistence/models.py) plus forced RLS. Frontend provides no authoritative permissions.
 - No SDK-specific provider class in application interfaces; lexical ingestion creates `embedding=None`, `embedding_profile_id=None`, `dimensions=None`.
 - Job status reflects real transactions and process state; a user-visible percentage requires actual completed/total work evidence, not simulated stage timers.
 
@@ -229,7 +229,7 @@ ActiveChunkPageResponse: Meta + workspace_id, source_id, source_version_id,
 
 - **Source detail is not original-file download.** Migration `0001` stores title/media type/version/chunk content/metadata but not the original raw file blob. Do not pretend original Markdown bytes can be reconstructed exactly from chunks; surface extracted content and metadata honestly.
 - Page is `null`/omitted for TXT/Markdown unless the converter provides genuine page information. Do not return page `0` or artificial page `1` as provenance.
-- Chunk lists must select **active version only**, stable keyset ordering, `limit` 1..100 and opaque cursor scoped to workspace/source/corpus revision. Reuse current signed cursor pattern in [`application.py`](../apps/workbench/api/application.py); a stale cursor returns **400 INVALID_CURSOR** and client restarts at first page. Avoid exposing vector embeddings by default.
+- Chunk lists must select **active version only**, stable keyset ordering, `limit` 1..100 and opaque cursor scoped to workspace/source/corpus revision. Reuse current signed cursor pattern in [`application.py`](../../apps/workbench/api/application.py); a stale cursor returns **400 INVALID_CURSOR** and client restarts at first page. Avoid exposing vector embeddings by default.
 - Add `features.upload`, `features.document_details`, `features.jobs` as distinct booleans. Existing `features.documents` continues to mean list/read; the existing [UI-001](TASK-UI-001-typed-api-and-execution-mode.md) decoder already tolerates additive capabilities; no production UI change is required. If ingestion migration is missing, advertise upload **false** even when lexical search remains ready.
 
 ### H6. Immutable source/chunk identity and versioning
@@ -263,26 +263,26 @@ Use `ErrorResponse` from existing API, including matching `X-Request-ID`, not a 
 
 | Target path | Change type | Exact responsibility |
 | --- | --- | --- |
-| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | Modify | Add named upload/detail/chunk/job routes, request scope validation, response status mapping; reuse `_context`, `_failure`, `_Cursors`. |
-| [`apps/workbench/api/boundary.py`](../apps/workbench/api/boundary.py) | Modify | New distinct bounded multipart request policy and POST/CORS preflight; preserve current search JSON rejection policies. |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | Modify | Typed upload, job, detail, chunk-list models; add distinct feature booleans. |
-| [`apps/workbench/api/config.py`](../apps/workbench/api/config.py) | Modify if needed | Validated upload/file/deadline limits, no secrets in response. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | Modify | Neutral durable job/idempotency and active chunk-list/detail interfaces; preserve existing method semantics. |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | Modify | Scoped job reservation/transitions; refactor `_publish` reuse into atomic version+job commit; new scoped reads, cursor-friendly pagination. |
-| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | Modify | Multi-revision compatibility/checksum and migration status; no tampering with applied `0001`. |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | **MUST NOT modify** | Historical migration checksum and existing data. |
-| `apps/workbench/api/migrations/0002_ingestion_jobs.up.sql` | **Create** | Durable jobs table, RLS, indexes, constraints. |
-| `apps/workbench/api/migrations/0002_ingestion_jobs.down.sql` | **Create for disposable verification** | Reversible **test-only** migration; never automatically drop production data. |
-| `apps/workbench/api/migrations/versions/0002_ingestion_jobs.py` | **Create** | Alembic revision with explicit upgrade; ensure tool supports ordered migration. |
+| [`apps/workbench/api/application.py`](../../apps/workbench/api/application.py) | Modify | Add named upload/detail/chunk/job routes, request scope validation, response status mapping; reuse `_context`, `_failure`, `_Cursors`. |
+| [`apps/workbench/api/boundary.py`](../../apps/workbench/api/boundary.py) | Modify | New distinct bounded multipart request policy and POST/CORS preflight; preserve current search JSON rejection policies. |
+| [`apps/workbench/contracts/schemas.py`](../../apps/workbench/contracts/schemas.py) | Modify | Typed upload, job, detail, chunk-list models; add distinct feature booleans. |
+| [`apps/workbench/configuration/config.py`](../../apps/workbench/configuration/config.py) | Modify if needed | Validated upload/file/deadline limits, no secrets in response. |
+| [`apps/workbench/persistence/models.py`](../../apps/workbench/persistence/models.py) | Modify | Neutral durable job/idempotency and active chunk-list/detail interfaces; preserve existing method semantics. |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | Modify | Scoped job reservation/transitions; refactor `_publish` reuse into atomic version+job commit; new scoped reads, cursor-friendly pagination. |
+| [`apps/workbench/postgres/db_migrations.py`](../../apps/workbench/postgres/db_migrations.py) | Modify | Multi-revision compatibility/checksum and migration status; no tampering with applied `0001`. |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../../apps/workbench/postgres/migrations/0001_initial.up.sql) | **MUST NOT modify** | Historical migration checksum and existing data. |
+| `apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql` | **Create** | Durable jobs table, RLS, indexes, constraints. |
+| `apps/workbench/postgres/migrations/0002_ingestion_jobs.down.sql` | **Create for disposable verification** | Reversible **test-only** migration; never automatically drop production data. |
+| `apps/workbench/postgres/migrations/versions/0002_ingestion_jobs.py` | **Create** | Alembic revision with explicit upgrade; ensure tool supports ordered migration. |
 | `apps/workbench/api/ingestion_http.py`, `upload_transport.py`, `upload_policy.py` | **Create** | Named HTTP orchestration, exact multipart fields and centralized byte ceilings. |
-| `apps/workbench/api/postgres_ingestion.py` | **Create** | Scoped reservations, owner fencing, transitions, lazy recovery and shared atomic publication. |
+| `apps/workbench/postgres/postgres_ingestion.py` | **Create** | Scoped reservations, owner fencing, transitions, lazy recovery and shared atomic publication. |
 | `scripts/workbench_ingestion_smoke.py`, `apps/workbench/api/tests/test_ingestion_stability.py` | **Create** | Main-volume HTTP replay collector and 25-case disposable stability measurements, with sanitized evidence. |
-| `apps/workbench/api/ingestion.py` | **Create** | App-owned orchestration: parse, section/chunk, identity, processing fingerprint, failure state. |
+| `apps/workbench/ingestion/ingestion.py` | **Create** | App-owned orchestration: parse, section/chunk, identity, processing fingerprint, failure state. |
 | `apps/workbench/api/tests/test_ingestion_routes.py` | **Create** | Real HTTP multipart, idempotency, status, pagination, malformed input, authorization, restart. |
-| `apps/workbench/api/tests/test_ingestion_persistence.py` | **Create** | Job transaction concurrency, atomic replacement, failure recovery, force RLS, migration upgrade. |
-| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | Extend narrowly | Search actual new uploaded terms through existing Haystack pipeline, old seed preserved. |
-| [`apps/workbench/api/openapi.json`](../apps/workbench/api/openapi.json) | Regenerate with tested schema | New routes and codes; retain old contract parity. |
-| [`apps/workbench/api/README.md`](../apps/workbench/api/README.md), [`docs-website/docs/architecture/rag-runtime-contract.md`](../docs-website/docs/architecture/rag-runtime-contract.md), [`postgres-lexical-search.md`](../docs-website/docs/architecture/postgres-lexical-search.md), [`postgresql-foundation.md`](../docs-website/docs/architecture/postgresql-foundation.md) | Update | Operator contract, migration/recovery instructions, true feature flags. |
+| `apps/workbench/postgres/tests/test_ingestion_persistence.py` | **Create** | Job transaction concurrency, atomic replacement, failure recovery, force RLS, migration upgrade. |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../../apps/workbench/api/tests/test_lexical_routes.py) | Extend narrowly | Search actual new uploaded terms through existing Haystack pipeline, old seed preserved. |
+| [`apps/workbench/api/openapi.json`](../../apps/workbench/api/openapi.json) | Regenerate with tested schema | New routes and codes; retain old contract parity. |
+| [`apps/workbench/api/README.md`](../../apps/workbench/api/README.md), [`docs-website/docs/architecture/rag-runtime-contract.md`](../../docs-website/docs/architecture/rag-runtime-contract.md), [`postgres-lexical-search.md`](../../docs-website/docs/architecture/postgres-lexical-search.md), [`postgresql-foundation.md`](../../docs-website/docs/architecture/postgresql-foundation.md) | Update | Operator contract, migration/recovery instructions, true feature flags. |
 
 **Do not modify:** `haystack/` implementations, production frontend editor/fixtures, TEI/Ollama adapters, unrelated databases, migration `0001`, existing search scores or validator. Frontend upload/Live Documents integration belongs to separate TASK-UI-003, not an implemented UI in this task.
 
@@ -290,7 +290,7 @@ Use `ErrorResponse` from existing API, including matching `X-Request-ID`, not a 
 
 ### J1. Confirm the existing corpus and implement migration `0002`
 
-1. Re-open [migration `0001`](../apps/workbench/api/migrations/0001_initial.up.sql), [`db_migrations.py`](../apps/workbench/api/db_migrations.py), [`PersistencePort`](../apps/workbench/api/persistence.py) and the existing `postgres.py` writer. Record exact schema revision and tests before edits.
+1. Re-open [migration `0001`](../../apps/workbench/postgres/migrations/0001_initial.up.sql), [`db_migrations.py`](../../apps/workbench/postgres/db_migrations.py), [`PersistencePort`](../../apps/workbench/persistence/models.py) and the existing `postgres.py` writer. Record exact schema revision and tests before edits.
 2. Choose an additive `ingestion_jobs` table whose `(workspace_id, job_id)`, `(workspace_id, idempotency_key)` and optional `(workspace_id, source_id)` access paths are indexed. Include status transition constraints and safe error_code retention.
 3. Apply `ENABLE/FORCE ROW LEVEL SECURITY` with the existing `current_setting('workbench.workspace_id', true)` policy. The app role must not have schema/role owner privileges or bypass RLS. Test pool session leakage after one workspace operation.
 4. Add Alembic `0002` without rewriting either `0001_initial.up.sql` or its applied historical checksum. Update `db_migrations.py` checksum/status logic to reason about each **applied revision** rather than hardcoding one up/down pair; regression-test migration from a real `0001` database preserving its rows.
@@ -305,7 +305,7 @@ Use `ErrorResponse` from existing API, including matching `X-Request-ID`, not a 
 2. `reserve_ingestion()` is transactional: server-scope workspace, compute `request_fingerprint`, enforce unique idempotency key, freeze target source/expected version and issue a stable `job_id`. A repeated identical key returns the existing reservation/result, never restarts the write.
 3. For an update, acquire source-row lock and validate **server-owned** current active version against `expected_active_version_id`. Concurrent independent replacements must serialize and stale ones fail 409 before publication.
 4. Record `parsing`, `chunking` and `publishing` only after a real transition; each checkpoint committed in a bounded transaction so GET job shows the latest known stage.
-5. Refactor the existing [`PostgresPersistence._publish`](../apps/workbench/api/postgres.py) to be reused **inside** a transaction that also sets the reserved job `completed`, chosen active version and final chunk count. Never call the current standalone `publish_source()` followed by a separate job success commit—crash between them would report false job state.
+5. Refactor the existing [`PostgresPersistence._publish`](../../apps/workbench/postgres/postgres.py) to be reused **inside** a transaction that also sets the reserved job `completed`, chosen active version and final chunk count. Never call the current standalone `publish_source()` followed by a separate job success commit—crash between them would report false job state.
 6. If the existing active content and processing fingerprint are unchanged, commit an `unchanged` terminal job with current version and **zero** new chunks; do not duplicate an identical active version. The same key returns identical job/source/version identities.
 7. On parse/validation/SQL failures, leave old version active; mark reserved job terminal `failed` via a safe separate transaction where possible. If database is down, do not claim a persisted failure without verification; the recovery scan handles abandoned jobs after restoration.
 8. Startup recovery may mark stale in-progress jobs `failed/INTERRUPTED` under server scope; no automatic content replay because original file bytes are not durable. Add a stress test for process stop between reservation and publish.
@@ -327,13 +327,13 @@ Use `ErrorResponse` from existing API, including matching `X-Request-ID`, not a 
 
 ### J4. Expose safe HTTP upload and read APIs
 
-1. Add bounded multipart framing to [`RequestBoundary`](../apps/workbench/api/boundary.py) for the **exact** upload path; enforce byte limit while reading, only allowlisted fields, no duplicate `file`, and origin/host checks before backend mutation. Keep `/search` 32 KiB JSON handling unchanged.
+1. Add bounded multipart framing to [`RequestBoundary`](../../apps/workbench/api/boundary.py) for the **exact** upload path; enforce byte limit while reading, only allowlisted fields, no duplicate `file`, and origin/host checks before backend mutation. Keep `/search` 32 KiB JSON handling unchanged.
 2. Configure preflight for `POST` plus `Content-Type`, `Idempotency-Key` on upload; keep current search/GET/validator route proxy behavior intact. Do not enable wildcard credentialed CORS or remote host access.
-3. Implement synchronous `POST` route in [`application.py`](../apps/workbench/api/application.py): resolve workspace, validate op/header/body, reserve job, invoke ingestion service under deadline, then return 201/200 only after publication commit. A failed request emits a structured sanitized error with real request/trace IDs.
+3. Implement synchronous `POST` route in [`application.py`](../../apps/workbench/api/application.py): resolve workspace, validate op/header/body, reserve job, invoke ingestion service under deadline, then return 201/200 only after publication commit. A failed request emits a structured sanitized error with real request/trace IDs.
 4. Add `GET` detail/chunks/jobs route implementations using `PersistencePort` scoped reads. Chunk pagination reuses existing `_Cursors` HMAC/opaque revision behavior and returns `INVALID_CURSOR` after content publication or restart.
 5. Respond with real parser warnings/stage timings, not fixture `sections`, fake page counts or simulated progress. The application can expose `stages` only when timings actually measured.
 6. Add capability flags only once migration and operations are verified. Maintain existing `features.documents` read-only meaning and existing lexical execution profile separate from write authorization.
-7. Regenerate [`openapi.json`](../apps/workbench/api/openapi.json) from the app, compare to contract models, and write request examples that match exact status codes.
+7. Regenerate [`openapi.json`](../../apps/workbench/api/openapi.json) from the app, compare to contract models, and write request examples that match exact status codes.
 8. Document original-bytes availability truthfully: the initial schema stores processed chunks, not a retrievable exact source blob; do not expose a nonexistent `/download` API.
 
 **Gate:** real HTTP upload yields durable source/job records and subsequent GET detail/chunks/job + `/search` agree on identities.
@@ -379,7 +379,7 @@ Use `ErrorResponse` from existing API, including matching `X-Request-ID`, not a 
 
 ### L1. Required commands and setup
 
-Run the pinned database first using [`apps/workbench/postgres/compose.yaml`](../apps/workbench/postgres/compose.yaml) and the [runbook](../docs-website/docs/architecture/postgresql-foundation.md). Use Hatch, not direct `python`/`pip` calls:
+Run the pinned database first using [`apps/workbench/postgres/compose.yaml`](../../apps/workbench/postgres/compose.yaml) and the [runbook](../../docs-website/docs/architecture/postgresql-foundation.md). Use Hatch, not direct `python`/`pip` calls:
 
 ```powershell
 hatch --version
@@ -390,7 +390,7 @@ hatch run workbench-api:db-migrate
 hatch run workbench-api:db-status
 ```
 
-Use scoped Hatch backend test and lint commands from [API README](../apps/workbench/api/README.md). Implemented focused tests:
+Use scoped Hatch backend test and lint commands from [API README](../../apps/workbench/api/README.md). Implemented focused tests:
 
 ```powershell
 hatch run workbench-api:check
@@ -399,7 +399,7 @@ hatch run workbench-api:types
 # For focused debugging, invoke pytest in the same Hatch environment once
 # test dependencies and test database DSNs are configured:
 hatch -e workbench-api run pytest -q apps/workbench/api/tests/test_ingestion_routes.py
-hatch -e workbench-api run pytest -q apps/workbench/api/tests/test_ingestion_persistence.py
+hatch -e workbench-api run pytest -q apps/workbench/postgres/tests/test_ingestion_persistence.py
 hatch -e workbench-api run pytest -q apps/workbench/api/tests/test_lexical_routes.py
 ```
 
@@ -433,17 +433,17 @@ Do not report vector Recall or model capacity from lexical-only uploads. Record 
 
 ### L4. Executed evidence — local qualification complete
 
-Evidence is local and sanitized under [`tasks/evidence/ingestion-2026-11-22/`](evidence/ingestion-2026-11-22/). The main-volume migration has been observed: updated API on `0001` retained lexical readiness with upload false; explicit upgrade to `0002` retained all eight seed source/version/chunk tuples and the unchanged `0001` ledger. Two synthetic nonce uploads subsequently produced ten sources, fifteen active chunks and two completed jobs; all three HTTP phases and visible browser baseline/fresh post-restart searches passed, preserving actual IDs, content and scores. The same PostgreSQL container/image/volume survived the real database restart without reseeding.
+Evidence is local and sanitized under [`tasks/evidence/ingestion-2026-11-22/`](../evidence/ingestion-2026-11-22/). The main-volume migration has been observed: updated API on `0001` retained lexical readiness with upload false; explicit upgrade to `0002` retained all eight seed source/version/chunk tuples and the unchanged `0001` ledger. Two synthetic nonce uploads subsequently produced ten sources, fifteen active chunks and two completed jobs; all three HTTP phases and visible browser baseline/fresh post-restart searches passed, preserving actual IDs, content and scores. The same PostgreSQL container/image/volume survived the real database restart without reseeding.
 
 The disposable actual-process test (`process-crash-tests.xml` / `.log`) killed API PID 72792 during parsing and restarted PID 60136. The existing job became terminal `INTERRUPTED`; old active source/version/chunk and corpus remained unchanged, the unpublished term had zero hits and same-key replay returned 409. This is an actual isolated process termination, separate from main-volume completed-upload restart qualification, with no production pause hook.
 
-The 25-case disposable stability artifact reports 23 completed uploads, two expected empty refusals and no unexpected verification failures. Per-case raw file bytes/hash, source/version/job/chunk IDs, stage timings, UTF-8 chunk distributions and active corpus bounds are retained in `stability.json`; absent stages are null rather than fabricated durations. The full API suite passed 735 tests with zero skips; a separate actual-process test passed once. Ruff/mypy qualified 60 application files. Frontend 259 tests/typecheck/format/build passed. Optional local Qwen assets exercised tokenizer regression only, without embedding inference. The final independent [evidence audit](evidence/ingestion-2026-11-22/evidence-audit.json) passed at 13:11:47 UTC: 28 artifacts, current 123-source/73-build/four-served-byte hashes, zero configured-credential or complete source/upload body matches.
+The 25-case disposable stability artifact reports 23 completed uploads, two expected empty refusals and no unexpected verification failures. Per-case raw file bytes/hash, source/version/job/chunk IDs, stage timings, UTF-8 chunk distributions and active corpus bounds are retained in `stability.json`; absent stages are null rather than fabricated durations. The full API suite passed 735 tests with zero skips; a separate actual-process test passed once. Ruff/mypy qualified 60 application files. Frontend 259 tests/typecheck/format/build passed. Optional local Qwen assets exercised tokenizer regression only, without embedding inference. The final independent [evidence audit](../evidence/ingestion-2026-11-22/evidence-audit.json) passed at 13:11:47 UTC: 28 artifacts, current 123-source/73-build/four-served-byte hashes, zero configured-credential or complete source/upload body matches.
 
 The first main collector attempt failed before any POST because its strict Pydantic enum DTO used Python-object rather than JSON-mode response validation. The collector was corrected; this was a proof-tool incident without an application failure or data write, and the failed attempt is retained rather than counted as successful coverage.
 
-The [live collector](evidence/ingestion-2026-11-22/live-http.json) records canonical exact queries 10/10, MRR 1 and separate paraphrases 0/3, MRR 0 in each phase. [Visible baseline](evidence/ingestion-2026-11-22/browser-baseline.json) and [fresh post-restart searches](evidence/ingestion-2026-11-22/browser-after-restarts.json) verify uploaded TXT/Markdown provenance/content/ranks/scores. [Database outage](evidence/ingestion-2026-11-22/database-outage.json) records real 200 liveness / 503 readiness / 503 `NOT_READY` upload with no job. [SQL evidence](evidence/ingestion-2026-11-22/evidence-audit.json) checks seed preservation, new raw hashes, core/aggregate policy metadata, NULL vectors, HTTP/SQL score parity and stable restart tuples. [Source/build manifest](evidence/ingestion-2026-11-22/source-build-manifest.json) binds the inspected checkout/build/served bytes; no implementation commit is invented.
+The [live collector](../evidence/ingestion-2026-11-22/live-http.json) records canonical exact queries 10/10, MRR 1 and separate paraphrases 0/3, MRR 0 in each phase. [Visible baseline](../evidence/ingestion-2026-11-22/browser-baseline.json) and [fresh post-restart searches](../evidence/ingestion-2026-11-22/browser-after-restarts.json) verify uploaded TXT/Markdown provenance/content/ranks/scores. [Database outage](../evidence/ingestion-2026-11-22/database-outage.json) records real 200 liveness / 503 readiness / 503 `NOT_READY` upload with no job. [SQL evidence](../evidence/ingestion-2026-11-22/evidence-audit.json) checks seed preservation, new raw hashes, core/aggregate policy metadata, NULL vectors, HTTP/SQL score parity and stable restart tuples. [Source/build manifest](../evidence/ingestion-2026-11-22/source-build-manifest.json) binds the inspected checkout/build/served bytes; no implementation commit is invented.
 
-Detailed nearest-rank timing sample counts and UTF-8 chunk-size statistics are in the [observed local acceptance section](../docs-website/docs/architecture/durable-text-ingestion.md#observed-local-acceptance--2026-11-22). Historic EVAL evidence remains unchanged. This qualifies a local synthetic development corpus, not upload UI, remote deployment, semantic quality or a throughput SLA.
+Detailed nearest-rank timing sample counts and UTF-8 chunk-size statistics are in the [observed local acceptance section](../../docs-website/docs/architecture/durable-text-ingestion.md#observed-local-acceptance--2026-11-22). Historic EVAL evidence remains unchanged. This qualifies a local synthetic development corpus, not upload UI, remote deployment, semantic quality or a throughput SLA.
 
 ## M. Acceptance Criteria
 
@@ -462,16 +462,16 @@ Detailed nearest-rank timing sample counts and UTF-8 chunk-size statistics are i
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
-The [durable ingestion guide](../docs-website/docs/architecture/durable-text-ingestion.md) records the implemented contract and explicit upgrade. New evidence belongs under `tasks/evidence/ingestion-2026-11-22/`; earlier parser, chunker and local lexical acceptance artifacts are not overwritten. Local migration/restart/HTTP/browser outcomes passed. The guide records exact scope, measurements and proof-tool incidents; the final independent artifact audit passed.
+The [durable ingestion guide](../../docs-website/docs/architecture/durable-text-ingestion.md) records the implemented contract and explicit upgrade. New evidence belongs under `tasks/evidence/ingestion-2026-11-22/`; earlier parser, chunker and local lexical acceptance artifacts are not overwritten. Local migration/restart/HTTP/browser outcomes passed. The guide records exact scope, measurements and proof-tool incidents; the final independent artifact audit passed.
 
 - **Forward schema:** additive `0002` migration; existing rows and `0001` checksum remain unchanged. Protect job state with RLS and indexes; define explicit schema compatibility for API versions before and after migration.
 - **API compatibility:** preserve existing `GET /documents` and lexical `POST /search`. Add new routes and typed capabilities flags; do not silently change the meaning of `features.documents` or the `rag-api-v1.0` envelope.
 - **Data compatibility:** version IDs and processing profile fingerprints must remain stable; future embedding/delta tasks can reuse the existing source/version/chunk identity and job metadata.
-- **Documentation:** update [canonical contract](../docs-website/docs/architecture/rag-runtime-contract.md), [API runbook](../apps/workbench/api/README.md), [PostgreSQL operations](../docs-website/docs/architecture/postgresql-foundation.md) and this A–O task with observed completion evidence.
+- **Documentation:** update [canonical contract](../../docs-website/docs/architecture/rag-runtime-contract.md), [API runbook](../../apps/workbench/api/README.md), [PostgreSQL operations](../../docs-website/docs/architecture/postgresql-foundation.md) and this A–O task with observed completion evidence.
 - **Rollback:** disable new upload/detail/job routes and associated capability flags; preserve PostgreSQL named volume, source rows, completed jobs, and old lexically searchable data. Do **not** run destructive migration downgrade on a live database. If back-level application code cannot tolerate `0002`, use a reviewed forward compatibility repair rather than editing `0001`.
 - **Deferred scope:** object storage for originals, async ingestion queue/retry, delta detector, PDF/Docling, real Qwen embeddings, ANN and multi-user authorization require separate tasks.
 
-Completion evidence: [735-test backend JUnit](evidence/ingestion-2026-11-22/backend-tests.xml), [actual process-crash test](evidence/ingestion-2026-11-22/process-crash-tests.xml), [259-test frontend JUnit](evidence/ingestion-2026-11-22/frontend-tests.xml), [quality](evidence/ingestion-2026-11-22/backend-quality.txt), [types](evidence/ingestion-2026-11-22/backend-types.txt), [live phases](evidence/ingestion-2026-11-22/live-http.json), [independent audit](evidence/ingestion-2026-11-22/evidence-audit.json). Full upstream Haystack tests and a Docusaurus build were not run; this is an application-only implementation with checked local documentation links and sidebar syntax.
+Completion evidence: [735-test backend JUnit](../evidence/ingestion-2026-11-22/backend-tests.xml), [actual process-crash test](../evidence/ingestion-2026-11-22/process-crash-tests.xml), [259-test frontend JUnit](../evidence/ingestion-2026-11-22/frontend-tests.xml), [quality](../evidence/ingestion-2026-11-22/backend-quality.txt), [types](../evidence/ingestion-2026-11-22/backend-types.txt), [live phases](../evidence/ingestion-2026-11-22/live-http.json), [independent audit](../evidence/ingestion-2026-11-22/evidence-audit.json). Full upstream Haystack tests and a Docusaurus build were not run; this is an application-only implementation with checked local documentation links and sidebar syntax.
 
 ## O. Mandatory Completion Checklist
 

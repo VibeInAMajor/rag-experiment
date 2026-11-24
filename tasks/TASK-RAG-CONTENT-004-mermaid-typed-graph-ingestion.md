@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-004 — Mermaid source parsing, typed relations, and search projections
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint; no approved Mermaid structural parser currently exists  
 **Priority:** P1 — Markdown structural enrichment after representation foundation  
 **Dependencies:** TASK-RAG-CONTENT-001; completed TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002; evidence consumer TASK-RAG-CONTENT-005  
@@ -20,16 +20,16 @@ Mermaid is not an image requiring OCR. The Mermaid text already encodes graph st
 
 ### C0. Source and parser-family status reconciliation
 
-**Source reinspection 2026-11-23:** [parsing.py](../apps/workbench/api/parsing.py) already recognizes Markdown fenced blocks as `ParsedElement.PROTECTED_RAW`. [parser_registry.py](../apps/workbench/api/parser_registry.py) has no qualified Mermaid grammar adapter, and no one has implemented a Mermaid source-to-graph schema yet. [PARSE-004](TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) separately proposes safe JSON/YAML/JSONL extraction, not Mermaid.
+**Source reinspection 2026-11-23:** [parsing.py](../apps/workbench/parsing/parsing.py) already recognizes Markdown fenced blocks as `ParsedElement.PROTECTED_RAW`. [parser_registry.py](../apps/workbench/parsing/parser_registry.py) has no qualified Mermaid grammar adapter, and no one has implemented a Mermaid source-to-graph schema yet. [PARSE-004](TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) separately proposes safe JSON/YAML/JSONL extraction, not Mermaid.
 
 | Source | Verified implementation / missing behavior |
 | --- | --- |
-| [parsing.py](../apps/workbench/api/parsing.py) | Markdown parser recognizes fenced blocks, emits ParsedElement with kind PROTECTED_RAW, text/source_span and line ranges; it does not parse a Mermaid AST or register diagram relations. |
-| [parser_registry.py](../apps/workbench/api/parser_registry.py) | FormatId.MARKDOWN and ElementKind.PROTECTED_RAW are qualified, with bounded UTF-8 input; no Mermaid-specific element kinds or language grammar capability. |
-| [chunking.py](../apps/workbench/api/chunking.py) | Token-aware Markdown chunks and structure-preserving control exist; it cannot by itself recover arrows/conditions from a code fence. |
-| [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py) | Immutable processing revisions/token counters; adding source-to-graph projection must change processing fingerprint. |
-| [ingestion.py](../apps/workbench/api/ingestion.py) and [ingestion_http.py](../apps/workbench/api/ingestion_http.py) | Durable TXT/Markdown ingestion, idempotency and scoped publishing; add structure only through these existing seams. |
-| [persistence.py](../apps/workbench/api/persistence.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) | Current SourceVersion/Chunk identity and PostgreSQL publication; do not start a second graph database or document store. |
+| [parsing.py](../apps/workbench/parsing/parsing.py) | Markdown parser recognizes fenced blocks, emits ParsedElement with kind PROTECTED_RAW, text/source_span and line ranges; it does not parse a Mermaid AST or register diagram relations. |
+| [parser_registry.py](../apps/workbench/parsing/parser_registry.py) | FormatId.MARKDOWN and ElementKind.PROTECTED_RAW are qualified, with bounded UTF-8 input; no Mermaid-specific element kinds or language grammar capability. |
+| [chunking.py](../apps/workbench/chunking/chunking.py) | Token-aware Markdown chunks and structure-preserving control exist; it cannot by itself recover arrows/conditions from a code fence. |
+| [chunking_profiles.py](../apps/workbench/chunking/chunking_profiles.py) | Immutable processing revisions/token counters; adding source-to-graph projection must change processing fingerprint. |
+| [ingestion.py](../apps/workbench/ingestion/ingestion.py) and [ingestion_http.py](../apps/workbench/api/ingestion_http.py) | Durable TXT/Markdown ingestion, idempotency and scoped publishing; add structure only through these existing seams. |
+| [models.py](../apps/workbench/persistence/models.py), [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) | Current SourceVersion/Chunk identity and PostgreSQL publication; do not start a second graph database or document store. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) | Typed original/structured/derived representations and source assets. Mermaid uses these rather than a new independent schema. |
 | [Mermaid documentation](https://mermaid.js.org/config/usage.html) | mermaid.parse validates syntax and reports diagramType; it does NOT promise a stable application-level graph AST or complete nodes/edges for every type. |
 | [Workbench UI](../apps/workbench/web/src/domain/catalog.ts) | Visual node catalog is an editor representation; it does not authorize execution of arbitrary Mermaid or Markdown scripts. |
@@ -57,7 +57,7 @@ No OCR, no VLM diagram interpretation of Mermaid, no browser-executed Markdown d
 
 ### G0. Explicit PARSE/CONTENT ownership contract — no duplicate parsing/persistence
 
-- **Input detection owner:** existing Markdown [parsing.py](../apps/workbench/api/parsing.py) emits protected fenced elements with exact line/source spans. This task consumes those elements. It MUST NOT build a second Markdown scanner/registry that duplicates `PARSE-001`.
+- **Input detection owner:** existing Markdown [parsing.py](../apps/workbench/parsing/parsing.py) emits protected fenced elements with exact line/source spans. This task consumes those elements. It MUST NOT build a second Markdown scanner/registry that duplicates `PARSE-001`.
 - **This task's unique role:** parse/validate Mermaid syntax and typed diagram-family relations from the existing `mermaid` fenced source (flowchart/sequence first). Preserve exact original code via [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and deterministic source-to-graph links; derived summaries become searchable via current chunking/ingestion.
 - **Separate structured data:** [PARSE-004](TASK-RAG-PARSE-004-structured-data-and-devops-parsers.md) owns YAML/JSON record path and value fidelity. A YAML string containing `flowchart` is **not** implicitly Mermaid. An explicit future field-to-Mermaid adapter would need separate scope and tests.
 - **Distinct visual graphs:** [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) analyzes diagram *pixels* and yields model-inferred relations; Mermaid AST is deterministic_parse. Do not run VLM on Mermaid source or conflate their trust status.

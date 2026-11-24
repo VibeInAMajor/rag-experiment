@@ -4,11 +4,11 @@
 **Updated:** 2026-11-24
 **Status:** COMPLETE — qualified local exact Dense baseline; real model, SQL oracle, browser and application reconstruction evidence passed
 **Priority:** P0
-**Dependencies:** EMBED-001, EMBED-002, INDEX-001, PROFILE-001; completed RAG-001/DB-001  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
+**Dependencies:** EMBED-001, EMBED-002, INDEX-001, PROFILE-001; completed RAG-001/DB-001  , [TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
 **Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651
-**Target:** tasks/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md
+**Target:** tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md
 
-**Source reinspection (2026-11-24):** the implementation owners moved since the original snapshot. Dense belongs to `apps/workbench/retrieval/dense.py`, DTOs to `contracts/schemas.py`, persistence to `persistence/models.py` and `postgres/postgres.py`; real embeddings are the existing migration `postgres/migrations/0005_embedding_jobs.up.sql` mappings, not nullable lexical `chunk.embedding`. No migration is added or rewritten. The existing versioned source/profile/embedding/tokenizer/admission owners are reused. The [execution record](evidence/dense-2026-11-24/report.md) separates actual model/SQL/HTTP/browser measurements from mocks. Provider server inference wall time is measured independently from adapter/SQL/UI wall time; TEI does not expose CUDA kernel-only duration, which remains explicitly unavailable rather than fabricated.
+**Source reinspection (2026-11-24):** the implementation owners moved since the original snapshot. Dense belongs to `apps/workbench/retrieval/dense.py`, DTOs to `contracts/schemas.py`, persistence to `persistence/models.py` and `postgres/postgres.py`; real embeddings are the existing migration `postgres/migrations/0005_embedding_jobs.up.sql` mappings, not nullable lexical `chunk.embedding`. No migration is added or rewritten. The existing versioned source/profile/embedding/tokenizer/admission owners are reused. The [execution record](../evidence/dense-2026-11-24/report.md) separates actual model/SQL/HTTP/browser measurements from mocks. Provider server inference wall time is measured independently from adapter/SQL/UI wall time; TEI does not expose CUDA kernel-only duration, which remains explicitly unavailable rather than fabricated.
 
 ## A. Title
 
@@ -20,8 +20,8 @@ The PostgreSQL vector_search method already exists but no public Haystack dense 
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [contracts.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
-[WorkspaceContext](../apps/workbench/persistence/models.py) is development-only. Existing SearchResult score_type is currently postgres_ts_rank_cd; new dense output must remain truthful raw cosine distance/similarity, not simulate BM25 relevance. The current UI uses Preview and approved Live lexical graph.
+**Actual code inspected:** [postgres.py](../../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../../apps/workbench/contracts/schemas.py), [application.py](../../apps/workbench/api/application.py) and [projection.py](../../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
+[WorkspaceContext](../../apps/workbench/persistence/models.py) is development-only. Existing SearchResult score_type is currently postgres_ts_rank_cd; new dense output must remain truthful raw cosine distance/similarity, not simulate BM25 relevance. The current UI uses Preview and approved Live lexical graph.
 
 ## D. Goal
 
@@ -45,20 +45,20 @@ SearchRequest remains four fields and expected_profile_revision. Add profile kin
 
 ## I. Repository Files / Components Impacted
 
-CREATE apps/workbench/retrieval/dense.py (or shared retrieval composition), tests/test_dense_routes.py and real model-gated tests/test_dense_model_smoke.py; MODIFY profiles.py, services.py, application.py, contracts.py, projection.py, optional client src/api and approved graph matcher in apps/workbench/web/src/domain/. REUSE postgres.py vector_search(), persistence.py, embeddings port and current v1 error boundary. NEVER mutate 0001/0002 or create a second store.
+CREATE apps/workbench/retrieval/dense.py (or shared retrieval composition), apps/workbench/api/tests/test_dense_routes.py and real model-gated apps/workbench/api/tests/test_dense_model_smoke.py; MODIFY profiles.py, services.py, application.py, contracts.py, projection.py, optional client src/api and approved graph matcher in apps/workbench/web/src/domain/. REUSE postgres.py vector_search(), persistence.py, embeddings port and current v1 error boundary. NEVER mutate 0001/0002 or create a second store.
 
 ### I.1. Concrete implementation ownership — source reinspection 2026-11-23
 
 | Existing file (direct link) | Symbol, contract and test reuse |
 | --- | --- |
-| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | exact vector_search <=> and active-version filtering |
-| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | VectorHit and profile/dimension validation |
-| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | Haystack Pipeline.run_async structure |
-| [`apps/workbench/api/projection.py`](../apps/workbench/api/projection.py) | server-owned stage/run IDs |
-| [`apps/workbench/embedding/model_token_counter.py`](../apps/workbench/embedding/model_token_counter.py) | native admission and input instruction counts |
-| [`apps/workbench/web/src/hooks/useLiveSearch.ts`](../apps/workbench/web/src/hooks/useLiveSearch.ts) | Live AbortController and latest-run guard |
-| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | approved graph allowlist |
-| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | existing read-only retrieval benchmark |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | exact vector_search <=> and active-version filtering |
+| [`apps/workbench/persistence/models.py`](../../apps/workbench/persistence/models.py) | VectorHit and profile/dimension validation |
+| [`apps/workbench/retrieval/lexical.py`](../../apps/workbench/retrieval/lexical.py) | Haystack Pipeline.run_async structure |
+| [`apps/workbench/api/projection.py`](../../apps/workbench/api/projection.py) | server-owned stage/run IDs |
+| [`apps/workbench/embedding/model_token_counter.py`](../../apps/workbench/embedding/model_token_counter.py) | native admission and input instruction counts |
+| [`apps/workbench/web/src/hooks/useLiveSearch.ts`](../../apps/workbench/web/src/hooks/useLiveSearch.ts) | Live AbortController and latest-run guard |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../../apps/workbench/web/src/domain/approvedExecution.ts) | approved graph allowlist |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../../apps/workbench/api/tests/test_lexical_routes.py) | existing read-only retrieval benchmark |
 
 **Related project, pinned audit sources (architecture/test patterns only):** [`src/enterprise_ai_pipeline/providers/tei_embeddings.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/providers/tei_embeddings.py); [`tests/pipeline/test_tei_embedding_provider.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tests/pipeline/test_tei_embedding_provider.py); [`src/enterprise_ai_pipeline/rag/embedding_dispatch.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_dispatch.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
 
@@ -87,7 +87,7 @@ CREATE apps/workbench/retrieval/dense.py (or shared retrieval composition), test
 
 **J13.** Inject local provider 429/503/504, query abort, stale version during run, unavailable index and workspace denial, verifying zero Preview fallback.
 
-**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](../RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
 ## K. Security / Governance / Observability
 

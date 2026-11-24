@@ -1,10 +1,10 @@
 # TASK-RAG-EMBED-002 — Durable generation-aware embedding ingestion, resumable backfill and initial delta reuse
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — durable backfill/reuse/restarts, controlled source-grounded quality and predeclared ten-minute steady-window gate pass; whole-run utilization 91.992753788% remains explicitly below exact 92%; broader TPM-001 stays IN PROGRESS
 **Priority:** P0  
-**Dependencies:** EMBED-001, INDEX-001; completed RAG-002/DB-001, coordinate PROFILE-001  , **[TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)**
+**Dependencies:** EMBED-001, INDEX-001; completed RAG-002/DB-001, coordinate PROFILE-001  , **[TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)**
 **Repository snapshot inspected:** 4d3292f81e55aa66cda4df97831b7eefe7b1f858 plus this task's working-tree changes
 **Target location:** tasks/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md
 
@@ -20,8 +20,8 @@ Today sources publish successfully as lexical chunks with embedding=None. On add
 
 **Implementation reinspection (2026-11-24):** INDEX-001 and PROFILE-001 are complete through applied migrations 0003/0004. EMBED-001 now provides the neutral immutable embedding port/profile, exact Qwen tokenizer, strict local TEI adapter and trusted named-volume deployment attestation. The current dedicated Qwen3-Embedding-4B profile produces actual full 2560-dimensional normalized vectors; main HTTP retrieval remains lexical-only. Its old admission owner is deliberately qualification-only, so it cannot satisfy this task's requested production-style 0.92/0.95 or ten-minute backlog proof. The user explicitly authorizes the necessary measured-capacity TPM-001 prerequisite here. No extra generative model, Ollama dependency or LLM judge is authorized for quality evaluation.
 
-**Source inspection (2026-11-23):** [SQL migration 0001](../apps/workbench/api/migrations/0001_initial.up.sql) contains workbench.sources, source_versions, chunks and nullable public.vector embeddings, generated tsvector and GIN; [migration 0002](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) adds transactional durable jobs. [PostgresPersistence](../apps/workbench/api/postgres.py) owns _publish(), _corpus_snapshot(), lexical_search_snapshot() and vector_search(). [Postgres ingestion](../apps/workbench/api/postgres_ingestion.py) calls _publish in the same transaction as terminal job completion. [FastAPI contracts](../apps/workbench/api/contracts.py), [API route owner](../apps/workbench/api/application.py), [Haystack lexical profile](../apps/workbench/api/lexical.py) and [runtime decision](../docs-website/docs/architecture/rag-runtime-contract.md) are the current authority. The local only workspace resolver is not production multi-tenancy.
-[postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) complete_ingestion_with_publication explicitly requires all chunks to have null embedding (lexical ingestion); DO NOT remove that guard blindly. [persistence.py](../apps/workbench/api/persistence.py) validates profile_id/dimensions. [postgres.py](../apps/workbench/api/postgres.py) _validate_embedding verifies registered dimensions, vector_search exact cosine; no job table for embedding backfill. [embedding_profiles](../apps/workbench/api/migrations/0001_initial.up.sql) only has synthetic-test-v1 initially, not a qualified real Qwen profile.
+**Source inspection (2026-11-23):** [SQL migration 0001](../../apps/workbench/postgres/migrations/0001_initial.up.sql) contains workbench.sources, source_versions, chunks and nullable public.vector embeddings, generated tsvector and GIN; [migration 0002](../../apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql) adds transactional durable jobs. [PostgresPersistence](../../apps/workbench/postgres/postgres.py) owns _publish(), _corpus_snapshot(), lexical_search_snapshot() and vector_search(). [Postgres ingestion](../../apps/workbench/postgres/postgres_ingestion.py) calls _publish in the same transaction as terminal job completion. [FastAPI contracts](../../apps/workbench/contracts/schemas.py), [API route owner](../../apps/workbench/api/application.py), [Haystack lexical profile](../../apps/workbench/retrieval/lexical.py) and [runtime decision](../../docs-website/docs/architecture/rag-runtime-contract.md) are the current authority. The local only workspace resolver is not production multi-tenancy.
+[postgres_ingestion.py](../../apps/workbench/postgres/postgres_ingestion.py) complete_ingestion_with_publication explicitly requires all chunks to have null embedding (lexical ingestion); DO NOT remove that guard blindly. [models.py](../../apps/workbench/persistence/models.py) validates profile_id/dimensions. [postgres.py](../../apps/workbench/postgres/postgres.py) _validate_embedding verifies registered dimensions, vector_search exact cosine; no job table for embedding backfill. [embedding_profiles](../../apps/workbench/postgres/migrations/0001_initial.up.sql) only has synthetic-test-v1 initially, not a qualified real Qwen profile.
 
 **Evidence discipline:** paths and symbols above were read from the inspected commit; readiness/throughput on another machine have not been measured by creating this task. At implementation start recheck source, tests and manifest against working tree; when source differs, update this A–O blueprint before expanding scope.
 
@@ -43,7 +43,7 @@ No ANN tuning (ANN-001), no direct new browser upload path, no automatic vector 
 
 Existing source ingest remains lexical-first. New embedding queue receives immutable chunk IDs/version hashes, requests EmbeddingPort adapter, stores typed EmbeddingGeneration rows bound to active source snapshot; a semantic index generation becomes ready only when required coverage passes and model identity matches. SQL writes use server workspace scope/RLS and existing connection lifecycle. Avoid holding a write transaction over GPU inference.
 
-**Mandatory boundaries:** domain/application must not import provider-specific SDKs, HTTP does not execute browser-authored graph JSON or raw SQL, persistence stays behind app-owned ports. Review [canonical runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) and previously delivered [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) when evidence is relevant.
+**Mandatory boundaries:** domain/application must not import provider-specific SDKs, HTTP does not execute browser-authored graph JSON or raw SQL, persistence stays behind app-owned ports. Review [canonical runtime contract](../../docs-website/docs/architecture/rag-runtime-contract.md) and previously delivered [CONTENT-001](../TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) when evidence is relevant.
 
 ## H. Contracts / Interfaces / Data Model
 
@@ -53,7 +53,7 @@ All new externally exposed fields require exact Pydantic/OpenAPI agreement and a
 
 ## I. Repository Files / Components Impacted
 
-MODIFY [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../apps/workbench/api/postgres.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) only through reviewed port; CREATE embedding_ingestion.py, embedding_jobs.py, tests/test_embedding_ingestion.py, next additive migration(s) after INDEX-001 schema; extend profiles.py, application.py capabilities and ops docs. MUST NOT alter lexical chunking and publication atomicity or original evidence links, applied 0001/0002 or static seed.
+MODIFY [models.py](../../apps/workbench/persistence/models.py), [postgres.py](../../apps/workbench/postgres/postgres.py), [postgres_ingestion.py](../../apps/workbench/postgres/postgres_ingestion.py) only through reviewed port; CREATE embedding_ingestion.py, embedding_jobs.py, tests/test_embedding_ingestion.py, next additive migration(s) after INDEX-001 schema; extend profiles.py, application.py capabilities and ops docs. MUST NOT alter lexical chunking and publication atomicity or original evidence links, applied 0001/0002 or static seed.
 
 **Reviewed implementation boundary:** `embedding_jobs.py` owns durable internal types; the PostgreSQL embedding mixin/next additive migration own jobs, generation-fenced vectors and same-tenant cache. `embedding_ingestion.py` owns leased bounded processing through the existing adapter. `embedding_capacity.py` owns the one measured TPM scheduler; the old qualification owner is not a second production limiter. The shared backfill/calibration CLI composes existing assets/runtime attestation. `scripts/workbench_embedding_evaluate.py`, the fixed multilingual JSON fixture and recipient tests own objective quality/provenance checks; no model judge or generator is introduced. Internal exact search and CLI coverage do not enable Dense HTTP/UI or require speculative API fields. Any actual HTTP contract change would require all existing DTO/client gates; leaving the frontend and lexical API unchanged is preferred.
 
@@ -65,14 +65,14 @@ MODIFY [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../
 
 | Repository file | Existing owner; exact integration role |
 | --- | --- |
-| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | synchronous parse/chunk followed by existing durable job; no model inference |
-| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | complete_ingestion_with_publication currently requires null embeddings and owns terminal job transaction |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | _publish and vector_search, registered profile dimension checks |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | source/version/chunk identities and EmbeddingProfile guards |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | embedding_profiles, nullable vector, CHECK dimension; do not rewrite |
-| [`apps/workbench/api/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) | existing indexing jobs are not durable embedding jobs |
-| [`apps/workbench/api/tests/test_ingestion_persistence.py`](../apps/workbench/api/tests/test_ingestion_persistence.py) | source version rollback/replay fixtures |
-| [`apps/workbench/api/tests/test_ingestion_resilience.py`](../apps/workbench/api/tests/test_ingestion_resilience.py) | interrupted publishing and current job retry expectations |
+| [`apps/workbench/ingestion/ingestion.py`](../../apps/workbench/ingestion/ingestion.py) | synchronous parse/chunk followed by existing durable job; no model inference |
+| [`apps/workbench/postgres/postgres_ingestion.py`](../../apps/workbench/postgres/postgres_ingestion.py) | complete_ingestion_with_publication currently requires null embeddings and owns terminal job transaction |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | _publish and vector_search, registered profile dimension checks |
+| [`apps/workbench/persistence/models.py`](../../apps/workbench/persistence/models.py) | source/version/chunk identities and EmbeddingProfile guards |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../../apps/workbench/postgres/migrations/0001_initial.up.sql) | embedding_profiles, nullable vector, CHECK dimension; do not rewrite |
+| [`apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql`](../../apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql) | existing indexing jobs are not durable embedding jobs |
+| [`apps/workbench/postgres/tests/test_ingestion_persistence.py`](../../apps/workbench/postgres/tests/test_ingestion_persistence.py) | source version rollback/replay fixtures |
+| [`apps/workbench/api/tests/test_ingestion_resilience.py`](../../apps/workbench/api/tests/test_ingestion_resilience.py) | interrupted publishing and current job retry expectations |
 
 **Pinned previous-project candidates (do NOT copy unlicensed code or Qdrant/SQLite infrastructure):** donor commit `955fd049949d3fc462d555be14774e4b255aa15c`.
 
@@ -119,7 +119,7 @@ All implementation methods use descriptive domain names (not task identifiers); 
 
 **Step J14 —** Run model-down/restart/TEI 429, OOM, duplicate queue and source replacement tests; compare provider calls saved by compatible prior cache; preserve existing ingestion_idempotency and active version semantics.
 
-**Mandatory dependency handshake:** [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) owns 0.92 desired / 0.95 hard admission and all query/document model calls; do not implement an independent limiter.
+**Mandatory dependency handshake:** [TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) owns 0.92 desired / 0.95 hard admission and all query/document model calls; do not implement an independent limiter.
 
 ## K. Security / Governance / Observability
 
@@ -133,7 +133,7 @@ Real qualified model optional GPU integration and fake provider deterministic te
 
 ### L.1. Reuse-specific test migration and verification
 
-**Executed acceptance (2026-11-24):** [full report](evidence/embedding-2026-11-24/report.md). Main corpus reached 44/44 full 2560-dimensional vectors, retained across actual API/PostgreSQL restarts with unchanged content digests. Real multipart upload produced 50 chunks; a one-word edit regenerated one input and reused 49, returning 58/58 coverage with the seed. The 102-chunk fixture and 52-query before/after exact retrieval audits pass provenance with unchanged measured relevance; no-answer/hard-negative limitations remain explicit. The 600.969-second run passes its predeclared steady-window rule with median 92.141081157%, 53/55 windows in the 90–95% band and zero independently replayed hard breaches. Whole-run utilization is **91.992753788%, BELOW exact 92%**, and is not rounded into achievement. Storage-only 100k and actual 10k server-restart tests use fake 32-dimensional vectors and zero model calls. The 1279-pass full application suite plus late focused regressions are recorded separately. Browser checks are inapplicable because no frontend/HTTP DTO changes were made.
+**Executed acceptance (2026-11-24):** [full report](../evidence/embedding-2026-11-24/report.md). Main corpus reached 44/44 full 2560-dimensional vectors, retained across actual API/PostgreSQL restarts with unchanged content digests. Real multipart upload produced 50 chunks; a one-word edit regenerated one input and reused 49, returning 58/58 coverage with the seed. The 102-chunk fixture and 52-query before/after exact retrieval audits pass provenance with unchanged measured relevance; no-answer/hard-negative limitations remain explicit. The 600.969-second run passes its predeclared steady-window rule with median 92.141081157%, 53/55 windows in the 90–95% band and zero independently replayed hard breaches. Whole-run utilization is **91.992753788%, BELOW exact 92%**, and is not rounded into achievement. Storage-only 100k and actual 10k server-restart tests use fake 32-dimensional vectors and zero model calls. The 1279-pass full application suite plus late focused regressions are recorded separately. Browser checks are inapplicable because no frontend/HTTP DTO changes were made.
 
 - [x] Objective quality: 102 active main-workspace chunks, 12 historical-version and 12 foreign-workspace sentinels, 52 EN/RU/UK/code/cross-language/no-answer queries; exact original-source SHA/chunk spans/input/profile/generation provenance. Report actual Recall/MRR/nDCG@1/5/10 and primary-evidence recall; raw nearest-neighbor no-answer candidates are not fabricated abstention or truth scores.
 
@@ -162,7 +162,7 @@ Real qualified model optional GPU integration and fake provider deterministic te
 
 New schema additive and staged; semantic generation pointer only activated after coverage gate. Disable embedding worker on errors while preserving lexical search and stored vectors for later safe recovery. Do not mutate applied 0001/0002, delete original source assets or silently expose old vectors with a new model identity.
 
-Update [API README](../apps/workbench/api/README.md), architecture and this task with exact evidence and compatibility details before marking ready.
+Update [API README](../../apps/workbench/api/README.md), architecture and this task with exact evidence and compatibility details before marking ready.
 
 ## O. Mandatory Completion Checklist
 

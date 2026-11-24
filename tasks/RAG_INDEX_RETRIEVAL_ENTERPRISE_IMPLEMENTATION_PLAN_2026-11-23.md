@@ -1,7 +1,7 @@
 # RAG Index, Retrieval and Enterprise Roadmap — Implementation Plan
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** Architecture and ordered task specification; not proof of deployment  
 **Scope:** Workbench backend retrieval, original evidence, search index lifecycle, scalable sources and enterprise readiness  
 **Repository source snapshot:** 1aa9b2654df0f490781b2a09a5809e111c1f6651
@@ -23,10 +23,10 @@ The roadmap prioritizes:
 
 | Concern | Existing implementation | What is NOT yet delivered |
 | --- | --- | --- |
-| Data | [0001 initial schema](../apps/workbench/api/migrations/0001_initial.up.sql), [0002 jobs](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql), PostgresPersistence, source/version/Chunk, FORCE RLS; bounded synchronous TXT/Markdown/Python ingestion | Multiworkspace identity/roles, async source jobs, source evidence asset lifecycle |
-| Lexical | [PostgresLexicalRetriever](../apps/workbench/api/lexical.py) via Haystack, generated tsvector, GIN and ts_rank_cd; profile postgres-fts-baseline-r1 | Genuine BM25, tiered lexicon and large-corpus query optimization |
-| Corpus revision | [_corpus_snapshot](../apps/workbench/api/postgres.py) hashes active chunk/doc metadata for each lexical snapshot | Persisted constant-cost generation and active profile index manifest |
-| Vector | Chunk.embedding nullable, embedding_profiles table and [vector_search](../apps/workbench/api/postgres.py) exact cosine | Qualified Qwen inference in ingestion, full backfill, Live Dense profile, HNSW index |
+| Data | [0001 initial schema](../apps/workbench/postgres/migrations/0001_initial.up.sql), [0002 jobs](../apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql), PostgresPersistence, source/version/Chunk, FORCE RLS; bounded synchronous TXT/Markdown/Python ingestion | Multiworkspace identity/roles, async source jobs, source evidence asset lifecycle |
+| Lexical | [PostgresLexicalRetriever](../apps/workbench/retrieval/lexical.py) via Haystack, generated tsvector, GIN and ts_rank_cd; profile postgres-fts-baseline-r1 | Genuine BM25, tiered lexicon and large-corpus query optimization |
+| Corpus revision | [_corpus_snapshot](../apps/workbench/postgres/postgres.py) hashes active chunk/doc metadata for each lexical snapshot | Persisted constant-cost generation and active profile index manifest |
+| Vector | Chunk.embedding nullable, embedding_profiles table and [vector_search](../apps/workbench/postgres/postgres.py) exact cosine | Qualified Qwen inference in ingestion, full backfill, Live Dense profile, HNSW index |
 | Workbench | Live keyword profile, Preview and constructor validator; [DocumentsView](../apps/workbench/web/src/views/DocumentsView.tsx) remains fixture-only in inspected source | Dense/Hybrid approved graphs, original evidence browser and live document-management UI |
 | Document parsing | Parser registry, qualified TXT/MD/Python; Docling PDF source worker and table/page chunking code; PDF qualification evolves independently | OCR/vision, Mermaid graph, complete original asset evidence architecture |
 | Local setup | PG17.10/pgvector0.8.2 pinned container; API local TEI/Qwen target contract | Multi-host deployment, workload SLOs, production RBAC and DR drills |

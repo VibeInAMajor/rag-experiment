@@ -1,7 +1,7 @@
 # TASK-VAL-001 — Use Haystack as the Authoritative Workbench Pipeline Validator
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-20  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE  
 **Priority:** High  
 **Dependencies:** None; this task precedes general frontend–backend integration.  

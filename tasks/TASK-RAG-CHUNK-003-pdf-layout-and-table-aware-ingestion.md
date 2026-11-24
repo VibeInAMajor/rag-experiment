@@ -1,7 +1,7 @@
 # TASK-RAG-CHUNK-003 — Paginated PDF layout- and table-aware ingestion
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PARTIALLY COMPLETE — Gate A COMPLETE; Gate B PENDING DEPENDENCY (CONTENT-001)\
 **Priority:** P1 · specialized paginated document family  
 **Dependencies:** TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; TASK-RAG-CONTENT-001 is a required integration gate for immutable original visual assets/evidence, but not a blocker for independent text-layer PDF parser qualification. Scanned OCR and VLM diagram understanding are separate successors TASK-RAG-CONTENT-002/003; evidence lookup is TASK-RAG-CONTENT-005.  
@@ -35,7 +35,7 @@ Evidence: [initial live/restart qualification](../docs-website/docs/tasks/pdf-la
 
 ### Historical discovery — superseded by the completion audit above
 
-**2026-11-23 repository reinspection before qualification:** application-owned PDF source files existed, but the parser was not yet an approved public upload feature. [pdf_models.py](../apps/workbench/api/pdf_models.py) supplied bounded provider-neutral records; [pdf_parser.py](../apps/workbench/api/pdf_parser.py), [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [pdf_sandbox.py](../apps/workbench/api/pdf_sandbox.py), [pdf_assets.py](../apps/workbench/api/pdf_assets.py), the [asset manifest](../apps/workbench/api/pdf_asset_manifest.json), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) and [chunking_profiles.py](../apps/workbench/api/chunking_profiles.py) were already present. The registry was then unqualified and no PDF test suite had been found. These were starting-state observations, not the current implementation status; qualification and live verification are recorded above.
+**2026-11-23 repository reinspection before qualification:** application-owned PDF source files existed, but the parser was not yet an approved public upload feature. [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py) supplied bounded provider-neutral records; [pdf_parser.py](../apps/workbench/parsing/pdf/pdf_parser.py), [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), [pdf_sandbox.py](../apps/workbench/parsing/pdf/pdf_sandbox.py), [pdf_assets.py](../apps/workbench/parsing/pdf/pdf_assets.py), the [asset manifest](../apps/workbench/parsing/pdf/pdf_asset_manifest.json), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) and [chunking_profiles.py](../apps/workbench/chunking/chunking_profiles.py) were already present. The registry was then unqualified and no PDF test suite had been found. These were starting-state observations, not the current implementation status; qualification and live verification are recorded above.
 
 **Multimodal handoff decision:** [TASK-RAG-CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) defines source/version-scoped original assets, structured elements and representations. **This task remains responsible for text-layer PDF pages, tables, headings, accurate page provenance and explicit classification of unhandled image regions.** It must not pretend to OCR scans or understand causal arrows/charts. Scanned/mixed-page OCR belongs to [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), vision diagrams to [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), and original evidence resolution to [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md). A PDF with pictures may be correctly indexed for qualified text, but figure coverage must be marked incomplete unless original visual regions have independent evidence links. Do not silently skip a diagram then mark the entire source semantically complete.
 
@@ -51,13 +51,13 @@ Evidence: [initial live/restart qualification](../docs-website/docs/tasks/pdf-la
 | --- | --- |
 | [`apps/workbench/web/src/domain/catalog.ts`](../apps/workbench/web/src/domain/catalog.ts) | `parser` display component is `DoclingConverter` and its `.format` option is UI data. Not an executable PDF parser binding. |
 | [`apps/workbench/validator/registry.py`](../apps/workbench/validator/registry.py) | Parser mapping has no approved constructor dependency; construction validator is not an ingestion or OCR service. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | Existing `Chunk` provides `page: int?`, title, content, JSON metadata, stable scoped source/version IDs. No dedicated table block or page parent storage exists. |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | `_publish()` stages, validates and atomically activates a version; `get_chunk()` and lexical retrieval enforce active workspace scope. |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | Existing bounded `chunks.content`, page, RLS, search_vector. Must not edit applied revision. |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | Existing `Chunk` provides `page: int?`, title, content, JSON metadata, stable scoped source/version IDs. No dedicated table block or page parent storage exists. |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | `_publish()` stages, validates and atomically activates a version; `get_chunk()` and lexical retrieval enforce active workspace scope. |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | Existing bounded `chunks.content`, page, RLS, search_vector. Must not edit applied revision. |
 | [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | Approved read-only lexical API; TXT/Markdown upload is planned in TASK-RAG-002 and will supply shared upload/jobs/contracts. |
 | [`haystack/components/converters/pypdf.py`](../haystack/components/converters/pypdf.py) and [`pdfminer.py`](../haystack/components/converters/pdfminer.py) | Existing generic PDF text converters, but presence of converters alone does NOT verify table/layout/page fidelity. Benchmarks needed as baseline. |
 | [`haystack/components/preprocessors/recursive_splitter.py`](../haystack/components/preprocessors/recursive_splitter.py) | Recursive splitter for fallback/controls, not authoritative page/table preservation. |
-| [`apps/workbench/api/config.py`](../apps/workbench/api/config.py) | API app configuration currently local-only; no reviewed Docling runtime/inference dependency. |
+| [`apps/workbench/configuration/config.py`](../apps/workbench/configuration/config.py) | API app configuration currently local-only; no reviewed Docling runtime/inference dependency. |
 | [Docling chunking docs](https://docling-project.github.io/docling/concepts/chunking/) | `HierarchicalChunker`, `HybridChunker`, table header repetition are available in Docling ecosystem, **not yet qualified in this Workbench runtime**. |
 | [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](completed/TASK-RAG-002-ingest-text-and-markdown.md) | Initial allowlist is TXT/Markdown and a 1 MiB request cap. PDF requires new explicit file/body bounds and testing; no silent extension. |
 
@@ -129,19 +129,19 @@ Shared authenticated/authorized upload + bounded PDF bytes
 
 ## I. Repository Files / Components Impacted
 
-**Current code ownership (2026-11-23):** REVIEW/EXTEND existing apps/workbench/api/pdf_models.py, pdf_parser.py, pdf_worker.py, pdf_sandbox.py, pdf_assets.py, pdf_asset_manifest.json, pdf_chunking_adapter.py, chunking_profiles.py (these are **already present**). Format enablement remains in parser_registry.py and parsing.py / the approved ingestion path; no independent PDF API or SQL writer. Add PDF qualification tests and safe visual-coverage tests; connect CONTENT-001 later through its common representation and AssetStorePort, not PDF-specific asset tables. Maintain compatibility with current upload_policy.py, upload_transport.py, ingestion_http.py and postgres_ingestion.py. The following historical planned-path table must be interpreted against this current ownership inventory.
+**Current code ownership (2026-11-23):** REVIEW/EXTEND existing apps/workbench/parsing/pdf/pdf_models.py, pdf_parser.py, pdf_worker.py, pdf_sandbox.py, pdf_assets.py, pdf_asset_manifest.json, pdf_chunking_adapter.py, chunking_profiles.py (these are **already present**). Format enablement remains in parser_registry.py and parsing.py / the approved ingestion path; no independent PDF API or SQL writer. Add PDF qualification tests and safe visual-coverage tests; connect CONTENT-001 later through its common representation and AssetStorePort, not PDF-specific asset tables. Maintain compatibility with current upload_policy.py, upload_transport.py, ingestion_http.py and postgres_ingestion.py. The following planned-path table uses the current ownership inventory; historical implementation observations above remain dated.
 
 
 
 | Path | Action / purpose |
 | --- | --- |
-| `apps/workbench/api/chunking.py` | Extend existing strategy registry with `page_layout` and table overlay, avoid duplicate rules. |
-| `apps/workbench/api/parsing.py` or actual TASK-RAG-002 parsing owner | Add only a bounded PDF parser adapter; isolate Docling-specific imports/version from domain. |
-| `apps/workbench/api/ingestion.py` or actual TASK-RAG-002 ingestion module | Extend verified format dispatcher and shared jobs; no second HTTP endpoint. |
-| `apps/workbench/api/config.py` | App-only parser resource limits/capabilities; keep loopback and credentials contract intact. |
+| `apps/workbench/chunking/chunking.py` | Extend existing strategy registry with `page_layout` and table overlay, avoid duplicate rules. |
+| `apps/workbench/parsing/parsing.py` or actual TASK-RAG-002 parsing owner | Add only a bounded PDF parser adapter; isolate Docling-specific imports/version from domain. |
+| `apps/workbench/ingestion/ingestion.py` or actual TASK-RAG-002 ingestion module | Extend verified format dispatcher and shared jobs; no second HTTP endpoint. |
+| `apps/workbench/configuration/config.py` | App-only parser resource limits/capabilities; keep loopback and credentials contract intact. |
 | `apps/workbench/api/boundary.py`; `application.py` | Exact PDF upload size/content-type and response allowances; no broad CORS bypass. |
-| `apps/workbench/api/contracts.py` and `openapi.json` | Only additive declared PDF support/parse metadata after runtime tests. |
-| `apps/workbench/api/tests/test_pdf_chunking.py` | CREATE typed layout/table/page golden and negative fixtures. |
+| `apps/workbench/contracts/schemas.py` and `openapi.json` | Only additive declared PDF support/parse metadata after runtime tests. |
+| `apps/workbench/chunking/pdf/tests/test_pdf_chunking.py` | CREATE typed layout/table/page golden and negative fixtures. |
 | `apps/workbench/api/tests/test_ingestion_routes.py` or task-created equivalent | Extend upload/rollback/real retrieval and signed page metadata checks. |
 | `apps/workbench/api/tests/fixtures/pdf/` | CREATE small non-sensitive, reproducible text/tables/multipage/corrupt/scanned PDF fixtures; no personal data. |
 | `pyproject.toml` | Add pinned **application-only** optional parser dependency with reviewed license/security and tested environment. |

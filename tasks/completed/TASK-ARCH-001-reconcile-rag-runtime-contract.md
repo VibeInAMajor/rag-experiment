@@ -1,7 +1,7 @@
 # TASK-ARCH-001-reconcile-rag-runtime-contract
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-20  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE  
 **Priority:** P0 · prerequisite  
 **Dependencies:** None  
@@ -95,10 +95,10 @@ Documentation-only change. The current visual fixture graph format remains `sche
 ### Completion evidence — 2026-11-20
 
 Deliverables:
-- [Canonical runtime/API contract](../docs-website/docs/architecture/rag-runtime-contract.md): six endpoints, strict request and typed response/error definitions, capabilities/revision handshake, exact `bm25-v1` graph eligibility, score/provenance/run/timing semantics, server-owned authorization, redaction and retention responsibilities.
-- [Dated plan](../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md): active reconciliation plus preserved historical v1.1 appendix. PostgreSQL owns the corpus from the first live slice; true BM25 is transient derived state. TEI/2560, tokenizer qualification and generation deferral are explicit.
-- [Workbench README](../apps/workbench/web/README.md): current runnable behavior remains preview/validation only; planned live search is separate. Graph schema version 1 is unchanged.
-- Documentation navigation in `docs-website/sidebars.js`; narrow RAG boundary corrections in [engineering guidance](../docs-website/ENGINEERING.md) and [project map](../docs-website/PROJECT_MAP.md) prevent those routers from denying the existing validation-only API/client.
+- [Canonical runtime/API contract](../../docs-website/docs/architecture/rag-runtime-contract.md): six endpoints, strict request and typed response/error definitions, capabilities/revision handshake, exact `bm25-v1` graph eligibility, score/provenance/run/timing semantics, server-owned authorization, redaction and retention responsibilities.
+- [Dated plan](../../docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md): active reconciliation plus preserved historical v1.1 appendix. PostgreSQL owns the corpus from the first live slice; true BM25 is transient derived state. TEI/2560, tokenizer qualification and generation deferral are explicit.
+- [Workbench README](../../apps/workbench/web/README.md): current runnable behavior remains preview/validation only; planned live search is separate. Graph schema version 1 is unchanged.
+- Documentation navigation in `docs-website/sidebars.js`; narrow RAG boundary corrections in [engineering guidance](../../docs-website/ENGINEERING.md) and [project map](../../docs-website/PROJECT_MAP.md) prevent those routers from denying the existing validation-only API/client.
 
 Reuse reviewed: existing graph import/export and structural checks; catalog node/parameter/handle definitions; constructor validator and its separate capability revision; core BM25 store/retriever and public Pipeline APIs. No duplicate graph parser, runtime interpreter or provider interface code was added.
 

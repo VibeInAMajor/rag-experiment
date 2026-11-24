@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-005 — Source evidence resolution, grounding, and citation verification
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint; source evidence resolver not yet present  
 **Priority:** P1 — trust boundary for multimodal retrieval and future answers  
 **Dependencies:** TASK-RAG-CONTENT-001; CONTENT-002/003/004 integrations provide format-specific evidence (may roll out separately); completed TASK-RAG-001/TASK-RAG-002  
@@ -20,17 +20,17 @@ A RAG result may contain a synthesized caption for a flowchart or an OCR reconst
 
 ### C0. Source and parser-family status reconciliation
 
-**Source reinspection 2026-11-23:** the current [api/contracts.py](../apps/workbench/api/contracts.py) provides `DocumentDetail.original_content_available=false` and [local_sources.py](../apps/workbench/api/local_sources.py) optionally opens a registered host-local file, but neither supplies general asset/evidence IDs or byte retrieval. [PARSE-002..005](TASK-RAG-PARSE-002-office-and-web-document-parsers.md) are proposed extraction tasks. CONTENT-001 is the prospective durable `DocumentElement/ContentRepresentation/DocumentAsset` owner.
+**Source reinspection 2026-11-23:** the current [api/contracts.py](../apps/workbench/contracts/schemas.py) provides `DocumentDetail.original_content_available=false` and [local_sources.py](../apps/workbench/sources/local_sources.py) optionally opens a registered host-local file, but neither supplies general asset/evidence IDs or byte retrieval. [PARSE-002..005](TASK-RAG-PARSE-002-office-and-web-document-parsers.md) are proposed extraction tasks. CONTENT-001 is the prospective durable `DocumentElement/ContentRepresentation/DocumentAsset` owner.
 
 | Source | Current behavior / evidence gap |
 | --- | --- |
-| [persistence.py](../apps/workbench/api/persistence.py) | Chunk has workspace/source/version/chunk IDs, content, optional page and metadata; no mandatory original-asset evidence reference. |
-| [postgres.py](../apps/workbench/api/postgres.py) | Lexical search uses active scoped versions and real PostgreSQL ranking, can return document IDs, not original page crops. |
-| [lexical.py](../apps/workbench/api/lexical.py) and [projection.py](../apps/workbench/api/projection.py) | Server-owned result ranks, trace IDs, source_version_id and score_type postgres_ts_rank_cd; no evidence-resolver link traversal. |
-| [contracts.py](../apps/workbench/api/contracts.py), [application.py](../apps/workbench/api/application.py) | v1 HTTP contracts and server-authenticated workspace scope; no asset/evidence read endpoint in inspected repository. |
-| [ingestion.py](../apps/workbench/api/ingestion.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py) | Existing idempotent publication and document/chunk read; must not be bypassed by a separate evidence store. |
-| [parsing.py](../apps/workbench/api/parsing.py) | SourceSpan of decoded text and line ranges for Markdown; distinguish byte offsets/Unicode when resolving original. |
-| [pdf_models.py](../apps/workbench/api/pdf_models.py) | Validated PDF page/bbox coordinates, tables; no original page raster/blob reader. |
+| [models.py](../apps/workbench/persistence/models.py) | Chunk has workspace/source/version/chunk IDs, content, optional page and metadata; no mandatory original-asset evidence reference. |
+| [postgres.py](../apps/workbench/postgres/postgres.py) | Lexical search uses active scoped versions and real PostgreSQL ranking, can return document IDs, not original page crops. |
+| [lexical.py](../apps/workbench/retrieval/lexical.py) and [projection.py](../apps/workbench/api/projection.py) | Server-owned result ranks, trace IDs, source_version_id and score_type postgres_ts_rank_cd; no evidence-resolver link traversal. |
+| [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) | v1 HTTP contracts and server-authenticated workspace scope; no asset/evidence read endpoint in inspected repository. |
+| [ingestion.py](../apps/workbench/ingestion/ingestion.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py) | Existing idempotent publication and document/chunk read; must not be bypassed by a separate evidence store. |
+| [parsing.py](../apps/workbench/parsing/parsing.py) | SourceSpan of decoded text and line ranges for Markdown; distinguish byte offsets/Unicode when resolving original. |
+| [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py) | Validated PDF page/bbox coordinates, tables; no original page raster/blob reader. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) | Provides original asset, representation, element, link and workspace-scoped storage contract; implementation is a hard prerequisite. |
 | [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), [003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), [004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) | Produce OCR, visual and source diagram evidence with distinct trust/provenance statuses. |
 | [Current UI views](../apps/workbench/web/src/views/RunsView.tsx) | Textual run display; no original page/diagram evidence preview implementation is guaranteed by current code. |

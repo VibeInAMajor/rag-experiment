@@ -1,13 +1,13 @@
 # TASK-RAG-PARSE-002 — DOCX, PPTX and HTML document-aware ingestion
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — blueprint, not implemented  
 **Priority:** P1 — common business-document coverage  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; PDF belongs to TASK-RAG-CHUNK-003  
 **Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
 **Target:** `tasks/TASK-RAG-PARSE-002-office-and-web-document-parsers.md  
-**Architecture:** [Format and chunking matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
+**Architecture:** [Format and chunking matrix](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
 
@@ -19,7 +19,7 @@ Business corpora contain policies in Word, sales/architecture decks and knowledg
 
 ## C. Current Repository State
 
-**Source audit refreshed 2026-11-23:** the earlier “read-only API / future upload” premise is obsolete. [RAG-002](../completed/TASK-RAG-002-ingest-text-and-markdown.md) now provides real `IngestionRoutes.upload/detail/chunks/job` in [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), durable jobs in [postgres_ingestion.py](../../apps/workbench/api/postgres_ingestion.py), and [PARSE-001](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) is complete. The catalog lists planned Office/HTML formats but they are **not qualified**. Pinned Docling PDF worker code exists in [pdf_worker.py](../../apps/workbench/api/pdf_worker.py), but installing it does not qualify Word/PowerPoint or image interpretation.
+**Source audit refreshed 2026-11-23:** the earlier “read-only API / future upload” premise is obsolete. [RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md) now provides real `IngestionRoutes.upload/detail/chunks/job` in [ingestion_http.py](../apps/workbench/api/ingestion_http.py), durable jobs in [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py), and [PARSE-001](completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) is complete. The catalog lists planned Office/HTML formats but they are **not qualified**. Pinned Docling PDF worker code exists in [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), but installing it does not qualify Word/PowerPoint or image interpretation.
 
 **Actual missing work:** per-format bounded Office/HTML adapter plus golden source/slide/table provenance tests and a capability update through the existing HTTP route. Do not create the new `ingestion.py` or another table/endpoint as the dated task suggests.
 
@@ -30,10 +30,10 @@ Business corpora contain policies in Word, sales/architecture decks and knowledg
 | [`haystack/components/converters/html.py`](../../haystack/components/converters/html.py) `HTMLToDocument` | Existing HTML extraction with optional structured markdown. | Strip scripts/nav/ads/tracking; HTML text alone loses DOM boundaries. |
 | [`haystack/components/converters/multi_file_converter.py`](../../haystack/components/converters/multi_file_converter.py) `MultiFileConverter` | Routes DOCX, PPTX, HTML among other formats. | Can be reused for simple fallback; not evidence of page/slide/table fidelity. |
 | [`haystack/components/preprocessors/markdown_header_splitter.py`](../../haystack/components/preprocessors/markdown_header_splitter.py) | Existing heading splitting. | Prefer structural element boundaries from parser; secondary chunks stay under parent. |
-| [`apps/workbench/api/persistence.py`](../../apps/workbench/api/persistence.py) | `Chunk.page?`, metadata JSON and source/version IDs. | `page` is **not** a slide number; store `slide` under bounded metadata unless schema changes are separately justified. |
-| [`apps/workbench/api/postgres.py`](../../apps/workbench/api/postgres.py) | Atomic `_publish` and forced workspace scope. | No second writer or table. |
-| [`apps/workbench/api/contracts.py`](../../apps/workbench/api/contracts.py) | v1 error/result schemas. | Format claims only after route + parser + storage qualification. |
-| [`tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md`](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) | Completed parser registry/element contract. | Declare additional adapters through its one registry. |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | `Chunk.page?`, metadata JSON and source/version IDs. | `page` is **not** a slide number; store `slide` under bounded metadata unless schema changes are separately justified. |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | Atomic `_publish` and forced workspace scope. | No second writer or table. |
+| [`apps/workbench/contracts/schemas.py`](../apps/workbench/contracts/schemas.py) | v1 error/result schemas. | Format claims only after route + parser + storage qualification. |
+| [`tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md`](completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) | Completed parser registry/element contract. | Declare additional adapters through its one registry. |
 
 Pinned Docling PDF worker and model assets exist in the Workbench source; this does **not** qualify Office/HTML parsing. Optional legacy/publishing formats require additional review.
 
@@ -58,11 +58,11 @@ No `.pdf` integration (CHUNK-003), spreadsheet parsing (PARSE-003), OCR of image
 
 ### PARSE/CONTENT ownership contract — non-duplication gate
 
-- **Ownership:** PARSE-002 alone qualifies DOCX/PPTX/HTML **format extraction**, source-native slide/paragraph/table order and safe HTML; it reuses existing [parser registry](../../apps/workbench/api/parser_registry.py), [ParsedElement](../../apps/workbench/api/parsing.py), [ingestion](../../apps/workbench/api/ingestion.py), and existing [chunking](../../apps/workbench/api/chunking.py). PARSE-003 owns XLSX/CSV/TSV row/sheet extraction, not PARSE-002.
-- **CONTENT-001 integration:** [CONTENT-001](../TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) defines a persisted `DocumentElement` and `ContentRepresentation` for original-evidence linkage. It must **adapt from** the parser's immutable `ParsedElement`, not re-parse Office/HTML or create another registry/table/chunker. This PARSE task can qualify textual chunks independently; original assets remain `not_available` until CONTENT-001.
-- **Visual boundary:** charts, images, and diagrams in slides or DOCX are **detected and warned about**, never interpreted here. [CONTENT-003](../TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) currently targets qualified PDF visual understanding; an explicit follow-up is required to support PPTX/DOCX images through its reusable `VisualUnderstandingPort`. [CONTENT-002](../TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md) is specifically scanned PDF OCR, not Office OCR.
-- **Mermaid boundary:** HTML/Markdown-like Mermaid text remains untrusted text; [CONTENT-004](../TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) owns Mermaid grammar, not this generic HTML parser. Raw link/asset bytes and citations are [CONTENT-001/005](../TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) responsibilities.
-- **Conversion option:** [CONVERT-001](../TASK-RAG-CONVERT-001-microsoft-markitdown-evaluation-and-safe-conversion-adapter.md) benchmarks Microsoft MarkItDown; it is a per-format adapter alternative, **not a second required extraction pipeline**. Only an approved measured format profile can select it.
+- **Ownership:** PARSE-002 alone qualifies DOCX/PPTX/HTML **format extraction**, source-native slide/paragraph/table order and safe HTML; it reuses existing [parser registry](../apps/workbench/parsing/parser_registry.py), [ParsedElement](../apps/workbench/parsing/parsing.py), [ingestion](../apps/workbench/ingestion/ingestion.py), and existing [chunking](../apps/workbench/chunking/chunking.py). PARSE-003 owns XLSX/CSV/TSV row/sheet extraction, not PARSE-002.
+- **CONTENT-001 integration:** [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) defines a persisted `DocumentElement` and `ContentRepresentation` for original-evidence linkage. It must **adapt from** the parser's immutable `ParsedElement`, not re-parse Office/HTML or create another registry/table/chunker. This PARSE task can qualify textual chunks independently; original assets remain `not_available` until CONTENT-001.
+- **Visual boundary:** charts, images, and diagrams in slides or DOCX are **detected and warned about**, never interpreted here. [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md) currently targets qualified PDF visual understanding; an explicit follow-up is required to support PPTX/DOCX images through its reusable `VisualUnderstandingPort`. [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md) is specifically scanned PDF OCR, not Office OCR.
+- **Mermaid boundary:** HTML/Markdown-like Mermaid text remains untrusted text; [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) owns Mermaid grammar, not this generic HTML parser. Raw link/asset bytes and citations are [CONTENT-001/005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) responsibilities.
+- **Conversion option:** [CONVERT-001](TASK-RAG-CONVERT-001-microsoft-markitdown-evaluation-and-safe-conversion-adapter.md) benchmarks Microsoft MarkItDown; it is a per-format adapter alternative, **not a second required extraction pipeline**. Only an approved measured format profile can select it.
 
 **Qualification modes:** Gate P = format-specific parser/structured chunk + existing PostgreSQL lexical publication (this task); Gate E = durable byte/evidence/representation resolution (CONTENT-001/005 or specialty CONTENT adapter). Gate P may pass while Gate E is NOT_IMPLEMENTED, but Gate P must not claim original evidence or multimodal completeness. No new global parser registry, ContentRepresentation storage or EvidenceResolver is permitted in this task.
 
@@ -85,11 +85,11 @@ First supported format set is exactly `.docx`, `.pptx`, `.html`, `.htm`; `.doc`,
 
 | Path | Change |
 | --- | --- |
-| `apps/workbench/api/parser_registry.py` | Extend reviewed descriptors; don't duplicate MIME rules. |
-| `apps/workbench/api/parsing.py` or task-created `parsers/office.py`, `parsers/html.py` | Add bounded extraction adapters; choose the simplest existing structure. |
-| `apps/workbench/api/ingestion.py` (created by TASK-RAG-002) | Wire approved parser via common dispatcher, not a second upload route. |
-| `apps/workbench/api/contracts.py`, `openapi.json`, `application.py`, `boundary.py` | Extend supported format/capability and request-specific bounds additively, only after parser works. |
-| `apps/workbench/api/tests/test_office_parsers.py`, `test_ingestion_routes.py` | Structural goldens, API+Postgres and failure cases. |
+| `apps/workbench/parsing/parser_registry.py` | Extend reviewed descriptors; don't duplicate MIME rules. |
+| `apps/workbench/parsing/parsing.py` or task-created `apps/workbench/parsing/office.py`, `apps/workbench/parsing/html.py` | Add bounded extraction adapters; choose the simplest existing structure. |
+| `apps/workbench/ingestion/ingestion.py` (created by TASK-RAG-002) | Wire approved parser via common dispatcher, not a second upload route. |
+| `apps/workbench/contracts/schemas.py`, `apps/workbench/api/openapi.json`, `apps/workbench/api/application.py`, `apps/workbench/api/boundary.py` | Extend supported format/capability and request-specific bounds additively, only after parser works. |
+| `apps/workbench/parsing/tests/test_office_parsers.py`, `test_ingestion_routes.py` | Structural goldens, API+Postgres and failure cases. |
 | `pyproject.toml` | App-only pinned optional Docling/Office dependencies if proven necessary. |
 | `docs-website/docs/architecture/content-aware-chunking-strategy.md`, `apps/workbench/api/README.md` | Accurate support matrix and runtime constraints. |
 
@@ -99,7 +99,7 @@ First supported format set is exactly `.docx`, `.pptx`, `.html`, `.htm`; `.doc`,
 
 ### J0. Reconcile completed app owners and format-specific handoffs
 
-1. Confirm current [parser registry](../../apps/workbench/api/parser_registry.py), [parsing.py](../../apps/workbench/api/parsing.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [chunking.py](../../apps/workbench/api/chunking.py), [PostgreSQL publication](../../apps/workbench/api/postgres_ingestion.py) and [actual contracts](../../apps/workbench/api/contracts.py). The old blueprint predates completed RAG-002 and PARSE-001; do not reimplement their components.
+1. Confirm current [parser registry](../apps/workbench/parsing/parser_registry.py), [parsing.py](../apps/workbench/parsing/parsing.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py), [chunking.py](../apps/workbench/chunking/chunking.py), [PostgreSQL publication](../apps/workbench/postgres/postgres_ingestion.py) and [actual contracts](../apps/workbench/contracts/schemas.py). The old blueprint predates completed RAG-002 and PARSE-001; do not reimplement their components.
 2. Build a format/element/asset/evidence matrix and mark all unsupported extractions `NOT_QUALIFIED`; record original evidence status separately from parsed text.
 3. Align this task's format-specific `ParsedElement` projection with CONTENT-001's long-lived `DocumentElement` contract **without building it here**. Confirm all source/span/line/page/time units are explicitly defined before using them as citations.
 

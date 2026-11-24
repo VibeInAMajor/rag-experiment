@@ -1,7 +1,7 @@
 # TASK-RAG-INGEST-003 — Supervised leased workers with retry, fencing and per-tenant fairness
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-RAG-INGEST-003-leased-workers-and-tenant-backpressure.md
@@ -48,7 +48,7 @@ Lease{job_id,owner_token,lease_epoch,expires_at,attempt,stage}; claim, renew, fa
 
 ## I. Repository Files / Components Impacted
 
-EDIT ingestion.py, postgres_ingestion.py, persistence.py, worker deployment/testing; ADD minimal queue adapter and worker entrypoint. Do not replace current ingestion publisher.
+EDIT apps/workbench/ingestion/ingestion.py, apps/workbench/postgres/postgres_ingestion.py, apps/workbench/persistence/models.py, worker deployment/testing; ADD minimal queue adapter and worker entrypoint under apps/workbench/ingestion/. Do not replace current ingestion publisher.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 

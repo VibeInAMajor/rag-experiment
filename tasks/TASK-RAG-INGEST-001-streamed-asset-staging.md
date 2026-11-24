@@ -1,7 +1,7 @@
 # TASK-RAG-INGEST-001 — Stream multipart input to immutable durable source staging
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-RAG-INGEST-001-streamed-asset-staging.md
@@ -49,7 +49,7 @@ StagedAsset{opaque_ref,workspace_id,sha256,bytes_count,media_hint,staged_at,expi
 
 ## I. Repository Files / Components Impacted
 
-EDIT apps/workbench/api/boundary.py, upload_transport.py, upload_policy.py, ingestion_http.py and tests; coordinate with CONTENT-001 asset modules. MUST NOT edit framework Haystack or applied 0001/0002 migrations.
+EDIT apps/workbench/api/boundary.py, apps/workbench/api/upload_transport.py, apps/workbench/ingestion/upload_policy.py, apps/workbench/api/ingestion_http.py and focused apps/workbench/api/tests/ and apps/workbench/ingestion/tests/; coordinate with CONTENT-001 asset modules. MUST NOT edit framework Haystack or applied 0001/0002 migrations.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 
