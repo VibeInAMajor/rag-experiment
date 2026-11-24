@@ -1,13 +1,13 @@
 # TASK-RAG-CHUNK-002 — Python syntax-aware chunking through the existing ingestion workflow
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-22  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — real-source running-server, SQL, restart/replay, browser and regression gates passed  
 **Priority:** P1 · specialized document class  
 **Dependencies:** TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; downstream UI behavior covered by TASK-UI-003 or a separately scoped extension  
 **Original blueprint snapshot:** `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`  
 **Target path:** `tasks/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md`  
-**Architecture decision:** [Content-aware chunking](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
+**Architecture decision:** [Content-aware chunking](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
 
@@ -23,14 +23,14 @@ Plain prose chunking can cut a class in the middle of a method, detach a decorat
 
 | Source path / symbol | Current behavior / gap |
 | --- | --- |
-| [`haystack/components/preprocessors/python_code_splitter.py`](../haystack/components/preprocessors/python_code_splitter.py) `PythonCodeSplitter` | Already uses Python `ast`; produces units for imports, classes, functions/methods and other statements, preserves line ranges, handles oversize units via line `DocumentSplitter`; can raise `SyntaxError`. Its constructor uses `min_effective_lines`, `max_effective_lines`, `expected_chars_per_line`, `oversized_factor`, `strip_docstrings`, `preserve_class_definition`, `secondary_split_overlap`/`_length`; no token-length contract. Metadata includes `start_line`, `end_line`, `unit_kinds`, `include_classes` and conditional decorator/qualified symbol fields. |
-| [`haystack/components/preprocessors/document_splitter.py`](../haystack/components/preprocessors/document_splitter.py) | Has line/word/token splitting. Token mode is generic tiktoken unless separately qualified; do not use for exact Qwen count by default. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) `Chunk`/`Source`/`SourceVersion` | Stable workspace/source/version/chunk IDs, content/metadata validation and exact chunk content limit exist. |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) `_publish()` | Atomic version publication already exists; reuse its job-coupled variant delivered by TASK-RAG-002. |
-| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) / [`boundary.py`](../apps/workbench/api/boundary.py) | Only current read-only routes inspected; planned TASK-RAG-002 adds bounded multipart upload and durable jobs for TXT/Markdown. Extend that handler, do not create a second upload path. |
-| [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](completed/TASK-RAG-002-ingest-text-and-markdown.md) | Initial explicit `.txt`/`.md` allowlist; `.py` remains unsupported until this task qualifies it. |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | `LexicalService` executes approved PostgreSQL `simple` FTS, score `postgres_ts_rank_cd`, over persisted active chunks. This is NOT semantic code search. |
-| [`apps/workbench/web/src/views/DocumentsView.tsx`](../apps/workbench/web/src/views/DocumentsView.tsx) | Demonstration model; future live UI must not invent an AST parse report or unsupported file class. |
+| [`haystack/components/preprocessors/python_code_splitter.py`](../../haystack/components/preprocessors/python_code_splitter.py) `PythonCodeSplitter` | Already uses Python `ast`; produces units for imports, classes, functions/methods and other statements, preserves line ranges, handles oversize units via line `DocumentSplitter`; can raise `SyntaxError`. Its constructor uses `min_effective_lines`, `max_effective_lines`, `expected_chars_per_line`, `oversized_factor`, `strip_docstrings`, `preserve_class_definition`, `secondary_split_overlap`/`_length`; no token-length contract. Metadata includes `start_line`, `end_line`, `unit_kinds`, `include_classes` and conditional decorator/qualified symbol fields. |
+| [`haystack/components/preprocessors/document_splitter.py`](../../haystack/components/preprocessors/document_splitter.py) | Has line/word/token splitting. Token mode is generic tiktoken unless separately qualified; do not use for exact Qwen count by default. |
+| [`apps/workbench/persistence/models.py`](../../apps/workbench/persistence/models.py) `Chunk`/`Source`/`SourceVersion` | Stable workspace/source/version/chunk IDs, content/metadata validation and exact chunk content limit exist. |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) `_publish()` | Atomic version publication already exists; reuse its job-coupled variant delivered by TASK-RAG-002. |
+| [`apps/workbench/api/application.py`](../../apps/workbench/api/application.py) / [`boundary.py`](../../apps/workbench/api/boundary.py) | Only current read-only routes inspected; planned TASK-RAG-002 adds bounded multipart upload and durable jobs for TXT/Markdown. Extend that handler, do not create a second upload path. |
+| [`tasks/TASK-RAG-002-ingest-text-and-markdown.md`](TASK-RAG-002-ingest-text-and-markdown.md) | Initial explicit `.txt`/`.md` allowlist; `.py` remains unsupported until this task qualifies it. |
+| [`apps/workbench/retrieval/lexical.py`](../../apps/workbench/retrieval/lexical.py) | `LexicalService` executes approved PostgreSQL `simple` FTS, score `postgres_ts_rank_cd`, over persisted active chunks. This is NOT semantic code search. |
+| [`apps/workbench/web/src/views/DocumentsView.tsx`](../../apps/workbench/web/src/views/DocumentsView.tsx) | Demonstration model; future live UI must not invent an AST parse report or unsupported file class. |
 
 **Original design gap:** Python was previously unqualified. The implementation and measured runtime result supersede that state; synthetic comparison and real-source server qualification are explicitly separate.
 
@@ -78,11 +78,11 @@ Flow: verified multipart `.py` -> existing ingestion service -> chunking resolve
 
 | Path | Expected change |
 | --- | --- |
-| `apps/workbench/api/chunking.py` | Extend allowlisted resolver with Python strategy and adapter to existing component; avoid duplicated token budget verifier. |
-| `apps/workbench/api/ingestion.py` (or actual module introduced by TASK-RAG-002) | Use shared upload/job path and materialized source version; no second writer. |
-| `apps/workbench/api/contracts.py` | Extend validated media-type capability/document type enum only if required by the *actual* implemented API contract; additive backwards-compatible change. |
+| `apps/workbench/chunking/chunking.py` | Extend allowlisted resolver with Python strategy and adapter to existing component; avoid duplicated token budget verifier. |
+| `apps/workbench/ingestion/ingestion.py` (or actual module introduced by TASK-RAG-002) | Use shared upload/job path and materialized source version; no second writer. |
+| `apps/workbench/contracts/schemas.py` | Extend validated media-type capability/document type enum only if required by the *actual* implemented API contract; additive backwards-compatible change. |
 | `apps/workbench/api/boundary.py` | Extend exact allowlist for `.py` only; preserve size, path and security checks. |
-| `apps/workbench/api/tests/test_chunking.py` | Add AST and fallback unit cases. |
+| `apps/workbench/chunking/tests/test_chunking.py` | Add AST and fallback unit cases. |
 | `apps/workbench/api/tests/test_ingestion_routes.py` or actual task-created equivalent | Add multipart `.py`, status, search and negative tests. |
 | `apps/workbench/api/tests/fixtures/chunking/` | Small Python fixture files with decorators, methods, comments, imports and syntax errors. |
 | `apps/workbench/api/README.md`; `docs-website/docs/architecture/content-aware-chunking-strategy.md` | Update real supported file classes and evidence. |
@@ -205,31 +205,31 @@ Container-backed tests must use explicitly configured **disposable** PostgreSQL 
 
 ### Real-source qualification on the running server — required user gate
 
-This gate used the actual project file `apps/workbench/api/ingestion.py`, not generated fixture text or an ASGI client. The running loopback API was updated through the existing launcher; the existing PostgreSQL volume was preserved. `scripts/workbench_python_probe.py` uses TCP HTTP on port 8011 and application-role repeatable-read SQL. It records hashes and IDs without retaining the uploaded source body in reports.
+This gate used the actual project file `apps/workbench/ingestion/ingestion.py`, not generated fixture text or an ASGI client. The running loopback API was updated through the existing launcher; the existing PostgreSQL volume was preserved. `scripts/workbench_python_probe.py` uses TCP HTTP on port 8011 and application-role repeatable-read SQL. It records hashes and IDs without retaining the uploaded source body in reports.
 
 - Actual source: **27,168 bytes**, SHA256 `41bf6e6c709a0e5f9dd0874fadcad29bce6d475571f2e67bc54ddde069ab2732`.
 - Uploaded source ID: `6619037462294ef08b6f001bcd5e3adf`; version ID: `efb8fc4007fa47b784bbafb6e7cb115c`. The live configured policy persisted **11 AST chunks / 28 declaration symbols**. Every chunk matched the real original line slice; independent local Qwen recounts matched every server count/revision. This is tokenizer admission, without model inference.
-- [Live upload](evidence/python-ast-2026-11-22/live-upload.json) confirms a deliberately syntax-corrupted update of the same real source returned `UNPARSEABLE_SOURCE` without changing the active chunks/search results. All preexisting sources, versions, chunks and jobs were preserved. The only new retained data is this source/version/11 chunks and its qualification jobs; corpus counts changed from **12 sources / 22 chunks** to **13 / 33**.
-- After an actual API process stop/start, [restart evidence](evidence/python-ast-2026-11-22/live-after-restart.json) confirms unchanged source/version/chunk identities, exact content/lines, Qwen counts, search scores and terminal same-key replay. [HTTP/file/SQL parity](evidence/python-ast-2026-11-22/live-sql-parity.json) explicitly compares all chunk identities and content hashes with persisted SQL rows. [Final corpus audit](evidence/python-ast-2026-11-22/final-corpus-audit.json) confirms later tests did not alter this state.
-- The existing side browser performed a real Keyword search for `IngestionService`: **Live / Completed**, `ingestion.py`, the same source/version/chunk IDs and raw score **0.10000000149011612**. [Browser evidence](evidence/python-ast-2026-11-22/live-browser.json), [visible result](evidence/python-ast-2026-11-22/live-browser.jpg). The page was left open. The existing result UI truthfully says Page unavailable; inline code line/symbol UI remains separate.
-- [Operational log check](evidence/python-ast-2026-11-22/operational-log-check.json) found no sampled real-source body markers in the API logs; source/secret exclusion also has automated regression coverage.
+- [Live upload](../evidence/python-ast-2026-11-22/live-upload.json) confirms a deliberately syntax-corrupted update of the same real source returned `UNPARSEABLE_SOURCE` without changing the active chunks/search results. All preexisting sources, versions, chunks and jobs were preserved. The only new retained data is this source/version/11 chunks and its qualification jobs; corpus counts changed from **12 sources / 22 chunks** to **13 / 33**.
+- After an actual API process stop/start, [restart evidence](../evidence/python-ast-2026-11-22/live-after-restart.json) confirms unchanged source/version/chunk identities, exact content/lines, Qwen counts, search scores and terminal same-key replay. [HTTP/file/SQL parity](../evidence/python-ast-2026-11-22/live-sql-parity.json) explicitly compares all chunk identities and content hashes with persisted SQL rows. [Final corpus audit](../evidence/python-ast-2026-11-22/final-corpus-audit.json) confirms later tests did not alter this state.
+- The existing side browser performed a real Keyword search for `IngestionService`: **Live / Completed**, `ingestion.py`, the same source/version/chunk IDs and raw score **0.10000000149011612**. [Browser evidence](../evidence/python-ast-2026-11-22/live-browser.json), [visible result](../evidence/python-ast-2026-11-22/live-browser.jpg). The page was left open. The existing result UI truthfully says Page unavailable; inline code line/symbol UI remains separate.
+- [Operational log check](../evidence/python-ast-2026-11-22/operational-log-check.json) found no sampled real-source body markers in the API logs; source/secret exclusion also has automated regression coverage.
 
 ### Separate synthetic regression comparison
 
-The ten committed code modules and **32 hand-labelled queries** (20 methods, 10 classes, 2 import references) are test inputs only. They are not used as proof that the live server processed real source. Each policy used its own disposable PostgreSQL database with identical source bytes, the same lexical ranker and actual top-k **5**, through real ASGI HTTP. [Input/hash audit](evidence/python-ast-2026-11-22/evaluation-audit.json), [labels](../apps/workbench/api/tests/fixtures/python/queries.json).
+The ten committed code modules and **32 hand-labelled queries** (20 methods, 10 classes, 2 import references) are test inputs only. They are not used as proof that the live server processed real source. Each policy used its own disposable PostgreSQL database with identical source bytes, the same lexical ranker and actual top-k **5**, through real ASGI HTTP. [Input/hash audit](../evidence/python-ast-2026-11-22/evaluation-audit.json), [labels](../../apps/workbench/chunking/tests/fixtures/python/queries.json).
 
 | Measured policy | Symbol hit@5 | Chunks | Actual overlap tokens | Evidence precision | Sequential upload + chunk-read time |
 | --- | --- | --- | --- | --- | --- |
 | Python AST | 32/32 | 20 | 0 | 0.941176 | 1251.92 ms |
 | Prose control, 500/50 tiktoken | 32/32 | 40 | 1500 | 0.260870 | 1482.19 ms |
 
-Reports: [AST](evidence/python-ast-2026-11-22/code-quality-python_ast.json), [prose](evidence/python-ast-2026-11-22/code-quality-prose_control.json), [benchmark test result](evidence/python-ast-2026-11-22/code-family.xml). Evidence precision here is the explicitly defined share of returned labelled-source chunks containing both the queried identifier and its hand-labelled context marker. It measures fixture context completeness, not general semantic quality. Timing is one local sequential run including chunk reads, not an SLA or a throughput claim. AST did not improve exact-identifier hit@5 on this corpus; both policies found every labelled symbol.
+Reports: [AST](../evidence/python-ast-2026-11-22/code-quality-python_ast.json), [prose](../evidence/python-ast-2026-11-22/code-quality-prose_control.json), [benchmark test result](../evidence/python-ast-2026-11-22/code-family.xml). Evidence precision here is the explicitly defined share of returned labelled-source chunks containing both the queried identifier and its hand-labelled context marker. It measures fixture context completeness, not general semantic quality. Timing is one local sequential run including chunk reads, not an SLA or a throughput claim. AST did not improve exact-identifier hit@5 on this corpus; both policies found every labelled symbol.
 
 ### Checks actually run
 
 - `hatch --version`: 1.18.2.
 - `hatch run workbench-api:check`: Ruff and format passed; `hatch run workbench-api:types`: **82 files**, passed. Probe Ruff/mypy and the edited validator registry checks passed.
-- `hatch run workbench-api:python -m pytest -q -o addopts='' -o log_cli=false apps/workbench/api/tests apps/workbench/validator/tests`: **925 passed, zero skips**, 93.35 seconds. Explicit disposable application/admin test connections and pinned native tokenizer assets were configured. [Final JUnit](evidence/python-ast-2026-11-22/backend-verified.xml), [log](evidence/python-ast-2026-11-22/backend-verified.log). API tests comprise 892 cases and validator tests 33.
+- `hatch run workbench-api:python -m pytest -q -o addopts='' -o log_cli=false apps/workbench/api/tests apps/workbench/validator/tests`: **925 passed, zero skips**, 93.35 seconds. Explicit disposable application/admin test connections and pinned native tokenizer assets were configured. [Final JUnit](../evidence/python-ast-2026-11-22/backend-verified.xml), [log](../evidence/python-ast-2026-11-22/backend-verified.log). API tests comprise 892 cases and validator tests 33.
 - After extending query families from 20 method cases to 32 method/class/import cases, the two affected disposable-database benchmark cases were rerun and passed; Ruff/mypy remained green. Production-code changes after the full run were limited to docstrings; final Ruff/mypy passed again. The earlier combined `backend-final.*` artifacts capture the discovered validator catalog failure before its repair and are not the final result.
 - Workbench `npm run typecheck`, `npm run format:check`, `npm test -- --run` (**270 tests / 13 files**) and `npm run build` passed; logs are under the same evidence directory. The real browser search above also passed.
 - Release-note YAML was checked and affected file diffs inspected. Full upstream Haystack tests and the documentation-site build were not run; neither upstream splitter code nor the frontend implementation changed. No remote deployment or production throughput guarantee is claimed.

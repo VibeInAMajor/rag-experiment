@@ -1,13 +1,13 @@
 # TASK-RAG-PARSE-001 — Deterministic file/element type detection and qualified parser registry
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-22
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — internal parser qualified; downstream consuming gates closed by CHUNK-001 and RAG-002
 **Priority:** P0 — before generalizable chunking/ingestion  
 **Dependencies:** TASK-ARCH-001, TASK-API-001, TASK-DB-001; coordinates with TASK-RAG-CHUNK-001 and TASK-RAG-002  
 **Repository snapshot reviewed:** implementation base `81e17e404014ed054736826868c775e4800f8fd3`; original blueprint reviewed `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`  
 **Target:** `tasks/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md`  
-**Architecture:** [Content-aware chunking and parser routing](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
+**Architecture:** [Content-aware chunking and parser routing](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
 
@@ -21,15 +21,15 @@ The initial ingestion plan accepts TXT/Markdown by an extension/MIME check; upco
 
 | Verified path / symbol | Existing behavior | Consequence |
 | --- | --- | --- |
-| [`haystack/components/routers/file_type_router.py`](../haystack/components/routers/file_type_router.py) `FileTypeRouter` | Classifies Paths using MIME guessed from extension and ByteStreams from metadata; unmatched/failed outputs. | **Reuse where useful inside trusted Haystack pipelines**, but it is NOT a byte-signature/magic or adversarial-upload verifier. |
-| [`haystack/components/converters/multi_file_converter.py`](../haystack/components/converters/multi_file_converter.py) `MultiFileConverter` | Already routes TXT, MD, PDF, CSV, DOCX, HTML, JSON, PPTX, XLSX to Haystack converters. MD currently handled by text converter; PDF uses `PyPDFToDocument` (no OCR). | Do not duplicate the converter suite; do not treat flattened outputs as proof of faithful structure. |
-| [`haystack/components/converters/txt.py`](../haystack/components/converters/txt.py) / [`markdown.py`](../haystack/components/converters/markdown.py) | Text and Markdown converters exist; can log failures and return zero documents. | Extraction result must be checked explicitly. |
-| [`haystack/components/preprocessors/embedding_based_document_splitter.py`](../haystack/components/preprocessors/embedding_based_document_splitter.py) | Semantic `EmbeddingBasedDocumentSplitter` already exists. | Advanced policy is future inference work, **not** a new splitter library implementation. |
-| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) / [`boundary.py`](../apps/workbench/api/boundary.py) | Current read-only FastAPI/strict boundary. | No public upload or format capability currently; registry must not claim one. |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | Versioned v1 contracts and `CapabilitiesResponse.features.documents/search`. | Add upload/format advertisement only when its consuming HTTP workflow is really ready, in TASK-RAG-002. |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | `Source`, `SourceVersion`, `Chunk`, `WorkspaceContext` metadata/identity types. | Reuse provenance concepts; no new storage or database SDK in policy. |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | `PostgresPersistence.publish_source()` uses scoped atomic version publication. | Keep all writes in existing port; this task performs no writes. |
-| [`apps/workbench/web/src/domain/catalog.ts`](../apps/workbench/web/src/domain/catalog.ts) | UI displays generic parser/chunker fields and ambiguous 500/50 size. | Neither UI labels nor filename are authoritative parser/profile selection. |
+| [`haystack/components/routers/file_type_router.py`](../../haystack/components/routers/file_type_router.py) `FileTypeRouter` | Classifies Paths using MIME guessed from extension and ByteStreams from metadata; unmatched/failed outputs. | **Reuse where useful inside trusted Haystack pipelines**, but it is NOT a byte-signature/magic or adversarial-upload verifier. |
+| [`haystack/components/converters/multi_file_converter.py`](../../haystack/components/converters/multi_file_converter.py) `MultiFileConverter` | Already routes TXT, MD, PDF, CSV, DOCX, HTML, JSON, PPTX, XLSX to Haystack converters. MD currently handled by text converter; PDF uses `PyPDFToDocument` (no OCR). | Do not duplicate the converter suite; do not treat flattened outputs as proof of faithful structure. |
+| [`haystack/components/converters/txt.py`](../../haystack/components/converters/txt.py) / [`markdown.py`](../../haystack/components/converters/markdown.py) | Text and Markdown converters exist; can log failures and return zero documents. | Extraction result must be checked explicitly. |
+| [`haystack/components/preprocessors/embedding_based_document_splitter.py`](../../haystack/components/preprocessors/embedding_based_document_splitter.py) | Semantic `EmbeddingBasedDocumentSplitter` already exists. | Advanced policy is future inference work, **not** a new splitter library implementation. |
+| [`apps/workbench/api/application.py`](../../apps/workbench/api/application.py) / [`boundary.py`](../../apps/workbench/api/boundary.py) | Current read-only FastAPI/strict boundary. | No public upload or format capability currently; registry must not claim one. |
+| [`apps/workbench/contracts/schemas.py`](../../apps/workbench/contracts/schemas.py) | Versioned v1 contracts and `CapabilitiesResponse.features.documents/search`. | Add upload/format advertisement only when its consuming HTTP workflow is really ready, in TASK-RAG-002. |
+| [`apps/workbench/persistence/models.py`](../../apps/workbench/persistence/models.py) | `Source`, `SourceVersion`, `Chunk`, `WorkspaceContext` metadata/identity types. | Reuse provenance concepts; no new storage or database SDK in policy. |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | `PostgresPersistence.publish_source()` uses scoped atomic version publication. | Keep all writes in existing port; this task performs no writes. |
+| [`apps/workbench/web/src/domain/catalog.ts`](../../apps/workbench/web/src/domain/catalog.ts) | UI displays generic parser/chunker fields and ambiguous 500/50 size. | Neither UI labels nor filename are authoritative parser/profile selection. |
 | [`tasks/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md`](TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md) | Referenced blueprint was absent at implementation base; this change adds an explicitly planned handoff. | Its future input is a typed, **verified** parser/element result from this task. |
 
 **Reinspection on 2026-11-21:** `FileTypeRouter` trusts extension/metadata; `MultiFileConverter` sends Markdown through the text converter and PDF through `PyPDFToDocument` without OCR. Existing text extraction can return zero documents on failure. No `parsing.py`, `parser_registry.py` or `ingestion.py` existed at the implementation base. This change adds the first two as internal application modules; ingestion remains absent. The architecture page and both referenced downstream task documents were also absent; this change creates an actual format matrix and explicitly planned handoffs. Navigation documents reside in `docs-website/PROJECT_MAP.md` and `docs-website/ENGINEERING.md`, despite stale root `docs/` links.
@@ -100,11 +100,11 @@ ParsedDocument:
 
 | Path | Change / owner |
 | --- | --- |
-| `apps/workbench/api/parser_registry.py` | **CREATE** only one compact allowlisted descriptor registry + availability checks; no plugin discovery. |
-| `apps/workbench/api/parsing.py` | **CREATE** neutral source inspection, immutable contracts, typed projection and safe operational metadata. |
-| `apps/workbench/api/parsing_adapters.py` | **CREATE** isolated Haystack byte extraction; no caller-controlled names, paths or metadata reach the converter. |
-| `apps/workbench/api/tests/test_parser_registry.py` | **CREATE** exhaustive matrix, rejection and deterministic fixtures. |
-| `apps/workbench/api/tests/test_parsing.py` | **CREATE** TXT/MD raw bytes, BOM, headings, malformed Unicode, false MIME, over-size. |
+| `apps/workbench/parsing/parser_registry.py` | **CREATE** only one compact allowlisted descriptor registry + availability checks; no plugin discovery. |
+| `apps/workbench/parsing/parsing.py` | **CREATE** neutral source inspection, immutable contracts, typed projection and safe operational metadata. |
+| `apps/workbench/parsing/parsing_adapters.py` | **CREATE** isolated Haystack byte extraction; no caller-controlled names, paths or metadata reach the converter. |
+| `apps/workbench/parsing/tests/test_parser_registry.py` | **CREATE** exhaustive matrix, rejection and deterministic fixtures. |
+| `apps/workbench/parsing/tests/test_parsing.py` | **CREATE** TXT/MD raw bytes, BOM, headings, malformed Unicode, false MIME, over-size. |
 | `apps/workbench/api/tests/test_http_contract.py` | Extend the existing architecture import check to recognize the reviewed parser adapter while preserving the neutral-core provider ban. |
 | `docs-website/docs/architecture/content-aware-chunking-strategy.md` | **CREATE** actual `available/qualified/planned` matrix and conservative structure/provenance contract. |
 | `tasks/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md` and `tasks/TASK-RAG-002-ingest-text-and-markdown.md` | **CREATE** explicitly planned intake/decision handoffs; executable consumers were absent. |
@@ -114,7 +114,7 @@ ParsedDocument:
 
 `pyproject.toml` remains unchanged: the existing pinned app Haystack dependency supplies the reused text converter; no new global or optional Markdown dependency is needed.
 
-**Must NOT change:** `haystack/` implementations, `apps/workbench/api/migrations/0001_initial.up.sql`, `PostgresPersistence` write semantics, existing search score contract, frontend Preview fixtures or validation-only service.
+**Must NOT change:** `haystack/` implementations, `apps/workbench/postgres/migrations/0001_initial.up.sql`, `PostgresPersistence` write semantics, existing search score contract, frontend Preview fixtures or validation-only service.
 
 ## J. Implementation Requirements — ordered blueprint
 
@@ -173,7 +173,7 @@ Treat all input bytes, filenames, user-provided MIME and future parser metadata 
 
 ### Executed internal checks and deferred gates
 
-Exact command output and focused/full JUnit reports are in the [evidence directory](evidence/parser-registry-2026-11-21/). The application lint/format and type checks pass; focused parser/registry fixtures and the full application regression suite pass. Container-backed PostgreSQL tests skip without explicit `WORKBENCH_TEST_ADMIN_DSN` and `WORKBENCH_TEST_APP_DSN`. The evidence summary records final counts and reasons; no storage integration result is inferred from those skips.
+Exact command output and focused/full JUnit reports are in the [evidence directory](../evidence/parser-registry-2026-11-21/). The application lint/format and type checks pass; focused parser/registry fixtures and the full application regression suite pass. Container-backed PostgreSQL tests skip without explicit `WORKBENCH_TEST_ADMIN_DSN` and `WORKBENCH_TEST_APP_DSN`. The evidence summary records final counts and reasons; no storage integration result is inferred from those skips.
 
 Fixture coverage includes reviewed aliases, all planned registry families, known binary signatures and misleading names, corrupt/control/empty text, BOM/Cyrillic, deterministic spans/heading anchors, protected raw Markdown, converter cardinality/empty/changed/error outputs, missing dependencies, one-dispatch behavior, immutable contracts, safe logs and byte/element/deadline refusals. This is a scenario coverage summary; no numerical line/branch coverage is claimed.
 
@@ -213,7 +213,7 @@ Markdown architecture matrix records **library/upstream/planned/qualified** inde
 
 ### Successor integration qualification — 2026-11-22
 
-The original parser and diagnostic runtime observations above remain historical. The separate [RAG-002 workflow](TASK-RAG-002-ingest-text-and-markdown.md) now closes upload/publication/read/retrieval gates with real same-volume migration, two TXT/Markdown uploads, API/database recovery and visible browser searches. Its [independent audit](evidence/ingestion-2026-11-22/evidence-audit.json) passed; this successor evidence does not retroactively change the earlier parser test counts or advertise other formats.
+The original parser and diagnostic runtime observations above remain historical. The separate [RAG-002 workflow](TASK-RAG-002-ingest-text-and-markdown.md) now closes upload/publication/read/retrieval gates with real same-volume migration, two TXT/Markdown uploads, API/database recovery and visible browser searches. Its [independent audit](../evidence/ingestion-2026-11-22/evidence-audit.json) passed; this successor evidence does not retroactively change the earlier parser test counts or advertise other formats.
 
 ## O. Mandatory Completion Checklist
 
@@ -221,7 +221,7 @@ The original parser and diagnostic runtime observations above remain historical.
 - [x] Format aliases, known-signature checks, parser statuses, typed elements and explicit refusal states implemented.
 - [x] Security review/tests cover misleading format extensions, archive signatures, MIME injection, unsafe names and nonexecution; signature-detection limitations are explicit.
 - [x] CHUNK-001 consumes the verified parser contract without a duplicated classifier; its internal tests and diagnostic HTTP execution qualify the parser-to-chunk handoff.
-- [x] RAG-002 consumes the contract in a workspace-scoped upload/publication workflow. **Successor RAG-002 implemented this outside the original parser scope; local live gates and final independent artifact audit passed; see [RAG-002 evidence](evidence/ingestion-2026-11-22/evidence-audit.json).**
+- [x] RAG-002 consumes the contract in a workspace-scoped upload/publication workflow. **Successor RAG-002 implemented this outside the original parser scope; local live gates and final independent artifact audit passed; see [RAG-002 evidence](../evidence/ingestion-2026-11-22/evidence-audit.json).**
 - [x] Internal unit, negative, contract, static and application regression gates executed; exact evidence referenced.
 - [x] Consuming parser → chunking → stored version → read/retrieval integration gate executed. **Successor RAG-002 now supplies real same-volume upload/publication/read/retrieval and restart evidence; final independent artifact audit passed. Original parser test skips remain historical and do not establish these later gates.**
 - [x] Docs/capabilities report only real qualified behavior; no public upload/capability contract changed.
