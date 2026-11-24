@@ -1,7 +1,7 @@
 # TASK-RAG-CONVERT-001 — Evaluate Microsoft MarkItDown for loss-aware Markdown conversion
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, no runtime claim  
 **Priority:** P1  
 **Dependencies:** completed RAG-PARSE-001/RAG-002; CONTENT-001 for exact originals  
@@ -18,7 +18,7 @@ The Microsoft open-source MarkItDown utility converts common PDF, Office, HTML a
 
 ## C. Current Repository State
 
-[parsing.py](../apps/workbench/api/parsing.py) and [parser_registry.py](../apps/workbench/api/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/api/chunking.py), [ingestion.py](../apps/workbench/api/ingestion.py) and [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [persistence.py](../apps/workbench/api/persistence.py) and [postgres.py](../apps/workbench/api/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [contracts.py](../apps/workbench/api/contracts.py) own API/capabilities. [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [pdf_models.py](../apps/workbench/api/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
+[parsing.py](../apps/workbench/parsing/parsing.py) and [parser_registry.py](../apps/workbench/parsing/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/chunking/chunking.py), [ingestion.py](../apps/workbench/ingestion/ingestion.py) and [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [models.py](../apps/workbench/persistence/models.py) and [postgres.py](../apps/workbench/postgres/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [schemas.py](../apps/workbench/contracts/schemas.py) own API/capabilities. [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
 Existing Markdown ingestion preserves structural headings/fences; current project has no MarkItDown application adapter. Official Microsoft MarkItDown docs https://github.com/microsoft/markitdown warn it targets analysis rather than human high-fidelity conversion. Existing Docling PDF is being qualified and must not be discarded; repository state may advance, so confirm parser registry and tests before coding.
 
 **Verification limit:** this is a source-backed task, not proof that the proposed feature exists. Re-inspect current code at implementation start.
@@ -47,7 +47,7 @@ External schema changes MUST be reviewed in Pydantic/OpenAPI/client and versione
 
 ## I. Repository Files / Components Impacted
 
-Use [parsing.py](../apps/workbench/api/parsing.py), [parser_registry.py](../apps/workbench/api/parser_registry.py), [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [ingestion.py](../apps/workbench/api/ingestion.py); CREATE tests/test_markitdown_comparison.py, safe non-sensitive file fixtures and tasks/MARKITDOWN_CONVERSION_DECISION_2026-11-23.md. Only after GO may conversion_adapters.py and pinned dependency be introduced. MUST NOT touch applied migrations or current Live index during trial.
+Use [parsing.py](../apps/workbench/parsing/parsing.py), [parser_registry.py](../apps/workbench/parsing/parser_registry.py), [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), [ingestion.py](../apps/workbench/ingestion/ingestion.py); CREATE apps/workbench/parsing/tests/test_markitdown_comparison.py, safe non-sensitive file fixtures and tasks/MARKITDOWN_CONVERSION_DECISION_2026-11-23.md. Only after GO may conversion_adapters.py and pinned dependency be introduced. MUST NOT touch applied migrations or current Live index during trial.
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
@@ -55,14 +55,14 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/api/parser_registry.py`](../apps/workbench/api/parser_registry.py) | trusted file classification and qualified parsers |
-| [`apps/workbench/api/parsing.py`](../apps/workbench/api/parsing.py) | ParsedDocument/ParsedElement and Markdown fences |
-| [`apps/workbench/api/pdf_worker.py`](../apps/workbench/api/pdf_worker.py) | existing isolated Docling text/table parser |
-| [`apps/workbench/api/pdf_models.py`](../apps/workbench/api/pdf_models.py) | page/box/table structure to compare against Markdown |
-| [`apps/workbench/api/pdf_chunking_adapter.py`](../apps/workbench/api/pdf_chunking_adapter.py) | Docling HybridChunker and structural retrieval text |
-| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | approved ingestion and source fingerprints |
-| [`apps/workbench/api/tests/test_parsing.py`](../apps/workbench/api/tests/test_parsing.py) | Markdown structure/fenced blocks tests |
-| [`apps/workbench/api/tests/test_pdf_chunking.py`](../apps/workbench/api/tests/test_pdf_chunking.py) | page/table golden test |
+| [`apps/workbench/parsing/parser_registry.py`](../apps/workbench/parsing/parser_registry.py) | trusted file classification and qualified parsers |
+| [`apps/workbench/parsing/parsing.py`](../apps/workbench/parsing/parsing.py) | ParsedDocument/ParsedElement and Markdown fences |
+| [`apps/workbench/parsing/pdf/pdf_worker.py`](../apps/workbench/parsing/pdf/pdf_worker.py) | existing isolated Docling text/table parser |
+| [`apps/workbench/parsing/pdf/pdf_models.py`](../apps/workbench/parsing/pdf/pdf_models.py) | page/box/table structure to compare against Markdown |
+| [`apps/workbench/chunking/pdf/pdf_chunking_adapter.py`](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) | Docling HybridChunker and structural retrieval text |
+| [`apps/workbench/ingestion/ingestion.py`](../apps/workbench/ingestion/ingestion.py) | approved ingestion and source fingerprints |
+| [`apps/workbench/parsing/tests/test_parsing.py`](../apps/workbench/parsing/tests/test_parsing.py) | Markdown structure/fenced blocks tests |
+| [`apps/workbench/chunking/pdf/tests/test_pdf_chunking.py`](../apps/workbench/chunking/pdf/tests/test_pdf_chunking.py) | page/table golden test |
 
 **Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/20-implementation-step-03-parsing-and-chunking.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/20-implementation-step-03-parsing-and-chunking.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
 

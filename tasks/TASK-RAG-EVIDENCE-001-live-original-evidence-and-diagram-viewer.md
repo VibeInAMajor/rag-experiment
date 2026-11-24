@@ -1,7 +1,7 @@
 # TASK-RAG-EVIDENCE-001 — Connect original PDF/image/Mermaid evidence to the Live Workbench UI
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, not implemented  
 **Priority:** P1 after verified evidence resolver  
 **Dependencies:** CONTENT-001 and CONTENT-005; completed UI-001/UI-002; CONTENT-002/003/004 add format-specific providers  
@@ -18,7 +18,7 @@ CONTENT-001 will persist original assets and derived representations, and CONTEN
 
 ## C. Current Repository State
 
-[DocumentsView.tsx](../apps/workbench/web/src/views/DocumentsView.tsx) currently consumes PreviewDocument[]; [ResultsPanel.tsx](../apps/workbench/web/src/components/ResultsPanel.tsx) and [RunsView.tsx](../apps/workbench/web/src/views/RunsView.tsx) show session search results. [local_sources.py](../apps/workbench/api/local_sources.py) offers host-local original reveal for a registered source, **not** a general authenticated PDF/image asset endpoint. [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) are existing PROPOSED specs and must be implemented before UI promises original evidence.
+[DocumentsView.tsx](../apps/workbench/web/src/views/DocumentsView.tsx) currently consumes PreviewDocument[]; [ResultsPanel.tsx](../apps/workbench/web/src/components/ResultsPanel.tsx) and [RunsView.tsx](../apps/workbench/web/src/views/RunsView.tsx) show session search results. [local_sources.py](../apps/workbench/sources/local_sources.py) offers host-local original reveal for a registered source, **not** a general authenticated PDF/image asset endpoint. [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) and [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) are existing PROPOSED specs and must be implemented before UI promises original evidence.
 
 **Evidence rule:** this source audit is not proof that the proposed new feature is working. Re-read code and tests at task start.
 
@@ -54,9 +54,9 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/api/local_sources.py`](../apps/workbench/api/local_sources.py) | guarded registered original local Windows file reveal; NOT general asset serving |
-| [`apps/workbench/api/source_registration.py`](../apps/workbench/api/source_registration.py) | source registration/version identity |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | current source metadata and API response |
+| [`apps/workbench/sources/local_sources.py`](../apps/workbench/sources/local_sources.py) | guarded registered original local Windows file reveal; NOT general asset serving |
+| [`apps/workbench/sources/source_registration.py`](../apps/workbench/sources/source_registration.py) | source registration/version identity |
+| [`apps/workbench/contracts/schemas.py`](../apps/workbench/contracts/schemas.py) | current source metadata and API response |
 | [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | readiness/capabilities and route owner |
 | [`apps/workbench/web/src/api/client.ts`](../apps/workbench/web/src/api/client.ts) | typed HTTP client and abort path |
 | [`apps/workbench/web/src/components/ResultsPanel.tsx`](../apps/workbench/web/src/components/ResultsPanel.tsx) | Live versus Preview result presentation |

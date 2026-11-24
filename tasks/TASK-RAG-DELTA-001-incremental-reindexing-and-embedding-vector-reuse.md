@@ -1,7 +1,7 @@
 # TASK-RAG-DELTA-001 — Version-aware chunk deltas and safe embedding reuse
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, no runtime claim  
 **Priority:** P1  
 **Dependencies:** EMBED-002, INDEX-001, PROFILE-001; CONTENT-001 for evidence  
@@ -18,8 +18,8 @@ The current publisher handles whole-source unchanged detection using source and 
 
 ## C. Current Repository State
 
-[parsing.py](../apps/workbench/api/parsing.py) and [parser_registry.py](../apps/workbench/api/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/api/chunking.py), [ingestion.py](../apps/workbench/api/ingestion.py) and [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [persistence.py](../apps/workbench/api/persistence.py) and [postgres.py](../apps/workbench/api/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [contracts.py](../apps/workbench/api/contracts.py) own API/capabilities. [pdf_worker.py](../apps/workbench/api/pdf_worker.py), [pdf_models.py](../apps/workbench/api/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
-[postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) returns unchanged on matching active content_hash and processing_profile_fingerprint. [chunking.py](../apps/workbench/api/chunking.py) prepares structured chunks; [ingestion.py](../apps/workbench/api/ingestion.py) persists processing identity. No cross-version per-chunk model-input vector reuse registry exists.
+[parsing.py](../apps/workbench/parsing/parsing.py) and [parser_registry.py](../apps/workbench/parsing/parser_registry.py) own verified file classification; [chunking.py](../apps/workbench/chunking/chunking.py), [ingestion.py](../apps/workbench/ingestion/ingestion.py) and [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) implement bounded parsing, jobs and PostgreSQL publication. [models.py](../apps/workbench/persistence/models.py) and [postgres.py](../apps/workbench/postgres/postgres.py) own workspace-scoped source versions and lexical/vector storage. [application.py](../apps/workbench/api/application.py), [schemas.py](../apps/workbench/contracts/schemas.py) own API/capabilities. [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py), [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) already implement substantial offline Docling text/table processing; do not duplicate them.
+[postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) returns unchanged on matching active content_hash and processing_profile_fingerprint. [chunking.py](../apps/workbench/chunking/chunking.py) prepares structured chunks; [ingestion.py](../apps/workbench/ingestion/ingestion.py) persists processing identity. No cross-version per-chunk model-input vector reuse registry exists.
 
 **Verification limit:** this is a source-backed task, not proof that the proposed feature exists. Re-inspect current code at implementation start.
 
@@ -47,7 +47,7 @@ External schema changes MUST be reviewed in Pydantic/OpenAPI/client and versione
 
 ## I. Repository Files / Components Impacted
 
-CREATE apps/workbench/api/delta_indexing.py, tests/test_delta_indexing.py, golden fixtures with code, MD and tables. MODIFY embedding ingestion backfill implementation minimally and reuse [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) and CONTENT-001 evidence links. No new source store.
+CREATE apps/workbench/ingestion/delta_indexing.py, apps/workbench/ingestion/tests/test_delta_indexing.py, golden fixtures with code, MD and tables. MODIFY embedding ingestion backfill implementation minimally and reuse [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) and CONTENT-001 evidence links. No new source store.
 
 MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile score labels, Preview fixtures or authority of existing store.
 
@@ -57,14 +57,14 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 
 | Repository file | Existing owner; exact integration role |
 | --- | --- |
-| [`apps/workbench/api/ingestion.py`](../apps/workbench/api/ingestion.py) | full-source SHA and processing profile recorded on upload |
-| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | unchanged source/idempotent replay and complete source version switch |
-| [`apps/workbench/api/chunking.py`](../apps/workbench/api/chunking.py) | PreparedChunk and structural identity+profile fingerprint |
-| [`apps/workbench/api/chunking_adapters.py`](../apps/workbench/api/chunking_adapters.py) | source-provenance-compatible projection into prepared chunks |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | Chunk/SourceVersion models and workspace ownership |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | existing active source version and vector_search; no physical point alias |
+| [`apps/workbench/ingestion/ingestion.py`](../apps/workbench/ingestion/ingestion.py) | full-source SHA and processing profile recorded on upload |
+| [`apps/workbench/postgres/postgres_ingestion.py`](../apps/workbench/postgres/postgres_ingestion.py) | unchanged source/idempotent replay and complete source version switch |
+| [`apps/workbench/chunking/chunking.py`](../apps/workbench/chunking/chunking.py) | PreparedChunk and structural identity+profile fingerprint |
+| [`apps/workbench/chunking/chunking_adapters.py`](../apps/workbench/chunking/chunking_adapters.py) | source-provenance-compatible projection into prepared chunks |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | Chunk/SourceVersion models and workspace ownership |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | existing active source version and vector_search; no physical point alias |
 | [`apps/workbench/api/tests/test_python_ingestion.py`](../apps/workbench/api/tests/test_python_ingestion.py) | code source-update and AST provenance fixture |
-| [`apps/workbench/api/tests/test_ingestion_persistence.py`](../apps/workbench/api/tests/test_ingestion_persistence.py) | duplicate, conflict, failure and version checks |
+| [`apps/workbench/postgres/tests/test_ingestion_persistence.py`](../apps/workbench/postgres/tests/test_ingestion_persistence.py) | duplicate, conflict, failure and version checks |
 
 **Pinned previous-project candidates (do NOT copy unlicensed code or Qdrant/SQLite infrastructure):** donor commit `955fd049949d3fc462d555be14774e4b255aa15c`.
 

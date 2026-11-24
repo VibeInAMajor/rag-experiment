@@ -1,13 +1,13 @@
 # TASK-RAG-PARSE-003 — CSV, TSV and XLSX table-aware ingestion
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — blueprint, not implemented  
 **Priority:** P1 — spreadsheets and tabular business data  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001  
 **Repository snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
 **Target:** `tasks/TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md  
-**Architecture:** [Content-aware format/strategy matrix](../../docs-website/docs/architecture/content-aware-chunking-strategy.md)
+**Architecture:** [Content-aware format/strategy matrix](../docs-website/docs/architecture/content-aware-chunking-strategy.md)
 
 ## A. Title
 
@@ -19,7 +19,7 @@ Naively splitting a spreadsheet every 500 tokens detaches data rows from their h
 
 ## C. Current Repository State
 
-**Source audit refreshed 2026-11-23:** [RAG-002](../completed/TASK-RAG-002-ingest-text-and-markdown.md) and [PARSE-001](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) are complete. The existing [parser_registry.py](../../apps/workbench/api/parser_registry.py) contains a `DELIMITED_TABLE` candidate but does **not** qualify CSV/TSV/XLSX for public ingestion. The existing upload, document metadata, chunks and jobs are implemented; this task only adds approved spreadsheet/CSV format adapters and provenance. Spreadsheet parsing is NOT already implemented simply because Haystack `XLSXToDocument` or `CSVDocumentSplitter` exists upstream.
+**Source audit refreshed 2026-11-23:** [RAG-002](completed/TASK-RAG-002-ingest-text-and-markdown.md) and [PARSE-001](completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md) are complete. The existing [parser_registry.py](../apps/workbench/parsing/parser_registry.py) contains a `DELIMITED_TABLE` candidate but does **not** qualify CSV/TSV/XLSX for public ingestion. The existing upload, document metadata, chunks and jobs are implemented; this task only adds approved spreadsheet/CSV format adapters and provenance. Spreadsheet parsing is NOT already implemented simply because Haystack `XLSXToDocument` or `CSVDocumentSplitter` exists upstream.
 
 | Inspected source | Existing behavior | Boundary |
 | --- | --- | --- |
@@ -27,9 +27,9 @@ Naively splitting a spreadsheet every 500 tokens detaches data rows from their h
 | [`haystack/components/preprocessors/csv_document_splitter.py`](../../haystack/components/preprocessors/csv_document_splitter.py) `CSVDocumentSplitter` | Already supports row-wise and threshold mode and source row/column start metadata. | Reuse; its pandas optional dependency and read kwargs need qualification. |
 | [`haystack/components/converters/xlsx.py`](../../haystack/components/converters/xlsx.py) `XLSXToDocument` | Extracts each sheet into a tabular `Document`; supports CSV/Markdown table representation. | A flattened sheet is not a proven cell-level lineage; verify sheet/cell positions. |
 | [`haystack/components/converters/multi_file_converter.py`](../../haystack/components/converters/multi_file_converter.py) | Routes CSV/XLSX using existing converters. | Reuse without reducing output to an opaque text blob. |
-| [`apps/workbench/api/persistence.py`](../../apps/workbench/api/persistence.py) `Chunk.metadata` | JSONB provenance; `page` optional. | Sheet/row/cell are separate typed metadata; do not overload `page`. |
-| [`apps/workbench/api/postgres.py`](../../apps/workbench/api/postgres.py) | Atomic version activation under RLS. | Reuse; no second spreadsheet DB. |
-| [`apps/workbench/api/lexical.py`](../../apps/workbench/api/lexical.py) | Native PostgreSQL `simple`/`ts_rank_cd` lexical retrieval. | Numeric/text exact matching requires actual benchmark; formula evaluation unsupported. |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) `Chunk.metadata` | JSONB provenance; `page` optional. | Sheet/row/cell are separate typed metadata; do not overload `page`. |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | Atomic version activation under RLS. | Reuse; no second spreadsheet DB. |
+| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | Native PostgreSQL `simple`/`ts_rank_cd` lexical retrieval. | Numeric/text exact matching requires actual benchmark; formula evaluation unsupported. |
 
 The application-level upload/job/detail/chunk routes are implemented for currently qualified formats, but **no CSV/TSV/XLSX format adapter is qualified** in the current parser registry.
 
@@ -69,10 +69,10 @@ No formula execution/recalculation, spreadsheet macros, `.xlsm` automatic suppor
 
 ## I. Repository Files / Components Impacted
 
-- CREATE `apps/workbench/api/parsers/tabular.py` or the existing parsing module's focused equivalent.
-- EXTEND `apps/workbench/api/parser_registry.py` and `apps/workbench/api/chunking.py` (defined in PARSE-001/CHUNK-001).
-- EXTEND `apps/workbench/api/ingestion.py`, `contracts.py`, `application.py`, and `openapi.json` only for approved formats; reuse shared upload/limits.
-- CREATE `apps/workbench/api/tests/test_tabular_parsing.py`; EXTEND integration `test_ingestion_routes.py` and retrieval fixtures.
+- CREATE `apps/workbench/parsing/tabular.py` or the existing parsing module's focused equivalent.
+- EXTEND `apps/workbench/parsing/parser_registry.py` and `apps/workbench/chunking/chunking.py` (defined in PARSE-001/CHUNK-001).
+- EXTEND `apps/workbench/ingestion/ingestion.py`, `apps/workbench/contracts/schemas.py`, `apps/workbench/api/application.py`, and `apps/workbench/api/openapi.json` only for approved formats; reuse shared upload/limits.
+- CREATE `apps/workbench/parsing/tests/test_tabular_parsing.py`; EXTEND integration `test_ingestion_routes.py` and retrieval fixtures.
 - UPDATE `docs-website/docs/architecture/content-aware-chunking-strategy.md` and API runbook.
 - Must NOT edit applied migration, Haystack library code, PostgreSQL score label, general JSON/YAML config parsing or external file system paths.
 
@@ -80,7 +80,7 @@ No formula execution/recalculation, spreadsheet macros, `.xlsm` automatic suppor
 
 ### J0. Reconcile completed app owners and format-specific handoffs
 
-1. Confirm current [parser registry](../../apps/workbench/api/parser_registry.py), [parsing.py](../../apps/workbench/api/parsing.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [chunking.py](../../apps/workbench/api/chunking.py), [PostgreSQL publication](../../apps/workbench/api/postgres_ingestion.py) and [actual contracts](../../apps/workbench/api/contracts.py). The old blueprint predates completed RAG-002 and PARSE-001; do not reimplement their components.
+1. Confirm current [parser registry](../apps/workbench/parsing/parser_registry.py), [parsing.py](../apps/workbench/parsing/parsing.py), [ingestion_http.py](../apps/workbench/api/ingestion_http.py), [chunking.py](../apps/workbench/chunking/chunking.py), [PostgreSQL publication](../apps/workbench/postgres/postgres_ingestion.py) and [actual contracts](../apps/workbench/contracts/schemas.py). The old blueprint predates completed RAG-002 and PARSE-001; do not reimplement their components.
 2. Build a format/element/asset/evidence matrix and mark all unsupported extractions `NOT_QUALIFIED`; record original evidence status separately from parsed text.
 3. Align this task's format-specific `ParsedElement` projection with CONTENT-001's long-lived `DocumentElement` contract **without building it here**. Confirm all source/span/line/page/time units are explicitly defined before using them as citations.
 
