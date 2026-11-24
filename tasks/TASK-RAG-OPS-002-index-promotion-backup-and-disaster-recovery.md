@@ -1,7 +1,7 @@
 # TASK-RAG-OPS-002 — Search generation build, promotion, backup/restore and zero-data-loss recovery
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint, not implemented  
 **Priority:** P1 before production index releases  
 **Dependencies:** INDEX-001, PROFILE-001, EMBED-002, ANN-001; coordinate CONTENT-001 and SCALE-002  
@@ -18,7 +18,7 @@ Production ANN builds, model version upgrades, embedding backfills and multi-wor
 
 ## C. Current Repository State
 
-[PostgreSQL runbook](../docs-website/docs/architecture/postgresql-foundation.md) covers pinned Docker service, migrations, seed and basic persistence. [db_migrations.py](../apps/workbench/api/db_migrations.py) is checksum validated. [postgres.py](../apps/workbench/api/postgres.py) supports active source version, GIN and exact cosine; [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) makes publish+job atomic. There is no unified production semantic generation lifecycle, ANN build promotion or verified blob+SQL restore process yet.
+[PostgreSQL runbook](../docs-website/docs/architecture/postgresql-foundation.md) covers pinned Docker service, migrations, seed and basic persistence. [db_migrations.py](../apps/workbench/postgres/db_migrations.py) is checksum validated. [postgres.py](../apps/workbench/postgres/postgres.py) supports active source version, GIN and exact cosine; [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) makes publish+job atomic. There is no unified production semantic generation lifecycle, ANN build promotion or verified blob+SQL restore process yet.
 
 **Evidence rule:** this source audit is not proof that the proposed new feature is working. Re-read code and tests at task start.
 
@@ -46,7 +46,7 @@ IndexGeneration{workspace,profile_id,source_generation,embedding_profile,physica
 
 ## I. Repository Files / Components Impacted
 
-CREATE apps/workbench/api/index_lifecycle.py and tests/test_index_lifecycle.py, apps/workbench/postgres/operator-index.ps1 (only if conventional) and tasks/INDEX_OPERATIONS_RUNBOOK_2026-11-23.md. MODIFY Postgres adapters/profiles only after INDEX-001/ANN-001 implementation; REUSE current [db_migrations.py](../apps/workbench/api/db_migrations.py) and [PostgresPersistence](../apps/workbench/api/postgres.py). MUST NOT rewrite 0001/0002 or remove named DB volume.
+CREATE apps/workbench/postgres/index_lifecycle.py and apps/workbench/postgres/tests/test_index_lifecycle.py, apps/workbench/postgres/operator-index.ps1 (only if conventional) and tasks/INDEX_OPERATIONS_RUNBOOK_2026-11-23.md. MODIFY Postgres adapters/profiles only after INDEX-001/ANN-001 implementation; REUSE current [db_migrations.py](../apps/workbench/postgres/db_migrations.py) and [PostgresPersistence](../apps/workbench/postgres/postgres.py). MUST NOT rewrite 0001/0002 or remove named DB volume.
 
 MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated Preview/validator implementations as a shortcut.
 
@@ -54,14 +54,14 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | explicit checksum schema upgrades; no auto migrate |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | source active constraints/GIN/vector |
-| [`apps/workbench/api/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/api/migrations/0002_ingestion_jobs.up.sql) | job transactional lifecycle |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | _publish active source version and lexical/vector read |
-| [`apps/workbench/api/postgres_ingestion.py`](../apps/workbench/api/postgres_ingestion.py) | idempotent terminal job commit and RLS |
+| [`apps/workbench/postgres/db_migrations.py`](../apps/workbench/postgres/db_migrations.py) | explicit checksum schema upgrades; no auto migrate |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | source active constraints/GIN/vector |
+| [`apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql`](../apps/workbench/postgres/migrations/0002_ingestion_jobs.up.sql) | job transactional lifecycle |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | _publish active source version and lexical/vector read |
+| [`apps/workbench/postgres/postgres_ingestion.py`](../apps/workbench/postgres/postgres_ingestion.py) | idempotent terminal job commit and RLS |
 | [`docs-website/docs/architecture/postgresql-foundation.md`](../docs-website/docs/architecture/postgresql-foundation.md) | current backups/restart and local Docker |
 | [`apps/workbench/postgres/compose.yaml`](../apps/workbench/postgres/compose.yaml) | named persistent volume and pinned image |
-| [`apps/workbench/api/tests/test_database_migrations.py`](../apps/workbench/api/tests/test_database_migrations.py) | upgrade path tests |
+| [`apps/workbench/postgres/tests/test_database_migrations.py`](../apps/workbench/postgres/tests/test_database_migrations.py) | upgrade path tests |
 
 **Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/63-progressive-repository-indexing-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/63-progressive-repository-indexing-architecture.md); [`docs/64-document-versioned-rag-state-architecture.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/64-document-versioned-rag-state-architecture.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
 

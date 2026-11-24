@@ -1,7 +1,7 @@
 # TASK-RAG-BM25-002 — Conditional BM25 PostgreSQL extension and truthful Live search profile
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** BLOCKED — GO decision and approval required  
 **Priority:** P2 BLOCKED until BM25-001 Go + approved license and deployment  
 **Dependencies:** BM25-001 GO decision, PROFILE-001, INDEX-001, SCALE-001 authorization strategy  
@@ -18,7 +18,7 @@ If a benchmark justifies BM25, implement it as a **second, specifically named** 
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/api/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/api/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/api/profiles.py) exposes only postgres-fts-baseline-r1. [contracts.py](../apps/workbench/api/contracts.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/api/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
+**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
 Current native index chunks_search_vector uses GIN+tsvector and is required by lexical readiness. Existing SearchResponse score_type postgres_ts_rank_cd. No BM25 extension is installed by 0001/0002 and no product agreement to deploy AGPL pg_search has been recorded. [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md) must settle algorithm, version, license and quality gate.
 
 ## D. Goal
@@ -49,12 +49,12 @@ CREATE app-owned bm25.py adapter/test suite and next additive extension-specific
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/api/migrations/0001_initial.up.sql`](../apps/workbench/api/migrations/0001_initial.up.sql) | keep native GIN index |
-| [`apps/workbench/api/db_migrations.py`](../apps/workbench/api/db_migrations.py) | additive change approval |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | persistent workspace + active version SQL source |
-| [`apps/workbench/api/profiles.py`](../apps/workbench/api/profiles.py) | current FTS-only profile constants |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | keep native GIN index |
+| [`apps/workbench/postgres/db_migrations.py`](../apps/workbench/postgres/db_migrations.py) | additive change approval |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | persistent workspace + active version SQL source |
+| [`apps/workbench/retrieval/profiles.py`](../apps/workbench/retrieval/profiles.py) | current FTS-only profile constants |
 | [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | fixed allowlist dispatch and safe errors |
-| [`apps/workbench/api/contracts.py`](../apps/workbench/api/contracts.py) | profile and score schema |
+| [`apps/workbench/contracts/schemas.py`](../apps/workbench/contracts/schemas.py) | profile and score schema |
 | [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | supported Live graph matcher |
 | [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | baseline scores/provenance |
 

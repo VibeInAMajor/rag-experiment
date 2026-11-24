@@ -1,7 +1,7 @@
 # TASK-RAG-DENSE-001 — Implement qualified live dense retrieval over versioned real Qwen embeddings
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** EMBED-001, EMBED-002, INDEX-001, PROFILE-001; completed RAG-001/DB-001  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
@@ -18,8 +18,8 @@ The PostgreSQL vector_search method already exists but no public Haystack dense 
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/api/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/api/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/api/profiles.py) exposes only postgres-fts-baseline-r1. [contracts.py](../apps/workbench/api/contracts.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/api/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
-[WorkspaceContext](../apps/workbench/api/persistence.py) is development-only. Existing SearchResult score_type is currently postgres_ts_rank_cd; new dense output must remain truthful raw cosine distance/similarity, not simulate BM25 relevance. The current UI uses Preview and approved Live lexical graph.
+**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
+[WorkspaceContext](../apps/workbench/persistence/models.py) is development-only. Existing SearchResult score_type is currently postgres_ts_rank_cd; new dense output must remain truthful raw cosine distance/similarity, not simulate BM25 relevance. The current UI uses Preview and approved Live lexical graph.
 
 ## D. Goal
 
@@ -43,17 +43,17 @@ SearchRequest remains four fields and expected_profile_revision. Add profile kin
 
 ## I. Repository Files / Components Impacted
 
-CREATE apps/workbench/api/dense.py (or shared retrieval composition), tests/test_dense_routes.py and real model-gated tests/test_dense_model_smoke.py; MODIFY profiles.py, services.py, application.py, contracts.py, projection.py, optional client src/api and approved graph matcher in apps/workbench/web/src/domain/. REUSE postgres.py vector_search(), persistence.py, embeddings port and current v1 error boundary. NEVER mutate 0001/0002 or create a second store.
+CREATE apps/workbench/retrieval/dense.py (or shared retrieval composition), apps/workbench/api/tests/test_dense_routes.py and real model-gated apps/workbench/embedding/tests/test_dense_model_smoke.py; MODIFY profiles.py, services.py, application.py, contracts.py, projection.py, optional client src/api and approved graph matcher in apps/workbench/web/src/domain/. REUSE postgres.py vector_search(), persistence.py, embeddings port and current v1 error boundary. NEVER mutate 0001/0002 or create a second store.
 
 ### I.1. Concrete implementation ownership — source reinspection 2026-11-23
 
 | Existing file (direct link) | Symbol, contract and test reuse |
 | --- | --- |
-| [`apps/workbench/api/postgres.py`](../apps/workbench/api/postgres.py) | exact vector_search <=> and active-version filtering |
-| [`apps/workbench/api/persistence.py`](../apps/workbench/api/persistence.py) | VectorHit and profile/dimension validation |
-| [`apps/workbench/api/lexical.py`](../apps/workbench/api/lexical.py) | Haystack Pipeline.run_async structure |
+| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | exact vector_search <=> and active-version filtering |
+| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | VectorHit and profile/dimension validation |
+| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | Haystack Pipeline.run_async structure |
 | [`apps/workbench/api/projection.py`](../apps/workbench/api/projection.py) | server-owned stage/run IDs |
-| [`apps/workbench/api/model_token_counter.py`](../apps/workbench/api/model_token_counter.py) | native admission and input instruction counts |
+| [`apps/workbench/embedding/model_token_counter.py`](../apps/workbench/embedding/model_token_counter.py) | native admission and input instruction counts |
 | [`apps/workbench/web/src/hooks/useLiveSearch.ts`](../apps/workbench/web/src/hooks/useLiveSearch.ts) | Live AbortController and latest-run guard |
 | [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | approved graph allowlist |
 | [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | existing read-only retrieval benchmark |
