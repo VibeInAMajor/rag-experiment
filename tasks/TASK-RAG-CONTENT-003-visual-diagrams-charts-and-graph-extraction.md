@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-003 — Visual diagrams, flowcharts, and chart understanding
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation blueprint; no qualified visual inference service exists  
 **Priority:** P1 — visual evidence after content assets and PDF layout  
 **Dependencies:** TASK-RAG-CONTENT-001, TASK-RAG-CHUNK-003; OCR-dependent scanned cases also require TASK-RAG-CONTENT-002  
@@ -20,18 +20,18 @@ Text extraction can return all labels of a flowchart while losing arrow directio
 
 ### C0. Source and parser-family status reconciliation
 
-**Source reinspection 2026-11-23:** the current PDF parser has qualified text-layer/page/table mechanics and explicitly incomplete visual semantics; [parser_registry.py](../apps/workbench/api/parser_registry.py) reports no OCR/visual understanding despite Docling availability. [PARSE-002](TASK-RAG-PARSE-002-office-and-web-document-parsers.md) and [PARSE-003](TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md) remain proposed and **do not** qualify embedded slide/workbook charts today. No approved VLM or graph representation exists.
+**Source reinspection 2026-11-23:** the current PDF parser has qualified text-layer/page/table mechanics and explicitly incomplete visual semantics; [parser_registry.py](../apps/workbench/parsing/parser_registry.py) reports no OCR/visual understanding despite Docling availability. [PARSE-002](TASK-RAG-PARSE-002-office-and-web-document-parsers.md) and [PARSE-003](TASK-RAG-PARSE-003-tabular-spreadsheet-parsers.md) remain proposed and **do not** qualify embedded slide/workbook charts today. No approved VLM or graph representation exists.
 
 | Exact repository source | Verified state and gap |
 | --- | --- |
-| [pdf_models.py](../apps/workbench/api/pdf_models.py) | PdfBlock.kind accepts only text, heading, caption and table. PdfBox is validated and page-qualified; no diagram/chart, nodes/edges, axis or numeric series yet. |
-| [pdf_worker.py](../apps/workbench/api/pdf_worker.py) | Quota-limited Docling worker extracts bounded text/layout/table blocks, disables network. The worker is NOT a trusted source of visual graph semantics. |
-| [pdf_parser.py](../apps/workbench/api/pdf_parser.py), [pdf_sandbox.py](../apps/workbench/api/pdf_sandbox.py) | A bounded subprocess execution and one-slot parser gate exist; reusing a child boundary is required for untrusted PDF rasterization. |
-| [pdf_assets.py](../apps/workbench/api/pdf_assets.py), [pdf_asset_manifest.json](../apps/workbench/api/pdf_asset_manifest.json) | Reviewed layout/table models; no approved picture understanding or visual LLM asset set. |
-| [pdf_chunking_adapter.py](../apps/workbench/api/pdf_chunking_adapter.py) | Distinguishes original_excerpt from retrieval content and retains tables; not a diagram parser. |
-| [parsing.py](../apps/workbench/api/parsing.py), [parser_registry.py](../apps/workbench/api/parser_registry.py) | App-owned verified format/element contracts, but ElementKind lacks chart/diagram qualified outputs. |
-| [chunking.py](../apps/workbench/api/chunking.py), [postgres_ingestion.py](../apps/workbench/api/postgres_ingestion.py) | Proven versioned prepared chunks and atomic publication; use them for searchable descriptions. |
-| [persistence.py](../apps/workbench/api/persistence.py), [postgres.py](../apps/workbench/api/postgres.py) | Chunk metadata and PostgreSQL FTS exist; no trusted original image storage or graph relation registry. |
+| [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py) | PdfBlock.kind accepts only text, heading, caption and table. PdfBox is validated and page-qualified; no diagram/chart, nodes/edges, axis or numeric series yet. |
+| [pdf_worker.py](../apps/workbench/parsing/pdf/pdf_worker.py) | Quota-limited Docling worker extracts bounded text/layout/table blocks, disables network. The worker is NOT a trusted source of visual graph semantics. |
+| [pdf_parser.py](../apps/workbench/parsing/pdf/pdf_parser.py), [pdf_sandbox.py](../apps/workbench/parsing/pdf/pdf_sandbox.py) | A bounded subprocess execution and one-slot parser gate exist; reusing a child boundary is required for untrusted PDF rasterization. |
+| [pdf_assets.py](../apps/workbench/parsing/pdf/pdf_assets.py), [pdf_asset_manifest.json](../apps/workbench/parsing/pdf/pdf_asset_manifest.json) | Reviewed layout/table models; no approved picture understanding or visual LLM asset set. |
+| [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) | Distinguishes original_excerpt from retrieval content and retains tables; not a diagram parser. |
+| [parsing.py](../apps/workbench/parsing/parsing.py), [parser_registry.py](../apps/workbench/parsing/parser_registry.py) | App-owned verified format/element contracts, but ElementKind lacks chart/diagram qualified outputs. |
+| [chunking.py](../apps/workbench/chunking/chunking.py), [postgres_ingestion.py](../apps/workbench/postgres/postgres_ingestion.py) | Proven versioned prepared chunks and atomic publication; use them for searchable descriptions. |
+| [models.py](../apps/workbench/persistence/models.py), [postgres.py](../apps/workbench/postgres/postgres.py) | Chunk metadata and PostgreSQL FTS exist; no trusted original image storage or graph relation registry. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md) | Defines document assets/elements/multiple representations and authorization; must be implemented before publishing derived graphics. |
 | [Docling pipeline options](https://docling-project.github.io/docling/reference/pipeline_options/) | Picture classification/description are optional configurable capabilities, NOT proof those models are installed in the app. |
 
