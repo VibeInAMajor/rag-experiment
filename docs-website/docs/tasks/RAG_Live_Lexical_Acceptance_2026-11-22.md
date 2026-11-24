@@ -6,7 +6,7 @@ description: Evidence and reproducible checks for the Workbench UI, Haystack and
 # Live lexical acceptance — 2026-11-22
 
 **Status:** COMPLETE — local Live lexical acceptance gates passed on 2026-11-22.\
-**Task:** [TASK-EVAL-001](../../../tasks/TASK-EVAL-001-prove-vertical-slice.md)\
+**Task:** [TASK-EVAL-001](../../../tasks/completed/TASK-EVAL-001-prove-vertical-slice.md)\
 **Inspected base:** `deb9fb63dde97f68db6dd856d1fc2a13a2af2255`, with existing working-tree parser/chunker changes preserved. No new implementation commit is claimed.
 
 This report evaluates the existing **browser Live → FastAPI → Haystack Pipeline → persisted PostgreSQL FTS** path on this **local Windows workstation**, using loopback services at `127.0.0.1:4173` and `127.0.0.1:8011`. It does not qualify a remote deployment, ingestion, embeddings, semantic retrieval or generated answers. Preview and constructor validation are independent regressions. The [runtime contract](../architecture/rag-runtime-contract.md), [lexical guide](../architecture/postgres-lexical-search.md) and [PostgreSQL operations guide](../architecture/postgresql-foundation.md) own the behavior being tested.
@@ -29,7 +29,7 @@ The generated [acceptance summary](../../../tasks/evidence/eval-vertical-2026-11
 
 ## Corpus and metric method
 
-Use the existing [gold fixture](../../../apps/workbench/api/fixtures/lexical-evaluation.json) and [eight-source synthetic corpus fixture](../../../apps/workbench/api/fixtures/development-corpus.json). Do not create another corpus, edit labels to hide misses or reseed a populated database. The expected fixture identity is `development-corpus-v1`; actual source/version/chunk counts, corpus revision, schema/image/backend/UI versions and timestamp must be captured during execution.
+Use the existing [gold fixture](../../../apps/workbench/retrieval/fixtures/lexical-evaluation.json) and [eight-source synthetic corpus fixture](../../../apps/workbench/postgres/fixtures/development-corpus.json). Do not create another corpus, edit labels to hide misses or reseed a populated database. The expected fixture identity is `development-corpus-v1`; actual source/version/chunk counts, corpus revision, schema/image/backend/UI versions and timestamp must be captured during execution.
 
 The intended profile is `postgres-fts-baseline` with raw score type `postgres_ts_rank_cd`; the browser obtains the actual approved revision/workspace from capabilities. Native PostgreSQL `simple` FTS with `ts_rank_cd` is neither BM25 nor a probability. These small synthetic-source labels are a regression gate, not a production relevance or semantic-quality claim.
 
