@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from urllib.request import urlopen
 from zipfile import BadZipFile, ZipFile
 
-from apps.workbench.api.chunking_adapters import (
+from apps.workbench.chunking.chunking_adapters import (
     _ASSET_ROOT,
     _PUNKT_FILES,
     _PUNKT_HASHES,
@@ -20,8 +20,8 @@ from apps.workbench.api.chunking_adapters import (
     _TOKEN_URL,
     _punkt_digest,
 )
-from apps.workbench.api.chunking_profiles import ChunkingError
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter, _read_assets
+from apps.workbench.chunking.chunking_profiles import ChunkingError
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter, _read_assets
 
 
 class _AssetError(ValueError):

@@ -22,6 +22,12 @@ This reference expands the root [AGENTS.md](../AGENTS.md). Follow established mo
 
 A shared UI validator does not replace mandatory independent server-side authorization/validation when backend integration is introduced.
 
+### Workbench backend module ownership
+
+`apps/workbench/api/` owns HTTP application composition, routes, request boundaries and response projection. Implementations live in their feature directories beside `api`: `embedding`, `postgres`, `parsing`, `chunking`, `ingestion`, `configuration`, `retrieval` and `sources`. The independent `validator` continues to own constructor-only Haystack validation. Shared DTOs belong to `contracts/schemas.py`, persistence records and the existing port to `persistence/models.py`, and operational event logging to `observability/events.py`.
+
+Follow the repository-wide module placement rule in [AGENTS.md](../AGENTS.md). Use direct imports from the implementation owner; do not retain compatibility modules, forwarding functions or facade re-exports. Keep tests and fixtures with their owning module; shared backend test support belongs to `apps/workbench/testing/`. See the [project map](PROJECT_MAP.md#2-workbench-source-ownership-and-reuse-index) before adding files.
+
 ## Workbench: React, TypeScript and Vite
 
 **Current status:** `apps/workbench/web` defaults to an in-memory Preview. Opt-in Live mode discovers the API and executes only the approved Keyword search graph; Live document listing remains pending. The app uses React 19, TypeScript, Vite 8, React Flow, Vitest and Prettier. Preview displays fixtures for documents, processing runs, scores and retrieval results. Never claim that preview data represents actual embeddings, retrieval, index writes or model calls.

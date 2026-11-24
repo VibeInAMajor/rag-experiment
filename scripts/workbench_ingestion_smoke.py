@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import httpx
 
-from apps.workbench.api.contracts import (
+from apps.workbench.contracts.schemas import (
     ActiveChunkItem,
     ActiveChunkPageResponse,
     CapabilitiesResponse,
@@ -24,10 +24,10 @@ from apps.workbench.api.contracts import (
     ReadyResponse,
     SearchResponse,
 )
-from apps.workbench.api.profiles import POSTGRES_FTS_PROFILE_ID
+from apps.workbench.retrieval.profiles import POSTGRES_FTS_PROFILE_ID
 
 _EVIDENCE = Path("tasks/evidence/ingestion-2026-11-22/live-http.json")
-_CASES = Path("apps/workbench/api/fixtures/lexical-evaluation.json")
+_CASES = Path("apps/workbench/retrieval/fixtures/lexical-evaluation.json")
 _DOCUMENTS = "/api/v1/workspaces/development/documents"
 _JOBS = "/api/v1/workspaces/development/jobs"
 _SEARCH = "/api/v1/workspaces/development/search"

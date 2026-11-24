@@ -9,10 +9,11 @@ from typing import Any, ParamSpec, TypeVar
 from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse
 
-from apps.workbench.api.boundary import error_response, log_event, request_meta
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.configuration import ConfigurationDocument, ConfigurationFailure, ConfigurationStore
-from apps.workbench.api.contracts import (
+from apps.workbench.api.boundary import error_response, request_meta
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.configuration.configuration import ConfigurationDocument, ConfigurationFailure, ConfigurationStore
+from apps.workbench.configuration.document_processing import DocumentProcessingConfigurationError
+from apps.workbench.contracts.schemas import (
     ConfigurationDocumentResponse,
     ConfigurationIssueResponse,
     ConfigurationSaveRequest,
@@ -21,7 +22,7 @@ from apps.workbench.api.contracts import (
     ConfigurationYamlRequest,
     ErrorResponse,
 )
-from apps.workbench.api.document_processing import DocumentProcessingConfigurationError
+from apps.workbench.observability.events import log_event
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")

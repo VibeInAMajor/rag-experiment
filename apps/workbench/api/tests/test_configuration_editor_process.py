@@ -9,10 +9,10 @@ from pathlib import Path
 import httpx
 import pytest
 
-from apps.workbench.api.config import ApiSettings
 from apps.workbench.api.tests.test_configuration_editor import _ORIGIN, _URL
 from apps.workbench.api.tests.test_configuration_editor import editor_settings as editor_settings
 from apps.workbench.api.tests.test_ingestion_process import _unused_port
+from apps.workbench.configuration.config import ApiSettings
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 

@@ -2,10 +2,10 @@
 
 from time import monotonic
 
-from apps.workbench.api.contracts import Meta, SearchResponse, SearchResult, StageTiming
-from apps.workbench.api.persistence import DatabaseUnavailable, LexicalSearchSnapshot, WorkspaceContext
-from apps.workbench.api.profile_registry import ProfileDefinition
-from apps.workbench.api.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
+from apps.workbench.contracts.schemas import Meta, SearchResponse, SearchResult, StageTiming
+from apps.workbench.persistence.models import DatabaseUnavailable, LexicalSearchSnapshot, WorkspaceContext
+from apps.workbench.retrieval.profile_registry import ProfileDefinition
+from apps.workbench.retrieval.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
 
 
 def project_search(

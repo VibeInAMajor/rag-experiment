@@ -12,12 +12,12 @@ from fastapi import FastAPI
 from jsonschema import Draft202012Validator
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.db_seed import seed_development
-from apps.workbench.api.persistence import Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.tests.conftest import DisposableDatabase
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import Workspace, WorkspaceContext
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.db_seed import seed_development
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.testing.database import DisposableDatabase
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 _DOCUMENTS = "/api/v1/workspaces/development/documents"

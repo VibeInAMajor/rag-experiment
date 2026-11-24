@@ -4,6 +4,9 @@ import ast
 import asyncio
 import json
 import logging
+import os
+import subprocess
+import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Protocol
@@ -18,10 +21,10 @@ from starlette.types import Message, Scope
 
 from apps.workbench.api import application as application_module
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.contracts import ExecutionProfile, ServiceState
-from apps.workbench.api.services import ReadinessSnapshot
-from apps.workbench.api.tests._persistence import _DatabaseProbe, _QualifiedLexical
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.contracts.schemas import ExecutionProfile, ServiceState
+from apps.workbench.retrieval.services import ReadinessSnapshot
+from apps.workbench.testing.persistence import _DatabaseProbe, _QualifiedLexical
 
 _BASE_URL = "http://127.0.0.1:8011"
 _LIVE = "/api/v1/health/live"
@@ -543,30 +546,34 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
         "sentence_transformers",
         "tokenizers",
         "psycopg",
+        "psycopg_pool",
         "pgvector",
         "httpx",
     }
-    package = Path(__file__).resolve().parents[1]
-    for source in package.glob("*.py"):
-        if source.name in {
-            "postgres.py",
-            "postgres_ingestion.py",
-            "postgres_indexes.py",
-            "postgres_profiles.py",
-            "postgres_embeddings.py",
-            "db_migrations.py",
-            "db_admin.py",
-        }:
+    permissions = {
+        "postgres/db_migrations.py": {"psycopg"},
+        "postgres/postgres.py": {"psycopg", "psycopg_pool", "pgvector"},
+        "postgres/postgres_embeddings.py": {"psycopg", "pgvector"},
+        "postgres/postgres_indexes.py": {"psycopg"},
+        "postgres/postgres_ingestion.py": {"psycopg", "psycopg_pool"},
+        "postgres/postgres_profiles.py": {"psycopg"},
+        "retrieval/lexical.py": {"haystack"},
+        "parsing/parsing_adapters.py": {"haystack"},
+        "chunking/chunking_adapters.py": {"haystack"},
+        "chunking/python_code.py": {"haystack"},
+        "embedding/model_token_counter.py": {"tokenizers"},
+        "embedding/embedding_adapters.py": {"httpx"},
+        "validator/registry.py": {"haystack"},
+        "validator/validator.py": {"haystack"},
+    }
+    package = Path(__file__).resolve().parents[2]
+    for source in package.rglob("*.py"):
+        relative = source.relative_to(package)
+        if set(relative.parts).intersection({"tests", "testing", "fixtures", "migrations", "web"}):
             continue
-        restricted = (
-            forbidden - {"haystack"}
-            if source.name in {"lexical.py", "parsing_adapters.py", "chunking_adapters.py", "python_code.py"}
-            else forbidden
-        )
-        if source.name == "model_token_counter.py":
-            restricted = restricted - {"tokenizers"}
-        if source.name == "embedding_adapters.py":
-            restricted = restricted - {"httpx"}
+        if relative.as_posix() == "conftest.py":
+            continue
+        restricted = forbidden - permissions.get(relative.as_posix(), set())
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -575,4 +582,81 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
                 modules = [node.module or ""]
             else:
                 continue
-            assert not restricted.intersection(module.split(".")[0] for module in modules), source.name
+            assert not restricted.intersection(module.split(".")[0] for module in modules), relative.as_posix()
+
+
+@pytest.mark.parametrize(
+    "modules",
+    [
+        ("embedding.embedding_adapters", "postgres.postgres", "parsing.parsing"),
+        ("postgres.postgres", "parsing.parsing", "embedding.embedding_adapters"),
+        ("parsing.parsing", "embedding.embedding_adapters", "postgres.postgres"),
+    ],
+)
+def test_domain_imports_disable_telemetry_without_loading_the_api(modules: tuple[str, ...]) -> None:
+    """Direct imports must not need HTTP composition or inherit enabled payload tracing."""
+    environment = dict(os.environ)
+    environment.update(HAYSTACK_TELEMETRY_ENABLED="true", HAYSTACK_CONTENT_TRACING_ENABLED="true")
+    program = """
+import importlib
+import os
+import sys
+
+for name in sys.argv[1:]:
+    importlib.import_module("apps.workbench." + name)
+    assert os.environ["HAYSTACK_TELEMETRY_ENABLED"] == "false"
+    assert os.environ["HAYSTACK_CONTENT_TRACING_ENABLED"] == "false"
+assert "apps.workbench.api" not in sys.modules
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", program, *modules],
+        cwd=Path(__file__).resolve().parents[4],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_module_resources_remain_owned_and_resolve_from_the_repository() -> None:
+    """Moving packages preserves operator configuration, shared caches and reviewed worker assets."""
+    from apps.workbench.chunking import chunking_adapters
+    from apps.workbench.configuration import document_processing
+    from apps.workbench.embedding import embedding_config, embedding_dispatch
+    from apps.workbench.parsing.pdf import pdf_assets, pdf_parser
+    from apps.workbench.parsing.pdf.pdf_models import PdfLimits
+    from apps.workbench.postgres import db_migrations, db_seed
+
+    repository = Path(__file__).resolve().parents[4]
+    workbench = repository / "apps/workbench"
+    assert workbench / "document_processing.yaml" == document_processing._DEFAULT_CONFIG
+    assert embedding_config._ROOT == embedding_dispatch._ROOT == repository
+    assert repository / ".cache/workbench-chunking" == chunking_adapters._ASSET_ROOT
+    assert pdf_assets._ROOT == pdf_parser._ROOT == repository
+    assert workbench / "parsing/pdf/pdf_asset_manifest.json" == pdf_assets._MANIFEST
+    assert pdf_assets._MANIFEST.is_file()
+    assert workbench / "postgres/fixtures/development-corpus.json" == db_seed._FIXTURE
+    assert db_seed._FIXTURE.is_file()
+    assert workbench / "postgres/migrations" == db_migrations._DIRECTORY
+    assert (db_migrations._DIRECTORY / "env.py").is_file()
+    worker = pdf_parser._worker_command(PdfLimits())
+    assert str(repository) in worker
+    assert "apps.workbench.parsing.pdf.pdf_worker" in worker[3]
+
+
+def test_module_packages_do_not_reexport_implementation_facades() -> None:
+    """Packages identify owners; callers import implementations directly."""
+    package = Path(__file__).resolve().parents[2]
+    for source in package.rglob("__init__.py"):
+        relative = source.relative_to(package)
+        if set(relative.parts).intersection({"tests", "testing", "fixtures", "migrations", "web", "validator"}):
+            continue
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        for node in ast.walk(tree):
+            assert not isinstance(node, ast.ImportFrom), relative.as_posix()
+            if isinstance(node, ast.Import):
+                assert relative.as_posix() == "__init__.py" and [alias.name for alias in node.names] == ["os"]
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                assert node.name != "__getattr__", relative.as_posix()

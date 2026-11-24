@@ -29,8 +29,8 @@ import uvicorn
 from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse
 
-from apps.workbench.api.parser_registry import ParsingError, UploadLimits
-from apps.workbench.api.parsing import parse_source
+from apps.workbench.parsing.parser_registry import ParsingError, UploadLimits
+from apps.workbench.parsing.parsing import parse_source
 
 _ROOT = Path(__file__).resolve().parents[1]
 _ROUTE = "/diagnostic/parse"
@@ -38,12 +38,12 @@ _LIMIT = UploadLimits().max_bytes
 
 
 async def _serve(ready_file: Path, *, qwen_tokenizer_dir: Path | None = None) -> None:
-    from apps.workbench.api.chunking import ExactModelCounter
+    from apps.workbench.chunking.chunking import ExactModelCounter
 
     model_counter: ExactModelCounter | None = None
     model_manifest: dict[str, Any] | None = None
     if qwen_tokenizer_dir is not None:
-        from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+        from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 
         local_counter = await asyncio.to_thread(LocalQwenTokenCounter, qwen_tokenizer_dir)
         model_counter, model_manifest = local_counter, local_counter.manifest()
@@ -77,7 +77,7 @@ async def _serve(ready_file: Path, *, qwen_tokenizer_dir: Path | None = None) ->
             )
             chunk_payload: dict[str, Any] = {}
             if request.url.path == "/diagnostic/chunks":
-                from apps.workbench.api.chunking import ChunkingInput, ModelTokenAdmission, prepare_chunks
+                from apps.workbench.chunking.chunking import ChunkingInput, ModelTokenAdmission, prepare_chunks
 
                 source = ChunkingInput(
                     parsed_document=parsed,
@@ -104,7 +104,7 @@ async def _serve(ready_file: Path, *, qwen_tokenizer_dir: Path | None = None) ->
                 content={"code": error.code.value, "reason": error.reason, "server_pid": os.getpid()},
             )
         except Exception as error:
-            from apps.workbench.api.chunking_profiles import ChunkingError
+            from apps.workbench.chunking.chunking_profiles import ChunkingError
 
             if not isinstance(error, ChunkingError):
                 raise
@@ -333,9 +333,9 @@ def _exercise(client: httpx.Client, *, pid: int, sample_dir: Path) -> dict[str, 
 
 
 def _boundary_metrics(content: str, chunks: list[dict[str, Any]], *, language: str) -> dict[str, Any]:
-    from apps.workbench.api import chunking_adapters as adapters
-    from apps.workbench.api.chunking_profiles import ChunkingProfile, DocumentFeatures, resolve_profile
-    from apps.workbench.api.parser_registry import ElementKind, FormatId
+    from apps.workbench.chunking import chunking_adapters as adapters
+    from apps.workbench.chunking.chunking_profiles import ChunkingProfile, DocumentFeatures, resolve_profile
+    from apps.workbench.parsing.parser_registry import ElementKind, FormatId
 
     def trim_end(position: int) -> int:
         while position > 0 and content[position - 1].isspace():
@@ -389,16 +389,16 @@ def _model_budget_negatives(client: httpx.Client, cases: list[dict[str, Any]], *
 
 
 def _exercise_chunks(client: httpx.Client, *, pid: int, qwen_tokenizer_dir: Path | None = None) -> dict[str, Any]:
-    from apps.workbench.api.chunking_adapters import count_tokens
+    from apps.workbench.chunking.chunking_adapters import count_tokens
 
     local_counter = None
     if qwen_tokenizer_dir is not None:
-        from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+        from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 
         local_counter = LocalQwenTokenCounter(qwen_tokenizer_dir)
 
     manifest = json.loads(
-        (_ROOT / "apps/workbench/api/tests/fixtures/chunking/manifest.json").read_text(encoding="utf-8")
+        (_ROOT / "apps/workbench/chunking/tests/fixtures/chunking/manifest.json").read_text(encoding="utf-8")
     )
     outcomes = []
     requests_count = 0

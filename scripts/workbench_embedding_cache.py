@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 from scripts.workbench_embedding_qualify import (
     _ASSETS,
     _CACHE_LABELS,

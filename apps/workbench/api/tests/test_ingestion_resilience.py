@@ -9,15 +9,15 @@ from uuid import uuid4
 import httpx
 import pytest
 
-from apps.workbench.api import ingestion as ingestion_module
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.persistence import DatabaseUnavailable
-from apps.workbench.api.postgres import PostgresPersistence
 from apps.workbench.api.tests.test_ingestion_routes import _CONTEXT, _DOCUMENTS, _error, _upload
 from apps.workbench.api.tests.test_ingestion_routes import ingestion_app as ingestion_app
 from apps.workbench.api.tests.test_ingestion_routes import ingestion_client as ingestion_client
 from apps.workbench.api.tests.test_ingestion_routes import ingestion_repository as ingestion_repository
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.ingestion import ingestion as ingestion_module
+from apps.workbench.persistence.models import DatabaseUnavailable
+from apps.workbench.postgres.postgres import PostgresPersistence
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 

@@ -1,7 +1,7 @@
 from pathlib import Path
-from apps.workbench.api.chunking import ChunkingInput, prepare_chunks
-from apps.workbench.api.chunking_profiles import ChunkingError
-from apps.workbench.api.parsing import parse_source
+from apps.workbench.chunking.chunking import ChunkingInput, prepare_chunks
+from apps.workbench.chunking.chunking_profiles import ChunkingError
+from apps.workbench.parsing.parsing import parse_source
 
 parsed = parse_source(Path('tasks/evidence/pdf-layout-2026-11-22/live/california-warn-report-page-1.pdf').read_bytes(),
     safe_basename='california-warn-report-page-1.pdf', declared_type='application/pdf')

@@ -11,7 +11,8 @@ from fastapi import FastAPI, Query, Request
 from starlette.responses import JSONResponse
 
 from apps.workbench.api.boundary import _ClientDisconnected, error_response, request_meta
-from apps.workbench.api.contracts import (
+from apps.workbench.api.upload_transport import UploadTransportError, read_upload
+from apps.workbench.contracts.schemas import (
     ActiveChunkItem,
     ActiveChunkPageResponse,
     DocumentDetail,
@@ -20,8 +21,9 @@ from apps.workbench.api.contracts import (
     IngestionResponse,
     IngestionStageTiming,
 )
-from apps.workbench.api.ingestion import IngestionError, IngestionResult, IngestionService, UploadInput
-from apps.workbench.api.persistence import (
+from apps.workbench.ingestion.ingestion import IngestionError, IngestionResult, IngestionService, UploadInput
+from apps.workbench.ingestion.upload_policy import pdf_upload_candidate
+from apps.workbench.persistence.models import (
     DocumentNotFound,
     IngestionJob,
     PersistencePort,
@@ -29,8 +31,6 @@ from apps.workbench.api.persistence import (
     SchemaIncompatible,
     WorkspaceContext,
 )
-from apps.workbench.api.upload_policy import pdf_upload_candidate
-from apps.workbench.api.upload_transport import UploadTransportError, read_upload
 
 _IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _CHUNK_METADATA = frozenset(

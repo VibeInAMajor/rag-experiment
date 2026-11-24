@@ -15,10 +15,10 @@ from typing import Any
 import httpx
 import pytest
 
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.persistence import Chunk, CorpusSnapshot, Source, SourceVersion, Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.tests.conftest import DisposableDatabase
+from apps.workbench.persistence.models import Chunk, CorpusSnapshot, Source, SourceVersion, Workspace, WorkspaceContext
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.testing.database import DisposableDatabase
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 _CONTEXT = WorkspaceContext(workspace_id="development")

@@ -15,12 +15,12 @@ from jsonschema import Draft202012Validator
 
 from apps.workbench.api import application as application_module
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.db_seed import seed_development
-from apps.workbench.api.persistence import Chunk, Source, SourceVersion, Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.tests.conftest import DisposableDatabase
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import Chunk, Source, SourceVersion, Workspace, WorkspaceContext
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.db_seed import seed_development
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.testing.database import DisposableDatabase
 from haystack import Pipeline
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
@@ -131,7 +131,7 @@ async def test_labeled_exact_queries_and_diagnostic_paraphrases(
 ) -> None:
     """At least nine of ten labeled lexical targets appear in the first five hits."""
     fixture = json.loads(
-        (Path(__file__).parents[1] / "fixtures" / "lexical-evaluation.json").read_text(encoding="utf-8")
+        (Path(__file__).parents[2] / "retrieval/fixtures/lexical-evaluation.json").read_text(encoding="utf-8")
     )
     matched = 0
     missed: list[str] = []
@@ -452,7 +452,7 @@ async def test_two_search_slots_are_released_only_after_cancellation_cleanup(
     live_client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A third search is busy while two execute; cancellation frees a usable owned slot."""
-    from apps.workbench.api.lexical import LexicalService
+    from apps.workbench.retrieval.lexical import LexicalService
 
     entered = asyncio.Event()
     release = asyncio.Event()
@@ -486,7 +486,7 @@ async def test_search_deadline_cancels_work_and_preserves_next_request(
     live_client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Timeout produces a real failed run and waits for owned task cleanup before reuse."""
-    from apps.workbench.api.lexical import LexicalService
+    from apps.workbench.retrieval.lexical import LexicalService
 
     original = LexicalService.search
     cancelled: list[bool] = []
@@ -528,7 +528,7 @@ async def test_late_completed_search_cannot_succeed_after_application_shutdown(
     corpus_repository: PostgresPersistence, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A real result already read from SQL cannot become a false success after shutdown."""
-    from apps.workbench.api.lexical import LexicalService
+    from apps.workbench.retrieval.lexical import LexicalService
 
     original = LexicalService.search
     entered = asyncio.Event()

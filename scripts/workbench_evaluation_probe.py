@@ -14,8 +14,8 @@ from typing import Any
 
 import psycopg
 
-from apps.workbench.api.persistence import WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.persistence.models import WorkspaceContext
+from apps.workbench.postgres.postgres import PostgresPersistence
 from scripts import workbench_lexical_smoke as lexical_smoke
 
 _DIRECTORY = Path("tasks/evidence/eval-vertical-2026-11-22")
@@ -157,7 +157,7 @@ def main() -> None:
     if phase == "database-unavailable":
         return
     observation = json.loads(_HTTP_EVIDENCE.read_text(encoding="utf-8"))[phase]
-    fixtures = json.loads(Path("apps/workbench/api/fixtures/lexical-evaluation.json").read_text(encoding="utf-8"))
+    fixtures = json.loads(Path("apps/workbench/retrieval/fixtures/lexical-evaluation.json").read_text(encoding="utf-8"))
     factory = asyncio.SelectorEventLoop if sys.platform == "win32" else asyncio.new_event_loop
     with asyncio.Runner(loop_factory=factory) as runner:
         report = runner.run(_sql_parity(phase, dsn=dsn, observation=observation, fixtures=fixtures))

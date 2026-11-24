@@ -12,9 +12,9 @@ import uvicorn
 from psycopg.conninfo import conninfo_to_dict
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.persistence import IngestionJob, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import IngestionJob, WorkspaceContext
+from apps.workbench.postgres.postgres import PostgresPersistence
 
 
 class _PausingRepository(PostgresPersistence):

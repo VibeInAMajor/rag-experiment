@@ -61,14 +61,14 @@ Stop old application writers, back up the selected database using the [foundatio
 hatch run workbench-api:db-status
 hatch run workbench-api:db-migrate
 hatch run workbench-api:db-status
-hatch run workbench-api:python -m apps.workbench.api.postgres_profiles status
+hatch run workbench-api:python -m apps.workbench.postgres.postgres_profiles status
 ```
 
 The CLI reads `WORKBENCH_DB_ADMIN_DSN`; it never accepts or returns provider credentials through HTTP. To add a policy, create a new immutable revision in the selected trusted catalog, retaining the current revision for a deliberate rollback. Then publish definitions:
 
 ```powershell
 $env:WORKBENCH_PROFILE_REGISTRY_CONFIG = 'apps/workbench/profile_registry.yaml'
-hatch run workbench-api:python -m apps.workbench.api.postgres_profiles sync
+hatch run workbench-api:python -m apps.workbench.postgres.postgres_profiles sync
 ```
 
 `sync` inserts definitions only. A repeat with the same content is a no-op; content drift under an existing identity refuses the whole sync transaction. Restart the API with the same selected configuration before activating a newly configured identity, so that its in-memory allowlist contains both the current and proposed revisions. Workspace lifecycle changes are read from the database for subsequent requests; editing the YAML file alone does not reload an API process or activate a policy.
@@ -76,9 +76,9 @@ hatch run workbench-api:python -m apps.workbench.api.postgres_profiles sync
 The example selects the shipped local catalog; select your reviewed local file when publishing an additional revision. Inspect `status` and supply its current `rollout_version` as `--expected-rollout-version` for a compare-and-set operation. This runnable example requalifies the existing baseline; use a reviewed configured identity/revision when selecting another policy:
 
 ```powershell
-$profileStatus = hatch run workbench-api:python -m apps.workbench.api.postgres_profiles status | ConvertFrom-Json
+$profileStatus = hatch run workbench-api:python -m apps.workbench.postgres.postgres_profiles status | ConvertFrom-Json
 $baselineStatus = @($profileStatus) | Where-Object profile_id -EQ 'postgres-fts-baseline' | Select-Object -First 1
-hatch run workbench-api:python -m apps.workbench.api.postgres_profiles promote --workspace-id development --profile-id postgres-fts-baseline --profile-revision postgres-fts-baseline-r1 --expected-rollout-version $baselineStatus.rollout_version
+hatch run workbench-api:python -m apps.workbench.postgres.postgres_profiles promote --workspace-id development --profile-id postgres-fts-baseline --profile-revision postgres-fts-baseline-r1 --expected-rollout-version $baselineStatus.rollout_version
 ```
 
 `promote` qualifies the exact revision and activates it in one transaction while holding the workspace lock. If either step fails, the preceding selection and audit history remain committed unchanged. `rollback` has the same atomic behavior for a historical revision that remains in the API's trusted catalog. Separate `qualify` and `activate` commands are available when the operator intentionally wants a non-executable qualified state between steps; `activate` refuses an unqualified exact revision. `retire` removes the selected logical profile from executable capabilities. All lifecycle operations preserve source, vector and corpus-generation data. Unsupported semantic/ANN/hybrid/BM25 compositions and unproven processing pins refuse qualification rather than acquiring readiness from an operator flag.

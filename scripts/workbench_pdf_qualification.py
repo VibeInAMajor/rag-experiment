@@ -14,12 +14,12 @@ from time import perf_counter
 import psycopg
 import tiktoken
 
-from apps.workbench.api.chunking_adapters import inspect_chunking_resources, split_prose
-from apps.workbench.api.chunking_profiles import PdfChunkingProfile, structural_token_profile
-from apps.workbench.api.parser_registry import ParsingError
-from apps.workbench.api.pdf_chunking_adapter import split_pdf_block
-from apps.workbench.api.pdf_models import PdfDocument
-from apps.workbench.api.pdf_parser import extract_pdf
+from apps.workbench.chunking.chunking_adapters import inspect_chunking_resources, split_prose
+from apps.workbench.chunking.chunking_profiles import PdfChunkingProfile, structural_token_profile
+from apps.workbench.chunking.pdf.pdf_chunking_adapter import split_pdf_block
+from apps.workbench.parsing.parser_registry import ParsingError
+from apps.workbench.parsing.pdf.pdf_models import PdfDocument
+from apps.workbench.parsing.pdf.pdf_parser import extract_pdf
 from scripts.workbench_pdf_fixtures import build_corpus
 
 
@@ -39,7 +39,7 @@ def _controls(document: PdfDocument, policy: str) -> list[dict]:
     if policy == "plain-recursive":
         text = "\n\n".join(block.text for block in document.blocks)
         # Baseline uses the same installed counter, without page/table structural boundaries.
-        from apps.workbench.api.chunking_profiles import ChunkingDecision
+        from apps.workbench.chunking.chunking_profiles import ChunkingDecision
 
         profile = replace(structural_token_profile(), target_size=768, overlap=0)
         decision = ChunkingDecision(

@@ -1,0 +1,9 @@
+---
+upgrade:
+  - |
+    Workbench Python implementations now live in their owning modules instead of
+    ``apps.workbench.api``. Update custom imports to the paths listed in the
+    project map; for example, import ``PostgresPersistence`` from
+    ``apps.workbench.postgres.postgres`` and ``ApiSettings`` from
+    ``apps.workbench.configuration.config``. Old module paths and package-level
+    facade exports are removed. HTTP endpoints and Hatch command names are unchanged.

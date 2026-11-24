@@ -14,8 +14,8 @@ import httpx
 import pytest
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.contracts import (
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.contracts.schemas import (
     ActiveChunkPageResponse,
     DocumentDetail,
     ErrorResponse,
@@ -23,15 +23,15 @@ from apps.workbench.api.contracts import (
     IngestionResponse,
     IngestionStageTiming,
 )
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.db_seed import seed_development
-from apps.workbench.api.persistence import WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.tests.conftest import DisposableDatabase
+from apps.workbench.persistence.models import WorkspaceContext
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.db_seed import seed_development
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.testing.database import DisposableDatabase
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 _DIRECTORY = Path(__file__).resolve().parents[4]
-_FIXTURES = Path(__file__).parent / "fixtures/chunking/manifest.json"
+_FIXTURES = Path(__file__).parents[2] / "chunking/tests/fixtures/chunking/manifest.json"
 _DOCUMENTS = "/api/v1/workspaces/development/documents"
 
 

@@ -19,10 +19,15 @@ from psycopg import ProgrammingError
 from psycopg.conninfo import conninfo_to_dict
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
-from apps.workbench.api.contracts import Identifier
-from apps.workbench.api.embedding import EmbeddingError, EmbeddingItem, EmbeddingRequest, prepare_embedding_request
-from apps.workbench.api.embedding_jobs import PersistedEmbeddingHit
-from apps.workbench.api.persistence import (
+from apps.workbench.contracts.schemas import Identifier
+from apps.workbench.embedding.embedding import (
+    EmbeddingError,
+    EmbeddingItem,
+    EmbeddingRequest,
+    prepare_embedding_request,
+)
+from apps.workbench.embedding.embedding_jobs import PersistedEmbeddingHit
+from apps.workbench.persistence.models import (
     Chunk,
     PersistenceError,
     Source,
@@ -31,11 +36,11 @@ from apps.workbench.api.persistence import (
     WorkspaceContext,
     WorkspaceNotFound,
 )
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.postgres.postgres import PostgresPersistence
 from scripts.workbench_embedding_backfill import BackfillRuntime, open_backfill_runtime, run_backfill
 
 _ROOT = Path(__file__).resolve().parents[1]
-_FIXTURE = _ROOT / "apps/workbench/api/fixtures/embedding-retrieval-evaluation.json"
+_FIXTURE = _ROOT / "apps/workbench/embedding/fixtures/embedding-retrieval-evaluation.json"
 _CUTOFFS = (1, 5, 10)
 
 

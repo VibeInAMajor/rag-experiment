@@ -8,11 +8,11 @@ from uuid import uuid4
 import pytest
 from pypdf import PdfReader, PdfWriter
 
-from apps.workbench.api.chunking_adapters import count_tokens
-from apps.workbench.api.tests.conftest import DisposableDatabase
 from apps.workbench.api.tests.test_ingestion_routes import _DOCUMENTS, _search, _upload
 from apps.workbench.api.tests.test_ingestion_routes import ingestion_repository as ingestion_repository
 from apps.workbench.api.tests.test_python_ingestion import _client
+from apps.workbench.chunking.chunking_adapters import count_tokens
+from apps.workbench.testing.database import DisposableDatabase
 from scripts.workbench_pdf_fixtures import pdf_bytes
 
 pytestmark = [

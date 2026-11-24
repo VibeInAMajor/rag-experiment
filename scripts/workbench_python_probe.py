@@ -11,12 +11,12 @@ from uuid import uuid4
 
 import httpx
 
-from apps.workbench.api.document_processing import load_document_processing
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.configuration.document_processing import load_document_processing
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 from scripts.workbench_ingestion_probe import _database_snapshot
 
 _DIRECTORY = Path("tasks/evidence/python-ast-2026-11-22")
-_SOURCE = Path("apps/workbench/api/ingestion.py")
+_SOURCE = Path("apps/workbench/ingestion/ingestion.py")
 _DOCUMENTS = "/api/v1/workspaces/development/documents"
 
 

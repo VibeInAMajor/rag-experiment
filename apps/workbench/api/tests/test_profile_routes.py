@@ -12,9 +12,9 @@ import pytest_asyncio
 from psycopg import AsyncConnection
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.lexical import LexicalService
-from apps.workbench.api.persistence import (
+from apps.workbench.api.tests.test_lexical_routes import corpus_repository as corpus_repository
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import (
     Chunk,
     CorpusNotReady,
     LexicalSearchSnapshot,
@@ -22,16 +22,16 @@ from apps.workbench.api.persistence import (
     SourceVersion,
     WorkspaceContext,
 )
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.postgres_profiles import promote_profile, sync_registry, transition_profile
-from apps.workbench.api.profile_registry import (
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.postgres.postgres_profiles import promote_profile, sync_registry, transition_profile
+from apps.workbench.retrieval.lexical import LexicalService
+from apps.workbench.retrieval.profile_registry import (
     ProfileDefinition,
     ProfileRegistry,
     ProfileRollout,
     default_profile_registry,
 )
-from apps.workbench.api.tests.conftest import DisposableDatabase
-from apps.workbench.api.tests.test_lexical_routes import corpus_repository as corpus_repository
+from apps.workbench.testing.database import DisposableDatabase
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="function")]
 _SEARCH = "/api/v1/workspaces/development/search"

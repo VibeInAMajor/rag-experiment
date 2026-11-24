@@ -16,7 +16,7 @@ The [Compose configuration](../../../apps/workbench/postgres/compose.yaml) runs 
 
 The root [Hatch configuration](../../../pyproject.toml) pins Alembic **1.20.1**, SQLAlchemy **2.1.9**, psycopg **3.3.9**, psycopg-pool **3.3.3**, and the pgvector Python codec **0.5.1** for the detached `workbench-api` environment. The image digest and migration checksum are compatibility inputs, not performance evidence.
 
-Application-owned [migrations](../../../apps/workbench/api/migrations/) create one `workbench` schema. The [persistence port](../../../apps/workbench/api/persistence.py) is independent of SQL drivers; [PostgresPersistence](../../../apps/workbench/api/postgres.py) owns parameterized SQL and connection lifecycle. There is no duplicate integration-owned document table.
+Application-owned [migrations](../../../apps/workbench/postgres/migrations/) create one `workbench` schema. The [persistence port](../../../apps/workbench/persistence/models.py) is independent of SQL drivers; [PostgresPersistence](../../../apps/workbench/postgres/postgres.py) owns parameterized SQL and connection lifecycle. There is no duplicate integration-owned document table.
 
 Haystack **3.5.0** with `pgvector-haystack` **8.2.1** was evaluated separately: genuine keyword and synthetic-vector operations worked, while automatic initialization was refused for the restricted application role. Its flat document layout and implicit DDL do not preserve the required composite foreign keys, version publication and forced row-level security. The selected adapter therefore uses the same PostgreSQL corpus directly. See the [recorded compatibility probe](../../../tasks/evidence/pgvector-compatibility-2026-11-21.json); it records no real embedding inference.
 
@@ -109,7 +109,7 @@ Restart the API and inspect dependency state without running the seed again. Com
 
 Do not delete the volume or use `down -v` as an application rollback. Reverting code does not reverse durable schema changes. Add a reviewed forward migration for repair. The downgrade CLI requires both `--confirm-disposable` and a database name beginning `rag_test_`, `workbench_test_` or `workbench_disposable_`; it refuses the main `workbench` database. It is only for throwaway migration tests and drops application tables there.
 
-After explicitly pointing `WORKBENCH_DB_ADMIN_DSN` at an owned disposable test database, its rollback entrypoint is `hatch -e workbench-api run python -m apps.workbench.api.db_admin downgrade --confirm-disposable`. Never repoint this command at customer data or rename a database to bypass its guard.
+After explicitly pointing `WORKBENCH_DB_ADMIN_DSN` at an owned disposable test database, its rollback entrypoint is `hatch -e workbench-api run python -m apps.workbench.postgres.db_admin downgrade --confirm-disposable`. Never repoint this command at customer data or rename a database to bypass its guard.
 
 ## Backups
 

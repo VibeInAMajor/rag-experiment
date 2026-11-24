@@ -17,9 +17,9 @@ import httpx
 import psycopg
 from psycopg import sql
 
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.db_seed import seed_development
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.db_seed import seed_development
+from apps.workbench.postgres.postgres import PostgresPersistence
 from scripts.workbench_ingestion_probe import _database_snapshot
 
 _DIRECTORY = Path("tasks/evidence/live-documents-2026-11-23")

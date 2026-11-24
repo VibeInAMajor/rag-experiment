@@ -13,7 +13,7 @@ import httpx
 from jsonschema import Draft202012Validator
 
 _EVIDENCE = Path("tasks/evidence/postgres-lexical-http-2026-11-21.json")
-_CASES = Path("apps/workbench/api/fixtures/lexical-evaluation.json")
+_CASES = Path("apps/workbench/retrieval/fixtures/lexical-evaluation.json")
 _SCHEMA = Path("apps/workbench/api/openapi.json")
 _CURSOR = Path(tempfile.gettempdir()) / "workbench-lexical-cursor-2026-11-21.txt"
 _SEARCH = "/api/v1/workspaces/development/search"

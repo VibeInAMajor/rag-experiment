@@ -20,11 +20,11 @@ from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from pydantic import SecretStr
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.persistence import Chunk, Source, SourceVersion, Workspace, resolve_development_workspace
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.source_registration import register_original_file
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import Chunk, Source, SourceVersion, Workspace, resolve_development_workspace
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.sources.source_registration import register_original_file
 
 _PORT = 8014
 _SOURCE_ID = "browser-original"

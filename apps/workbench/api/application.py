@@ -17,10 +17,13 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
-from apps.workbench.api.boundary import RequestBoundary, _ClientDisconnected, error_response, log_event, request_meta
-from apps.workbench.api.config import ApiSettings
+from apps.workbench.api.boundary import RequestBoundary, _ClientDisconnected, error_response, request_meta
 from apps.workbench.api.configuration_http import register_configuration_routes
-from apps.workbench.api.contracts import (
+from apps.workbench.api.database_dependency import DatabaseDependency, create_database_dependency
+from apps.workbench.api.ingestion_http import IngestionRoutes, register_ingestion_routes
+from apps.workbench.api.projection import project_search
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.contracts.schemas import (
     CapabilitiesResponse,
     Dependencies,
     DocumentItem,
@@ -39,19 +42,10 @@ from apps.workbench.api.contracts import (
     WorkspaceItem,
     WorkspacePage,
 )
-from apps.workbench.api.database_dependency import DatabaseDependency, create_database_dependency
-from apps.workbench.api.ingestion import IngestionService
-from apps.workbench.api.ingestion_http import IngestionRoutes, register_ingestion_routes
-from apps.workbench.api.local_sources import (
-    FileRevealFailed,
-    LocalFileLauncher,
-    LocalSources,
-    SourceFileUnavailable,
-    SourceNotFound,
-    WindowsExplorer,
-)
-from apps.workbench.api.parser_registry import FormatId, parser_descriptors
-from apps.workbench.api.persistence import (
+from apps.workbench.ingestion.ingestion import IngestionService
+from apps.workbench.observability.events import log_event
+from apps.workbench.parsing.parser_registry import FormatId, parser_descriptors
+from apps.workbench.persistence.models import (
     DatabaseUnavailable,
     InvalidSearchParameters,
     LexicalSearchSnapshot,
@@ -63,10 +57,17 @@ from apps.workbench.api.persistence import (
     WorkspaceNotFound,
     resolve_development_workspace,
 )
-from apps.workbench.api.profile_registry import ProfileRegistry
-from apps.workbench.api.profiles import resolve_profile, validate_search_policy
-from apps.workbench.api.projection import project_search
-from apps.workbench.api.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot
+from apps.workbench.retrieval.profile_registry import ProfileRegistry
+from apps.workbench.retrieval.profiles import resolve_profile, validate_search_policy
+from apps.workbench.retrieval.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot
+from apps.workbench.sources.local_sources import (
+    FileRevealFailed,
+    LocalFileLauncher,
+    LocalSources,
+    SourceFileUnavailable,
+    SourceNotFound,
+    WindowsExplorer,
+)
 
 _READINESS_TIMEOUT_SECONDS = 1.0
 _SEARCH_TIMEOUT_SECONDS = 10.0
@@ -591,7 +592,7 @@ def create_app(
             log_event("service_state", state=ServiceState.STOPPED.value)
 
     if service is None and database.persistence is not None:
-        from apps.workbench.api.lexical import LexicalService
+        from apps.workbench.retrieval.lexical import LexicalService
 
         service = LexicalService(database.persistence, registry=approved_registry)
     app = _Application(

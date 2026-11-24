@@ -42,14 +42,14 @@ Run offline reconciliation with the separate migration administrator after migra
 
 ```powershell
 . ./apps/workbench/postgres/use-dev-env.ps1 -IncludeAdmin
-hatch run workbench-api:python -m apps.workbench.api.postgres_indexes --workspace-id development
+hatch run workbench-api:python -m apps.workbench.postgres.postgres_indexes --workspace-id development
 ```
 
 The command reads `WORKBENCH_DB_ADMIN_DSN`, locks the selected workspace, compares actual active source projections and counts with the current manifest and ledger, then reports safe IDs/counts and `consistent`. Check-only does not repair or advance the generation. Reconciliation may scan the corpus and has a 120-second statement ceiling and five-second lock ceiling; it must not run on every HTTP request. For a reviewed mismatch, preserve the check output and explicitly request repair:
 
 ```powershell
-hatch run workbench-api:python -m apps.workbench.api.postgres_indexes --workspace-id development --repair
-hatch run workbench-api:python -m apps.workbench.api.postgres_indexes --workspace-id development
+hatch run workbench-api:python -m apps.workbench.postgres.postgres_indexes --workspace-id development --repair
+hatch run workbench-api:python -m apps.workbench.postgres.postgres_indexes --workspace-id development
 ```
 
 Repair rebuilds source contributions and commits one new reconciliation generation; it does not change source/version/chunk/vector data. `consistent:false,repaired:true` describes a successfully repaired mismatch; the following check must report `consistent:true`. Repair on an already consistent corpus is a no-op. Missing/incompatible schema, unknown workspace, app-role credentials or a failed transaction refuse safely. Do not force a ready flag or change counts by hand.

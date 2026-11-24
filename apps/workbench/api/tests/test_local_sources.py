@@ -13,18 +13,18 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.types import Message, Scope
 
-from apps.workbench.api import local_sources as local_module
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.local_sources import (
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import LocalOriginalRecord, WorkspaceContext
+from apps.workbench.sources import local_sources as local_module
+from apps.workbench.sources.local_sources import (
     FileRevealFailed,
     LocalSources,
     SourceFileUnavailable,
     WindowsExplorer,
     inspect_local_original,
 )
-from apps.workbench.api.persistence import LocalOriginalRecord, WorkspaceContext
-from apps.workbench.api.tests._persistence import _DatabaseProbe
+from apps.workbench.testing.persistence import _DatabaseProbe
 
 _FILE = "/api/v1/workspaces/development/sources/source-real/versions/version-real/local-file"
 _ORIGIN = {"Origin": "http://127.0.0.1:4173"}

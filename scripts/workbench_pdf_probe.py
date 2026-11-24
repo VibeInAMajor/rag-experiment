@@ -13,8 +13,8 @@ from uuid import uuid4
 import httpx
 from pypdf import PdfReader, PdfWriter
 
-from apps.workbench.api.document_processing import load_document_processing
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.configuration.document_processing import load_document_processing
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 from scripts.workbench_ingestion_probe import _database_snapshot
 from scripts.workbench_python_probe import _assert_preserved, _assert_sql_chunks, _chunks
 

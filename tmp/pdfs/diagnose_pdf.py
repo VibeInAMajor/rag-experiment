@@ -1,7 +1,7 @@
 from pathlib import Path
 from pydantic import ValidationError
-from apps.workbench.api.pdf_worker import _convert,_restrict_runtime
-from apps.workbench.api.pdf_models import PdfLimits
+from apps.workbench.parsing.pdf.pdf_worker import _convert,_restrict_runtime
+from apps.workbench.parsing.pdf.pdf_models import PdfLimits
 limits=PdfLimits()
 _restrict_runtime(limits)
 try:

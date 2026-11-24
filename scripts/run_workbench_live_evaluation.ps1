@@ -12,7 +12,7 @@ $evaluationRoot = Split-Path -Parent $PSScriptRoot
 $evaluationWeb = Join-Path $evaluationRoot 'apps/workbench/web'
 $evaluationArtifacts = Join-Path $evaluationRoot 'tasks/evidence/eval-vertical-2026-11-22'
 $evaluationWrappers = Join-Path $evaluationRoot 'output/playwright'
-$evaluationFixturePath = Join-Path $evaluationRoot 'apps/workbench/api/fixtures/lexical-evaluation.json'
+$evaluationFixturePath = Join-Path $evaluationRoot 'apps/workbench/retrieval/fixtures/lexical-evaluation.json'
 $evaluationHarnessPath = Join-Path $evaluationWeb $(if ($Harness -eq 'evaluation') { 'scripts/live-evaluation-smoke.js' } else { 'scripts/live-resilience-smoke.js' })
 New-Item -ItemType Directory -Force -Path $evaluationArtifacts, $evaluationWrappers | Out-Null
 $evaluationConfig = @{

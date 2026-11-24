@@ -3,11 +3,11 @@
 
 ## Task routing
 
-- **Find existing logic:** [Project map](docs/PROJECT_MAP.md).
-- **Naming, reuse, testing and integration rules:** [Engineering conventions](docs/ENGINEERING.md).
+- **Find existing logic:** [Project map](docs-website/PROJECT_MAP.md).
+- **Naming, reuse, testing and integration rules:** [Engineering conventions](docs-website/ENGINEERING.md).
 - **UI:** [Workbench README](apps/workbench/web/README.md). In `apps/workbench/web`, run `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` (after `npm ci` if needed).
-- **Haystack Python:** [Engineering conventions](docs/ENGINEERING.md#haystack-python) and [CONTRIBUTING.md](CONTRIBUTING.md). Use Hatch; run targeted tests and configured quality checks.
-- **RAG architecture:** [Project map: implemented vs planned](docs/PROJECT_MAP.md#implemented-vs-planned). The dated [RAG MVP plan](docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) is a reference, not an implemented contract.
+- **Haystack Python:** [Engineering conventions](docs-website/ENGINEERING.md#haystack-python) and [CONTRIBUTING.md](CONTRIBUTING.md). Use Hatch; run targeted tests and configured quality checks.
+- **RAG architecture:** [Project map: implemented vs planned](docs-website/PROJECT_MAP.md#5-planned-rag-capabilities-vs-checked-in-implementation). The dated [RAG MVP plan](docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) is a reference, not an implemented contract.
 
 ## Scoped guidance
 
@@ -144,6 +144,7 @@ Also see directory-specific guidelines:
 
 ## General
 
+- Place new files in the directory of the existing logical module that owns their behavior. When new functionality forms an independent logical module, create a directory for it. Import implementations directly from their owning modules; do not leave forwarding files or facade re-exports at old locations.
 - Define package exports in `__init__.py` via `__all__`; avoid `__all__` in implementation modules — keeps public APIs intentional
 - Update `pyproject.toml` for new package APIs — declare deps and minimum versions used
 

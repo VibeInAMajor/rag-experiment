@@ -11,7 +11,7 @@ from python_multipart.exceptions import MultipartParseError
 from python_multipart.multipart import parse_options_header
 from starlette.requests import Request
 
-from apps.workbench.api.upload_policy import upload_file_byte_limit
+from apps.workbench.ingestion.upload_policy import upload_file_byte_limit
 
 _IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _IDEMPOTENCY_KEY = re.compile(r"[A-Za-z0-9_-]{8,128}")

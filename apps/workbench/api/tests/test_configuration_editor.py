@@ -10,8 +10,8 @@ import pytest
 import pytest_asyncio
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.configuration import ConfigurationFailure, ConfigurationStore
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.configuration.configuration import ConfigurationFailure, ConfigurationStore
 
 _URL = "/api/v1/configuration"
 _ORIGIN = {"Origin": "http://127.0.0.1:4173", "X-Workbench-Request": "configuration"}
@@ -149,7 +149,7 @@ async def test_simultaneous_writers_and_atomic_failure(
     editor_settings: ApiSettings, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """One CAS winner publishes; a failed final replace leaves the preimage intact."""
-    import apps.workbench.api.configuration as module
+    import apps.workbench.configuration.configuration as module
 
     stores = [ConfigurationStore(editor_settings, state_directory=tmp_path / "history") for _ in range(2)]
     first = await asyncio.to_thread(stores[0].read)

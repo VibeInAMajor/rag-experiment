@@ -16,16 +16,16 @@ from typing import Any
 
 import httpx
 
-from apps.workbench.api.embedding import (
+from apps.workbench.embedding.embedding import (
     EmbeddingError,
     EmbeddingErrorCode,
     EmbeddingItem,
     EmbeddingProfile,
     EmbeddingRequest,
 )
-from apps.workbench.api.embedding_adapters import TeiEmbeddingAdapter
-from apps.workbench.api.embedding_capacity import MeasuredEmbeddingCapacityPolicy, ProductionEmbeddingGovernor
-from apps.workbench.api.embedding_dispatch import QualificationCapacityPolicy, QualificationEmbeddingGovernor
+from apps.workbench.embedding.embedding_adapters import TeiEmbeddingAdapter
+from apps.workbench.embedding.embedding_capacity import MeasuredEmbeddingCapacityPolicy, ProductionEmbeddingGovernor
+from apps.workbench.embedding.embedding_dispatch import QualificationCapacityPolicy, QualificationEmbeddingGovernor
 from scripts.workbench_embedding_qualify import (
     _DEFAULT_CONTAINER,
     _DEFAULT_ENDPOINT,

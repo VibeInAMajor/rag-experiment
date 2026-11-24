@@ -15,11 +15,18 @@ from typing import Any
 import psycopg
 from psycopg.conninfo import conninfo_to_dict
 
-from apps.workbench.api.db_migrations import MigrationError, migrate
-from apps.workbench.api.embedding import EmbeddingProfile
-from apps.workbench.api.embedding_jobs import EmbeddingWrite
-from apps.workbench.api.persistence import Chunk, PersistenceError, Source, SourceVersion, Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.embedding.embedding import EmbeddingProfile
+from apps.workbench.embedding.embedding_jobs import EmbeddingWrite
+from apps.workbench.persistence.models import (
+    Chunk,
+    PersistenceError,
+    Source,
+    SourceVersion,
+    Workspace,
+    WorkspaceContext,
+)
+from apps.workbench.postgres.db_migrations import MigrationError, migrate
+from apps.workbench.postgres.postgres import PostgresPersistence
 
 _TEXT = "Synthetic storage benchmark: unchanged tenant-local input."
 _INPUT_HASH = hashlib.sha256(_TEXT.encode()).hexdigest()

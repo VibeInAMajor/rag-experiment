@@ -19,10 +19,10 @@ from uuid import uuid4
 import httpx
 import psycopg
 
-from apps.workbench.api.db_migrations import bootstrap_role, migrate
-from apps.workbench.api.persistence import Chunk, Source, SourceVersion, Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
+from apps.workbench.persistence.models import Chunk, Source, SourceVersion, Workspace, WorkspaceContext
+from apps.workbench.postgres.db_migrations import bootstrap_role, migrate
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.retrieval.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
 
 _IMAGE = "pgvector/pgvector:0.8.2-pg17-bookworm@sha256:feb68f4f15446397d8cac7f4fe48fe4586de83160d1fc48b46283312d1a33966"
 _CONTEXT = WorkspaceContext(workspace_id="development", trace_id="index-restart-r1")

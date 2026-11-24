@@ -5,9 +5,14 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.persistence import DatabaseUnavailable, PersistenceError, SchemaIncompatible, WorkspaceNotFound
-from apps.workbench.api.tests._persistence import _DatabaseProbe
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.persistence.models import (
+    DatabaseUnavailable,
+    PersistenceError,
+    SchemaIncompatible,
+    WorkspaceNotFound,
+)
+from apps.workbench.testing.persistence import _DatabaseProbe
 
 
 def test_database_readiness_does_not_enable_execution_profiles() -> None:

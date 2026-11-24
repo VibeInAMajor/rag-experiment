@@ -16,19 +16,19 @@ import httpx
 import pytest
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.chunking_adapters import count_tokens
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.tests.conftest import DisposableDatabase
 from apps.workbench.api.tests.test_ingestion_routes import _DOCUMENTS, _counts, _error, _search, _upload
 from apps.workbench.api.tests.test_ingestion_routes import ingestion_repository as ingestion_repository
+from apps.workbench.chunking.chunking_adapters import count_tokens
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.testing.database import DisposableDatabase
 
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.asyncio(loop_scope="function"),
     pytest.mark.usefixtures("ingestion_repository"),
 ]
-_FIXTURES = Path(__file__).parent / "fixtures/python"
+_FIXTURES = Path(__file__).parents[2] / "chunking/tests/fixtures/python"
 
 
 @asynccontextmanager

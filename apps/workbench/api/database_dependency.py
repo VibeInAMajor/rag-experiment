@@ -5,9 +5,9 @@ from typing import Literal
 
 from pydantic import SecretStr
 
-from apps.workbench.api.boundary import log_event
-from apps.workbench.api.contracts import DatabaseDependencyStatus
-from apps.workbench.api.persistence import (
+from apps.workbench.contracts.schemas import DatabaseDependencyStatus
+from apps.workbench.observability.events import log_event
+from apps.workbench.persistence.models import (
     DatabaseUnavailable,
     PersistenceError,
     PersistencePort,
@@ -72,7 +72,7 @@ def create_database_dependency(
 ) -> DatabaseDependency:
     """Bind only the configured local infrastructure adapter at the composition edge."""
     if persistence is None and dsn is not None:
-        from apps.workbench.api.postgres import PostgresPersistence
+        from apps.workbench.postgres.postgres import PostgresPersistence
 
         persistence = PostgresPersistence(dsn.get_secret_value(), snapshot_mode=snapshot_mode)
     return DatabaseDependency(persistence)

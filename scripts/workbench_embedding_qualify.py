@@ -19,7 +19,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from apps.workbench.api.embedding import (
+from apps.workbench.embedding.embedding import (
     EmbeddingBatch,
     EmbeddingError,
     EmbeddingErrorCode,
@@ -29,10 +29,10 @@ from apps.workbench.api.embedding import (
     EmbeddingRuntimeIdentity,
     prepare_embedding_request,
 )
-from apps.workbench.api.embedding_adapters import TeiEmbeddingAdapter
-from apps.workbench.api.embedding_config import EmbeddingConfigurationError, validate_embedding_endpoint
-from apps.workbench.api.embedding_dispatch import QualificationCapacityPolicy, QualificationEmbeddingGovernor
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.embedding.embedding_adapters import TeiEmbeddingAdapter
+from apps.workbench.embedding.embedding_config import EmbeddingConfigurationError, validate_embedding_endpoint
+from apps.workbench.embedding.embedding_dispatch import QualificationCapacityPolicy, QualificationEmbeddingGovernor
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 
 _REVISION = "5cf2132abc99cad020ac570b19d031efec650f2b"
 _IMAGE = "sha256:d139efce84ee1d23405d64e4dc0b82d583c463fce3ff707eb65c47a8a1b7f69c"

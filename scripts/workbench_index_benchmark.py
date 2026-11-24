@@ -22,10 +22,10 @@ from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 from sqlalchemy import text
 
-from apps.workbench.api import db_migrations
-from apps.workbench.api.persistence import WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.postgres_indexes import _INDEX_STATE_QUERY
+from apps.workbench.persistence.models import WorkspaceContext
+from apps.workbench.postgres import db_migrations
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.postgres.postgres_indexes import _INDEX_STATE_QUERY
 
 _CONTEXT = WorkspaceContext(workspace_id="benchmark", trace_id="index-benchmark-r1")
 _ACTIVE = (

@@ -23,14 +23,14 @@ from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from pydantic import JsonValue
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.chunking import ExactModelCounter
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.db_seed import seed_development
-from apps.workbench.api.embedding import EmbeddingBatch, EmbeddingItem, EmbeddingPort, EmbeddingRequest
-from apps.workbench.api.embedding_ingestion import EmbeddingIngestionService
-from apps.workbench.api.persistence import Chunk, Source, SourceVersion, Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.chunking.chunking import ExactModelCounter
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.embedding.embedding import EmbeddingBatch, EmbeddingItem, EmbeddingPort, EmbeddingRequest
+from apps.workbench.embedding.embedding_ingestion import EmbeddingIngestionService
+from apps.workbench.persistence.models import Chunk, Source, SourceVersion, Workspace, WorkspaceContext
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.db_seed import seed_development
+from apps.workbench.postgres.postgres import PostgresPersistence
 from scripts.workbench_embedding_backfill import (
     BackfillRuntime,
     load_capacity_configuration,

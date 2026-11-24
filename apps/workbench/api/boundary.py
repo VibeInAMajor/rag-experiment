@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import logging
 import re
 from asyncio import CancelledError, timeout
 from time import monotonic
@@ -13,11 +12,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.contracts import ApiError, ErrorResponse, Meta
-from apps.workbench.api.upload_policy import upload_request_byte_limit
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.contracts.schemas import ApiError, ErrorResponse, Meta
+from apps.workbench.ingestion.upload_policy import upload_request_byte_limit
+from apps.workbench.observability.events import log_event
 
-_logger = logging.getLogger("workbench.api")
 _ORIGIN = b"origin"
 _HOST = b"host"
 _CONTENT_LENGTH = b"content-length"
@@ -52,11 +51,6 @@ def error_response(
         ),
     )
     return JSONResponse(status_code=status, content=payload.model_dump(exclude_none=True))
-
-
-def log_event(event: str, **metadata: str | int | float) -> None:
-    """Emit operational metadata only, without request paths or payloads."""
-    _logger.info(json.dumps({"event": event, **metadata}, separators=(",", ":")))
 
 
 def _trusted_host(raw: str) -> bool:

@@ -14,8 +14,8 @@ import httpx
 import psycopg
 from psycopg.rows import dict_row
 
-from apps.workbench.api.persistence import WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.persistence.models import WorkspaceContext
+from apps.workbench.postgres.postgres import PostgresPersistence
 
 _EVIDENCE = Path("tasks/evidence/postgresql-restart-2026-11-21.json")
 

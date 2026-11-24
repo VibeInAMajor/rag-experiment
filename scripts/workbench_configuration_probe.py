@@ -9,8 +9,8 @@ from pathlib import Path
 
 import httpx
 
-from apps.workbench.api.contracts import ConfigurationDocumentResponse
-from apps.workbench.api.document_processing import validate_document_processing_yaml
+from apps.workbench.configuration.document_processing import validate_document_processing_yaml
+from apps.workbench.contracts.schemas import ConfigurationDocumentResponse
 from scripts.workbench_ingestion_probe import _database_snapshot
 
 _DIRECTORY = Path("tasks/evidence/configuration-editor-2026-11-22")

@@ -7,7 +7,7 @@ import sys
 import uvicorn
 from pydantic import ValidationError
 
-from apps.workbench.api.config import ApiSettings
+from apps.workbench.configuration.config import ApiSettings
 
 
 def main() -> None:

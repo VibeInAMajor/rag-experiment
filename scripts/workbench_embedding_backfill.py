@@ -17,16 +17,16 @@ from typing import Any
 import httpx
 from pydantic import ValidationError
 
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.document_processing import DocumentProcessingSettings
-from apps.workbench.api.embedding import EmbeddingError, EmbeddingErrorCode, EmbeddingProfile
-from apps.workbench.api.embedding_adapters import TeiEmbeddingAdapter
-from apps.workbench.api.embedding_capacity import MeasuredEmbeddingCapacityPolicy, ProductionEmbeddingGovernor
-from apps.workbench.api.embedding_config import validate_embedding_endpoint
-from apps.workbench.api.embedding_ingestion import EmbeddingIngestionService
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
-from apps.workbench.api.persistence import PersistenceError, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.configuration.document_processing import DocumentProcessingSettings
+from apps.workbench.embedding.embedding import EmbeddingError, EmbeddingErrorCode, EmbeddingProfile
+from apps.workbench.embedding.embedding_adapters import TeiEmbeddingAdapter
+from apps.workbench.embedding.embedding_capacity import MeasuredEmbeddingCapacityPolicy, ProductionEmbeddingGovernor
+from apps.workbench.embedding.embedding_config import validate_embedding_endpoint
+from apps.workbench.embedding.embedding_ingestion import EmbeddingIngestionService
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.persistence.models import PersistenceError, WorkspaceContext
+from apps.workbench.postgres.postgres import PostgresPersistence
 from scripts.workbench_embedding_qualify import _DEFAULT_CONTAINER, _DEFAULT_ENDPOINT, LocalDeploymentVerifier
 
 

@@ -5,7 +5,7 @@ import json
 import shutil
 from pathlib import Path
 
-from apps.workbench.api.pdf_assets import pdf_assets_directory, pdf_assets_revision, verify_pdf_assets
+from apps.workbench.parsing.pdf.pdf_assets import pdf_assets_directory, pdf_assets_revision, verify_pdf_assets
 
 
 def main() -> None:
@@ -17,7 +17,7 @@ def main() -> None:
     parser.add_argument("--verify-only", action="store_true")
     options = parser.parse_args()
     root = pdf_assets_directory()
-    manifest_path = Path(__file__).resolve().parents[1] / "apps/workbench/api/pdf_asset_manifest.json"
+    manifest_path = Path(__file__).resolve().parents[1] / "apps/workbench/parsing/pdf/pdf_asset_manifest.json"
     manifest = json.loads(manifest_path.read_bytes())
     if options.verify_only and (options.download or options.from_directory):
         parser.error("--verify-only cannot provision assets")

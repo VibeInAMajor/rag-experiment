@@ -11,9 +11,9 @@ from uuid import uuid4
 
 import httpx
 
-from apps.workbench.api.chunking_adapters import count_tokens
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.chunking.chunking_adapters import count_tokens
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 from scripts.workbench_ingestion_probe import _database_snapshot
 
 _DIRECTORY = Path("tasks/evidence/config-2026-11-22")

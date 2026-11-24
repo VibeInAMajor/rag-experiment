@@ -21,11 +21,11 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from psycopg.rows import dict_row
 
-from apps.workbench.api.db_migrations import migrate
-from apps.workbench.api.db_seed import seed_development
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.postgres_profiles import promote_profile, sync_registry, transition_profile
-from apps.workbench.api.profile_registry import ProfileDefinition, ProfileRegistry, default_profile_registry
+from apps.workbench.postgres.db_migrations import migrate
+from apps.workbench.postgres.db_seed import seed_development
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.postgres.postgres_profiles import promote_profile, sync_registry, transition_profile
+from apps.workbench.retrieval.profile_registry import ProfileDefinition, ProfileRegistry, default_profile_registry
 
 _ROOT = Path(__file__).resolve().parents[1]
 _DIRECTORY = _ROOT / ".cache" / "workbench-profile-smoke"

@@ -13,16 +13,16 @@ import httpx
 import pytest
 
 from apps.workbench.api.application import create_app
-from apps.workbench.api.chunking import ModelTokenAdmission
-from apps.workbench.api.chunking_adapters import count_tokens
-from apps.workbench.api.config import ApiSettings
-from apps.workbench.api.document_processing import DocumentProcessingSettings
-from apps.workbench.api.model_token_counter import LocalQwenTokenCounter
-from apps.workbench.api.persistence import Workspace, WorkspaceContext
-from apps.workbench.api.postgres import PostgresPersistence
-from apps.workbench.api.tests.conftest import DisposableDatabase
 from apps.workbench.api.tests.test_ingestion_routes import _CONTEXT, _DOCUMENTS, _error, _upload
 from apps.workbench.api.tests.test_ingestion_routes import ingestion_repository as ingestion_repository
+from apps.workbench.chunking.chunking import ModelTokenAdmission
+from apps.workbench.chunking.chunking_adapters import count_tokens
+from apps.workbench.configuration.config import ApiSettings
+from apps.workbench.configuration.document_processing import DocumentProcessingSettings
+from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
+from apps.workbench.persistence.models import Workspace, WorkspaceContext
+from apps.workbench.postgres.postgres import PostgresPersistence
+from apps.workbench.testing.database import DisposableDatabase
 
 pytestmark = [
     pytest.mark.integration,
