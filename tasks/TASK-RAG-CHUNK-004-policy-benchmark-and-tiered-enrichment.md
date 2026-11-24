@@ -158,8 +158,8 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 | [pdf_chunk_preparation.py](../apps/workbench/chunking/pdf/pdf_chunk_preparation.py), [pdf_chunking_adapter.py](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py), [pdf_models.py](../apps/workbench/parsing/pdf/pdf_models.py) | READ page/table/visual-incomplete provenance and approved PDF policy choices. |
 | [tests/test_pdf_ingestion.py](../apps/workbench/api/tests/test_pdf_ingestion.py), [tests/test_chunking.py](../apps/workbench/chunking/tests/test_chunking.py), [tests/test_python_chunking.py](../apps/workbench/chunking/tests/test_python_chunking.py) | REUSE existing fixtures/tests as regression controls; add gold labels, not duplicate splitter implementations. |
 | `apps/workbench/evaluation/chunking.py`, `apps/workbench/evaluation/metrics.py`, `apps/workbench/evaluation/cohorts.py` | CREATE **minimal** evaluation modules after inspecting actual app package; avoid parallel search/persistence stacks. |
-| `apps/workbench/api/tests/test_chunking_evaluation.py`, `tests/test_chunking_evidence.py`, `tests/test_chunking_promotion.py` | CREATE unit/integration/evidence and policy-promotion tests using test-only corpora. |
-| `apps/workbench/api/fixtures/chunking-evaluation/` | CREATE labeled fixtures/manifests for new cohorts with non-sensitive source and original evidence. |
+| `apps/workbench/chunking/tests/test_chunking_evaluation.py`, `apps/workbench/chunking/tests/test_chunking_evidence.py`, `apps/workbench/chunking/tests/test_chunking_promotion.py` | CREATE unit/integration/evidence and policy-promotion tests using test-only corpora. |
+| `apps/workbench/chunking/tests/fixtures/chunking-evaluation/` | CREATE labeled fixtures/manifests for new cohorts with non-sensitive source and original evidence. |
 | [CONTENT-001](TASK-RAG-CONTENT-001-structured-elements-representations-and-original-evidence.md), [CONTENT-005](TASK-RAG-CONTENT-005-original-evidence-resolution-and-grounding.md) | READ provider-neutral element/asset/representation and evidence resolver once implemented; no duplicate ContentRepresentation or EvidenceReference models. |
 | [CONTENT-002](TASK-RAG-CONTENT-002-scanned-pdf-ocr-and-layout.md), [CONTENT-003](TASK-RAG-CONTENT-003-visual-diagrams-charts-and-graph-extraction.md), [CONTENT-004](TASK-RAG-CONTENT-004-mermaid-typed-graph-ingestion.md) | Import their actual approved gold source/quality fixtures only after capabilities pass; do not implement visual/semantic adapters in the benchmark. |
 | `docs-website/docs/architecture/content-aware-chunking-strategy.md` | UPDATE with measured results, cohort decisions and **real** modality availability; no blanket claims. |
@@ -170,8 +170,8 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 
 
 - CREATE `apps/workbench/evaluation/chunking.py` or the existing evaluation package's cohesive location; avoid second score calculation if present.
-- ADD versioned curated cohort fixtures under `apps/workbench/api/fixtures/` (non-sensitive, properly licensed) and exact labels.
-- ADD `apps/workbench/api/tests/test_chunking_evaluation.py` and separate integration benchmark command under app-specific Hatch environment.
+- ADD versioned curated cohort fixtures under `apps/workbench/chunking/tests/fixtures/` (non-sensitive, properly licensed) and exact labels.
+- ADD `apps/workbench/chunking/tests/test_chunking_evaluation.py` and separate integration benchmark command under app-specific Hatch environment.
 - EXTEND only approved retrieval parent-expansion adapter after reviewing source/version parent metadata contract; possible **separate** migration.
 - UPDATE `docs-website/docs/architecture/content-aware-chunking-strategy.md` and per-cohort result `.md` summaries, not core Haystack.
 
@@ -185,7 +185,7 @@ Define `PromotionDecision`: format+intent cohort, incumbent vs challenger finger
 | [`apps/workbench/chunking/chunking_adapters.py`](../apps/workbench/chunking/chunking_adapters.py) | semantic element-aware part building; avoid second chunker |
 | [`apps/workbench/chunking/chunking_profiles.py`](../apps/workbench/chunking/chunking_profiles.py) | token/section/policy revisions and PDF profile parameters |
 | [`apps/workbench/parsing/parsing.py`](../apps/workbench/parsing/parsing.py) | typed ParsedElement/SourceSpan |
-| [`apps/workbench/api/python_code.py`](../apps/workbench/api/python_code.py) | PythonCodeSplitter integration and symbol metadata |
+| [`apps/workbench/chunking/python_code.py`](../apps/workbench/chunking/python_code.py) | PythonCodeSplitter integration and symbol metadata |
 | [`apps/workbench/chunking/pdf/pdf_chunking_adapter.py`](../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) | Docling HybridChunker for PDF page/table chunks |
 | [`apps/workbench/chunking/tests/test_chunking.py`](../apps/workbench/chunking/tests/test_chunking.py) | current invariant/golden tests |
 | [`apps/workbench/chunking/pdf/tests/test_pdf_chunking.py`](../apps/workbench/chunking/pdf/tests/test_pdf_chunking.py) | current page/cell/heading regressions |

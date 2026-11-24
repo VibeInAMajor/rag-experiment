@@ -4,7 +4,7 @@
 **Updated:** 2026-11-24  
 **Status:** IN PROGRESS — EMBED-002's measured single-owner prerequisite passes its actual ten-minute steady-window/hard-ceiling gate; broader 30-minute and wider concurrency matrix remain unrun
 **Priority:** P0 — independent prerequisite for high-volume real embedding ingestion  
-**Dependencies:** [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [PROFILE-001](TASK-RAG-PROFILE-001-versioned-retrieval-and-processing-profile-registry.md); block actual real dispatch until EMBED-001 validates runtime; integrate into [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) and [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md).  
+**Dependencies:** [EMBED-001](completed/TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [PROFILE-001](completed/TASK-RAG-PROFILE-001-versioned-retrieval-and-processing-profile-registry.md); block actual real dispatch until EMBED-001 validates runtime; integrate into [EMBED-002](completed/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) and [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md).  
 **Recipient repository source inspected:** `4d3292f81e55aa66cda4df97831b7eefe7b1f858` plus this task's working-tree changes (historical proposal: `fe171f5273b2dfa3db536c8bc8ffeae8f3aa582e`)
 **Donor source pinned:** `955fd049949d3fc462d555be14774e4b255aa15c`  
 **Target:** `tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md`  
@@ -144,7 +144,7 @@ embedding_capacity:
 | Existing `apps/workbench/embedding/embedding_capacity.py` and `apps/workbench/embedding/embedding_dispatch.py`; optional new `apps/workbench/embedding/embedding_capacity_windows.py` and `apps/workbench/embedding/embedding_packet_packing.py` only if existing owner cannot satisfy the contract | Adapt **minimum sufficient** donor contracts; no duplicate dispatch if EMBED-001 already adds it. |
 | New `apps/workbench/embedding/tests/test_embedding_capacity.py`, `test_embedding_dispatch.py`, `test_embedding_telemetry.py` | Port donor invariants and target-specific 0.92/0.95 negative tests. |
 | [donor quota audit](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/tasks/TASK-M39-030-embedding-TPM-smoothing-audit.md) | Reference for source-starvation/packing/ramp defects and exact measurement plan; source code cannot be copied without license permission. |
-| [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md), [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md), [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) | MUST coordinate shared governor and actual usage schema; no independent quota governors per request type. |
+| [EMBED-001](completed/TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [EMBED-002](completed/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md), [SCALE-002](TASK-RAG-SCALE-002-durable-asynchronous-ingestion-and-tenant-backpressure.md), [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) | MUST coordinate shared governor and actual usage schema; no independent quota governors per request type. |
 
 MUST NOT change applied migrations 0001/0002, core Haystack algorithms, native FTS score semantics, original source version publication or UI Preview fixtures. If a distributed shared quota table/service is required, add a separate narrowly scoped contract/migration decision BEFORE concurrent workers are allowed.
 
@@ -236,7 +236,7 @@ Recipient baseline: `hatch run workbench-api:check`, `hatch run workbench-api:te
 - No PostgreSQL schema migration is needed for a single-process in-memory governor; if multiworker lease/capacity authority becomes necessary, create reviewed additive schema and explicit rollout with SCALE-002.
 - Keep current lexical search and existing source versions valid when TEI/governor offline. Changing only utilization tuning does not invalidate embeddings; changing model/tokenizer/input profile does.
 - Rollback disables governed real embedding profile or returns it to an earlier verified capacity policy while preserving source, vectors and jobs. Do **not** delete data, silently fall back to an ungoverned provider, or force a new corpus.
-- Cross-references: [EMBED-001](TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md), [DELTA-001](TASK-RAG-DELTA-001-incremental-reindexing-and-embedding-vector-reuse.md) and [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md).
+- Cross-references: [EMBED-001](completed/TASK-RAG-EMBED-001-qualify-local-qwen-embedding-provider.md), [EMBED-002](completed/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md), [DELTA-001](TASK-RAG-DELTA-001-incremental-reindexing-and-embedding-vector-reuse.md) and [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md).
 
 ## O. Mandatory Completion Checklist
 

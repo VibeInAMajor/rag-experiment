@@ -110,7 +110,7 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 
 **Step J14 —** Measure one paragraph/method edit on 100-chunk Markdown/Python/PDF fixtures; require expected vector call reduction but no source-index inconsistency, cross-tenant leak or profile-mismatch reuse. Port donor test **scenarios**, not donor whole test runtime.
 
-**Mandatory dependency handshake:** [EMBED-002](TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) supplies durable vector jobs; [INDEX-001](TASK-RAG-INDEX-001-persisted-revision-and-consistent-search-snapshots.md) supplies source generation; planner must not bypass TPM-001.
+**Mandatory dependency handshake:** [EMBED-002](completed/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) supplies durable vector jobs; [INDEX-001](completed/TASK-RAG-INDEX-001-persisted-revision-and-consistent-search-snapshots.md) supplies source generation; planner must not bypass TPM-001.
 
 ## K. Security / Governance / Observability
 
