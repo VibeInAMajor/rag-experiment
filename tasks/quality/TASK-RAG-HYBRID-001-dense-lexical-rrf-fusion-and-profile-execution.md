@@ -3,10 +3,10 @@
 **Created:** 2026-11-23  
 **Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
-**Priority:** P1  
-**Dependencies:** DENSE-001, PROFILE-001, INDEX-001; BM25-002 optional and not a prerequisite  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
-**Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
-**Target:** tasks/TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md
+**Priority:** P0 — retrieval quality before scalability  
+**Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md), completed PROFILE-001/INDEX-001; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) reviewed tuning corpus and [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) baseline; valid [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) local admission. BM25-002 and ANN are NOT prerequisites.  
+**Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44  
+**Target:** tasks/quality/TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md
 
 ## A. Title
 
@@ -18,8 +18,7 @@ Dense semantic retrieval and lexical exact term recall have complementary failur
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
-The source library has [DocumentJoiner](../haystack/components/joiners/document_joiner.py) with RRF mode, and a query-dependent lexical Haystack pipeline. No cross-retriever profile/execution exists in the application. Current source-aware identities and active version constraints must be shared by both retrievers.
+[PostgresPersistence](../../apps/workbench/postgres/postgres.py) now owns lexical_search_snapshot and real vector_search_snapshot over migration 0005's immutable embedding_vectors and chunk_embeddings, not nullable legacy chunks.embedding. [DenseService / QueryEmbedder](../../apps/workbench/retrieval/dense.py) executes qualified exact Dense; [ProfileDefinition](../../apps/workbench/retrieval/profile_registry.py) already defines rrf/bm25 but they are not executable merely by schema. [profiles.py](../../apps/workbench/retrieval/profiles.py), [retrieval routing](../../apps/workbench/retrieval/services.py), [projection](../../apps/workbench/api/projection.py) and [API contracts](../../apps/workbench/contracts/schemas.py) own qualification and score provenance. [actual Dense evidence](../../tasks/evidence/dense-2026-11-24/report.md) records 102 real vectors, 52 queries and independently checked exact SQL; no independent quality holdout, BM25 or Hybrid runtime claim. Current local corpus cap 10k/50 MiB remains. [DocumentJoiner](../../haystack/components/joiners/document_joiner.py) supports explicit RRF, not default concatenate. Current DenseService and lexical arm must preserve common generation; no ANN dependency.
 
 ## D. Goal
 
@@ -49,15 +48,17 @@ CREATE apps/workbench/retrieval/hybrid.py, apps/workbench/retrieval/tests/test_h
 
 | Existing file (direct link) | Symbol, contract and test reuse |
 | --- | --- |
-| [`haystack/components/joiners/document_joiner.py`](../haystack/components/joiners/document_joiner.py) | DocumentJoiner default CONCATENATE; explicit RRF needed |
-| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | existing Haystack lexical retriever |
-| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | separate FTS/pgvector search paths |
-| [`apps/workbench/persistence/models.py`](../apps/workbench/persistence/models.py) | stable Chunk identity |
-| [`apps/workbench/contracts/schemas.py`](../apps/workbench/contracts/schemas.py) | profile/score version contract |
-| [`apps/workbench/api/projection.py`](../apps/workbench/api/projection.py) | actual stage timing and identifiers |
-| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | only vetted graph topology executable |
+| [`haystack/components/joiners/document_joiner.py`](../../haystack/components/joiners/document_joiner.py) | DocumentJoiner default CONCATENATE; explicit RRF needed |
+| [`apps/workbench/retrieval/lexical.py`](../../apps/workbench/retrieval/lexical.py) | existing Haystack lexical retriever |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | separate FTS/pgvector search paths |
+| [`apps/workbench/persistence/models.py`](../../apps/workbench/persistence/models.py) | stable Chunk identity |
+| [`apps/workbench/contracts/schemas.py`](../../apps/workbench/contracts/schemas.py) | profile/score version contract |
+| [`apps/workbench/api/projection.py`](../../apps/workbench/api/projection.py) | actual stage timing and identifiers |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../../apps/workbench/web/src/domain/approvedExecution.ts) | only vetted graph topology executable |
 
 **Related project, pinned audit sources (architecture/test patterns only):** [`docs/23-implementation-step-06-hybrid-fusion-and-reranking.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/23-implementation-step-06-hybrid-fusion-and-reranking.md); [`src/enterprise_ai_pipeline/rag/embedding_dispatch.py`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/src/enterprise_ai_pipeline/rag/embedding_dispatch.py). Donor uses a different physical Qdrant/SQLite index; no code copying without [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md) review.
+
+**Quality-track boundary:** [implementation order](IMPLEMENTATION_ORDER.md). Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion. Use DATASET-001 reviewed tuning data and common evidence facets, equal final context token budget, predeclared paired metrics and explicit no-go. The independent final holdout is reserved for QUALITY-002; prior synthetic query counts remain minimum regression tests, not final quality qualification. No production activation based on benchmark alone.
 
 ## J. Implementation Requirements — ordered executable blueprint
 
@@ -84,7 +85,7 @@ CREATE apps/workbench/retrieval/hybrid.py, apps/workbench/retrieval/tests/test_h
 
 **J13.** Test 30+ gold queries, per-arm/hybrid Recall/MRR, no duplicate passages, query provider outage and indexing/interactive TPM fairness.
 
-**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
+**Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](../RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
 ## K. Security / Governance / Observability
 

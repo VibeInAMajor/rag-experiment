@@ -4,9 +4,9 @@
 **Updated:** 2026-11-24  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P1 decision task; start now, migrate only if data proves value  
-**Dependencies:** Completed RAG-001 and EVAL-001; INDEX-001 and PROFILE-001 desired for exact versioned A/B  
-**Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
-**Target:** tasks/TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md
+**Dependencies:** completed RAG-001/EVAL-001/INDEX-001/PROFILE-001; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) reviewed tuning data, [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) lexical baseline; compare [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) when available.  
+**Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44  
+**Target:** tasks/quality/TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md
 
 ## A. Title
 
@@ -18,8 +18,7 @@ It is tempting to replace current PostgreSQL FTS because the UI says "BM25", but
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
-Existing PostgreSQL generated tsvector uses simple dictionary with GIN; score_type postgres_ts_rank_cd. Haystack InMemoryBM25Retriever requires an InMemoryDocumentStore and is **not** a viable Live replacement. The pg_search (ParadeDB) Postgres extension offers BM25 and currently lists AGPL 3 licensing on PGXN; packaging and license/commercial implications require approval. Alternative PostgreSQL BM25 options must be researched in the implementation phase; do not invent an installed extension.
+[PostgresPersistence](../../apps/workbench/postgres/postgres.py) now owns lexical_search_snapshot and real vector_search_snapshot over migration 0005's immutable embedding_vectors and chunk_embeddings, not nullable legacy chunks.embedding. [DenseService / QueryEmbedder](../../apps/workbench/retrieval/dense.py) executes qualified exact Dense; [ProfileDefinition](../../apps/workbench/retrieval/profile_registry.py) already defines rrf/bm25 but they are not executable merely by schema. [profiles.py](../../apps/workbench/retrieval/profiles.py), [retrieval routing](../../apps/workbench/retrieval/services.py), [projection](../../apps/workbench/api/projection.py) and [API contracts](../../apps/workbench/contracts/schemas.py) own qualification and score provenance. [actual Dense evidence](../../tasks/evidence/dense-2026-11-24/report.md) records 102 real vectors, 52 queries and independently checked exact SQL; no independent quality holdout, BM25 or Hybrid runtime claim. Current local corpus cap 10k/50 MiB remains. Native PostgreSQL simple FTS/GIN uses ts_rank_cd, not BM25. No deployed BM25 extension; review actual extension license and runtime before isolated trial.
 
 ## D. Goal
 
@@ -43,21 +42,23 @@ BenchmarkExperiment{corpus_generation,query_labels,expected_relevant_source_or_c
 
 ## I. Repository Files / Components Impacted
 
-READ [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql), [postgres.py](../apps/workbench/postgres/postgres.py), [lexical.py](../apps/workbench/retrieval/lexical.py), [lexical gold fixture](../apps/workbench/retrieval/fixtures/lexical-evaluation.json), [evaluation guide](../docs-website/docs/architecture/postgres-lexical-search.md); CREATE benchmark design/tools in apps/workbench/retrieval/tests/benchmarks/ or apps/workbench/retrieval/tests/benchmark_bm25.py, and tasks/BM25_DECISION_REPORT.md with Created/Updated; do not change live SQL or public API.
+READ [0001 migration](../../apps/workbench/postgres/migrations/0001_initial.up.sql), [postgres.py](../../apps/workbench/postgres/postgres.py), [lexical.py](../../apps/workbench/retrieval/lexical.py), [lexical gold fixture](../../apps/workbench/retrieval/fixtures/lexical-evaluation.json), [evaluation guide](../../docs-website/docs/architecture/postgres-lexical-search.md); CREATE benchmark design/tools in apps/workbench/retrieval/tests/benchmarks/ or apps/workbench/retrieval/tests/benchmark_bm25.py, and tasks/BM25_DECISION_REPORT.md with Created/Updated; do not change live SQL or public API.
 
 ### I.1. Verified implementation map, symbol ownership and test references
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | true baseline plainto_tsquery('simple') + ts_rank_cd + active version filter |
-| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | generated tsvector and GIN index |
-| [`apps/workbench/retrieval/lexical.py`](../apps/workbench/retrieval/lexical.py) | read-only Haystack FTS baseline |
-| [`apps/workbench/retrieval/fixtures/lexical-evaluation.json`](../apps/workbench/retrieval/fixtures/lexical-evaluation.json) | 10 exact, 3 paraphrase cases, insufficient for BM25 decision |
-| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | rank and provenance oracle |
-| [`docs-website/docs/architecture/postgres-lexical-search.md`](../docs-website/docs/architecture/postgres-lexical-search.md) | current lexical runbook/results |
-| [`haystack/components/retrievers/in_memory/bm25_retriever.py`](../haystack/components/retrievers/in_memory/bm25_retriever.py) | in-memory implementation NOT a pgvector adapter |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | true baseline plainto_tsquery('simple') + ts_rank_cd + active version filter |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../../apps/workbench/postgres/migrations/0001_initial.up.sql) | generated tsvector and GIN index |
+| [`apps/workbench/retrieval/lexical.py`](../../apps/workbench/retrieval/lexical.py) | read-only Haystack FTS baseline |
+| [`apps/workbench/retrieval/fixtures/lexical-evaluation.json`](../../apps/workbench/retrieval/fixtures/lexical-evaluation.json) | 10 exact, 3 paraphrase cases, insufficient for BM25 decision |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../../apps/workbench/api/tests/test_lexical_routes.py) | rank and provenance oracle |
+| [`docs-website/docs/architecture/postgres-lexical-search.md`](../../docs-website/docs/architecture/postgres-lexical-search.md) | current lexical runbook/results |
+| [`haystack/components/retrievers/in_memory/bm25_retriever.py`](../../haystack/components/retrievers/in_memory/bm25_retriever.py) | in-memory implementation NOT a pgvector adapter |
 
 **Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/22-implementation-step-05-sparse-and-symbol-retrieval.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/22-implementation-step-05-sparse-and-symbol-retrieval.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
+**Quality-track boundary:** [implementation order](IMPLEMENTATION_ORDER.md). Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion. Use DATASET-001 reviewed tuning data and common evidence facets, equal final context token budget, predeclared paired metrics and explicit no-go. The independent final holdout is reserved for QUALITY-002; prior synthetic query counts remain minimum regression tests, not final quality qualification. No production activation based on benchmark alone.
 
 ## J. Implementation Requirements — ordered executable blueprint
 

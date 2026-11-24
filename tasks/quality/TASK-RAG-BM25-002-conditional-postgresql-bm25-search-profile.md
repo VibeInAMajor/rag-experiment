@@ -4,9 +4,9 @@
 **Updated:** 2026-11-24  
 **Status:** BLOCKED — GO decision and approval required  
 **Priority:** P2 BLOCKED until BM25-001 Go + approved license and deployment  
-**Dependencies:** BM25-001 GO decision, PROFILE-001, INDEX-001, SCALE-001 authorization strategy  
-**Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
-**Target:** tasks/TASK-RAG-BM25-002-conditional-postgresql-bm25-search-profile.md
+**Dependencies:** [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md) GO and explicit license/runtime approval, completed PROFILE-001/INDEX-001; existing local RLS; SCALE-001 mandatory only for later enterprise release.  
+**Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44  
+**Target:** tasks/quality/TASK-RAG-BM25-002-conditional-postgresql-bm25-search-profile.md
 
 ## A. Title
 
@@ -18,8 +18,7 @@ If a benchmark justifies BM25, implement it as a **second, specifically named** 
 
 ## C. Current Repository State
 
-**Actual code inspected:** [postgres.py](../apps/workbench/postgres/postgres.py) contains vector_search() that uses exact cosine distance on existing nullable chunk.embedding; lexical_search_snapshot() executes PostgreSQL plainto_tsquery('simple') + ts_rank_cd with active source versions. [lexical.py](../apps/workbench/retrieval/lexical.py) contains a fixed allowlisted Haystack Pipeline with PostgresLexicalRetriever. [profiles.py](../apps/workbench/retrieval/profiles.py) exposes only postgres-fts-baseline-r1. [schemas.py](../apps/workbench/contracts/schemas.py), [application.py](../apps/workbench/api/application.py) and [projection.py](../apps/workbench/api/projection.py) enforce the current four-field search request and truthful metadata. [0001 migration](../apps/workbench/postgres/migrations/0001_initial.up.sql) created GIN/tsvector and pgvector storage but no HNSW/IVFFlat ANN index. [runtime contract](../docs-website/docs/architecture/rag-runtime-contract.md) specifies future local TEI/Qwen 2560, not an existing real dense API.
-Current native index chunks_search_vector uses GIN+tsvector and is required by lexical readiness. Existing SearchResponse score_type postgres_ts_rank_cd. No BM25 extension is installed by 0001/0002 and no product agreement to deploy AGPL pg_search has been recorded. [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md) must settle algorithm, version, license and quality gate.
+[PostgresPersistence](../../apps/workbench/postgres/postgres.py) now owns lexical_search_snapshot and real vector_search_snapshot over migration 0005's immutable embedding_vectors and chunk_embeddings, not nullable legacy chunks.embedding. [DenseService / QueryEmbedder](../../apps/workbench/retrieval/dense.py) executes qualified exact Dense; [ProfileDefinition](../../apps/workbench/retrieval/profile_registry.py) already defines rrf/bm25 but they are not executable merely by schema. [profiles.py](../../apps/workbench/retrieval/profiles.py), [retrieval routing](../../apps/workbench/retrieval/services.py), [projection](../../apps/workbench/api/projection.py) and [API contracts](../../apps/workbench/contracts/schemas.py) own qualification and score provenance. [actual Dense evidence](../../tasks/evidence/dense-2026-11-24/report.md) records 102 real vectors, 52 queries and independently checked exact SQL; no independent quality holdout, BM25 or Hybrid runtime claim. Current local corpus cap 10k/50 MiB remains. No approved extension deployment; BM25-001 GO and license required, keep FTS unchanged.
 
 ## D. Goal
 
@@ -49,16 +48,18 @@ CREATE app-owned bm25.py adapter/test suite and next additive extension-specific
 
 | Existing real source file | Role / reason to reuse |
 | --- | --- |
-| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../apps/workbench/postgres/migrations/0001_initial.up.sql) | keep native GIN index |
-| [`apps/workbench/postgres/db_migrations.py`](../apps/workbench/postgres/db_migrations.py) | additive change approval |
-| [`apps/workbench/postgres/postgres.py`](../apps/workbench/postgres/postgres.py) | persistent workspace + active version SQL source |
-| [`apps/workbench/retrieval/profiles.py`](../apps/workbench/retrieval/profiles.py) | current FTS-only profile constants |
-| [`apps/workbench/api/application.py`](../apps/workbench/api/application.py) | fixed allowlist dispatch and safe errors |
-| [`apps/workbench/contracts/schemas.py`](../apps/workbench/contracts/schemas.py) | profile and score schema |
-| [`apps/workbench/web/src/domain/approvedExecution.ts`](../apps/workbench/web/src/domain/approvedExecution.ts) | supported Live graph matcher |
-| [`apps/workbench/api/tests/test_lexical_routes.py`](../apps/workbench/api/tests/test_lexical_routes.py) | baseline scores/provenance |
+| [`apps/workbench/postgres/migrations/0001_initial.up.sql`](../../apps/workbench/postgres/migrations/0001_initial.up.sql) | keep native GIN index |
+| [`apps/workbench/postgres/db_migrations.py`](../../apps/workbench/postgres/db_migrations.py) | additive change approval |
+| [`apps/workbench/postgres/postgres.py`](../../apps/workbench/postgres/postgres.py) | persistent workspace + active version SQL source |
+| [`apps/workbench/retrieval/profiles.py`](../../apps/workbench/retrieval/profiles.py) | current FTS-only profile constants |
+| [`apps/workbench/api/application.py`](../../apps/workbench/api/application.py) | fixed allowlist dispatch and safe errors |
+| [`apps/workbench/contracts/schemas.py`](../../apps/workbench/contracts/schemas.py) | profile and score schema |
+| [`apps/workbench/web/src/domain/approvedExecution.ts`](../../apps/workbench/web/src/domain/approvedExecution.ts) | supported Live graph matcher |
+| [`apps/workbench/api/tests/test_lexical_routes.py`](../../apps/workbench/api/tests/test_lexical_routes.py) | baseline scores/provenance |
 
 **Related project (pinned source snapshot) for design/test comparison, never a blind code transplant:** [`docs/22-implementation-step-05-sparse-and-symbol-retrieval.md`](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/docs/22-implementation-step-05-sparse-and-symbol-retrieval.md); [license](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/LICENSE.md).
+
+**Quality-track boundary:** [implementation order](IMPLEMENTATION_ORDER.md). Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion. Use DATASET-001 reviewed tuning data and common evidence facets, equal final context token budget, predeclared paired metrics and explicit no-go. The independent final holdout is reserved for QUALITY-002; prior synthetic query counts remain minimum regression tests, not final quality qualification. No production activation based on benchmark alone.
 
 ## J. Implementation Requirements — ordered executable blueprint
 
