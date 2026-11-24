@@ -1,10 +1,10 @@
 # Parser-family vs Content-family task overlap and Live Documents contract audit
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — source-level architecture/task specification audit; no new parser, multimodal runtime or Live Documents UI was implemented  
 **Repository source snapshot reviewed:** `522c2cb38aff746e65a8f04ea48d88d3695fc5a9`  
-**Scope:** [UI-003](../TASK-UI-003-live-document-management.md), four tasks in this review folder, five CONTENT tasks, existing completed PARSE-001/RAG-002/CHUNK-001/Python and current FastAPI/web API contracts
+**Scope:** [UI-003](../completed/TASK-UI-003-live-document-management.md), four tasks in this review folder, five CONTENT tasks, existing completed PARSE-001/RAG-002/CHUNK-001/Python and current FastAPI/web API contracts
 
 ## Executive finding
 
@@ -22,14 +22,14 @@
 
 | Current source / accepted task | Verified state and implication |
 | --- | --- |
-| [PARSE-001 completed](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md), [parser_registry.py](../../apps/workbench/api/parser_registry.py), [parsing.py](../../apps/workbench/api/parsing.py) | App-owned verified format classifier, `ParsedDocument`/`ParsedElement`/`SourceSpan`, `ElementKind`, TXT/MD/Python qualified. Additional format entries are catalogued but **not automatically qualified**. |
-| [RAG-002 completed](../completed/TASK-RAG-002-ingest-text-and-markdown.md), [ingestion.py](../../apps/workbench/api/ingestion.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [postgres_ingestion.py](../../apps/workbench/api/postgres_ingestion.py) | Real bounded multipart, idempotency, detail/chunks/jobs, active source/version and PostgreSQL publication are ALREADY implemented. No parser or CONTENT task may create a second HTTP family or source writer. |
-| [CHUNK-001 completed](../completed/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md), [chunking.py](../../apps/workbench/api/chunking.py), [chunking_profiles.py](../../apps/workbench/api/chunking_profiles.py) | Source-aware chunk selection and profile fingerprints already exist. Format-specific parsers extend/adapt these, not create independent general chunking policy engines. |
-| [Python AST completed](../completed/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md), [python_code.py](../../apps/workbench/api/python_code.py) | Python parsing should not be reimplemented by PARSE-004, even when the user uploads DevOps files. |
-| [PDF CHUNK-003](../TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md), [pdf_worker.py](../../apps/workbench/api/pdf_worker.py), [pdf_chunking_adapter.py](../../apps/workbench/api/pdf_chunking_adapter.py) | Existing Docling source and text-layer PDF/table integration; task reports Gate A locally qualified while original assets/OCR/VLM remain separately gated. |
-| [contracts.py](../../apps/workbench/api/contracts.py), [application.py](../../apps/workbench/api/application.py) | `rag-api-v1.0` now includes real `Features.upload/document_details/jobs`, `PdfIngestionCapabilities` and all ingestion/document DTOs; no missing backend upload route. |
+| [PARSE-001 completed](../completed/TASK-RAG-PARSE-001-format-detection-and-parser-registry.md), [parser_registry.py](../../apps/workbench/parsing/parser_registry.py), [parsing.py](../../apps/workbench/parsing/parsing.py) | App-owned verified format classifier, `ParsedDocument`/`ParsedElement`/`SourceSpan`, `ElementKind`, TXT/MD/Python qualified. Additional format entries are catalogued but **not automatically qualified**. |
+| [RAG-002 completed](../completed/TASK-RAG-002-ingest-text-and-markdown.md), [ingestion.py](../../apps/workbench/ingestion/ingestion.py), [ingestion_http.py](../../apps/workbench/api/ingestion_http.py), [postgres_ingestion.py](../../apps/workbench/postgres/postgres_ingestion.py) | Real bounded multipart, idempotency, detail/chunks/jobs, active source/version and PostgreSQL publication are ALREADY implemented. No parser or CONTENT task may create a second HTTP family or source writer. |
+| [CHUNK-001 completed](../completed/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md), [chunking.py](../../apps/workbench/chunking/chunking.py), [chunking_profiles.py](../../apps/workbench/chunking/chunking_profiles.py) | Source-aware chunk selection and profile fingerprints already exist. Format-specific parsers extend/adapt these, not create independent general chunking policy engines. |
+| [Python AST completed](../completed/TASK-RAG-CHUNK-002-python-code-ast-ingestion.md), [python_code.py](../../apps/workbench/parsing/python_code.py) | Python parsing should not be reimplemented by PARSE-004, even when the user uploads DevOps files. |
+| [PDF CHUNK-003](../TASK-RAG-CHUNK-003-pdf-layout-and-table-aware-ingestion.md), [pdf_worker.py](../../apps/workbench/parsing/pdf/pdf_worker.py), [pdf_chunking_adapter.py](../../apps/workbench/chunking/pdf/pdf_chunking_adapter.py) | Existing Docling source and text-layer PDF/table integration; task reports Gate A locally qualified while original assets/OCR/VLM remain separately gated. |
+| [schemas.py](../../apps/workbench/contracts/schemas.py), [application.py](../../apps/workbench/api/application.py) | `rag-api-v1.0` now includes real `Features.upload/document_details/jobs`, `PdfIngestionCapabilities` and all ingestion/document DTOs; no missing backend upload route. |
 | [web contracts.ts](../../apps/workbench/web/src/api/contracts.ts), [decode.ts](../../apps/workbench/web/src/api/decode.ts), [client.ts](../../apps/workbench/web/src/api/client.ts) | Frontend still lacks those typed flags/DTOs and multipart/201 handling; this is a **UI-003 contract implementation gap**, not a PARSE/CONTENT duplicate. |
-| [UI-003 revised blueprint](../TASK-UI-003-live-document-management.md) | Updated for real server contracts and TXT/MD/Python plus conditionally qualified PDF; current [DocumentsView.tsx](../../apps/workbench/web/src/views/DocumentsView.tsx) remains fixture-only. |
+| [UI-003 revised blueprint](../completed/TASK-UI-003-live-document-management.md) | Updated for real server contracts and TXT/MD/Python plus conditionally qualified PDF; current [DocumentsView.tsx](../../apps/workbench/web/src/views/DocumentsView.tsx) remains fixture-only. |
 
 ## Task-by-task overlap matrix
 
@@ -99,4 +99,4 @@ Source bytes -> ONE verified parser registry
 
 All newly written or updated documents are Markdown and retain Created/Updated dates. The updated task files remain **PROPOSED**; this audit does not mark any unfinished parser/content implementation complete. Test paths, dependencies and active capabilities must be rechecked immediately before coding because other changes may land after the inspected source snapshot.
 
-**Current API contract risk to track:** backend [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) still contains stale upload OpenAPI prose saying “TXT or Markdown at most 1 MiB”, while server accepts Python and conditionally PDF. [UI-003](../TASK-UI-003-live-document-management.md) now specifies a docs-only correction and a schema test; actual runtime capability and parser registry remain the authoritative source of supported formats.
+**Current API contract risk to track:** backend [ingestion_http.py](../../apps/workbench/api/ingestion_http.py) still contains stale upload OpenAPI prose saying “TXT or Markdown at most 1 MiB”, while server accepts Python and conditionally PDF. [UI-003](../completed/TASK-UI-003-live-document-management.md) now specifies a docs-only correction and a schema test; actual runtime capability and parser registry remain the authoritative source of supported formats.

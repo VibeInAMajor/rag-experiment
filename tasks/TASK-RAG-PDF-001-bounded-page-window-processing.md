@@ -1,7 +1,7 @@
 # TASK-RAG-PDF-001 — Restartable seekable PDF page windows for 200 MiB and 1000 pages
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-RAG-PDF-001-bounded-page-window-processing.md
@@ -50,7 +50,7 @@ PdfWindow{original_sha256,page_start,page_end,total_pages,parser_revision,assets
 
 ## I. Repository Files / Components Impacted
 
-EDIT pdf_models.py, pdf_parser.py, pdf_worker.py, pdf_sandbox.py, parsing.py, pdf_chunk_preparation.py, pdf_chunking_adapter.py and checkpoint/test layers; reuse Docling model manifest.
+EDIT apps/workbench/parsing/pdf/pdf_models.py, apps/workbench/parsing/pdf/pdf_parser.py, apps/workbench/parsing/pdf/pdf_worker.py, apps/workbench/parsing/pdf/pdf_sandbox.py, apps/workbench/parsing/parsing.py, apps/workbench/chunking/pdf/pdf_chunk_preparation.py, apps/workbench/chunking/pdf/pdf_chunking_adapter.py and focused apps/workbench/parsing/pdf/tests/ and apps/workbench/chunking/pdf/tests/; reuse apps/workbench/parsing/pdf/pdf_asset_manifest.json.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 

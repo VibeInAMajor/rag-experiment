@@ -1,7 +1,7 @@
 # TASK-RAG-OPS-003 — Release-gate 200 MiB and 1000-page ingestion on target server
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-23  
+**Updated:** 2026-11-24  
 **Status:** PROPOSED — specification only; not implemented or benchmarked  
 **Source reviewed:** 44866bb7e7dc01993bbaefefdec1ab1985951cc7  
 **Target:** tasks/TASK-RAG-OPS-003-large-pdf-1000-page-qualification.md
@@ -48,7 +48,7 @@ Evidence: input SHA, pages, parser assets revision, hardware/OS, number samples,
 
 ## I. Repository Files / Components Impacted
 
-ADD targeted tests/scripts, tasks/evidence Markdown report, operational runbook and truthfully versioned capabilities. Never run against production corpus.
+ADD targeted tests under apps/workbench/parsing/pdf/tests/ and apps/workbench/api/tests/, benchmark scripts under scripts/, a tasks/evidence/ Markdown report, operational runbook under docs-website/docs/architecture/, and truthfully versioned capabilities in apps/workbench/contracts/schemas.py and apps/workbench/api/projection.py. Never run against production corpus.
 
 MUST NOT silently expand scope. Architecture or schema changes require updating this task first.
 
