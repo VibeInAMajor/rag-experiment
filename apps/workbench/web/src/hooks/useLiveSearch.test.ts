@@ -125,6 +125,43 @@ function harness() {
 }
 
 describe("Live search request lifecycle used by useLiveSearch", () => {
+  it("rejects a dense response from another embedding generation", async () => {
+    const test = harness();
+    const denseProfile: BackendProfile = {
+      ...profile,
+      kind: "dense_search",
+      score_type: "cosine_distance",
+      score_direction: "lower_is_better",
+      profile_id: "postgres-dense-exact",
+      profile_revision: "postgres-dense-exact-r1",
+      embedding_profile_revision: "qwen-local-r1",
+      index_generation: 4,
+      min_coverage: 1,
+    };
+    test.context = {
+      ...test.context,
+      pipeline: createPipeline("dense"),
+      profile: denseProfile,
+    };
+    test.search.mockResolvedValue({
+      ...response(),
+      profile_id: denseProfile.profile_id,
+      profile_revision: denseProfile.profile_revision,
+      embedding_profile_revision: denseProfile.embedding_profile_revision,
+      index_generation: 3,
+    });
+    const request = {
+      ...submitted,
+      profile_id: denseProfile.profile_id,
+      expected_profile_revision: denseProfile.profile_revision,
+    };
+    await test.requests.run(test.context.pipeline, request, "development");
+    expect(test.runs[0].status).toBe("Failed");
+    expect(test.runs[0].error?.code).toBe("DENSE_GENERATION_MISMATCH");
+    expect(test.runs[0].results).toEqual([]);
+    expect(test.runs[0].traceId).toBe("trace-1");
+    expect(test.invalidate).toHaveBeenCalledOnce();
+  });
   it("records immutable submitted context and only measured server values", async () => {
     const state = harness();
     await state.run();

@@ -1,0 +1,53 @@
+Executed 2026-11-24, Europe/Kiev. Commands use the existing Hatch 1.18.2 environment.
+
+hatch run workbench-api:python -m scripts.workbench_embedding_capacity_benchmark --calibrate --output tasks/evidence/dense-2026-11-24/capacity-calibration.json
+PASS: actual measured sustainable denominator 557056 tokens/minute. Existing expired allowance not edited. Shared physical GPU boundary retained.
+
+hatch run workbench-api:python -m scripts.workbench_dense_evaluate --run --capacity-config tasks/evidence/dense-2026-11-24/capacity-calibration.json --output tasks/evidence/dense-2026-11-24/runtime-evaluation.json --serve-seconds 600 --serve-port 8013 --stop-file .cache/workbench-capacity/dense-browser-finished.marker
+PASS: initial 102 active real vectors,52 semantic + 52 lexical paraphrases+10 exact lexical cases; independent SQL matches all 52. Initial artifact retained runtime-evaluation-initial.json. Temporary real API 8013 served browser then shut down cleanly and owned DB removed.
+
+Final explicitly gated model smoke (test DSNs loaded from existing ignored environment; secret values omitted):
+WORKBENCH_DENSE_LIVE_TEST=1
+WORKBENCH_DENSE_CAPACITY_CONFIG=tasks/evidence/dense-2026-11-24/capacity-calibration.json
+WORKBENCH_DENSE_EVIDENCE=tasks/evidence/dense-2026-11-24/runtime-evaluation.json
+hatch run workbench-api:python -m pytest apps/workbench/api/tests/test_dense_model_smoke.py -q --override-ini addopts='' --junitxml=tasks/evidence/dense-2026-11-24/model-smoke-tests.xml
+PASS: 1 test in 144.27 seconds. Final 52 provider-inference samples, 52 SQL oracles,application/lifespan/pool reconstruction and owned DB cleanup. See runtime-evaluation.json.
+
+hatch run workbench-api:test
+PASS:1363 passed, 20 skipped in 306.63 seconds. Actual output backend-tests.log. GPU live opt-in unset for this broad run; explicit real test above passed separately. Actual disposable PostgreSQL integration ran, no DB skips.
+
+hatch run workbench-api:python -m pytest apps/workbench/postgres/tests/test_dense_persistence.py -q --override-ini addopts='' --junitxml=tasks/evidence/dense-2026-11-24/dense-sql-tests.xml
+PASS:9 tests in 9.06 seconds on final dispatch state.
+
+Explicit local tokenizer directory supplied to owner-specific native guards/provisioning tests:
+PASS:32 tests in 20.68 seconds, zero skips. Exact case paths/results native-tokenizer-tests.xml. This separately closes 16 broad asset-environment skips; original broad output remains unchanged.
+
+hatch run workbench-api:python -m pytest apps/workbench/retrieval/tests/test_dense_evaluation.py apps/workbench/api/tests/test_dense_model_smoke.py -q --override-ini addopts='' --junitxml=tasks/evidence/dense-2026-11-24/evaluator-tests.xml
+PASS:13 passed, 1 default gated skip. The explicit real gated test ran later as shown above.
+
+hatch run workbench-api:check
+hatch run workbench-api:types
+PASS: 154 backend Python files on final implementation. Latest focused Dense HTTP 16 PASS; mixed dense/lexical/profile/http/SQL 113 PASS in 60.27 seconds earlier.
+
+hatch run workbench-api:ruff check scripts/workbench_dense_evaluate.py scripts/workbench_dense_serve.py apps/workbench/retrieval/tests/test_dense_evaluation.py apps/workbench/api/tests/test_dense_model_smoke.py
+hatch run workbench-api:ruff format --check scripts/workbench_dense_evaluate.py scripts/workbench_dense_serve.py apps/workbench/retrieval/tests/test_dense_evaluation.py apps/workbench/api/tests/test_dense_model_smoke.py
+hatch run workbench-api:mypy --explicit-package-bases --follow-imports=silent scripts/workbench_dense_evaluate.py scripts/workbench_dense_serve.py
+PASS:all 4 files lint/format;both standalone scripts typechecked.
+
+hatch run workbench-api:python -m scripts.workbench_dense_serve --capacity-config tasks/evidence/dense-2026-11-24/capacity-calibration.json --write-profile-registry .cache/workbench-capacity/dense-launcher-check.yaml
+PASS: REGISTRY_WRITTEN, runtime_qualified=false. Configuration generation performs no provider inference or profile activation.
+
+Frontend apps/workbench/web:
+npm run typecheck
+npm run format:check
+npm test -- --reporter=dot
+npm run build
+PASS. Preview smoke and actual Dense smoke passed; browser-dense.json records exact Dense command,10 actual queries/UI timings, 503 zero fallback and invalid graph zero POST.
+
+node --check docs-website/sidebars.js
+PASS. Strict UTF-8 and relative links checked for modified task/report/runbook/docs. Full docs-site build not run: docs dependencies absent.
+
+Final frontend: 18 test files / 364 tests PASS. Build retains existing directive warnings.
+Preview smoke: npx --yes --package @playwright/cli playwright-cli -s=dense-frontend run-code --filename=scripts/browser-smoke.js
+PASS: edit, undo/redo, JSON roundtrip, branch creation, preview-only cycle restriction, preview success, document chunks, run history, preview failure.
+Constructor validator focused 37 PASS; Ruff/mypy 7 files PASS.

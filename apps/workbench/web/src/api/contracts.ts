@@ -29,13 +29,11 @@ export type ReadyResponse = ApiMeta & {
   ready_profile_ids: string[];
 };
 
-export type BackendProfile = {
+type BackendProfileBase = {
   profile_id: string;
   profile_revision: string;
-  kind: "lexical_search";
   workspace_ids: string[];
   corpus_id: string;
-  score_type: "postgres_ts_rank_cd" | "bm25_raw";
   parameters: {
     query: { type: "string"; min_length: 1; max_length: number };
     top_k: { type: "integer"; default: number; minimum: 1; maximum: number };
@@ -48,6 +46,19 @@ export type BackendProfile = {
     max_corpus_bytes: number;
   };
 };
+
+export type BackendProfile = BackendProfileBase &
+  (
+    | { kind: "lexical_search"; score_type: "postgres_ts_rank_cd" | "bm25_raw" }
+    | {
+        kind: "dense_search";
+        score_type: "cosine_distance";
+        score_direction: "lower_is_better";
+        embedding_profile_revision: string;
+        index_generation: number;
+        min_coverage: 1;
+      }
+  );
 
 export type BackendCapabilities = ApiMeta & {
   backend_revision: string;
@@ -101,7 +112,7 @@ export type SearchResult = {
   content: string;
   rank: number;
   score: number;
-  score_type: "postgres_ts_rank_cd";
+  score_type: "postgres_ts_rank_cd" | "cosine_distance";
 };
 
 export type SearchResponse = ApiMeta & {
@@ -113,10 +124,23 @@ export type SearchResponse = ApiMeta & {
   run_id: string;
   status: "success";
   duration_ms: number;
+  embedding_profile_revision?: string;
+  index_generation?: number;
+  model_revision?: string;
+  model_digest?: string;
+  tokenizer_digest?: string;
+  input_format_revision?: string;
   stages: Array<{
-    stage: "corpus_load" | "retrieval" | "projection";
+    stage:
+      | "corpus_load"
+      | "retrieval"
+      | "query_embedding"
+      | "vector_search"
+      | "projection";
     status: "success" | "skipped";
     duration_ms: number;
+    started_at?: string;
+    finished_at?: string;
   }>;
   results: SearchResult[];
 };

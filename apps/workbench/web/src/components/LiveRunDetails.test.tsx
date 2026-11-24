@@ -65,6 +65,43 @@ function completedRun(): LiveRun {
 }
 
 describe("Live result rendering", () => {
+  it("renders raw cosine distances as lower-is-better and retains model provenance", () => {
+    const run = completedRun();
+    run.results = [
+      {
+        ...run.results[0],
+        score_type: "cosine_distance",
+        score: 0.1234567890123456,
+      },
+    ];
+    run.response = {
+      ...response,
+      embedding_profile_revision: "qwen-local-r1",
+      index_generation: 4,
+      model_revision: "model-r1",
+      model_digest: "model-digest",
+      tokenizer_digest: "tokenizer-digest",
+      input_format_revision: "input-r1",
+    };
+    const html = renderToStaticMarkup(
+      <>
+        <LiveRunDetails run={run} />
+        <LiveRunMetadata run={run} />
+      </>,
+    );
+    for (const value of [
+      "0.1234567890123456",
+      "cosine_distance",
+      "Lower is better",
+      "qwen-local-r1",
+      "model-digest",
+      "tokenizer-digest",
+      "input-r1",
+    ])
+      expect(html).toContain(value);
+    expect(html).not.toContain("%");
+    expect(html).not.toContain("BM25");
+  });
   it("keeps server rank, full raw score, provenance and unavailable page", () => {
     const html = renderToStaticMarkup(<LiveRunDetails run={completedRun()} />);
     for (const value of [

@@ -209,6 +209,10 @@ class ProductionEmbeddingGovernor:
         ):
             raise EmbeddingError(EmbeddingErrorCode.NOT_QUALIFIED)
 
+    async def check_ready_async(self) -> None:
+        """Verify current measured-policy validity and sole ownership without reserving inference."""
+        self._check_available()
+
     def _acquire(self) -> None:
         self._lock_path.parent.mkdir(parents=True, exist_ok=True)
         self._lease.acquire(timeout=0)

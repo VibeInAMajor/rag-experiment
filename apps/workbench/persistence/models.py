@@ -12,6 +12,7 @@ from pydantic import ConfigDict, Field, JsonValue, field_validator, model_valida
 from apps.workbench.contracts.schemas import ContractModel, Identifier
 
 if TYPE_CHECKING:
+    from apps.workbench.embedding.embedding import EmbeddingProfile
     from apps.workbench.retrieval.profile_registry import ProfileDefinition, ProfileRollout
 
 
@@ -258,6 +259,20 @@ class LexicalSearchSnapshot(ContractModel):
     index_generation_id: int | None = Field(default=None, ge=0)
 
 
+class VectorSearchSnapshot(ContractModel):
+    """Exact distances and provenance read from one complete semantic generation."""
+
+    corpus_revision: Identifier
+    index_generation_id: int = Field(ge=0)
+    embedding_profile_revision: Identifier
+    embedding_profile_fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
+    hits: list[VectorHit]
+    chunk_count: int = Field(ge=1)
+    content_bytes: int = Field(ge=1)
+    corpus_load_duration_ms: float = Field(ge=0, allow_inf_nan=False)
+    retrieval_duration_ms: float = Field(ge=0, allow_inf_nan=False)
+
+
 class IngestionTiming(ContractModel):
     """An actually measured ingestion stage, without content diagnostics."""
 
@@ -482,4 +497,18 @@ class PersistencePort(Protocol):
         self, context: WorkspaceContext, *, embedding: list[float], profile_id: str, top_k: int = 10
     ) -> list[VectorHit]:
         """Search compatible persisted vectors using exact cosine distance."""
+        ...
+
+    async def vector_search_snapshot(
+        self,
+        context: WorkspaceContext,
+        *,
+        embedding: list[float],
+        embedding_profile: EmbeddingProfile,
+        expected_index_generation: int,
+        profile_fence: ProfileRollout,
+        profile_definition: ProfileDefinition,
+        top_k: int = 10,
+    ) -> VectorSearchSnapshot:
+        """Fence approved policy and complete durable generation before exact vector retrieval."""
         ...

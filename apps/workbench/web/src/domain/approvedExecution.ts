@@ -1,11 +1,11 @@
 import type { SearchRequest } from "../api/contracts";
 import {
-  isSupportedLexicalProfile,
+  isSupportedSearchProfile,
   type BackendDiscoveryState,
 } from "./backendDiscovery";
 import type { Graph, GraphIssue, WorkbenchNode } from "./types";
 
-export type ApprovedKeywordMatch =
+export type ApprovedSearchMatch =
   | {
       supported: true;
       workspaceId: string;
@@ -17,7 +17,7 @@ export type ApprovedKeywordMatch =
 function unsupported(
   message: string,
   issue: Omit<GraphIssue, "message"> = {},
-): ApprovedKeywordMatch {
+): ApprovedSearchMatch {
   return {
     supported: false,
     issues: [{ code: "LIVE_GRAPH_UNSUPPORTED", ...issue, message }],
@@ -61,7 +61,7 @@ function approvedDiscovery(discovery: BackendDiscoveryState): boolean {
     (capabilities.dependencies.database.workspace_id == null ||
       capabilities.dependencies.database.workspace_id ===
         selectedWorkspaceId) &&
-    isSupportedLexicalProfile(profile) &&
+    isSupportedSearchProfile(profile) &&
     profile.workspace_ids.includes(selectedWorkspaceId) &&
     discovery.workspaces.some(
       (workspace) =>
@@ -75,6 +75,13 @@ function approvedDiscovery(discovery: BackendDiscoveryState): boolean {
         advertised.kind === profile.kind &&
         advertised.score_type === profile.score_type &&
         advertised.corpus_id === profile.corpus_id &&
+        (profile.kind !== "dense_search" ||
+          (advertised.kind === "dense_search" &&
+            advertised.embedding_profile_revision ===
+              profile.embedding_profile_revision &&
+            advertised.index_generation === profile.index_generation &&
+            advertised.min_coverage === profile.min_coverage &&
+            advertised.score_direction === profile.score_direction)) &&
         advertised.workspace_ids.includes(selectedWorkspaceId) &&
         advertised.parameters.query.max_length ===
           parameters.query.max_length &&
@@ -98,22 +105,27 @@ function approvedDiscovery(discovery: BackendDiscoveryState): boolean {
   );
 }
 
-export function matchApprovedKeywordGraph(
+export function matchApprovedSearchGraph(
   graph: Graph,
   discovery: BackendDiscoveryState,
-): ApprovedKeywordMatch {
+): ApprovedSearchMatch {
   if (!approvedDiscovery(discovery) || discovery.status !== "ready")
     return unsupported(
       "A ready, compatible Live profile and authorized workspace are required.",
       { code: "LIVE_PROFILE_UNAVAILABLE" },
     );
-  if (graph.nodes.length !== 3 || graph.edges.length !== 2)
+  const dense = discovery.profile.kind === "dense_search";
+  const nodeCount = dense ? 4 : 3;
+  const edgeCount = dense ? 3 : 2;
+  if (graph.nodes.length !== nodeCount || graph.edges.length !== edgeCount)
     return unsupported(
-      "Live supports only Search query → Keyword search → Search results, with three components and two connections.",
+      dense
+        ? "Live Dense supports only Search query → Query embedding → Dense search → Search results."
+        : "Live supports only Search query → Keyword search → Search results, with three components and two connections.",
     );
   if (
-    new Set(graph.nodes.map((node) => node.id)).size !== 3 ||
-    new Set(graph.edges.map((edge) => edge.id)).size !== 2 ||
+    new Set(graph.nodes.map((node) => node.id)).size !== nodeCount ||
+    new Set(graph.edges.map((edge) => edge.id)).size !== edgeCount ||
     graph.nodes.some(
       (node) => typeof node.id !== "string" || !node.id.trim(),
     ) ||
@@ -123,28 +135,51 @@ export function matchApprovedKeywordGraph(
       "Live components and connections require distinct, nonempty identifiers.",
     );
   const queryNode = graph.nodes.find((node) => node.data.kind === "query");
-  const keywordNode = graph.nodes.find(
-    (node) => node.data.kind === "keyword-search",
+  const retrieverNode = graph.nodes.find(
+    (node) => node.data.kind === (dense ? "dense-search" : "keyword-search"),
+  );
+  const embedder = graph.nodes.find(
+    (node) => node.data.kind === "query-embedding",
   );
   const resultNode = graph.nodes.find((node) => node.data.kind === "results");
-  if (!queryNode || !keywordNode || !resultNode)
+  if (!queryNode || !retrieverNode || !resultNode)
     return unsupported(
-      "Use exactly one Search query, Keyword search and Search results component for Live.",
+      dense
+        ? "Use exactly one Search query, Query embedding, Dense search and Search results component for Live Dense."
+        : "Use exactly one Search query, Keyword search and Search results component for Live.",
+    );
+  if (
+    dense &&
+    (!embedder ||
+      !embedder.data.parameters ||
+      typeof embedder.data.parameters !== "object" ||
+      Array.isArray(embedder.data.parameters) ||
+      Reflect.ownKeys(embedder.data.parameters).length !== 0)
+  )
+    return unsupported(
+      "Live Query embedding uses the server-qualified model and accepts no parameters.",
     );
   const expected = [
     {
       source: queryNode.id,
       sourceHandle: "query",
-      target: keywordNode.id,
-      targetHandle: "query",
+      target: embedder?.id ?? retrieverNode.id,
+      targetHandle: dense ? "text" : "query",
     },
     {
-      source: keywordNode.id,
+      source: retrieverNode.id,
       sourceHandle: "documents",
       target: resultNode.id,
       targetHandle: "documents",
     },
   ];
+  if (dense && embedder)
+    expected.push({
+      source: embedder.id,
+      sourceHandle: "embedding",
+      target: retrieverNode.id,
+      targetHandle: "embedding",
+    });
   for (const edge of graph.edges) {
     const matching = expected.find(
       (candidate) =>
@@ -154,10 +189,9 @@ export function matchApprovedKeywordGraph(
         edge.targetHandle === candidate.targetHandle,
     );
     if (!matching)
-      return unsupported(
-        "Connect query → Keyword search.query and Keyword search.documents → results.documents only.",
-        { edgeId: edge.id },
-      );
+      return unsupported("Use only the approved search template connections.", {
+        edgeId: edge.id,
+      });
     expected.splice(expected.indexOf(matching), 1);
   }
   const rawQuery = parameter(queryNode, "query");
@@ -176,13 +210,13 @@ export function matchApprovedKeywordGraph(
       "Query must have only the query parameter, containing 1–4096 valid Unicode characters without NUL.",
       { nodeId: queryNode.id, field: "query" },
     );
-  const topK = parameter(keywordNode, "topK");
+  const topK = parameter(retrieverNode, "topK");
   const limit = parameter(resultNode, "limit");
   const maximum = discovery.profile.parameters.top_k.maximum;
   if (!boundedInteger(topK, maximum))
     return unsupported(
-      `Keyword search must have only topK, a whole number between 1 and ${maximum}.`,
-      { nodeId: keywordNode.id, field: "topK" },
+      `${dense ? "Dense search" : "Keyword search"} must have only topK, a whole number between 1 and ${maximum}.`,
+      { nodeId: retrieverNode.id, field: "topK" },
     );
   if (!boundedInteger(limit, maximum))
     return unsupported(

@@ -211,6 +211,45 @@ export const catalog: NodeDefinition[] = [
     defaults: { topK: 10 },
   },
   {
+    kind: "query-embedding",
+    label: "Query embedding",
+    component: "Qualified local embedding profile",
+    group: "Retrieval",
+    description:
+      "Embed a query with the server-qualified local model and input policy.",
+    inputs: [{ id: "text", label: "Query", valueKind: "text", required: true }],
+    outputs: [{ id: "embedding", label: "Embedding", valueKind: "embedding" }],
+    parameters: [],
+    defaults: {},
+  },
+  {
+    kind: "dense-search",
+    label: "Dense search",
+    component: "Approved exact cosine profile",
+    group: "Retrieval",
+    description:
+      "Search a complete qualified generation by exact cosine distance. Lower distances rank first.",
+    inputs: [
+      {
+        id: "embedding",
+        label: "Embedding",
+        valueKind: "embedding",
+        required: true,
+      },
+    ],
+    outputs: [{ id: "documents", label: "Matches", valueKind: "documents" }],
+    parameters: [
+      {
+        key: "topK",
+        label: "Maximum results",
+        type: "number",
+        min: 1,
+        required: true,
+      },
+    ],
+    defaults: { topK: 10 },
+  },
+  {
     kind: "vector",
     label: "Semantic search",
     component: "PgvectorEmbeddingRetriever",

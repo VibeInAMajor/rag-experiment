@@ -146,19 +146,41 @@ export function decodeSearch(
   )
     invalidResponse();
   const durationMs = finiteNumber(item.duration_ms);
-  const expectedStages = ["corpus_load", "retrieval", "projection"] as const;
+  const dense = submitted.profile_id === "postgres-dense-exact";
+  const expectedStages = dense
+    ? (["query_embedding", "vector_search", "projection"] as const)
+    : (["corpus_load", "retrieval", "projection"] as const);
   const stages = array(item.stages, 3).map((entry, index) => {
     const stage = object(entry);
     return {
       stage: literal(stage.stage, expectedStages[index]),
       status: choice(stage.status, ["success", "skipped"]),
       duration_ms: finiteNumber(stage.duration_ms),
+      ...(dense
+        ? {
+            started_at: timestamp(stage.started_at),
+            finished_at: timestamp(stage.finished_at),
+          }
+        : {}),
     };
   });
   if (
     stages.length !== 3 ||
     stages.reduce((sum, stage) => sum + stage.duration_ms, 0) >
       durationMs + 1e-6
+  )
+    invalidResponse();
+  if (
+    dense &&
+    stages.some(
+      (stage, index) =>
+        stage.status !== "success" ||
+        Date.parse(timestamp(stage.finished_at)) <
+          Date.parse(timestamp(stage.started_at)) ||
+        (index > 0 &&
+          Date.parse(timestamp(stage.started_at)) <
+            Date.parse(timestamp(stages[index - 1].finished_at))),
+    )
   )
     invalidResponse();
   const results = array(item.results, submitted.top_k).map((entry, index) => {
@@ -174,8 +196,11 @@ export function decodeSearch(
         ? {}
         : { page: result.page === null ? null : positiveInteger(result.page) }),
       rank: index + 1,
-      score: finiteNumber(result.score),
-      score_type: literal(result.score_type, "postgres_ts_rank_cd"),
+      score: dense ? cosineDistance(result.score) : finiteNumber(result.score),
+      score_type: literal(
+        result.score_type,
+        dense ? "cosine_distance" : "postgres_ts_rank_cd",
+      ),
     };
   });
   const seen = new Set<string>();
@@ -185,7 +210,9 @@ export function decodeSearch(
     if (
       seen.has(result.chunk_id) ||
       (previous &&
-        (result.score > previous.score ||
+        ((dense
+          ? result.score < previous.score
+          : result.score > previous.score) ||
           (result.score === previous.score &&
             result.chunk_id < previous.chunk_id)))
     )
@@ -202,9 +229,27 @@ export function decodeSearch(
     run_id: identifier(item.run_id),
     status: literal(item.status, "success"),
     duration_ms: durationMs,
+    ...(dense
+      ? {
+          embedding_profile_revision: identifier(
+            item.embedding_profile_revision,
+          ),
+          index_generation: nonnegativeInteger(item.index_generation),
+          model_revision: text(item.model_revision, 128),
+          model_digest: text(item.model_digest, 256),
+          tokenizer_digest: text(item.tokenizer_digest, 256),
+          input_format_revision: text(item.input_format_revision, 128),
+        }
+      : {}),
     stages,
     results,
   };
+}
+
+function cosineDistance(value: unknown): number {
+  const number = finiteNumber(value, -1e-6);
+  if (number > 2 + 1e-6) invalidResponse();
+  return number;
 }
 
 function text(value: unknown, maximum = 4096): string {
@@ -287,9 +332,16 @@ function profile(value: unknown): BackendProfile {
   const scoreType = choice(item.score_type, [
     "bm25_raw",
     "postgres_ts_rank_cd",
+    "cosine_distance",
   ]);
+  const kind = choice(item.kind, ["lexical_search", "dense_search"]);
   if (
-    scoreType !== (profileId === "bm25-v1" ? "bm25_raw" : "postgres_ts_rank_cd")
+    scoreType !==
+    (kind === "dense_search"
+      ? "cosine_distance"
+      : profileId === "bm25-v1"
+        ? "bm25_raw"
+        : "postgres_ts_rank_cd")
   )
     invalidResponse();
   const workspaceIds = uniqueIds(item.workspace_ids, 1);
@@ -298,10 +350,26 @@ function profile(value: unknown): BackendProfile {
   return {
     profile_id: profileId,
     profile_revision: identifier(item.profile_revision),
-    kind: literal(item.kind, "lexical_search"),
+    ...(kind === "dense_search"
+      ? {
+          kind,
+          score_type: literal(scoreType, "cosine_distance"),
+          score_direction: literal(item.score_direction, "lower_is_better"),
+          embedding_profile_revision: identifier(
+            item.embedding_profile_revision,
+          ),
+          index_generation: nonnegativeInteger(item.index_generation),
+          min_coverage: literal(item.min_coverage, 1),
+        }
+      : {
+          kind,
+          score_type: literal(
+            scoreType,
+            profileId === "bm25-v1" ? "bm25_raw" : "postgres_ts_rank_cd",
+          ),
+        }),
     workspace_ids: workspaceIds,
     corpus_id: identifier(item.corpus_id),
-    score_type: scoreType,
     parameters: {
       query: {
         type: literal(query.type, "string"),

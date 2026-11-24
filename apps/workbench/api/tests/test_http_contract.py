@@ -558,6 +558,7 @@ def test_framework_and_provider_imports_stay_inside_explicit_adapters() -> None:
         "postgres/postgres_ingestion.py": {"psycopg", "psycopg_pool"},
         "postgres/postgres_profiles.py": {"psycopg"},
         "retrieval/lexical.py": {"haystack"},
+        "retrieval/dense.py": {"haystack"},
         "parsing/parsing_adapters.py": {"haystack"},
         "chunking/chunking_adapters.py": {"haystack"},
         "chunking/python_code.py": {"haystack"},

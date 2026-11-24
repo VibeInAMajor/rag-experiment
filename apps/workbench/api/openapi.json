@@ -2755,7 +2755,10 @@
           },
           "kind": {
             "type": "string",
-            "const": "lexical_search",
+            "enum": [
+              "lexical_search",
+              "dense_search"
+            ],
             "title": "Kind",
             "default": "lexical_search"
           },
@@ -2784,10 +2787,59 @@
             "type": "string",
             "enum": [
               "bm25_raw",
-              "postgres_ts_rank_cd"
+              "postgres_ts_rank_cd",
+              "cosine_distance"
             ],
             "title": "Score Type",
             "default": "bm25_raw"
+          },
+          "score_direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "lower_is_better"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Direction"
+          },
+          "embedding_profile_revision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,128}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Profile Revision"
+          },
+          "index_generation": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Generation"
+          },
+          "min_coverage": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "const": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Coverage"
           }
         },
         "additionalProperties": false,
@@ -3559,6 +3611,74 @@
             },
             "type": "array",
             "title": "Results"
+          },
+          "embedding_profile_revision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,128}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Profile Revision"
+          },
+          "index_generation": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Generation"
+          },
+          "model_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Revision"
+          },
+          "model_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Digest"
+          },
+          "tokenizer_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tokenizer Digest"
+          },
+          "input_format_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Format Revision"
           }
         },
         "additionalProperties": false,
@@ -3624,7 +3744,10 @@
           },
           "score_type": {
             "type": "string",
-            "const": "postgres_ts_rank_cd",
+            "enum": [
+              "postgres_ts_rank_cd",
+              "cosine_distance"
+            ],
             "title": "Score Type",
             "default": "postgres_ts_rank_cd"
           }
@@ -3659,6 +3782,8 @@
             "enum": [
               "corpus_load",
               "retrieval",
+              "query_embedding",
+              "vector_search",
               "projection"
             ],
             "title": "Stage"
@@ -3676,6 +3801,28 @@
             "type": "number",
             "minimum": 0.0,
             "title": "Duration Ms"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
           }
         },
         "additionalProperties": false,

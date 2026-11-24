@@ -14,6 +14,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from pydantic import ValidationError
 
+from apps.workbench.embedding.embedding import EmbeddingProfile
 from apps.workbench.persistence.models import (
     CorpusNotReady,
     IndexGeneration,
@@ -154,6 +155,53 @@ def _qualify_lexical(
     return int(generation["generation_id"])
 
 
+def _qualify_dense(
+    connection: psycopg.Connection[dict[str, Any]], context: WorkspaceContext, definition: ProfileDefinition
+) -> int:
+    from apps.workbench.postgres.postgres_indexes import _INDEX_STATE_QUERY
+    from apps.workbench.retrieval.profiles import validate_dense_policy
+
+    generation = connection.execute(_INDEX_STATE_QUERY, (context.workspace_id,)).fetchone()
+    model = connection.execute(
+        "SELECT definition,profile_fingerprint FROM workbench.embedding_model_profiles "
+        "WHERE workspace_id=%s AND profile_id=%s AND profile_revision=%s AND enabled",
+        (context.workspace_id, definition.model_profile_id, definition.model_profile_revision),
+    ).fetchone()
+    if generation is None or model is None:
+        raise CorpusNotReady("The exact dense model or source generation is unavailable.")
+    profile = EmbeddingProfile.model_validate(model["definition"])
+    validate_dense_policy(definition, profile, workspace_id=context.workspace_id)
+    if (
+        profile.fingerprint != model["profile_fingerprint"]
+        or not 1 <= generation["active_chunk_count"] <= definition.max_corpus_chunks
+        or not 1 <= generation["content_bytes"] <= definition.max_corpus_bytes
+    ):
+        raise CorpusNotReady("The exact dense model or corpus policy is incompatible.")
+    coverage = connection.execute(
+        "SELECT count(c.chunk_id) AS eligible,count(e.input_hash) AS covered "
+        "FROM workbench.chunks c JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
+        "LEFT JOIN workbench.chunk_embeddings m ON m.workspace_id=c.workspace_id AND m.chunk_id=c.chunk_id "
+        "AND m.source_id=c.source_id AND m.version_id=c.version_id "
+        "AND m.profile_fingerprint=%s AND m.expected_content_hash=c.content_hash "
+        "LEFT JOIN workbench.embedding_vectors e ON e.workspace_id=m.workspace_id "
+        "AND e.profile_fingerprint=m.profile_fingerprint AND e.processing_digest=m.processing_digest "
+        "AND e.input_hash=m.input_hash AND e.dimensions=%s WHERE c.workspace_id=%s AND v.status='active'",
+        (profile.fingerprint, profile.dimensions, context.workspace_id),
+    ).fetchone()
+    published = connection.execute(
+        "SELECT eligible_active_chunks,ready_embeddings FROM workbench.embedding_generations "
+        "WHERE workspace_id=%s AND profile_fingerprint=%s AND index_generation=%s",
+        (context.workspace_id, profile.fingerprint, generation["generation_id"]),
+    ).fetchone()
+    count = generation["active_chunk_count"]
+    if coverage != {"eligible": count, "covered": count} or published != {
+        "eligible_active_chunks": count,
+        "ready_embeddings": count,
+    }:
+        raise CorpusNotReady("The current exact dense generation is not completely covered.")
+    return int(generation["generation_id"])
+
+
 def transition_profile(
     dsn: str,
     *,
@@ -216,7 +264,11 @@ def _transition_profile(
         raise RecordConflict("The workspace profile rollout changed; refresh its current version.")
     qualified_generation_id = None
     if state in {"qualified", "active"}:
-        qualified_generation_id = _qualify_lexical(connection, context, definition)
+        qualified_generation_id = (
+            _qualify_dense(connection, context, definition)
+            if definition.composition == "exact_dense"
+            else _qualify_lexical(connection, context, definition)
+        )
     if state == "active" and (
         existing is None
         or existing["profile_revision"] != profile_revision

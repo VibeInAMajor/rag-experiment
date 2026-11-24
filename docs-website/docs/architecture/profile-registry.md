@@ -21,7 +21,7 @@ Document-processing configuration retains its existing parser/chunker selection 
 
 ## Executable capabilities
 
-The current reviewed composition executes PostgreSQL `simple` FTS and returns raw `postgres_ts_rank_cd`, where larger scores sort first. It keeps the existing Haystack pipeline and source-version predicates. Dense exact/ANN, hybrid/RRF and BM25 definitions do not become executable merely by being stored, labeled active or selected in YAML. Their actual adapters, model/index identity, coverage and capacity dependencies must be implemented and qualified by their owning tasks.
+The default reviewed composition executes PostgreSQL `simple` FTS and returns raw `postgres_ts_rank_cd`, where larger scores sort first. The explicitly composed [Live Dense runtime](live-dense-search.md) also qualifies `exact_dense` only against complete durable vector coverage, the matching local model profile and measured shared admission. Its raw `cosine_distance` sorts smaller values first. Stored definitions and active labels alone enable neither path. ANN, hybrid/RRF and BM25 remain separately gated.
 
 Capabilities lists only profiles that qualify for the authorized workspace and complete current corpus. Draft, retired or unready policies are excluded. The Live selector consumes those executable descriptors; Preview remains a separate fixture mode. The browser cannot authorize a profile by a canvas label or silently choose another profile after an error.
 

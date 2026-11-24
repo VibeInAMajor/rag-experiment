@@ -236,6 +236,36 @@ describe("backend discovery", () => {
     expect(changed).toHaveBeenCalled();
   });
 
+  it("keeps lexical default and requires explicit selection of qualified Dense", async () => {
+    const { discovery, caps, ready } = clientFixture();
+    const dense = {
+      ...caps.profiles[0],
+      profile_id: "postgres-dense-exact",
+      profile_revision: "postgres-dense-exact-r1",
+      kind: "dense_search" as const,
+      score_type: "cosine_distance" as const,
+      score_direction: "lower_is_better" as const,
+      embedding_profile_revision: "qwen-local-r1",
+      index_generation: 4,
+      min_coverage: 1 as const,
+    };
+    caps.profiles.push(dense);
+    ready.ready_profile_ids.push(dense.profile_id);
+    await discovery.refresh();
+    expect(discovery.state.profile?.profile_id).toBe("postgres-fts-baseline");
+    expect(discovery.selectProfile(dense.profile_id)).toBe(true);
+    await vi.waitFor(() =>
+      expect(discovery.state.profile?.kind).toBe("dense_search"),
+    );
+    caps.profiles = caps.profiles.filter(
+      (item) => item.profile_id !== dense.profile_id,
+    );
+    ready.ready_profile_ids = ["postgres-fts-baseline"];
+    await discovery.refresh();
+    expect(discovery.state.status).toBe("awaiting_profile");
+    expect(discovery.state.profile).toBeNull();
+  });
+
   it("never substitutes another profile when an explicitly selected profile is retired", async () => {
     const { discovery, caps, ready } = clientFixture();
     const alternate = {

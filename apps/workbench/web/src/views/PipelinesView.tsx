@@ -18,6 +18,7 @@ type Props = {
   pipelines: Pipeline[];
   runs: RunEntry[];
   defaultTemplate: TemplateId;
+  denseAvailable?: boolean;
   onOpen: (id: string) => void;
   onCreate: (template: TemplateId) => void;
   onRename: (id: string, name: string) => void;
@@ -26,6 +27,11 @@ type Props = {
 };
 
 const templates: { id: TemplateId; title: string; description: string }[] = [
+  {
+    id: "dense",
+    title: "Dense search",
+    description: "Requires a qualified Live exact cosine profile.",
+  },
   {
     id: "keyword",
     title: "Keyword search",
@@ -52,6 +58,7 @@ export function PipelinesView({
   pipelines,
   runs,
   defaultTemplate,
+  denseAvailable = false,
   onOpen,
   onCreate,
   onRename,
@@ -70,9 +77,12 @@ export function PipelinesView({
   const visible = pipelines.filter((pipeline) =>
     pipeline.name.toLowerCase().includes(query.toLowerCase()),
   );
+  const availableTemplates = templates.filter(
+    (template) => template.id !== "dense" || denseAvailable,
+  );
   const preferredTemplates = [
-    ...templates.filter((template) => template.id === defaultTemplate),
-    ...templates.filter((template) => template.id !== defaultTemplate),
+    ...availableTemplates.filter((template) => template.id === defaultTemplate),
+    ...availableTemplates.filter((template) => template.id !== defaultTemplate),
   ];
 
   useEffect(() => {

@@ -46,6 +46,11 @@ export default {
     },
     {
       type: 'doc',
+      id: 'architecture/live-dense-search',
+      label: 'Live Exact Dense Search',
+    },
+    {
+      type: 'doc',
       id: 'tasks/RAG_Live_Lexical_Acceptance_2026-11-22',
       label: 'Live Lexical Acceptance',
     },

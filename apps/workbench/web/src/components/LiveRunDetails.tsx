@@ -11,6 +11,22 @@ export function LiveRunMetadata({ run }: { run: LiveRun }) {
     ["Profile", run.profileId],
     ["Profile revision", run.profileRevision],
     ["Corpus revision", run.corpusRevision ?? "Unavailable"],
+    ...(run.response?.embedding_profile_revision
+      ? [
+          [
+            "Embedding profile revision",
+            run.response.embedding_profile_revision,
+          ],
+          ["Index generation", String(run.response.index_generation)],
+          ["Model revision", run.response.model_revision ?? "Unavailable"],
+          ["Model digest", run.response.model_digest ?? "Unavailable"],
+          ["Tokenizer digest", run.response.tokenizer_digest ?? "Unavailable"],
+          [
+            "Input format revision",
+            run.response.input_format_revision ?? "Unavailable",
+          ],
+        ]
+      : []),
     ["Server run ID", run.serverRunId ?? "Not received"],
     ["Request ID", run.requestId ?? "Not received"],
     ["Trace ID", run.traceId ?? "Not received"],
@@ -169,11 +185,18 @@ export function LiveRunDetails({
             <div className="live-score">
               <span
                 className="result-score mono"
-                aria-label="Raw PostgreSQL ts_rank_cd score"
+                aria-label={
+                  result.score_type === "cosine_distance"
+                    ? "Raw cosine distance, lower is better"
+                    : "Raw PostgreSQL ts_rank_cd score"
+                }
               >
                 {String(result.score)}
               </span>
               <span className="mono">{result.score_type}</span>
+              {result.score_type === "cosine_distance" && (
+                <small>Lower is better</small>
+              )}
             </div>
           </article>
         ))}

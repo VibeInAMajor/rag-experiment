@@ -1,0 +1,402 @@
+{
+  "executed_at_utc": "2026-11-24T12:25:52Z",
+  "command": "npx --yes --package @playwright/cli playwright-cli -s=dense-final run-code --filename=scripts/dense-search-smoke.js",
+  "working_directory": "apps/workbench/web",
+  "frontend_url": "http://127.0.0.1:4173/?dense_api_port=8013",
+  "api_origin": "http://127.0.0.1:8013",
+  "viewport": { "width": 1440, "height": 1000 },
+  "result": "PASS",
+  "evidence": "real qualified API plus explicitly injected HTTP 503",
+  "profile_id": "postgres-dense-exact",
+  "profile_revision": "postgres-dense-exact-r1",
+  "embedding_profile_revision": "qwen3-4b-capacity-32k-r1",
+  "index_generation": 38,
+  "trace_id": "33daa0ade3fc42e4b734e8811cb9d738",
+  "results": [
+    {
+      "chunk_id": "eval-retention-en-r2-c1",
+      "source_id": "eval-retention-en",
+      "source_version_id": "eval-retention-en-r2",
+      "score": 0.39950588944519116
+    },
+    {
+      "chunk_id": "eval-retention-en-r2-c3",
+      "source_id": "eval-retention-en",
+      "source_version_id": "eval-retention-en-r2",
+      "score": 0.465402190041281
+    },
+    {
+      "chunk_id": "eval-retention-ru-r2-c1",
+      "source_id": "eval-retention-ru",
+      "source_version_id": "eval-retention-ru-r2",
+      "score": 0.48286658729713117
+    },
+    {
+      "chunk_id": "eval-retention-uk-r2-c1",
+      "source_id": "eval-retention-uk",
+      "source_version_id": "eval-retention-uk-r2",
+      "score": 0.49947312477391126
+    },
+    {
+      "chunk_id": "eval-retention-uk-r2-c3",
+      "source_id": "eval-retention-uk",
+      "source_version_id": "eval-retention-uk-r2",
+      "score": 0.5247638806841436
+    }
+  ],
+  "exact_request_fields": [
+    "query",
+    "top_k",
+    "profile_id",
+    "expected_profile_revision"
+  ],
+  "provider_failure_no_fallback": true,
+  "unsupported_graph_search_requests": 0,
+  "browser_timing_scope": "Response body consumption to observed React result DOM commit and second animation-frame callback; excludes provider/SQL/network and includes JSON decode, React scheduling and frame scheduling. Not pure component CPU or guaranteed paint duration.",
+  "ui_timings": {
+    "response_body_ready_to_result_dom_commit_ms": {
+      "samples": 10,
+      "p50": 2.5,
+      "p95": 4.400000000372529
+    },
+    "response_body_ready_to_second_animation_frame_ms": {
+      "samples": 10,
+      "p50": 10.199999999254942,
+      "p95": 20.90000000037253
+    }
+  },
+  "ui_samples": [
+    {
+      "run_id": "745c73bba1b34c95ab465fd8919a0d08",
+      "trace_id": "33daa0ade3fc42e4b734e8811cb9d738",
+      "response_body_ready_to_result_dom_commit_ms": 4.400000000372529,
+      "response_body_ready_to_second_animation_frame_ms": 20.90000000037253
+    },
+    {
+      "run_id": "54de5ef5087440ea83c5d4636d63cd95",
+      "trace_id": "9379b8cf710e40baba2cf306f637e9ab",
+      "response_body_ready_to_result_dom_commit_ms": 2.900000000372529,
+      "response_body_ready_to_second_animation_frame_ms": 11.800000000745058
+    },
+    {
+      "run_id": "12ba2933241a4e1dae3678913a3b7039",
+      "trace_id": "fb85aa378250489ca0ebec3d28193a53",
+      "response_body_ready_to_result_dom_commit_ms": 2.699999999254942,
+      "response_body_ready_to_second_animation_frame_ms": 10.300000000745058
+    },
+    {
+      "run_id": "c89be9a8b5574ef3aadaf3238a4762fe",
+      "trace_id": "b00ae427293348639ef2eb69770b6b01",
+      "response_body_ready_to_result_dom_commit_ms": 3,
+      "response_body_ready_to_second_animation_frame_ms": 10.900000000372529
+    },
+    {
+      "run_id": "82d0e08b39f84a53873a1ed77f96002d",
+      "trace_id": "ab69f2f6488248d28c7d2179c6d612cf",
+      "response_body_ready_to_result_dom_commit_ms": 2.5,
+      "response_body_ready_to_second_animation_frame_ms": 10.199999999254942
+    },
+    {
+      "run_id": "40b331330daa4a21b0d2f589297c9429",
+      "trace_id": "3f98e8496f6847b2a75a99bc53fc61d7",
+      "response_body_ready_to_result_dom_commit_ms": 2.099999999627471,
+      "response_body_ready_to_second_animation_frame_ms": 8.699999999254942
+    },
+    {
+      "run_id": "dd20816828834aa3b6e002c3b5d45f73",
+      "trace_id": "72e267dd179d47e4b364807764433c31",
+      "response_body_ready_to_result_dom_commit_ms": 2.599999999627471,
+      "response_body_ready_to_second_animation_frame_ms": 10.5
+    },
+    {
+      "run_id": "657214e6845b4071bc0a017c491bc9e3",
+      "trace_id": "b72b3295485247d7b421703b8439e961",
+      "response_body_ready_to_result_dom_commit_ms": 2.099999999627471,
+      "response_body_ready_to_second_animation_frame_ms": 8.699999999254942
+    },
+    {
+      "run_id": "46bb1d504e084b518ab8c0cf5da896f2",
+      "trace_id": "ec728dbe0e354b3292b0bf33f62c8f7d",
+      "response_body_ready_to_result_dom_commit_ms": 2.5,
+      "response_body_ready_to_second_animation_frame_ms": 9.199999999254942
+    },
+    {
+      "run_id": "994dcf30a9ec4bbbae3a5714422aa451",
+      "trace_id": "c6318d577d294da796807d534aa25274",
+      "response_body_ready_to_result_dom_commit_ms": 2.200000001117587,
+      "response_body_ready_to_second_animation_frame_ms": 8.900000000372529
+    }
+  ],
+  "server_samples": [
+    {
+      "run_id": "745c73bba1b34c95ab465fd8919a0d08",
+      "trace_id": "33daa0ade3fc42e4b734e8811cb9d738",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 719.0000000009604,
+          "started_at": "2026-11-24T12:25:52.664642+00:00",
+          "finished_at": "2026-11-24T12:25:53.376530+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 30.999999999039574,
+          "started_at": "2026-11-24T12:25:53.378084+00:00",
+          "finished_at": "2026-11-24T12:25:53.405567+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:53.407071+00:00",
+          "finished_at": "2026-11-24T12:25:53.407071+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "54de5ef5087440ea83c5d4636d63cd95",
+      "trace_id": "9379b8cf710e40baba2cf306f637e9ab",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 578.0000000013388,
+          "started_at": "2026-11-24T12:25:53.863826+00:00",
+          "finished_at": "2026-11-24T12:25:54.439351+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 31.9999999992433,
+          "started_at": "2026-11-24T12:25:54.440411+00:00",
+          "finished_at": "2026-11-24T12:25:54.467772+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:54.468817+00:00",
+          "finished_at": "2026-11-24T12:25:54.468817+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "12ba2933241a4e1dae3678913a3b7039",
+      "trace_id": "fb85aa378250489ca0ebec3d28193a53",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 561.9999999998981,
+          "started_at": "2026-11-24T12:25:54.874747+00:00",
+          "finished_at": "2026-11-24T12:25:55.436925+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 31.9999999992433,
+          "started_at": "2026-11-24T12:25:55.438480+00:00",
+          "finished_at": "2026-11-24T12:25:55.466315+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:55.466833+00:00",
+          "finished_at": "2026-11-24T12:25:55.466833+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "c89be9a8b5574ef3aadaf3238a4762fe",
+      "trace_id": "b00ae427293348639ef2eb69770b6b01",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 609.0000000003783,
+          "started_at": "2026-11-24T12:25:55.950800+00:00",
+          "finished_at": "2026-11-24T12:25:56.559826+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 31.9999999992433,
+          "started_at": "2026-11-24T12:25:56.561384+00:00",
+          "finished_at": "2026-11-24T12:25:56.588694+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:56.589753+00:00",
+          "finished_at": "2026-11-24T12:25:56.589753+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "82d0e08b39f84a53873a1ed77f96002d",
+      "trace_id": "ab69f2f6488248d28c7d2179c6d612cf",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 625,
+          "started_at": "2026-11-24T12:25:57.031280+00:00",
+          "finished_at": "2026-11-24T12:25:57.654947+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 31.000000000858563,
+          "started_at": "2026-11-24T12:25:57.656472+00:00",
+          "finished_at": "2026-11-24T12:25:57.687405+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:57.687405+00:00",
+          "finished_at": "2026-11-24T12:25:57.687405+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "40b331330daa4a21b0d2f589297c9429",
+      "trace_id": "3f98e8496f6847b2a75a99bc53fc61d7",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 546.0000000002765,
+          "started_at": "2026-11-24T12:25:58.095673+00:00",
+          "finished_at": "2026-11-24T12:25:58.636094+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 15.99999999962165,
+          "started_at": "2026-11-24T12:25:58.637132+00:00",
+          "finished_at": "2026-11-24T12:25:58.662543+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:58.663083+00:00",
+          "finished_at": "2026-11-24T12:25:58.663083+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "dd20816828834aa3b6e002c3b5d45f73",
+      "trace_id": "72e267dd179d47e4b364807764433c31",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 547.0000000004802,
+          "started_at": "2026-11-24T12:25:59.053916+00:00",
+          "finished_at": "2026-11-24T12:25:59.603251+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 16.00000000144064,
+          "started_at": "2026-11-24T12:25:59.604299+00:00",
+          "finished_at": "2026-11-24T12:25:59.627413+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:25:59.627937+00:00",
+          "finished_at": "2026-11-24T12:25:59.627937+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "657214e6845b4071bc0a017c491bc9e3",
+      "trace_id": "b72b3295485247d7b421703b8439e961",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 577.9999999995198,
+          "started_at": "2026-11-24T12:26:00.003545+00:00",
+          "finished_at": "2026-11-24T12:26:00.583928+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 30.999999999039574,
+          "started_at": "2026-11-24T12:26:00.584964+00:00",
+          "finished_at": "2026-11-24T12:26:00.608791+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:26:00.609317+00:00",
+          "finished_at": "2026-11-24T12:26:00.609317+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "46bb1d504e084b518ab8c0cf5da896f2",
+      "trace_id": "ec728dbe0e354b3292b0bf33f62c8f7d",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 593.9999999991414,
+          "started_at": "2026-11-24T12:26:00.997632+00:00",
+          "finished_at": "2026-11-24T12:26:01.598391+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 31.000000000858563,
+          "started_at": "2026-11-24T12:26:01.599506+00:00",
+          "finished_at": "2026-11-24T12:26:01.631064+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:26:01.631586+00:00",
+          "finished_at": "2026-11-24T12:26:01.632102+00:00"
+        }
+      ]
+    },
+    {
+      "run_id": "994dcf30a9ec4bbbae3a5714422aa451",
+      "trace_id": "c6318d577d294da796807d534aa25274",
+      "stages": [
+        {
+          "stage": "query_embedding",
+          "status": "success",
+          "duration_ms": 515.0000000012369,
+          "started_at": "2026-11-24T12:26:02.052149+00:00",
+          "finished_at": "2026-11-24T12:26:02.569044+00:00"
+        },
+        {
+          "stage": "vector_search",
+          "status": "success",
+          "duration_ms": 31.9999999992433,
+          "started_at": "2026-11-24T12:26:02.570042+00:00",
+          "finished_at": "2026-11-24T12:26:02.595086+00:00"
+        },
+        {
+          "stage": "projection",
+          "status": "success",
+          "duration_ms": 0,
+          "started_at": "2026-11-24T12:26:02.595602+00:00",
+          "finished_at": "2026-11-24T12:26:02.595602+00:00"
+        }
+      ]
+    }
+  ]
+}

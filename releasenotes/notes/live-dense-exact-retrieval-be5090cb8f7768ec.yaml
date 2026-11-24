@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Workbench supports an explicitly configured Live Dense graph using a qualified
+    local embedding model and exact PostgreSQL cosine retrieval. Discovery requires
+    complete current embedding coverage, an active immutable profile and measured
+    shared admission. Results retain source versions, raw cosine distances and
+    server stage timing; unavailable models never produce Preview results.
+upgrade:
+  - |
+    The default Workbench service remains lexical. To enable Dense, follow the
+    Live Dense operator guide: refresh measured model capacity, complete backfill,
+    publish and promote the immutable ``postgres-dense-exact`` profile, then start
+    ``scripts.workbench_dense_serve``. Existing vectors and migrations are preserved.

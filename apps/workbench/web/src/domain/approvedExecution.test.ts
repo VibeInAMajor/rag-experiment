@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { matchApprovedKeywordGraph } from "./approvedExecution";
+import { matchApprovedSearchGraph } from "./approvedExecution";
 import type { BackendDiscoveryState } from "./backendDiscovery";
 import { createNode } from "./catalog";
 import { createPipeline } from "./graph";
 import type { Graph } from "./types";
+import { isSupportedDenseProfile } from "./backendDiscovery";
 
 function readyDiscovery(): Extract<BackendDiscoveryState, { status: "ready" }> {
   const profile = {
@@ -68,9 +69,85 @@ function readyDiscovery(): Extract<BackendDiscoveryState, { status: "ready" }> {
 }
 
 describe("approved keyword execution", () => {
+  function denseDiscovery() {
+    const discovery = readyDiscovery();
+    discovery.profile = {
+      ...discovery.profile,
+      kind: "dense_search",
+      score_type: "cosine_distance",
+      score_direction: "lower_is_better",
+      profile_id: "postgres-dense-exact",
+      profile_revision: "postgres-dense-exact-r1",
+      embedding_profile_revision: "qwen-local-r1",
+      index_generation: 7,
+      min_coverage: 1,
+    };
+    discovery.capabilities!.profiles = [structuredClone(discovery.profile)];
+    return discovery;
+  }
+
+  it("allows only the qualified four-node Dense template and sends no vectors or graph", () => {
+    const discovery = denseDiscovery();
+    const graph = createPipeline("dense").graph;
+    expect(matchApprovedSearchGraph(graph, discovery)).toEqual({
+      supported: true,
+      workspaceId: "development",
+      effectiveTopK: 5,
+      request: {
+        query: "How long are backups retained?",
+        top_k: 5,
+        profile_id: "postgres-dense-exact",
+        expected_profile_revision: "postgres-dense-exact-r1",
+      },
+    });
+    expect(matchApprovedSearchGraph(graph, readyDiscovery()).supported).toBe(
+      false,
+    );
+    expect(
+      matchApprovedSearchGraph(createPipeline("keyword").graph, discovery)
+        .supported,
+    ).toBe(false);
+    expect(
+      matchApprovedSearchGraph(createPipeline("retrieval").graph, discovery)
+        .supported,
+    ).toBe(false);
+    graph.nodes[1].data.parameters.model = "browser-model";
+    expect(matchApprovedSearchGraph(graph, discovery).supported).toBe(false);
+  });
+
+  it("rejects partial or changed dense provenance and revisions before execution", () => {
+    const discovery = denseDiscovery();
+    const graph = createPipeline("dense").graph;
+    const advertised = discovery.capabilities!.profiles[0];
+    if (advertised.kind !== "dense_search")
+      throw new Error("Expected dense profile");
+    advertised.index_generation++;
+    expect(matchApprovedSearchGraph(graph, discovery).supported).toBe(false);
+    advertised.index_generation--;
+    advertised.embedding_profile_revision = "different-r1";
+    expect(matchApprovedSearchGraph(graph, discovery).supported).toBe(false);
+    expect(
+      isSupportedDenseProfile({
+        ...discovery.profile,
+        profile_revision: "unapproved-r2",
+      }),
+    ).toBe(false);
+    expect(
+      isSupportedDenseProfile({
+        ...discovery.profile,
+        index_generation: -1,
+      } as typeof discovery.profile),
+    ).toBe(false);
+    expect(
+      isSupportedDenseProfile({
+        ...discovery.profile,
+        min_coverage: 0.9,
+      } as unknown as typeof discovery.profile),
+    ).toBe(false);
+  });
   it("maps only the four approved fields and the server-authorized workspace", () => {
     const graph = createPipeline("keyword").graph;
-    expect(matchApprovedKeywordGraph(graph, readyDiscovery())).toEqual({
+    expect(matchApprovedSearchGraph(graph, readyDiscovery())).toEqual({
       supported: true,
       workspaceId: "development",
       effectiveTopK: 5,
@@ -106,10 +183,10 @@ describe("approved keyword execution", () => {
     discovery.profile = selected;
     discovery.capabilities!.profiles = [selected];
     const graph = createPipeline("keyword").graph;
-    expect(matchApprovedKeywordGraph(graph, discovery).supported).toBe(false);
+    expect(matchApprovedSearchGraph(graph, discovery).supported).toBe(false);
     graph.nodes[1].data.parameters.topK = 3;
     graph.nodes[2].data.parameters.limit = 2;
-    expect(matchApprovedKeywordGraph(graph, discovery)).toMatchObject({
+    expect(matchApprovedSearchGraph(graph, discovery)).toMatchObject({
       supported: true,
       request: {
         profile_id: "postgres-fts-bounded",
@@ -118,7 +195,7 @@ describe("approved keyword execution", () => {
       },
     });
     graph.nodes[0].data.parameters.query = "x".repeat(129);
-    expect(matchApprovedKeywordGraph(graph, discovery).supported).toBe(false);
+    expect(matchApprovedSearchGraph(graph, discovery).supported).toBe(false);
   });
 
   it("ignores node order, labels, coordinates and viewport", () => {
@@ -130,7 +207,7 @@ describe("approved keyword execution", () => {
       node.position = { x: -1000 + index * 200, y: 800 };
     });
     graph.viewport = { x: 40, y: -50, zoom: 0.75 };
-    expect(matchApprovedKeywordGraph(graph, readyDiscovery()).supported).toBe(
+    expect(matchApprovedSearchGraph(graph, readyDiscovery()).supported).toBe(
       true,
     );
   });
@@ -144,7 +221,7 @@ describe("approved keyword execution", () => {
     const graph = createPipeline("keyword").graph;
     graph.nodes[1].data.parameters.topK = topK;
     graph.nodes[2].data.parameters.limit = limit;
-    const result = matchApprovedKeywordGraph(graph, readyDiscovery());
+    const result = matchApprovedSearchGraph(graph, readyDiscovery());
     expect(result.supported && result.request.top_k).toBe(expected);
   });
 
@@ -284,7 +361,7 @@ describe("approved keyword execution", () => {
     (_label, mutate) => {
       const graph = createPipeline("keyword").graph;
       mutate(graph);
-      const result = matchApprovedKeywordGraph(graph, readyDiscovery());
+      const result = matchApprovedSearchGraph(graph, readyDiscovery());
       expect(result.supported).toBe(false);
       expect(result).not.toHaveProperty("request");
     },
@@ -301,7 +378,7 @@ describe("approved keyword execution", () => {
   ])("rejects invalid query %#", (query) => {
     const graph = createPipeline("keyword").graph;
     graph.nodes[0].data.parameters.query = query;
-    expect(matchApprovedKeywordGraph(graph, readyDiscovery()).supported).toBe(
+    expect(matchApprovedSearchGraph(graph, readyDiscovery()).supported).toBe(
       false,
     );
   });
@@ -310,7 +387,7 @@ describe("approved keyword execution", () => {
     const graph = createPipeline("keyword").graph;
     const query = "😀".repeat(4096);
     graph.nodes[0].data.parameters.query = `  ${query}  `;
-    const result = matchApprovedKeywordGraph(graph, readyDiscovery());
+    const result = matchApprovedSearchGraph(graph, readyDiscovery());
     expect(result.supported && result.request.query).toBe(query);
   });
 
@@ -322,7 +399,7 @@ describe("approved keyword execution", () => {
         graph.nodes[index].data.parameters[index === 1 ? "topK" : "limit"] =
           value;
         expect(
-          matchApprovedKeywordGraph(graph, readyDiscovery()).supported,
+          matchApprovedSearchGraph(graph, readyDiscovery()).supported,
         ).toBe(false);
       }
     },
@@ -331,7 +408,7 @@ describe("approved keyword execution", () => {
   it("refuses all existing Preview templates", () => {
     for (const template of ["blank", "retrieval", "indexing"] as const)
       expect(
-        matchApprovedKeywordGraph(
+        matchApprovedSearchGraph(
           createPipeline(template).graph,
           readyDiscovery(),
         ).supported,
@@ -352,7 +429,7 @@ describe("approved keyword execution", () => {
       selectedWorkspaceId: null,
     };
     expect(
-      matchApprovedKeywordGraph(createPipeline("keyword").graph, discovery)
+      matchApprovedSearchGraph(createPipeline("keyword").graph, discovery)
         .supported,
     ).toBe(false);
   });
@@ -363,7 +440,7 @@ describe("approved keyword execution", () => {
     const graph = createPipeline("keyword").graph;
     graph.nodes[1].data.parameters.topK = 11;
     graph.nodes[2].data.parameters.limit = 5;
-    expect(matchApprovedKeywordGraph(graph, discovery).supported).toBe(false);
+    expect(matchApprovedSearchGraph(graph, discovery).supported).toBe(false);
   });
 
   const profileMutations: Array<
@@ -446,7 +523,7 @@ describe("approved keyword execution", () => {
       const discovery = readyDiscovery();
       mutate(discovery);
       expect(
-        matchApprovedKeywordGraph(createPipeline("keyword").graph, discovery)
+        matchApprovedSearchGraph(createPipeline("keyword").graph, discovery)
           .supported,
       ).toBe(false);
     },
@@ -456,7 +533,7 @@ describe("approved keyword execution", () => {
     const graph = createPipeline("keyword").graph;
     const discovery = readyDiscovery();
     const before = structuredClone({ graph, discovery });
-    matchApprovedKeywordGraph(graph, discovery);
+    matchApprovedSearchGraph(graph, discovery);
     expect({ graph, discovery }).toEqual(before);
   });
 });

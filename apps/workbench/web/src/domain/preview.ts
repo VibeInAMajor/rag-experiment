@@ -89,9 +89,13 @@ export function completePreviewNode(
   node: WorkbenchNode,
   scenario: Scenario,
 ): NodeResult {
-  if (node.data.kind === "keyword-search")
+  if (
+    node.data.kind === "keyword-search" ||
+    node.data.kind === "query-embedding" ||
+    node.data.kind === "dense-search"
+  )
     throw new Error(
-      "Keyword search is unavailable in Preview. Select Live mode.",
+      `${node.data.label} is unavailable in Preview. Select Live mode.`,
     );
   if (!run.graph.nodes.some((item) => item.id === node.id))
     throw new Error("The component does not belong to this run.");
@@ -115,7 +119,10 @@ export function completePreviewNode(
     (document) => document.status === "Indexed",
   );
   const summaries: Record<
-    Exclude<WorkbenchNode["data"]["kind"], "keyword-search">,
+    Exclude<
+      WorkbenchNode["data"]["kind"],
+      "keyword-search" | "query-embedding" | "dense-search"
+    >,
     { durationMs: number; summary: string; output: Record<string, unknown> }
   > = {
     files: {

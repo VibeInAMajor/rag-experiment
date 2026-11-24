@@ -16,6 +16,11 @@ type Connection = {
   targetHandle?: string | null;
 };
 const templates: Record<TemplateId, { name: string; description: string }> = {
+  dense: {
+    name: "Dense search",
+    description:
+      "Search a qualified local embedding generation by exact cosine distance.",
+  },
   keyword: {
     name: "Keyword search",
     description:
@@ -80,6 +85,18 @@ export function createPipeline(templateId: TemplateId): Pipeline {
     edges.push(
       connect(query, "query", keyword, "query"),
       connect(keyword, "documents", results, "documents"),
+    );
+  } else if (templateId === "dense") {
+    const query = createNode("query", { x: 0, y: 160 });
+    query.data.parameters.query = "How long are backups retained?";
+    const embedder = createNode("query-embedding", { x: 260, y: 160 });
+    const retriever = createNode("dense-search", { x: 520, y: 160 });
+    const results = createNode("results", { x: 780, y: 160 });
+    nodes.push(query, embedder, retriever, results);
+    edges.push(
+      connect(query, "query", embedder, "text"),
+      connect(embedder, "embedding", retriever, "embedding"),
+      connect(retriever, "documents", results, "documents"),
     );
   } else if (templateId === "indexing") {
     const kinds: NodeKind[] = [
@@ -233,12 +250,15 @@ export function checkPreviewGraph(graph: Graph): GraphIssue[] {
     return [{ message: "Add a component to start building your pipeline." }];
   const ids = new Set<string>();
   for (const node of graph.nodes) {
-    if (node.data.kind === "keyword-search")
+    if (
+      ["keyword-search", "query-embedding", "dense-search"].includes(
+        node.data.kind,
+      )
+    )
       issues.push({
         nodeId: node.id,
         code: "PREVIEW_UNSUPPORTED",
-        message:
-          "Keyword search requires Live mode and a ready backend profile. Preview does not simulate this component.",
+        message: `${node.data.label} requires Live mode and a ready backend profile. Preview does not simulate this component.`,
       });
     if (ids.has(node.id))
       issues.push({
@@ -528,6 +548,7 @@ export function importPipeline(serialized: string): Pipeline {
     pipeline.templateId !== "blank" &&
     pipeline.templateId !== "retrieval" &&
     pipeline.templateId !== "keyword" &&
+    pipeline.templateId !== "dense" &&
     pipeline.templateId !== "indexing"
   )
     throw new Error("Unsupported pipeline template.");

@@ -1,0 +1,78 @@
+{
+  "status": "PASS",
+  "files": [
+    {
+      "file": "backend-tests.log",
+      "bytes": 231083,
+      "sha256": "0dffcfbc109b9c9dc8617c00400b254c9fd8f8a1b4b7fe5db9a3045060cbff55",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "browser-dense.json",
+      "bytes": 13880,
+      "sha256": "d3e695320323757fac0d55cf3ba26de7a508e4463bd32fb3183e1c14380c5d5f",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "capacity-calibration.json",
+      "bytes": 32751,
+      "sha256": "13bd1e5cd9db5af0a5e768e31da4ee0cc17b5fb08f0ee5a761a90ebfe7d655e4",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "dense-sql-tests.xml",
+      "bytes": 1692,
+      "sha256": "1e84338b71a2462b57e765168aebb9adab66b2db599651b6d29af519f5492a1e",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "evaluator-tests.xml",
+      "bytes": 2975,
+      "sha256": "322f617509bbc0989f030d7f74bfdb7f8e827d4bc49ccdfd0fe41f8e7420cd8a",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "model-smoke-tests.xml",
+      "bytes": 387,
+      "sha256": "404933e934e404c52c91b33d8b0e576c20ecc10938e809affca699a51d9ef94c",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "native-tokenizer-tests.xml",
+      "bytes": 6109,
+      "sha256": "6840c732ffcbe54a226198bba5c0d4848e6af608d2981587118c2d810079cfd9",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "runtime-evaluation-initial.json",
+      "bytes": 442938,
+      "sha256": "43b53221af572c55ad9dc0245801b9a751a7d2682209ef6c61e4236943e62373",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    },
+    {
+      "file": "runtime-evaluation.json",
+      "bytes": 443879,
+      "sha256": "2d1df316551c7693cf98a08642c5d0ddda56a6b8519dcf12fe9fdc4541c8371f",
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_vector_array_matches": 0
+    }
+  ],
+  "scope": "Configured DSNs/passwords, credential-bearing PostgreSQL URLs, and long raw float arrays; fixed public/synthetic fixture query labels and safe source/trace IDs are intentional. Audit binds exact artifact bytes by SHA-256."
+}

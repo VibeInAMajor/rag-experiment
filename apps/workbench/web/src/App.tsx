@@ -41,9 +41,10 @@ import { useGraphHistory } from "./hooks/useGraphHistory";
 import { usePreview } from "./hooks/usePreview";
 import { useValidation } from "./hooks/useValidation";
 import { useBackendDiscovery } from "./hooks/useBackendDiscovery";
+import { isSupportedDenseProfile } from "./domain/backendDiscovery";
 import { useLiveSearch } from "./hooks/useLiveSearch";
 import { useLiveDocuments } from "./hooks/useLiveDocuments";
-import { matchApprovedKeywordGraph } from "./domain/approvedExecution";
+import { matchApprovedSearchGraph } from "./domain/approvedExecution";
 import {
   graphFingerprint,
   type LiveRun,
@@ -178,7 +179,7 @@ export function App() {
       },
     },
   );
-  const approved = matchApprovedKeywordGraph(current.graph, discovery.state);
+  const approved = matchApprovedSearchGraph(current.graph, discovery.state);
   const visibleLiveRun = liveRuns.find(
     (run) =>
       submittedLiveContext &&
@@ -559,6 +560,19 @@ export function App() {
           )}
           {page === "pipelines" && (
             <PipelinesView
+              denseAvailable={
+                mode === "live" &&
+                discovery.state.status === "ready" &&
+                Boolean(
+                  discovery.state.capabilities?.profiles.some(
+                    (profile) =>
+                      isSupportedDenseProfile(profile) &&
+                      profile.workspace_ids.includes(
+                        discovery.state.selectedWorkspaceId ?? "",
+                      ),
+                  ),
+                )
+              }
               pipelines={pipelines}
               defaultTemplate={settings.defaultTemplate}
               runs={sessionRuns}

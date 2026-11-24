@@ -22,6 +22,8 @@ const icons = {
   "text-embedder": VectorSquare,
   bm25: TextSearch,
   "keyword-search": TextSearch,
+  "query-embedding": TextSearch,
+  "dense-search": TextSearch,
   vector: ScanLine,
   joiner: GitMerge,
   results: Layers,

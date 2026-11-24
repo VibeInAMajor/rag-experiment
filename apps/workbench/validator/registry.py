@@ -36,6 +36,22 @@ REGISTRY: dict[str, ComponentMapping] = {
         ("topK",),
         "Keyword search uses the approved Live API profile; constructor validation is unsupported.",
     ),
+    "query-embedding": ComponentMapping(
+        None,
+        {},
+        {},
+        (),
+        (),
+        "Query embedding requires the qualified local Live profile; constructor validation is unsupported.",
+    ),
+    "dense-search": ComponentMapping(
+        None,
+        {},
+        {},
+        ("topK",),
+        ("topK",),
+        "Dense search requires the qualified generation and workspace binding from the Live API.",
+    ),
     "parser": ComponentMapping(
         None, {}, {}, (), ("format",), "Docling integration is not an approved installed validation dependency."
     ),

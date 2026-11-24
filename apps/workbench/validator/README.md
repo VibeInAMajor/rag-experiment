@@ -34,6 +34,9 @@ User node IDs map to generated `n_0`, `n_1`, … names. UI handle mappings below
 | `parser` | Intended DoclingConverter external integration | None approved | Unsupported: no approved installed parser integration; no plugin discovery |
 | `writer` | Core DocumentWriter exists, persistent resource binding absent | None approved | Unsupported: substituting an empty memory store would misrepresent the selected knowledge base |
 | `vector` | Intended PgvectorEmbeddingRetriever external integration | None approved | Unsupported: no approved pgvector/resource constructor binding |
+| `keyword-search` | Approved Live lexical API composition | None approved | Unsupported: the constructor validator does not bind the Live workspace/profile |
+| `query-embedding` | Qualified local Live query embedding | None approved | Unsupported: no provider/model or admission initialization in constructor validation; accepts no model parameters |
+| `dense-search` | Approved Live exact cosine API composition | None approved | Unsupported: qualified generation and workspace binding are owned by the Live API; only `topK` is a recognized parameter |
 | `chunker` | `haystack.components.preprocessors.DocumentSplitter` | `documents` → `documents` in/out | `split_by=token`, `size` → `split_length`, `overlap` → `split_overlap`; no warm-up. Constructor requires installed tiktoken; absent dependency returns unsupported |
 | `bm25` | `haystack.components.retrievers.in_memory.InMemoryBM25Retriever` | `query` → `query`; output `documents` → `documents` | `topK` → `top_k`; isolated empty `InMemoryDocumentStore(shared=False)`. `collection` is a bounded UI resource label only: no documents or knowledge-base lookup occurs |
 | `joiner` | `haystack.components.joiners.DocumentJoiner` | `documents` → `documents` in/out | RRF mode, `topK` → `top_k`; actual input is variadic |

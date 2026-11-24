@@ -4,6 +4,8 @@ An independent FastAPI process with bounded durable TXT/Markdown/Python and text
 
 ## Code ownership
 
+Qualified exact Dense HTTP is available through the explicit `scripts.workbench_dense_serve` operator composition. It reuses durable vectors, the local native tokenizer and one measured query/document admission owner. It requires a complete current semantic generation, active immutable dense profile and fresh model/capacity qualification. Ordinary `start.ps1` / `serve` keeps its lexical default. Follow the [Live Dense operator guide](../../../docs-website/docs/architecture/live-dense-search.md) for configuration, calibration, activation, evaluation and non-destructive rollback.
+
 This directory contains HTTP composition, routes, transport/security boundaries, response projection and the published OpenAPI schema. Feature implementations live beside it in `embedding/`, `postgres/`, `parsing/`, `chunking/`, `ingestion/`, `configuration/`, `retrieval/` and `sources/`. Shared DTOs live in `contracts/schemas.py`, persistence records and the existing port in `persistence/models.py`, and event logging in `observability/events.py`. See the [module ownership map](../../../docs-website/PROJECT_MAP.md#backend-module-directories) for exact owners.
 
 Import each implementation directly from its module. Removed `apps.workbench.api.*` implementation paths have no forwarding modules or facade re-exports. The HTTP contract and named Hatch commands remain unchanged. Tests and fixtures accompany their module; cross-module HTTP acceptance stays in `api/tests/`, with shared support in `testing/`. The API Hatch test/check/type commands cover the backend module tree.

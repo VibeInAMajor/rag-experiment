@@ -66,6 +66,7 @@ class _DatabaseProbe(PersistencePort):
     lexical_search = _unexpected
     lexical_search_snapshot = _unexpected
     vector_search = _unexpected
+    vector_search_snapshot = _unexpected
     reserve_ingestion = _unexpected_reservation
     transition_ingestion = _unexpected
     complete_ingestion_with_publication = _unexpected

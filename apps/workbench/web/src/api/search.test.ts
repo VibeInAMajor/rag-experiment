@@ -56,6 +56,88 @@ function clientFor(value: unknown, status = 200) {
 }
 
 describe("Live search HTTP boundary", () => {
+  function denseResponse(): SearchResponse {
+    const item = response();
+    return {
+      ...item,
+      profile_id: "postgres-dense-exact",
+      profile_revision: "postgres-dense-exact-r1",
+      embedding_profile_revision: "qwen-local-r1",
+      index_generation: 4,
+      model_revision: "model-r1",
+      model_digest: "sha256-model",
+      tokenizer_digest: "sha256-tokenizer",
+      input_format_revision: "query-instruction-r1",
+      stages: ["query_embedding", "vector_search", "projection"].map(
+        (stage, index) => ({
+          stage: stage as SearchResponse["stages"][number]["stage"],
+          status: "success",
+          duration_ms: 1,
+          started_at: `2026-11-24T00:00:00.00${index}Z`,
+          finished_at: `2026-11-24T00:00:00.00${index + 1}Z`,
+        }),
+      ),
+      results: [
+        {
+          ...item.results[0],
+          score_type: "cosine_distance",
+          score: 0.1234567890123456,
+        },
+        {
+          ...item.results[0],
+          chunk_id: "chunk-b",
+          rank: 2,
+          score_type: "cosine_distance",
+          score: 0.55,
+        },
+      ],
+    };
+  }
+  const denseSubmitted = {
+    ...submitted,
+    profile_id: "postgres-dense-exact",
+    expected_profile_revision: "postgres-dense-exact-r1",
+  };
+
+  it("preserves exact ascending cosine distances, timestamps and qualified model provenance", async () => {
+    const item = denseResponse();
+    const { client, fetchImpl } = clientFor(item);
+    expect(await client.search("development", denseSubmitted)).toEqual(item);
+    expect(JSON.parse(String(fetchImpl.mock.calls[0][1]?.body))).toEqual(
+      denseSubmitted,
+    );
+  });
+
+  it.each([
+    (item: SearchResponse) => {
+      item.results.reverse();
+      item.results.forEach((result, index) => (result.rank = index + 1));
+    },
+    (item: SearchResponse) => {
+      delete item.model_digest;
+    },
+    (item: SearchResponse) => {
+      item.index_generation = -1;
+    },
+    (item: SearchResponse) => {
+      item.results[0].score_type = "postgres_ts_rank_cd";
+    },
+    (item: SearchResponse) => {
+      item.results[0].score = 3;
+    },
+    (item: SearchResponse) => {
+      delete item.stages[0].started_at;
+    },
+  ])(
+    "rejects malformed Dense results without a fixture fallback",
+    async (mutate) => {
+      const item = denseResponse();
+      mutate(item);
+      await expect(
+        clientFor(item).client.search("development", denseSubmitted),
+      ).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
+    },
+  );
   it("uses a separate bounded execution deadline and never retries POST", async () => {
     vi.useFakeTimers();
     const fetchImpl = vi

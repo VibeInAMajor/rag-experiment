@@ -52,13 +52,38 @@ export type BackendDiscoveryClient = Pick<
 >;
 
 export function isSupportedLexicalProfile(profile: BackendProfile): boolean {
+  return (
+    profile.kind === "lexical_search" &&
+    profile.score_type === "postgres_ts_rank_cd" &&
+    supportedProfileBounds(profile)
+  );
+}
+
+export function isSupportedDenseProfile(profile: BackendProfile): boolean {
+  return (
+    profile.kind === "dense_search" &&
+    profile.profile_id === "postgres-dense-exact" &&
+    profile.profile_revision === "postgres-dense-exact-r1" &&
+    profile.score_type === "cosine_distance" &&
+    profile.score_direction === "lower_is_better" &&
+    /^[A-Za-z0-9_-]{1,128}$/.test(profile.embedding_profile_revision) &&
+    Number.isSafeInteger(profile.index_generation) &&
+    profile.index_generation >= 0 &&
+    profile.min_coverage === 1 &&
+    supportedProfileBounds(profile)
+  );
+}
+
+export function isSupportedSearchProfile(profile: BackendProfile): boolean {
+  return isSupportedLexicalProfile(profile) || isSupportedDenseProfile(profile);
+}
+
+function supportedProfileBounds(profile: BackendProfile): boolean {
   const bounded = (value: number, maximum: number) =>
     Number.isSafeInteger(value) && value >= 1 && value <= maximum;
   return (
     /^[A-Za-z0-9_-]{1,128}$/.test(profile.profile_id) &&
     /^[A-Za-z0-9_-]{1,128}$/.test(profile.profile_revision) &&
-    profile.kind === "lexical_search" &&
-    profile.score_type === "postgres_ts_rank_cd" &&
     profile.parameters.query.type === "string" &&
     profile.parameters.query.min_length === 1 &&
     bounded(profile.parameters.query.max_length, 4096) &&
@@ -169,7 +194,7 @@ export class BackendDiscovery {
       !this.state.capabilities?.profiles.some(
         (profile) =>
           profile.profile_id === profileId &&
-          isSupportedLexicalProfile(profile) &&
+          isSupportedSearchProfile(profile) &&
           profile.workspace_ids.includes(workspaceId),
       )
     )
@@ -335,13 +360,13 @@ export class BackendDiscovery {
       );
       return;
     }
-    const profiles = capabilities.profiles.filter(isSupportedLexicalProfile);
+    const profiles = capabilities.profiles.filter(isSupportedSearchProfile);
     if (!profiles.length) {
       unavailable(
         "incompatible",
         conflict(
           "PROFILE_NOT_SUPPORTED",
-          "No compatible lexical profile is advertised. Update compatible services and refresh.",
+          "No compatible search profile is advertised. Update compatible services and refresh.",
         ),
       );
       return;
@@ -436,7 +461,7 @@ export class BackendDiscovery {
             : "PROFILE_SELECTION_REQUIRED",
           this.preferredProfileId
             ? "The selected profile is no longer available. Choose an approved profile."
-            : "Choose an approved lexical profile before searching.",
+            : "Choose an approved search profile before searching.",
         ),
       });
       return;

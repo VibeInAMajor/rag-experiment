@@ -9,6 +9,7 @@ from apps.workbench.contracts.schemas import (
     QueryParameter,
     TopKParameter,
 )
+from apps.workbench.embedding.embedding import EmbeddingProfile
 from apps.workbench.persistence.models import (
     CorpusNotReady,
     CorpusSnapshot,
@@ -22,6 +23,63 @@ from apps.workbench.retrieval.profile_registry import ProfileNotAvailable as Reg
 POSTGRES_FTS_PROFILE_ID: Final = "postgres-fts-baseline"
 POSTGRES_FTS_PROFILE_REVISION: Final = "postgres-fts-baseline-r1"
 _AVAILABLE_REQUIREMENTS = frozenset({"schema", "source_generation", "lexical_index"})
+
+
+def validate_dense_policy(
+    definition: ProfileDefinition, profile: EmbeddingProfile, *, workspace_id: str, top_k: int = 1
+) -> None:
+    """Bind the fixed exact composition to the immutable indexed model and input policy."""
+    if (
+        definition.composition != "exact_dense"
+        or workspace_id not in definition.workspace_ids
+        or (definition.model_profile_id, definition.model_profile_revision, definition.dimensions)
+        != (profile.profile_id, profile.profile_revision, profile.dimensions)
+        or definition.index_dimensions != profile.dimensions
+        or definition.vector_representation != "vector"
+        or definition.normalization != "l2"
+        or any(
+            value is not None
+            for value in (
+                definition.parser_profile_revision,
+                definition.chunk_profile_revision,
+                definition.processing_policy_hash,
+            )
+        )
+        or not set(definition.capability_requirements).issubset(
+            {"schema", "source_generation", "embedding_model", "embedding_coverage", "capacity_policy"}
+        )
+    ):
+        raise CorpusNotReady("The exact dense policy does not match its qualified embedding dependencies.")
+    if type(top_k) is not int or not 1 <= top_k <= min(definition.max_top_k, definition.candidate_k):
+        raise InvalidSearchParameters("The request exceeds the approved dense search policy.")
+
+
+def dense_profile_definition(profile: EmbeddingProfile, *, capacity_policy_id: str) -> ProfileDefinition:
+    """Build the sole reviewed exact-dense policy from an operator-qualified local model."""
+    return ProfileDefinition(
+        profile_id="postgres-dense-exact",
+        profile_revision="postgres-dense-exact-r1",
+        label="PostgreSQL exact dense search",
+        kind="dense",
+        composition="exact_dense",
+        workspace_ids=("development",),
+        model_profile_id=profile.profile_id,
+        model_profile_revision=profile.profile_revision,
+        dimensions=profile.dimensions,
+        index_dimensions=profile.dimensions,
+        vector_representation="vector",
+        normalization="l2",
+        capacity_policy_id=capacity_policy_id,
+        score_type="cosine_distance",
+        score_direction="lower_is_better",
+        capability_requirements=(
+            "schema",
+            "source_generation",
+            "embedding_model",
+            "embedding_coverage",
+            "capacity_policy",
+        ),
+    )
 
 
 def resolve_profile(
@@ -96,14 +154,23 @@ def qualify_profile(definition: ProfileDefinition, generation: IndexGeneration |
         raise CorpusNotReady("The complete authorized corpus is not ready for this profile.")
 
 
-def execution_profile(definition: ProfileDefinition, *, workspace_id: str, corpus_id: str) -> ExecutionProfile:
+def execution_profile(
+    definition: ProfileDefinition, *, workspace_id: str, corpus_id: str, index_generation: int | None = None
+) -> ExecutionProfile:
     """Project existing discovery fields with truthful algorithm semantics and approved bounds."""
+    if definition.score_type not in {"cosine_distance", "postgres_ts_rank_cd", "bm25_raw"}:
+        raise CorpusNotReady("The output score semantics are not implemented.")
     return ExecutionProfile(
         profile_id=definition.profile_id,
         profile_revision=definition.profile_revision,
         workspace_ids=[workspace_id],
         corpus_id=corpus_id,
-        score_type="postgres_ts_rank_cd",
+        kind="dense_search" if definition.composition == "exact_dense" else "lexical_search",
+        score_type="cosine_distance" if definition.composition == "exact_dense" else "postgres_ts_rank_cd",
+        score_direction="lower_is_better" if definition.composition == "exact_dense" else None,
+        embedding_profile_revision=definition.model_profile_revision,
+        index_generation=index_generation,
+        min_coverage=1 if definition.composition == "exact_dense" else None,
         parameters=ProfileParameters(
             query=QueryParameter(max_length=definition.max_query_characters),
             top_k=TopKParameter(default=min(10, definition.max_top_k), maximum=definition.max_top_k),

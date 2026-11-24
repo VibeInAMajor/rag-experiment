@@ -7,6 +7,8 @@ description: Leased embedding jobs, generation coverage, measured shared admissi
 
 Lexical publication commits source versions and chunks first. A separate durable worker embeds active chunks using the qualified [local Qwen provider](local-embedding-provider.md), then stores generation-fenced mappings. Model failure leaves lexical retrieval available. Internal semantic coverage and exact-vector diagnostics do not enable Dense HTTP, ANN, hybrid retrieval or generation; the [approved profile registry](profile-registry.md) still controls executable retrieval.
 
+The successor [Live Dense owner](live-dense-search.md) now supplies the explicit fixed HTTP composition over these same mappings. It additionally requires active immutable policy, current complete coverage and current model/capacity qualification. Worker completion alone still does not activate a retrieval profile; ANN/hybrid/generation remain separate.
+
 Implementation and live acceptance are tracked in completed [EMBED-002](../../../tasks/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) and its [evidence](../../../tasks/evidence/embedding-2026-11-24/report.md). The actual ten-minute run passed its predeclared steady-window rule: median 92.141081157% of the measured denominator, with zero hard breaches. Whole-run utilization was **91.992753788%, below exact 92%**. Fixed-fixture retrieval metrics and no-answer/hard-negative limitations are recorded separately; they establish no production truth guarantee.
 
 ## Storage, source identity and recovery

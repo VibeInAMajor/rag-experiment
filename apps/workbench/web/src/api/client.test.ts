@@ -91,6 +91,37 @@ afterEach(() => {
 });
 
 describe("Workbench API discovery transport", () => {
+  it("decodes qualified Dense capability without changing the lexical baseline", async () => {
+    const dense = {
+      ...profile,
+      profile_id: "postgres-dense-exact",
+      profile_revision: "postgres-dense-exact-r1",
+      kind: "dense_search",
+      score_type: "cosine_distance",
+      score_direction: "lower_is_better",
+      embedding_profile_revision: "qwen-local-r1",
+      index_generation: 4,
+      min_coverage: 1,
+    };
+    const decoded = await clientFor({
+      ...capabilities,
+      profiles: [profile, dense],
+    }).client.getCapabilities();
+    expect(decoded.profiles).toEqual([profile, dense]);
+    for (const patch of [
+      { min_coverage: 0.99 },
+      { index_generation: -1 },
+      { embedding_profile_revision: null },
+      { score_direction: "higher_is_better" },
+      { score_type: "bm25_raw" },
+    ])
+      await expect(
+        clientFor({
+          ...capabilities,
+          profiles: [{ ...dense, ...patch }],
+        }).client.getCapabilities(),
+      ).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
+  });
   it("matches implemented discriminator and required-field assumptions against published OpenAPI", () => {
     const schema = JSON.parse(openApiText);
     expect(schema.info.version).toBe(contractRevision);

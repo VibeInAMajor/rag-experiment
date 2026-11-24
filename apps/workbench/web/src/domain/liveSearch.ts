@@ -60,6 +60,12 @@ export function liveContextFingerprint(context: LiveSearchContext): string {
     context.workspaceId,
     context.profile?.profile_id,
     context.profile?.profile_revision,
+    context.profile?.kind === "dense_search"
+      ? [
+          context.profile.embedding_profile_revision,
+          context.profile.index_generation,
+        ]
+      : null,
   ]);
 }
 
@@ -200,6 +206,22 @@ export class LiveSearchRequests {
         signal: controller.signal,
       });
       if (!current()) return;
+      if (
+        context.profile.kind === "dense_search" &&
+        (response.embedding_profile_revision !==
+          context.profile.embedding_profile_revision ||
+          response.index_generation !== context.profile.index_generation)
+      )
+        throw new WorkbenchApiError(
+          "The embedding generation changed. Refresh the backend connection.",
+          {
+            kind: "protocol",
+            code: "DENSE_GENERATION_MISMATCH",
+            requestId: response.request_id,
+            traceId: response.trace_id,
+            runId: response.run_id,
+          },
+        );
       this.update(id, (entry) => ({
         ...entry,
         status: "Completed",
@@ -236,7 +258,8 @@ export class LiveSearchRequests {
       }));
       if (
         error instanceof WorkbenchApiError &&
-        [404, 409, 503].includes(error.httpStatus ?? 0)
+        ([404, 409, 503].includes(error.httpStatus ?? 0) ||
+          error.code === "DENSE_GENERATION_MISMATCH")
       )
         this.onInvalidateDiscovery();
     } finally {

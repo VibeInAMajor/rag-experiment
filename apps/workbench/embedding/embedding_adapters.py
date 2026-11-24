@@ -128,6 +128,11 @@ class TeiEmbeddingAdapter:
             if client is not None:
                 await client.aclose()
 
+    async def check_ready_async(self) -> None:
+        """Reattest current model availability without generating a query or reserving tokens."""
+        await self.warm_up_async()
+        await self._attest()
+
     async def embed(self, request: EmbeddingRequest) -> EmbeddingBatch:
         """Prepare, admit and validate one ordered batch under the request deadline."""
         return await self._embed(request, native_probe=False)

@@ -17,6 +17,7 @@ from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool, PoolClosed, PoolTimeout
 from pydantic import ValidationError
 
+from apps.workbench.embedding.embedding import EmbeddingProfile
 from apps.workbench.persistence.models import (
     ActiveChunkPage,
     Chunk,
@@ -43,11 +44,12 @@ from apps.workbench.persistence.models import (
     SourceVersion,
     UploadReservation,
     VectorHit,
+    VectorSearchSnapshot,
     Workspace,
     WorkspaceContext,
     WorkspaceNotFound,
 )
-from apps.workbench.postgres.postgres_embeddings import PostgresEmbeddingMixin
+from apps.workbench.postgres.postgres_embeddings import PostgresEmbeddingMixin, _coverage
 from apps.workbench.retrieval.profile_registry import ProfileDefinition, ProfileRollout
 
 _CHUNK_COLUMNS = (
@@ -899,6 +901,88 @@ class PostgresPersistence(PostgresEmbeddingMixin):
             return [
                 VectorHit(chunk=_chunk(row), rank=index, distance=row["distance"]) for index, row in enumerate(rows, 1)
             ]
+
+    async def vector_search_snapshot(
+        self,
+        context: WorkspaceContext,
+        *,
+        embedding: list[float],
+        embedding_profile: EmbeddingProfile,
+        expected_index_generation: int,
+        profile_fence: ProfileRollout,
+        profile_definition: ProfileDefinition,
+        top_k: int = 10,
+    ) -> VectorSearchSnapshot:
+        """Read durable exact cosine hits only while the complete approved generation is current."""
+        from apps.workbench.postgres.postgres_dense import validate_query_vector
+        from apps.workbench.postgres.postgres_profiles import read_profile_rollouts
+        from apps.workbench.retrieval.profiles import validate_dense_policy
+
+        validate_query_vector(embedding, embedding_profile)
+        validate_dense_policy(profile_definition, embedding_profile, workspace_id=context.workspace_id, top_k=top_k)
+        if type(expected_index_generation) is not int or expected_index_generation < 0:
+            raise CorpusNotReady("The requested embedding generation is not available.")
+        started = monotonic()
+        async with self._transaction(context, operation="dense_search", repeatable_read=True) as connection:
+            await self._embedding_schema(connection, context)
+            rollouts = await read_profile_rollouts(connection, context)
+            if (
+                profile_fence.state != "active"
+                or profile_fence not in rollouts
+                or (profile_fence.profile_id, profile_fence.profile_revision, profile_fence.policy_hash)
+                != (profile_definition.profile_id, profile_definition.profile_revision, profile_definition.policy_hash)
+            ):
+                raise ProfileNotAvailable("The approved profile changed before retrieval.")
+            corpus = await self._corpus_summary(connection, context)
+            coverage = await _coverage(connection, context, embedding_profile)
+            if (
+                not coverage.ready
+                or coverage.index_generation != expected_index_generation
+                or corpus.index_generation_id != expected_index_generation
+                or profile_fence.qualified_generation_id != expected_index_generation
+                or corpus.chunk_count != coverage.eligible_active_chunks
+                or not 1 <= corpus.chunk_count <= profile_definition.max_corpus_chunks
+                or not 1 <= corpus.content_bytes <= profile_definition.max_corpus_bytes
+            ):
+                raise CorpusNotReady("The approved embedding generation is incomplete or no longer current.")
+            # A future ANN index must not silently change this profile's exact-distance contract.
+            await connection.execute("SET LOCAL enable_indexscan=off")
+            loaded = monotonic()
+            rows = await (
+                await connection.execute(
+                    "SELECT c.workspace_id,c.source_id,c.version_id,c.chunk_id,c.title,c.content,c.content_hash,"
+                    "c.page,c.metadata,e.vector <=> %s::vector AS distance "
+                    "FROM workbench.chunks c JOIN workbench.source_versions v USING(workspace_id,source_id,version_id) "
+                    "JOIN workbench.chunk_embeddings m ON m.workspace_id=c.workspace_id AND m.chunk_id=c.chunk_id "
+                    "AND m.source_id=c.source_id AND m.version_id=c.version_id "
+                    "AND m.profile_fingerprint=%s AND m.expected_content_hash=c.content_hash "
+                    "JOIN workbench.embedding_vectors e ON e.workspace_id=m.workspace_id "
+                    "AND e.profile_fingerprint=m.profile_fingerprint AND e.processing_digest=m.processing_digest "
+                    "AND e.input_hash=m.input_hash WHERE c.workspace_id=%s AND v.status='active' "
+                    'ORDER BY distance,c.chunk_id COLLATE "C" LIMIT %s',
+                    (Vector(embedding).to_text(), embedding_profile.fingerprint, context.workspace_id, top_k),
+                )
+            ).fetchall()
+            retrieved = monotonic()
+            hits = [
+                VectorHit(
+                    chunk=Chunk.model_validate({name: row[name] for name in Chunk.model_fields if name in row}),
+                    rank=index,
+                    distance=row["distance"],
+                )
+                for index, row in enumerate(rows, 1)
+            ]
+            return VectorSearchSnapshot(
+                corpus_revision=corpus.corpus_revision,
+                index_generation_id=expected_index_generation,
+                embedding_profile_revision=embedding_profile.profile_revision,
+                embedding_profile_fingerprint=embedding_profile.fingerprint,
+                hits=hits,
+                chunk_count=corpus.chunk_count,
+                content_bytes=corpus.content_bytes,
+                corpus_load_duration_ms=(loaded - started) * 1000,
+                retrieval_duration_ms=(retrieved - loaded) * 1000,
+            )
 
     async def seed_development(
         self,

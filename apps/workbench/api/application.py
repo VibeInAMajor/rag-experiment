@@ -42,6 +42,7 @@ from apps.workbench.contracts.schemas import (
     WorkspaceItem,
     WorkspacePage,
 )
+from apps.workbench.embedding.embedding import EmbeddingError, EmbeddingErrorCode
 from apps.workbench.ingestion.ingestion import IngestionService
 from apps.workbench.observability.events import log_event
 from apps.workbench.parsing.parser_registry import FormatId, parser_descriptors
@@ -57,9 +58,10 @@ from apps.workbench.persistence.models import (
     WorkspaceNotFound,
     resolve_development_workspace,
 )
+from apps.workbench.retrieval.dense import DenseSearchResult, DenseService
 from apps.workbench.retrieval.profile_registry import ProfileRegistry
 from apps.workbench.retrieval.profiles import resolve_profile, validate_search_policy
-from apps.workbench.retrieval.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot
+from apps.workbench.retrieval.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot, RetrievalService
 from apps.workbench.sources.local_sources import (
     FileRevealFailed,
     LocalFileLauncher,
@@ -139,7 +141,7 @@ async def _wait_for_disconnect(request: Request) -> None:
 
 async def _execute_search(
     request: Request, service: LexicalServicePort, *, context: WorkspaceContext, body: SearchRequest
-) -> LexicalSearchSnapshot:
+) -> LexicalSearchSnapshot | DenseSearchResult:
     work = asyncio.create_task(
         service.search(
             context,
@@ -164,7 +166,17 @@ async def _execute_search(
 
 
 def _failure(request: Request, error: Exception, *, run_id: str | None = None) -> JSONResponse:
-    if isinstance(error, WorkspaceNotFound):
+    if isinstance(error, EmbeddingError):
+        if error.code == EmbeddingErrorCode.TIMEOUT:
+            status = 504
+        elif error.code in {EmbeddingErrorCode.RATE_LIMITED, EmbeddingErrorCode.CAPACITY_BUSY}:
+            status = 429
+        elif error.code in {EmbeddingErrorCode.INVALID_REQUEST, EmbeddingErrorCode.REQUEST_TOO_LARGE}:
+            status = 400
+        else:
+            status = 503
+        code, message = error.code.value, "The qualified local embedding dependency could not complete the request."
+    elif isinstance(error, WorkspaceNotFound):
         status, code, message = (404, "WORKSPACE_NOT_FOUND", "Workspace is not available.")
     elif isinstance(error, SourceNotFound):
         status, code, message = (404, "SOURCE_NOT_FOUND", "The source version is not available.")
@@ -191,7 +203,12 @@ def _failure(request: Request, error: Exception, *, run_id: str | None = None) -
             "search_failed", run_id=run_id, trace_id=request_meta(request).trace_id, code=code, http_status=status
         )
     return error_response(
-        request_meta(request), status=status, code=code, message=message, retryable=status == 503, run_id=run_id
+        request_meta(request),
+        status=status,
+        code=code,
+        message=message,
+        retryable=status in {429, 503, 504},
+        run_id=run_id,
     )
 
 
@@ -553,6 +570,7 @@ def create_app(
     lexical: LexicalServicePort | None = None,
     local_file_launcher: LocalFileLauncher | None = None,
     registry: ProfileRegistry | None = None,
+    dense: DenseService | None = None,
 ) -> FastAPI:
     """Bind the qualified lexical service to the existing persistent corpus."""
     configuration = ApiSettings.from_env() if settings is None else settings
@@ -595,6 +613,8 @@ def create_app(
         from apps.workbench.retrieval.lexical import LexicalService
 
         service = LexicalService(database.persistence, registry=approved_registry)
+    if service is not None and dense is not None:
+        service = RetrievalService(service, dense=dense, registry=approved_registry)
     app = _Application(
         title="Workbench API",
         version="rag-api-v1.0",
@@ -626,7 +646,11 @@ def create_app(
     app.add_api_route("/api/v1/health/live", routes._live, response_model=LiveResponse, name="live")
     app.add_api_route("/api/v1/health/ready", routes._ready, response_model=ReadyResponse, name="ready")
     app.add_api_route(
-        "/api/v1/capabilities", routes._capabilities, response_model=CapabilitiesResponse, name="capabilities"
+        "/api/v1/capabilities",
+        routes._capabilities,
+        response_model=CapabilitiesResponse,
+        response_model_exclude_none=True,
+        name="capabilities",
     )
     app.add_api_route("/api/v1/workspaces", routes._workspaces, response_model=WorkspacePage, name="workspaces")
     app.add_api_route(

@@ -282,3 +282,17 @@ tasks/evidence/embedding-2026-11-24/*
 !tasks/evidence/embedding-2026-11-24/acceptance-report.json
 !tasks/evidence/embedding-2026-11-24/acceptance-completion.json
 !tasks/evidence/embedding-2026-11-24/acceptance-guard-tests.xml
+!tasks/evidence/dense-2026-11-24/
+tasks/evidence/dense-2026-11-24/*
+!tasks/evidence/dense-2026-11-24/report.md
+!tasks/evidence/dense-2026-11-24/quality-checks.txt
+!tasks/evidence/dense-2026-11-24/capacity-calibration.json
+!tasks/evidence/dense-2026-11-24/runtime-evaluation-initial.json
+!tasks/evidence/dense-2026-11-24/runtime-evaluation.json
+!tasks/evidence/dense-2026-11-24/browser-dense.json
+!tasks/evidence/dense-2026-11-24/evaluator-tests.xml
+!tasks/evidence/dense-2026-11-24/model-smoke-tests.xml
+!tasks/evidence/dense-2026-11-24/backend-tests.log
+!tasks/evidence/dense-2026-11-24/dense-sql-tests.xml
+!tasks/evidence/dense-2026-11-24/native-tokenizer-tests.xml
+!tasks/evidence/dense-2026-11-24/artifact-safety-audit.json

@@ -1,15 +1,24 @@
 """Validate and project a certified lexical snapshot without inventing timing or provenance."""
 
+from collections.abc import Sequence
+from datetime import UTC, datetime
 from time import monotonic
 
 from apps.workbench.contracts.schemas import Meta, SearchResponse, SearchResult, StageTiming
-from apps.workbench.persistence.models import DatabaseUnavailable, LexicalSearchSnapshot, WorkspaceContext
+from apps.workbench.persistence.models import (
+    DatabaseUnavailable,
+    LexicalHit,
+    LexicalSearchSnapshot,
+    VectorHit,
+    WorkspaceContext,
+)
+from apps.workbench.retrieval.dense import DenseSearchResult
 from apps.workbench.retrieval.profile_registry import ProfileDefinition
 from apps.workbench.retrieval.profiles import POSTGRES_FTS_PROFILE_ID, POSTGRES_FTS_PROFILE_REVISION
 
 
 def project_search(
-    snapshot: LexicalSearchSnapshot,
+    snapshot: LexicalSearchSnapshot | DenseSearchResult,
     *,
     context: WorkspaceContext,
     top_k: int,
@@ -20,6 +29,10 @@ def project_search(
 ) -> SearchResponse:
     """Project exact passages and measured exclusive stages from an authorized snapshot."""
     projection_started = monotonic()
+    projection_started_at = datetime.now(UTC).isoformat()
+    dense = isinstance(snapshot, DenseSearchResult)
+    if expected_profile is not None and (expected_profile.composition == "exact_dense") != dense:
+        raise DatabaseUnavailable("The result kind differs from the approved composition.")
     if expected_profile is not None and (snapshot.profile_id, snapshot.profile_revision, snapshot.policy_hash) != (
         expected_profile.profile_id,
         expected_profile.profile_revision,
@@ -30,8 +43,10 @@ def project_search(
         raise ValueError("Invalid result projection")
     results = []
     previous: tuple[float, str] | None = None
-    for index, hit in enumerate(snapshot.hits, 1):
-        order = (-hit.score, hit.chunk.chunk_id)
+    hits: Sequence[LexicalHit | VectorHit] = snapshot.hits
+    for index, hit in enumerate(hits, 1):
+        score = hit.distance if isinstance(hit, VectorHit) else hit.score
+        order = (score if dense else -score, hit.chunk.chunk_id)
         if (
             hit.chunk.workspace_id != context.workspace_id
             or hit.rank != index
@@ -49,7 +64,8 @@ def project_search(
                 page=hit.chunk.page,
                 content=hit.chunk.content,
                 rank=hit.rank,
-                score=hit.score,
+                score=score,
+                score_type="cosine_distance" if dense else "postgres_ts_rank_cd",
             )
         )
     stages = [
@@ -57,6 +73,16 @@ def project_search(
         StageTiming(stage="retrieval", duration_ms=snapshot.retrieval_duration_ms),
         StageTiming(stage="projection", duration_ms=(monotonic() - projection_started) * 1000),
     ]
+    if isinstance(snapshot, DenseSearchResult):
+        stages = [
+            *snapshot.stages,
+            StageTiming(
+                stage="projection",
+                duration_ms=(monotonic() - projection_started) * 1000,
+                started_at=projection_started_at,
+                finished_at=datetime.now(UTC).isoformat(),
+            ),
+        ]
     duration_ms = (monotonic() - started) * 1000
     if sum(stage.duration_ms for stage in stages) > duration_ms:
         raise ValueError("Invalid measured timing")
@@ -72,4 +98,16 @@ def project_search(
         duration_ms=duration_ms,
         stages=stages,
         results=results,
+        embedding_profile_revision=snapshot.embedding_profile_revision
+        if isinstance(snapshot, DenseSearchResult)
+        else None,
+        index_generation=snapshot.index_generation_id if isinstance(snapshot, DenseSearchResult) else None,
+        model_revision=snapshot.embedding_profile.model_revision if isinstance(snapshot, DenseSearchResult) else None,
+        model_digest=snapshot.embedding_profile.model_digest if isinstance(snapshot, DenseSearchResult) else None,
+        tokenizer_digest=snapshot.embedding_profile.tokenizer_digest
+        if isinstance(snapshot, DenseSearchResult)
+        else None,
+        input_format_revision=snapshot.embedding_profile.input_format_revision
+        if isinstance(snapshot, DenseSearchResult)
+        else None,
     )

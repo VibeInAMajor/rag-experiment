@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import type { ExecutionMode, WorkbenchSettings } from "../domain/types";
 import type { useBackendDiscovery } from "../hooks/useBackendDiscovery";
-import { isSupportedLexicalProfile } from "../domain/backendDiscovery";
+import { isSupportedSearchProfile } from "../domain/backendDiscovery";
 import "./views.css";
 
 export function SettingsView({
@@ -49,7 +49,7 @@ export function SettingsView({
           <p>
             {mode === "preview"
               ? "Select Live to check the API."
-              : "Run the approved Keyword search graph from the editor."}
+              : "Run an approved Keyword search or qualified Dense search graph from the editor."}
           </p>
         </div>
         <div className="view-settings-fields">
@@ -134,7 +134,7 @@ export function SettingsView({
               {discovery.state.capabilities?.profiles
                 .filter(
                   (profile) =>
-                    isSupportedLexicalProfile(profile) &&
+                    isSupportedSearchProfile(profile) &&
                     discovery.state.selectedWorkspaceId !== null &&
                     profile.workspace_ids.includes(
                       discovery.state.selectedWorkspaceId,
@@ -147,7 +147,9 @@ export function SettingsView({
                 ))}
             </select>
             <small id="execution-profile-help">
-              Approved lexical profiles only. Higher scores rank first.
+              {discovery.state.profile?.kind === "dense_search"
+                ? "Exact cosine distance. Lower distances rank first."
+                : "Approved lexical profiles only. Higher scores rank first."}
             </small>
           </label>
           <dl className="backend-diagnostics">
@@ -224,7 +226,8 @@ export function SettingsView({
                   value === "blank" ||
                   value === "indexing" ||
                   value === "retrieval" ||
-                  value === "keyword"
+                  value === "keyword" ||
+                  value === "dense"
                 ) {
                   update("defaultTemplate", value);
                 }
@@ -234,6 +237,7 @@ export function SettingsView({
               <option value="indexing">Document indexing</option>
               <option value="retrieval">Hybrid retrieval</option>
               <option value="keyword">Keyword search</option>
+              <option value="dense">Dense search</option>
             </select>
           </label>
         </div>

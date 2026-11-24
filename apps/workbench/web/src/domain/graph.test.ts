@@ -17,6 +17,22 @@ import {
 import type { Graph, PreviewRun, WorkbenchNode } from "./types";
 
 describe("pipeline validation", () => {
+  it("round-trips Dense and refuses fixture simulation of its approved components", () => {
+    const pipeline = createPipeline("dense");
+    expect(importPipeline(exportPipeline(pipeline))).toEqual(pipeline);
+    expect(pipeline.graph.nodes.map((node) => node.data.kind)).toEqual([
+      "query",
+      "query-embedding",
+      "dense-search",
+      "results",
+    ]);
+    expect(
+      checkPreviewGraph(pipeline.graph).filter(
+        (issue) => issue.code === "PREVIEW_UNSUPPORTED",
+      ),
+    ).toHaveLength(2);
+    expect(() => createPreviewRun(pipeline)).toThrow("requires Live");
+  });
   it("round-trips the approved keyword graph in schema version 1", () => {
     const pipeline = createPipeline("keyword");
     const serialized = exportPipeline(pipeline);

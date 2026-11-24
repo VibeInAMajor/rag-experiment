@@ -33,6 +33,9 @@ def _node(kind: str, identifier: str, **parameters: Any) -> dict[str, Any]:
         "writer": {"collection": "Product knowledge"},
         "query": {"query": "example"},
         "vector": {"collection": "Product knowledge", "topK": 20},
+        "keyword-search": {"topK": 10},
+        "query-embedding": {},
+        "dense-search": {"topK": 10},
         "results": {"limit": 5},
     }
     return {
@@ -146,7 +149,10 @@ def test_connection_errors_preserve_ui_identifiers(output: str, input_name: str,
     assert any(issue["code"] == expected and issue.get("edgeId") == edge["id"] for issue in result["issues"])
 
 
-@pytest.mark.parametrize("kind", ["files", "query", "results", "parser", "writer", "vector"])
+@pytest.mark.parametrize(
+    "kind",
+    ["files", "query", "results", "parser", "writer", "vector", "keyword-search", "query-embedding", "dense-search"],
+)
 def test_unmapped_components_never_receive_a_valid_verdict(kind: str) -> None:
     """Prevent successful validation through pass-through substitutes."""
     result = _validate(_payload([_node(kind, "unsupported-node")], mode="draft"))
@@ -155,6 +161,41 @@ def test_unmapped_components_never_receive_a_valid_verdict(kind: str) -> None:
         issue["code"] == "UNSUPPORTED_COMPONENT" and issue.get("nodeId") == "unsupported-node"
         for issue in result["issues"]
     )
+
+
+def test_dense_template_is_explicitly_unsupported_without_initializing_live_dependencies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A Live-capable graph does not authorize provider or database binding during Validate."""
+    constructed: list[str] = []
+
+    def record_constructor(kind: str, parameters: dict[str, Any], stores: list[Any]) -> None:  # noqa: ARG001
+        constructed.append(kind)
+
+    monkeypatch.setattr(validation_module, "create_component", record_constructor)
+    result = _validate(
+        _payload(
+            [
+                _node("query", "query"),
+                _node("query-embedding", "embed"),
+                _node("dense-search", "dense"),
+                _node("results", "out"),
+            ],
+            [
+                _edge("query", "embed", "query", "text"),
+                _edge("embed", "dense", "embedding", "embedding"),
+                _edge("dense", "out"),
+            ],
+        )
+    )
+    assert result["status"] == "unsupported"
+    assert {issue["nodeId"] for issue in result["issues"] if issue["code"] == "UNSUPPORTED_COMPONENT"} == {
+        "query",
+        "embed",
+        "dense",
+        "out",
+    }
+    assert constructed == []
 
 
 def test_real_haystack_cycle_is_not_rejected_as_a_dag_rule() -> None:

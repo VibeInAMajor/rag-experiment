@@ -72,15 +72,31 @@ class ProfileLimits(ContractModel):
 class ExecutionProfile(ContractModel):
     profile_id: Identifier = "bm25-v1"
     profile_revision: Identifier
-    kind: Literal["lexical_search"] = "lexical_search"
+    kind: Literal["lexical_search", "dense_search"] = "lexical_search"
     workspace_ids: list[Identifier] = Field(min_length=1, max_length=1)
     corpus_id: Identifier
     parameters: ProfileParameters = Field(default_factory=ProfileParameters)
     limits: ProfileLimits = Field(default_factory=ProfileLimits)
-    score_type: Literal["bm25_raw", "postgres_ts_rank_cd"] = "bm25_raw"
+    score_type: Literal["bm25_raw", "postgres_ts_rank_cd", "cosine_distance"] = "bm25_raw"
+    score_direction: Literal["lower_is_better"] | None = None
+    embedding_profile_revision: Identifier | None = None
+    index_generation: int | None = Field(default=None, ge=0)
+    min_coverage: Literal[1] | None = None
 
     @model_validator(mode="after")
     def _profile_score(self) -> "ExecutionProfile":
+        if self.kind == "dense_search":
+            if self.score_type != "cosine_distance" or any(
+                value is None
+                for value in (
+                    self.score_direction,
+                    self.embedding_profile_revision,
+                    self.index_generation,
+                    self.min_coverage,
+                )
+            ):
+                raise ValueError("Dense profiles require complete distance and generation semantics")
+            return self
         expected = "bm25_raw" if self.profile_id == "bm25-v1" else "postgres_ts_rank_cd"
         if self.score_type != expected:
             raise ValueError("Execution profile and score semantics must match")
@@ -168,9 +184,11 @@ class SearchRequest(ContractModel):
 
 
 class StageTiming(ContractModel):
-    stage: Literal["corpus_load", "retrieval", "projection"]
+    stage: Literal["corpus_load", "retrieval", "query_embedding", "vector_search", "projection"]
     status: Literal["success", "skipped"] = "success"
     duration_ms: float = Field(ge=0, allow_inf_nan=False)
+    started_at: str | None = None
+    finished_at: str | None = None
 
 
 class SearchResult(ContractModel):
@@ -182,7 +200,7 @@ class SearchResult(ContractModel):
     content: str
     rank: int = Field(ge=1)
     score: float = Field(ge=0, allow_inf_nan=False)
-    score_type: Literal["postgres_ts_rank_cd"] = "postgres_ts_rank_cd"
+    score_type: Literal["postgres_ts_rank_cd", "cosine_distance"] = "postgres_ts_rank_cd"
 
 
 class SearchResponse(Meta):
@@ -196,6 +214,12 @@ class SearchResponse(Meta):
     duration_ms: float = Field(ge=0, allow_inf_nan=False)
     stages: list[StageTiming]
     results: list[SearchResult]
+    embedding_profile_revision: Identifier | None = None
+    index_generation: int | None = Field(default=None, ge=0)
+    model_revision: str | None = None
+    model_digest: str | None = None
+    tokenizer_digest: str | None = None
+    input_format_revision: str | None = None
 
 
 class WorkspaceItem(ContractModel):
