@@ -47,6 +47,8 @@ Starter under tasks/quality/dataset/; add reviewed corpus/manifest and fixture l
 
 ## J. Implementation Requirements
 
+**Agent execution contract:** [Autonomous preparation, reference answers and sealed holdout](DATASET-001-AGENT-EXECUTION-AND-HOLDOUT.md). The executing agent MUST perform source acquisition, question and reference-answer authoring, independent automated verification, adjudication preparation, split validation, restricted custody and evidence reporting without delegating routine dataset work to the user. The companion resolves routine implementation decisions; it does not waive the independent human review or release gates below. If isolated custody or required approval is unavailable, complete permitted open work and report the affected gate BLOCKED. Never commit plaintext closed questions or answers.
+
 **External-domain corpus (2026-11-24):** [External multidisciplinary dataset V1](dataset/README.md) includes 31 actual externally sourced Markdown documents, 87 candidate answerable families/261 multilingual cases, 15 candidate no-answer families/45 cases, pinned manifests and localized answer keys. This complements the repo-specific seed and must be reviewed and admitted separately using the [external protocol](dataset/EXTERNAL_EVALUATION_PROTOCOL_V1.md). Do not index the question/answer files. The visible external set is not independent human gold or sealed holdout. Extend the existing bounded evaluator to ingest only corpus files, map gold ranges to persisted source spans, join stable query IDs to reviewed answers, retain translation-family grouping and validate all documents/306 rows; review no-answer and alternatives. If independently reviewed final holdout is unavailable, keep the release gate BLOCKED.
 
 
