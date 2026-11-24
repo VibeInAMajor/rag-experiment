@@ -1,7 +1,7 @@
 # TASK-SRC-001 — Click source name to reveal its local original
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-21  
+**Updated:** 2026-11-24  
 **Status:** COMPLETE — implemented and verified on 2026-11-21  
 **Inspected base:** `1d082e043a7d7c8f89d7623cac321d7b83218f23`, plus the existing uncommitted, verified UI-002 implementation. Preserve those changes.
 
@@ -73,4 +73,4 @@ No real ingestion or remote desktop bridge is introduced. Current main corpus co
 
 ## O. Completion record
 
-Implemented with three agents over the preserved UI-002 working tree. Reused existing PostgreSQL version metadata/RLS, publication locks, typed transport and Live result/session presentation. Added trusted registration, native guarded API operations and only a clickable filename; demo stays plain text. All 259 frontend and 199 API tests passed, along with typecheck/format/build/Ruff/mypy and actual browser/native/legacy regressions. A controlled React Flow measurement correction prevents fast Run from hiding nodes without changing graph serialization. The actual isolated real-file browser click dispatched Windows Explorer; the main8-source corpus remains unchanged, and the owned fixture database/listener were cleaned. See [verification and evidence](evidence/source-name-verification-2026-11-21.md) and [operating guide](../docs-website/docs/architecture/local-source-reveal.md) for exact commands, files, limits and unrun checks. Search contracts/profile, schema/fixtures and Haystack core are unchanged; the new routes and original-registration metadata are the intentional additive contract.
+Implemented with three agents over the preserved UI-002 working tree. Reused existing PostgreSQL version metadata/RLS, publication locks, typed transport and Live result/session presentation. Added trusted registration, native guarded API operations and only a clickable filename; demo stays plain text. All 259 frontend and 199 API tests passed, along with typecheck/format/build/Ruff/mypy and actual browser/native/legacy regressions. A controlled React Flow measurement correction prevents fast Run from hiding nodes without changing graph serialization. The actual isolated real-file browser click dispatched Windows Explorer; the main8-source corpus remains unchanged, and the owned fixture database/listener were cleaned. See [verification and evidence](../evidence/source-name-verification-2026-11-21.md) and [operating guide](../../docs-website/docs/architecture/local-source-reveal.md) for exact commands, files, limits and unrun checks. Search contracts/profile, schema/fixtures and Haystack core are unchanged; the new routes and original-registration metadata are the intentional additive contract.
