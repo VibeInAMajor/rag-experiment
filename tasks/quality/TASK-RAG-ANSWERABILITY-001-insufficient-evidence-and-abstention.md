@@ -1,7 +1,7 @@
 # TASK-RAG-ANSWERABILITY-001 — Qualify insufficient-evidence detection and explicit abstention
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — specification only; no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** [EVIDENCE-002](TASK-RAG-EVIDENCE-002-bounded-context-and-required-facet-coverage.md), [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md), [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md); qualified selected exact/Hybrid/reranked path; no generation dependency.  
@@ -54,6 +54,10 @@ Reuse evaluation and retrieval contracts, existing profile governance, [API cont
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Distribution-shift calibration — 2026-11-26
+
+Follow [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) section 4.6. Separate gold corpus answerability from actual selected-context sufficiency, partial facts, contradictions and transport failure; report outcome-specific denominators and false acceptance/abstention by family, language and OOD stress. Fit/calibrate only on OPEN sub-split, freeze before validation. If a genuine probability of sufficient context is available, report Brier, predeclared-bin ECE/reliability, PR/ROC and risk-coverage ID vs OOD with family-clustered uncertainty; otherwise probability metrics NOT_EVALUABLE. Raw cosine/reranker scores and model self-reported confidence are not probabilities. Do not publish invented confidence.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -71,6 +75,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Real reviewed tuning evidence and fixed thresholds with error trade-off.
 - [ ] Explicit insufficient/conflicting vs transport failure outcome and safe provenance.
 - [ ] Target <=5% false acceptance/abstention demonstrated on tuning or blocked; final independent gate belongs QUALITY-002.
+
+- [ ] Calibration and OOD outcomes reported with exact denominators, fixed policy, uncertainty and probability availability; existing <=5% false acceptance/abstention targets retained.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

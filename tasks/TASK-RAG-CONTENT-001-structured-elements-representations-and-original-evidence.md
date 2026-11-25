@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-001 — Structured elements, multiple representations, and immutable original evidence
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — architecture and storage blueprint; not implemented  
 **Priority:** P0 — prerequisite for trustworthy multimodal ingestion  
 **Dependencies:** completed TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001; coordinate with active TASK-RAG-CHUNK-003  
@@ -121,6 +121,10 @@ Implement provider-neutral evidence lookups behind API auth and RLS (no anonymou
 ### J6 — publish compatibility and handoffs
 Update architecture diagram, JSON schema examples, migration/retention runbook and successor interfaces for OCR/VLM/Mermaid. Provide a fake parser producer for unit tests and no dependency on real GPU or PDF files. Run end-to-end proof with a synthetic source, two elements, multiple representations, linked chunk and exact original bytes after database/API restart.
 
+### Schema-driven representation extension — 2026-11-26
+
+Use [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) and the pinned Azure chart analyzer as design reference, not a provider contract. Extend existing element/representation ownership with schema ID/revision, field type, nullable unknowns, extraction method, model/prompt revision, exact original locator/evidence refs and verification state. Typed fields must be validated and projected deterministically for search; preserve original bytes, original offsets and separate derived projection offsets. Multiple representations of one occurrence retain common identity; do not duplicate search stores or promote inferred fields to observed. Local text enrichment experiment does not require this durable implementation.
+
 ## K. Security / Governance / Observability
 
 Original files may contain secrets and personal data. Enforce workspace scope and app-role FORCE RLS on metadata, and equivalent access policy on bytes. Reject user-authored asset paths, SSRF URLs, HTML or executable representations; never log original files, OCR text, VLM descriptions, Mermaid payloads, credentials, encryption keys or vectors. Protect any later renderer with inert text defaults. Source text is untrusted evidence, not instructions. Bound byte count, decompression, asset count and API range reads. Operational logs: trace_id, workspace/source/version/element/asset opaque IDs, processor revision, safe error_code, duration/size, no payload. Explicit retention/encryption/backups and auditability of staged/orphaned assets. Treat confidence as a measured quality field, not authorization.
@@ -140,6 +144,8 @@ Use existing Hatch workbench-api:check, workbench-api:test and workbench-api:typ
 - [ ] Cross-workspace and stale version attempts return safe failures with zero unauthorized asset bytes.
 - [ ] New features are advertised only after passing storage/auth readiness; no new embedding/GPU service required.
 - [ ] All relevant API, migration, source and restart regression gates have actual recorded outputs.
+
+- [ ] Typed schema and source/derived offset lineage tested, including nulls, conflicting/inferred fields and duplicate occurrence identity.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

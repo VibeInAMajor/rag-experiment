@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-005 — Source evidence resolution, grounding, and citation verification
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation blueprint; source evidence resolver not yet present  
 **Priority:** P1 — trust boundary for multimodal retrieval and future answers  
 **Dependencies:** TASK-RAG-CONTENT-001; CONTENT-002/003/004 integrations provide format-specific evidence (may roll out separately); completed TASK-RAG-001/TASK-RAG-002  
@@ -115,6 +115,10 @@ Use synthetic non-sensitive records for: (a) Markdown paragraph source span, (b)
 ### J6 — audit, performance and negative paths
 Collect 30+ manually labelled evidence queries/citations across element families (some may be declared pending if upstream format tasks not qualified). Measure evidence-availability rate, exact page/line/crop attribution, wrong-version rate, false-verified rate and resolver latency p50/p95. A 0% false-verified rate is a hard correctness gate for crafted model-inferred edge/number cases, not a statistical assurance. Test missing/corrupted asset, wrong tenant, guessed evidence ID, stale cursor, oversized range, invalid coordinate frame, hash collision, incomplete OCR, parser rev drift, restart and deletion/retention interaction. Verify no raw customer content in telemetry.
 
+### Evidence-chain verification — 2026-11-26
+
+Apply [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) section 4.5 to original resolver: validate chain at every identity/link, original vs derived offset mapping, page/crop and table-cell bounds, missing/contradictory/unverified fields; separate structural integrity from factual support. Expose only backend-resolved evidence IDs; model-generated URLs or page numbers are not authority. Record complete selected-context-to-original chains and failed links; claim-level end-to-end scoring belongs to QUALITY-003.
+
 ## K. Security / Governance / Observability
 
 Evidence bytes are often more sensitive than summaries. Access must be checked for workspace, source, version, element and exact asset on every request; never rely only on an opaque ID. Disable direct unauthenticated paths, unbounded ranges, public signed URLs and browser cache of original assets. Originals may contain malicious PDF/HTML/SVG/Markdown; set safe Content-Type and restrictive response headers, and never execute embedded instructions. Prompt-injection content is a displayed source, not an instruction to the resolver or future answer model. Track hashes, version, trust and pipeline revision. Log safe IDs, status codes and latency without OCR bodies, full charts, diagram images, source text, credentials or secrets. Retention/deletion requires coordinating immutable citations and source legal policy; do not silently leave dangling public assets.
@@ -135,6 +139,8 @@ Run existing Hatch workbench-api test/types, disposable PostgreSQL with CONTENT-
 - [ ] Source/crop byte caps and restricted content rendering prevent untrusted PDF/HTML/URL execution.
 - [ ] Cross-restart, mutation rollback and asset corruption paths have real evidence logs.
 - [ ] All relevant API, SQL, security and regression tests pass; operator docs/capability flags match actual behavior.
+
+- [ ] Resolver tests demonstrate complete original chains, broken-link rejection and zero false verification of derived claims.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

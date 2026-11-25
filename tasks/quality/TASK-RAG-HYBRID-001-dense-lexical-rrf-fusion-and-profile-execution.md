@@ -1,7 +1,7 @@
 # TASK-RAG-HYBRID-001 — Live hybrid retrieval combining genuine lexical and dense ranks with explicit RRF
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation specification only, no runtime tests executed  
 **Priority:** P0 — retrieval quality before scalability  
 **Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md), completed PROFILE-001/INDEX-001; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) reviewed tuning corpus and [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) baseline; valid [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) local admission. BM25-002 and ANN are NOT prerequisites.  
@@ -87,6 +87,10 @@ CREATE apps/workbench/retrieval/hybrid.py, apps/workbench/retrieval/tests/test_h
 
 **Cross-task evidence boundary:** [Index/Profile/Dense/ANN/Hybrid roadmap](../RAG_INDEX_RETRIEVAL_ENTERPRISE_IMPLEMENTATION_PLAN_2026-11-23.md); [TPM-001](../TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) is the single owner of actual 0.92/0.95 model admission, and does not turn missing model measurements into success.
 
+### Lexical readiness and robust comparison — 2026-11-26
+
+[LEXICAL-001](TASK-RAG-LEXICAL-001-natural-language-query-policy.md) must demonstrate useful lexical evidence before claiming a hybrid GO (current natural-query FTS yielded 0/306). If NO-GO, retain dense-only baseline and route to BM25 feasibility or dense reranking; do not integrate empty fusion as a quality improvement. Use the selected immutable lexical policy, compare per-arm incremental evidence and hard-negative results with equal budgets and preserve literal FTS baseline. [Quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) defines the stress methodology; final paired adversarial gate belongs to QUALITY-002.
+
 ## K. Security / Governance / Observability
 
 WorkspaceContext and RLS are required for every candidate and metadata lookup. No credentials, raw document text, vectors or private model responses in logs; only safe IDs, profile/generation revision, bounded counts, trace_id, stage duration and error codes. Incoming graph/config/doc text is untrusted. No outbound cloud connections or unreviewed license burden; cap memory, candidate counts and provider timeouts. Apply adversarial tests to source-version, workspace and ranking result integrity.
@@ -114,6 +118,8 @@ Run scoped Hatch workbench-api:check/test/types, PostgreSQL container integratio
 - [ ] Corpus version and component ranks/timings recorded with every Live run
 - [ ] No duplicate chunks and no mixed source versions
 - [ ] Existing lexical and dense regression suites remain green
+
+- [ ] Useful lexical GO is linked before hybrid qualification, or hybrid is explicitly deferred with dense-only alternative; raw per-arm ranks and hard-negative results recorded.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

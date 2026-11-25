@@ -1,7 +1,7 @@
 # TASK-RAG-RERANK-001 — Qualify a bounded local semantic reranker against exact and hybrid candidates
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — conditional quality experiment; no model qualified  
 **Priority:** P0  
 **Dependencies:** [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md), [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) for hybrid arm; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); valid [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) admission for embedding queries.  
@@ -54,6 +54,10 @@ Reuse [embedding evaluator](../../scripts/workbench_embedding_evaluate.py), [Liv
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Hard-negative and cohort robustness — 2026-11-26
+
+Use QUALITY-001 failure handoff and compare raw candidate ceiling vs reordered top-k. Dense-only qualification may proceed if lexical NO-GO; add hybrid arm only when useful lexical/hybrid profile qualifies. On OPEN compare hard-negative@1, known-facet/primary hits and all-required-facets at equal budget, including Art/Literature/Kubernetes, multilingual and close contradictory passages. Follow [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md); do not infer answerability from ranker score or claim exhaustive recall/nDCG with sparse qrels.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -71,6 +75,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Actual pinned local model and resource tests recorded or explicit blocker.
 - [ ] Reproducible paired quality/cost evidence and candidate ceiling analysis.
 - [ ] GO/NO-GO with measured bounds, no production claim; conditional RERANK-002 handoff.
+
+- [ ] Paired hard-negative and cohort results, candidate ceiling, cost and material gain/no-go are reported; unavailable hybrid arm explicitly not evaluated.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

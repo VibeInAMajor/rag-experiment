@@ -1,7 +1,7 @@
 # TASK-RAG-PARSE-005 — Conversation, email, subtitles and transcript-aware boundaries
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — blueprint, not implemented  
 **Priority:** P2 — customer communications and time-aware knowledge  
 **Dependencies:** TASK-RAG-PARSE-001, TASK-RAG-CHUNK-001, TASK-RAG-002, TASK-DB-001  
@@ -106,6 +106,10 @@ Use RAG-002 job/idempotency and version publication; no custom chat DB or unqual
 
 Enable each file type separately after 10 curated sources and 10 gold queries per family, reporting speaker/timestamp citation accuracy, source coverage, PII/redaction outcomes, parse cost and FTS ranking. Only then advertise it in capability discovery. Explicitly defer `mbox`, Slack exports, audio/video ASR and diagrams to separately reviewed tasks.
 
+### Deferred timed media reference — 2026-11-26
+
+Use [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) and the Azure video/audio analyzer samples only as future reference for typed speaker/topic/segment and start/end locators. Keep existing EML/MSG/SRT/VTT scope; do not introduce raw audio/video ingestion or diarization as part of this task. Verify timestamps and speaker fields against original cues, leave unknown values null, and distinguish derived summaries from transcript evidence. Future actual ASR/video requires a separately qualified producer and budget.
+
 ## K. Security / Governance / Observability
 
 Email bodies, transcript text and attachments frequently contain PII/secrets. Do not log or trace content, email addresses, recipient lists, attachment bodies or remote links by default. Never fetch attachments or run active MIME/HTML content. Respect workspace source ACL and retention. Define retention/deletion consent and secure temporary-file disposal before accepting real customer communications. Sender identity or transcript user IDs do not grant application access. Document all intentional redaction/exclusion transforms in a versioned profile.
@@ -125,6 +129,8 @@ Valid/invalid MIME nesting, multipart, encoded header, HTML/script, quoted chain
 - [ ] Reuses **completed** PARSE-001/RAG-002/chunking and current API; no duplicate format registry, HTTP upload handler, persistence adapter or version publication.
 - [ ] Does **not** implement CONTENT-001 original asset storage/`DocumentElement` persistence or CONTENT-005 evidence resolution; the parser exports accurate source/element spans for later adapters.
 - [ ] `EML/MSG/SRT/VTT` format-specific supported/unsupported visual/attachment/graph cases are labelled truthfully; no inferred OCR/VLM/Mermaid/ASR behavior advertised from parsing.
+
+- [ ] Supported transcript evidence retains exact timestamp/speaker provenance; no unsupported audio/video capability is advertised.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

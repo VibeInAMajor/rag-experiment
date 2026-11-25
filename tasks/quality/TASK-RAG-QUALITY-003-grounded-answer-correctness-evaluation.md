@@ -1,7 +1,7 @@
 # TASK-RAG-QUALITY-003 — Evaluate grounded answer correctness, completeness and citation support
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-25  
+**Updated:** 2026-11-26  
 **Status:** BLOCKED — grounded generation implementation required  
 **Priority:** P0  
 **Dependencies:** [GENERATION-001](TASK-RAG-GENERATION-001-grounded-answer-generation.md) internal implementation, [QUALITY-002](TASK-RAG-QUALITY-002-retrieval-release-gate-and-regression.md) GO, [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); source-verified answer rubric and local holdout.  
@@ -60,6 +60,10 @@ Reuse reviewed dataset and source/facet contracts, existing evaluation runner/re
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Faithfulness-Plus, claim chains and noise robustness — 2026-11-26
+
+Execute [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) sections 4.2/4.3/4.5/4.6. Score claim-to-context support separately from context-to-original source fidelity, complete claim-to-original evidence chains and required facts; distinguish unsupported, contradicted, unverified and omitted. Proposed >=95% valid supporting claim chains and existing >=98% valid supporting citations; zero fabricated/unauthorized locators. Run matched oracle-clean and actual-context generation at 0/10/20/30% noise by token share, fixed total budget; evidence-preserving and displacement arms separate, near-topic contradictions separate. Proposed 20% evidence-preserving noise tolerance <=10 pp fully-correct/complete accuracy drop, predeclare before evaluation. Report relative and pp changes, actual coverage and cost. If actual answer correctness probabilities exist, assess separate ID/OOD Brier/ECE and risk-coverage; no fake confidence. Agent verifies originals and deterministic values, local model judge optional diagnostic only. Keep ANSWER holdout out of tuning.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -79,6 +83,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Actual source-verified claim/fact/citation evidence and all metrics with denominator.
 - [ ] Release GO or explicit NO-GO/BLOCKED, no answer-quality claim from retrieval scores.
 - [ ] Regression suite and rollback preserve retrieval independently.
+
+- [ ] Full source/claim metrics, broken links, NAG paired degradation and optional answer calibration reported separately; proposed stress thresholds frozen before final run, no unsupported pass.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

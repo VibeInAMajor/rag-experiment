@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-24  
 **Updated:** 2026-11-26
-**Status:** COMPLETE — diagnostic `INSUFFICIENT_WITH_CURRENT_STACK`; missing Dense/native FTS probes and the matched Markdown before/after comparison completed through UI. This does not pass the retrieval release gate or promote the working profile.
+**Status:** IN PROGRESS — the prior current-stack diagnostic and Dense/FTS/Markdown UI scope are COMPLETE with `INSUFFICIENT_WITH_CURRENT_STACK`; the source-fidelity diagnostic added on remote on 2026-11-26 remains pending. The retrieval release gate has not passed and the working profile was not promoted.
 
 **Priority:** P0  
 **Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md), completed EMBED-001/002, INDEX-001, PROFILE-001, CHUNK-001/002, CONFIG-001, RAG-002; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) for reviewed dataset; [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) valid current local admission.  
@@ -111,6 +111,10 @@ Completion is a measured decision: select a justified current-stack candidate or
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Source-fidelity diagnostic (Faithfulness-Plus extraction half) — 2026-11-26
+
+Apply section 4.2 of the [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) to the existing J.1 failure inventory: distinguish exact source/locator integrity, semantic qualifier loss, missing facets and unknown judgments. Report verified source-supported evidence units / assessed units, assessment coverage and invalid identity/locator counts, with examples and evidence pointers. Use the existing frozen original/representation/chunk mappings, and inspect actual context selected. No new scored arms, corpus perturbation or generation required here; answer faithfulness and NAG remain NOT_EVALUATED. The uniform matrix and subsequent UI continuation are complete; reuse their preserved artifacts for this pending assessment.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -151,6 +155,8 @@ Additional diagnostic checks: test the failure classifier/aggregation with known
 **Completed J.1 UI evidence (2026-11-26):** both original pinned profiles received targeted Dense top-20/50 probes and native FTS inspection for all 306 questions; the separate matched original-only Markdown pair completed 306 Dense/FTS requests per side. Same-source/model/settings integrity, independent SQL agreement, family-clustered deltas and bounded unknown ranks are recorded in [the completion report](../evidence/quality-2026-11-25/report.md#завершение-quality-001-dense-fts-и-парное-сравнение-чанкинга--2026-11-26) and metrics.json → ui_completion. An ignored local console supplies the missing UI operations without changing production API/UI. Existing parser/chunker and local quality suites were run from UI: 364 passed, 0 failed/skipped. Three accepted phase databases and the failed preparation database were owner-checked and removed; the final owned corpus is retained for the named, executed/exported Live Dense pipeline with an explicit UI cleanup control. Main working DB/profile and protected holdout are unchanged.
 
 - [x] Measured the separately authorized Markdown change with identical 31 originals, 306 questions, generic model/instruction, 500/50 policy and 2048-token context. Published before/after source-fact coverage, paired outcomes, clustered uncertainty and cohort breakdowns. This does not relabel sparse gold as primary evidence or generated-answer quality.
+
+- [ ] Source-fidelity counts and assessment coverage are reported from existing OPEN artifacts; extraction failures and context omissions are distinct; no generation claim or matrix restart.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

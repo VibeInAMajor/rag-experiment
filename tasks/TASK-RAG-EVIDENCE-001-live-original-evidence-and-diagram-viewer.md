@@ -1,7 +1,7 @@
 # TASK-RAG-EVIDENCE-001 — Connect original PDF/image/Mermaid evidence to the Live Workbench UI
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation blueprint, not implemented  
 **Priority:** P1 after verified evidence resolver  
 **Dependencies:** CONTENT-001 and CONTENT-005; completed UI-001/UI-002; CONTENT-002/003/004 add format-specific providers  
@@ -93,6 +93,10 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 
 **Cross-cutting constraints:** Original assets and EvidenceResolver are separate BACKEND prerequisites, not existing sources merely because a UI link exists.
 
+### Original evidence navigation — 2026-11-26
+
+Adapt the evidence-navigation interaction from the [pinned Azure sample UI](https://github.com/Azure-Samples/azure-ai-search-with-content-understanding-python/blob/82ade360894b5b7959ef546cbfe96f0ff9e1cc81/nodejs/video-search-app/app/page.tsx) through existing Workbench components: select a result/citation and open exact original PDF page/crop, Markdown section or code span when supported; show derived/observed/unverified state and failed links. Never parse model-generated URLs or timestamps as evidence. Only backend-resolved IDs/locators are authoritative. Future media timestamps remain conditional on qualified transcript/media support, not a new local prerequisite. See [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md).
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext and FORCE RLS across all source, asset and index paths. Keep private source bytes, vectors, prompts, credentials, user identifiers and arbitrary URLs out of logs and public evidence. Treat source/model text as untrusted data. Enforce bounded CPU/GPU/DB/network requests, cancellation, timeout, retention, auditing and safe error codes with trace/job/run IDs. Test cross-workspace and provider outage negative cases.
@@ -121,6 +125,8 @@ Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, 
 - [ ] SVG/HTML/Mermaid cannot execute scripts or follow external links
 - [ ] >=3 qualified source types pass real HTTP/browser E2E
 - [ ] Existing Preview/Live search and API error handling unchanged
+
+- [ ] Browser smoke demonstrates navigation from actual result/citation to the verified original locator, and explicit unavailable/inferred states; no new UI framework or direct model URL.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

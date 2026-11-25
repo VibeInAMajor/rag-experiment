@@ -1,7 +1,7 @@
 # TASK-RAG-DELTA-001 — Version-aware chunk deltas and safe embedding reuse
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation blueprint, no runtime claim  
 **Priority:** P1  
 **Dependencies:** EMBED-002, INDEX-001, PROFILE-001; CONTENT-001 for evidence  
@@ -112,6 +112,10 @@ MUST NOT modify applied 0001/0002, framework haystack/, unrelated Live profile s
 
 **Mandatory dependency handshake:** [EMBED-002](completed/TASK-RAG-EMBED-002-durable-embedding-ingestion-and-backfill.md) supplies durable vector jobs; [INDEX-001](completed/TASK-RAG-INDEX-001-persisted-revision-and-consistent-search-snapshots.md) supplies source generation; planner must not bypass TPM-001.
 
+### Local concept drift and correction-window replay — 2026-11-26
+
+Use [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) sections 4.4/4.7. Replay bounded source revisions with tracked entities, unchanged/paraphrase controls and changed definitions using same pinned embedding profile: compute 1-cosine distribution and correlate with actual retrieval/fact changes. Drift is diagnostic, not a replacement for exact content/profile digest or an automatic full reindex. Record accepted update, stage completion, active publication and first sustained correct retrieval using declared polling interval, stale counts and censored failures; later answer correction separate. Preserve prior valid generation on failed update. No enterprise monitoring infrastructure required.
+
 ## K. Security / Governance / Observability
 
 Server-derived WorkspaceContext and FORCE RLS are required. Never log original source/asset text, credentials, embedding vectors, model prompts, token secrets or unsafe user paths. Content and model outputs are untrusted data. Use bounded CPU/GPU/network/provider work, safe error codes, trace/job/profile revisions and retention; cross-tenant, canceled, stale and resource-exhaustion tests mandatory.
@@ -145,6 +149,8 @@ Run the existing Hatch app-specific check/test/types scripts on disposable test 
 - [ ] Donor test_chunk_level_repository_delta and test_rag_chunk_delta_runtime scenarios reproduced independently in recipient tests
 - [ ] Reused vectors cannot inherit stale source/page/ACL/tenant metadata; new occurrence citations remain correct
 - [ ] A missing/invalid vector or incompatible model/processing profile always requires new inference rather than optimistic reuse
+
+- [ ] Version replay reports drift controls, actual correction windows and stale counts, zero stale active-version results after publication, with no fake answer/SLA claim.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 

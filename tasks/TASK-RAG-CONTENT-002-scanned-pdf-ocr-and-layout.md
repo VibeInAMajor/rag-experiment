@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-002 — Scanned and mixed PDF OCR with page-accurate provenance
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation blueprint; scanned-PDF support not qualified  
 **Priority:** P1 — after evidence storage and existing PDF parser qualification  
 **Dependencies:** TASK-RAG-CONTENT-001; coordinate with active TASK-RAG-CHUNK-003 and completed TASK-RAG-PARSE-001/TASK-RAG-002  
@@ -113,6 +113,10 @@ Feed prepared chunks into the existing authorized upload/version transaction; no
 ### J6 — run quality/security benchmarks
 At least 12 synthetic/non-sensitive PDFs covering 40+ page observations, mixed-native+scanned, two-column, Cyrillic, rotation, low contrast, tables, empty diagrams, encrypted/corrupt, resource exhaustion and duplicate hidden text. Audit >30 labelled OCR/search cases. Compare CER/WER where ground truth is available, wrong-page citation rate, reading-order errors, duplicate text ratio, token cost and per-page p50/p95; report per-language separately. Repeat API/DB/asset store restart test and cross-workspace denial.
 
+### OCR source fidelity — 2026-11-26
+
+Use [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) section 4.2: compare OCR text and recovered layout to original scanned regions, preserve page/bbox and source asset hash. Measure assessed character/word errors, missing qualifiers, numeric/unit errors, table/reading-order fidelity and known-fact retrieval; separate structural locator integrity from semantic support. Do not silently mark uncertain OCR or derived fields as verified. Agent prepares and verifies local fixtures; no external reviewer or cloud dependency. This remains deferred until text quality and OCR capability justify it.
+
 ## K. Security / Governance / Observability
 
 Pages can contain confidential data and adversarial prompt text. OCR content is data only; never use it as instructions or HTML. No external OCR call without explicit future capability. Constrain untrusted PDF rasterization, filesystem, process count, CPU/memory, DPI and asset storage. Workspace scoping applies to every asset/representation/word record and derived crop, not just source ID. Redact image/word content and personal file paths from logs; log only trace/job IDs, page count, engine revision, OCR decisions, failure code, time and confidence distribution. Define retention and access of intermediate page rasters; do not leak them as publicly routable files.
@@ -133,6 +137,8 @@ Commands from repo root: hatch run workbench-api:check; hatch run workbench-api:
 - [ ] Original exact PDF/page reference and OCR element remain retrievable after API/DB/asset restart; RLS and access tests pass.
 - [ ] Qualifying OCR does not force any cloud network dependency; source/lexical regressions pass.
 - [ ] Capability/README reflect only installed and measured OCR profiles.
+
+- [ ] OCR fidelity/coverage and exact source locators measured on actual supported cases; unavailable OCR remains explicitly not evaluated.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
