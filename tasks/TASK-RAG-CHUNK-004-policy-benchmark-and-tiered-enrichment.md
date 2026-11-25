@@ -1,7 +1,7 @@
 # TASK-RAG-CHUNK-004 — Cohort-based chunking evaluation, hierarchy and optional enrichment
 
 **Created:** 2026-11-21  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — evaluation and rollout blueprint; not an implemented agent  
 **Priority:** P2 — optimize only after baselines are actually indexed  
 **Dependencies:** completed TASK-RAG-CHUNK-001, TASK-RAG-CHUNK-002, TASK-RAG-002, TASK-EVAL-001, TASK-RAG-PARSE-001; qualified text-layer PDF via TASK-RAG-CHUNK-003; original-evidence and multimodal cohorts additionally require implemented TASK-RAG-CONTENT-001/002/003/004/005 as applicable. Experimental cohorts may be reported NOT_EVALUABLE until their producer is qualified.  
@@ -278,6 +278,10 @@ Report metric definitions and denominators, per-cohort paired bootstrap confiden
 
 **Mandatory dependency handshake:** Current [CHUNK-001](completed/TASK-RAG-CHUNK-001-strategy-routing-and-profile-contract.md) is COMPLETE; treat source donor chunker as a measured policy candidate, not already integrated.
 
+### Conditional contextual and schema-driven enrichment — 2026-11-26
+
+After [QUALITY-001](quality/TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) proves structural/context gap, prioritize the smallest text-only experiment (P0 conditional, not full multimodal rollout). Follow [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) section 6: existing original-only vs deterministic title/heading/parent context, bounded neighbor paragraph/section expansion, then optional typed entity/event/technical fields via qualified local capability. Art and Literature cohorts separate, plus technical controls. Keep original immutable, derived representation/hash/schema/model/prompt/source refs separate; no gold/query-specific hints or domain routing. Use local existing projection artifacts without requiring CONTENT-001 storage migration for the experiment; durable publication remains CONTENT-001. Compare source-fidelity, unsupported-field rate, all-facets and first-rank gain at fixed context/candidate budgets and actual cost; reject unsupported fields. Agent verifies source facts; no external reviewers. Preserve other advanced modality gates as deferred.
+
 ## K. Security / Governance / Observability
 
 **Multimodal trust and retention requirements:** untrusted PDF images, Markdown Mermaid code, OCR labels and VLM descriptions must never be executed or used to choose a model/provider. For benchmark gold/evidence files, use non-sensitive or explicitly approved content with license and retention recorded; do not persist original customer scans in public evaluation fixtures. Evaluate using a server-resolved test workspace, protected original asset reads and forced RLS; all child-parent-evidence joins must enforce the *same* workspace/source/version. Treat SHA256 as byte-integrity only, not proof of diagram semantics. Distinguish direct_source, deterministic_parse, observed_OCR and model_inferred in metrics and logs; never promote inferred relation to verified merely because a model provides a confidence number. Redact raw file bytes, OCR transcripts, images, prompts, personal data and credentials from logs/reports. Account separately for OCR/VLM token/image costs, staging/retention of original assets and deletion of evaluation copies. No automatic use of remote models or hidden fallback that changes test population.
@@ -349,6 +353,8 @@ Run the repository's actual app targets from root: `hatch run workbench-api:chec
 - [ ] Donor StructuralChunker and json_structural_chunking reuse or rejection decision is explicitly justified against existing Haystack adapters
 - [ ] Donor parsing/JSON golden scenarios are integrated as independent source-format tests
 - [ ] No duplicate chunker or new data store introduced when current structured logic already covers a case
+
+- [ ] Conditional paired enrichment experiment records actual evidence and gain/cost or documented no-go; no false source verification, no regression hidden by aggregate.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
