@@ -3,7 +3,7 @@
 **Created:** 2026-11-21  
 **Updated:** 2026-11-26  
 **Status:** PROPOSED — evaluation and rollout blueprint; not an implemented agent  
-**Priority:** P2 — optimize only after baselines are actually indexed  
+**Priority:** P0 for narrow measured text correction; advanced enrichment/multimodal deferred  
 **Dependencies:** completed TASK-RAG-CHUNK-001, TASK-RAG-CHUNK-002, TASK-RAG-002, TASK-EVAL-001, TASK-RAG-PARSE-001; qualified text-layer PDF via TASK-RAG-CHUNK-003; original-evidence and multimodal cohorts additionally require implemented TASK-RAG-CONTENT-001/002/003/004/005 as applicable. Experimental cohorts may be reported NOT_EVALUABLE until their producer is qualified.  
 **Repository snapshot reviewed:** historical `6639ccb2d01f6c0a2396ee43022bfd2edd5e1a77`; refreshed source inspection `a32b0a7a666f8bdef0eeb01d00dbb04a159fcd2f` (2026-11-23)  
 **Target:** `tasks/TASK-RAG-CHUNK-004-policy-benchmark-and-tiered-enrichment.md`  
@@ -282,6 +282,10 @@ Report metric definitions and denominators, per-cohort paired bootstrap confiden
 
 After [QUALITY-001](quality/TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) proves structural/context gap, prioritize the smallest text-only experiment (P0 conditional, not full multimodal rollout). Follow [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) section 6: existing original-only vs deterministic title/heading/parent context, bounded neighbor paragraph/section expansion, then optional typed entity/event/technical fields via qualified local capability. Art and Literature cohorts separate, plus technical controls. Keep original immutable, derived representation/hash/schema/model/prompt/source refs separate; no gold/query-specific hints or domain routing. Use local existing projection artifacts without requiring CONTENT-001 storage migration for the experiment; durable publication remains CONTENT-001. Compare source-fidelity, unsupported-field rate, all-facets and first-rank gain at fixed context/candidate budgets and actual cost; reject unsupported fields. Agent verifies source facts; no external reviewers. Preserve other advanced modality gates as deferred.
 
+### Activate narrow structural correction after measured Markdown improvement — 2026-11-26
+
+Supersede the interim Markdown relevance NOT_EVALUATED statement with [latest matched pair](evidence/quality-2026-11-25/report.md): 1441 to 634 chunks, any-fact@1 177/261 to 194/261, all-facts@5 222/261 to 237/261, fixed-budget 226/261 to 240/261; all 182 review spans retained. This does not prove that every former structure issue is resolved. Start with cleaned Markdown r3/chunks r3, generic instruction, same originals/query IDs and fixed budget. Recompute remaining singleton feasibility and distributed-facet coverage from actual captures; only then compare small parent/neighbor context or deterministic section metadata variants on Art/Literature/Kubernetes and full OPEN controls. The previous heading-input, longer chunk and overlap arms did not establish general benefit; do not repeat blindly or add VLM/LLM enrichment before deterministic gap is measured. If needed, separate source-grounded schema enrichment experiment using existing local seams. Require paired benefit, no unsupported fields/invalid locators, actual cost and cohort regression reporting; use existing local UI acceptance. No separate domain runtime or multimodal dependencies.
+
 ## K. Security / Governance / Observability
 
 **Multimodal trust and retention requirements:** untrusted PDF images, Markdown Mermaid code, OCR labels and VLM descriptions must never be executed or used to choose a model/provider. For benchmark gold/evidence files, use non-sensitive or explicitly approved content with license and retention recorded; do not persist original customer scans in public evaluation fixtures. Evaluate using a server-resolved test workspace, protected original asset reads and forced RLS; all child-parent-evidence joins must enforce the *same* workspace/source/version. Treat SHA256 as byte-integrity only, not proof of diagram semantics. Distinguish direct_source, deterministic_parse, observed_OCR and model_inferred in metrics and logs; never promote inferred relation to verified merely because a model provides a confidence number. Redact raw file bytes, OCR transcripts, images, prompts, personal data and credentials from logs/reports. Account separately for OCR/VLM token/image costs, staging/retention of original assets and deletion of evaluation copies. No automatic use of remote models or hidden fallback that changes test population.
@@ -355,6 +359,8 @@ Run the repository's actual app targets from root: `hatch run workbench-api:chec
 - [ ] No duplicate chunker or new data store introduced when current structured logic already covers a case
 
 - [ ] Conditional paired enrichment experiment records actual evidence and gain/cost or documented no-go; no false source verification, no regression hidden by aggregate.
+
+- [ ] Post-cleanup remaining structural causes quantified; only evidence-backed narrow experiment run, old pair preserved and unsupported fields excluded.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
