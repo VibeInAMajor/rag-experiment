@@ -1,7 +1,7 @@
 # TASK-RAG-QUALITY-001 — Reproduce and improve primary-evidence retrieval using the qualified current stack
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-25  
+**Updated:** 2026-11-26  
 **Status:** IN PROGRESS — Windows ledger reliability fix committed and verified; 152 local checks and 108 backend checks pass; patched 52-case replay passed; uniform OPEN V2 matrix running
 
 **Priority:** P0  
@@ -105,6 +105,10 @@ Completion is a measured decision: select a justified current-stack candidate or
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Source-fidelity diagnostic (Faithfulness-Plus extraction half) — 2026-11-26
+
+Apply section 4.2 of the [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) to the existing J.1 failure inventory: distinguish exact source/locator integrity, semantic qualifier loss, missing facets and unknown judgments. Report verified source-supported evidence units / assessed units, assessment coverage and invalid identity/locator counts, with examples and evidence pointers. Use the existing frozen original/representation/chunk mappings, and inspect actual context selected. No new scored arms, corpus perturbation or generation required here; answer faithfulness and NAG remain NOT_EVALUATED. Finish the current uniform matrix first.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -136,6 +140,8 @@ Additional diagnostic checks: test the failure classifier/aggregation with known
 - [ ] Art, Literature and Kubernetes have separate per-case failure breakdowns, paired arm comparisons and demonstrated or rejected hypotheses.
 - [ ] Candidate ceiling, rank losses and final context losses are distinguished; lexical zero-result cause is verified with native token/control evidence.
 - [ ] Local failure analysis and sanitized aggregate report are linked; existing owner tasks receive actionable handoff with affected counts and evidence references, without adding duplicate implementations or opening holdout.
+
+- [ ] Source-fidelity counts and assessment coverage are reported from existing OPEN artifacts; extraction failures and context omissions are distinct; no generation claim or matrix restart.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
