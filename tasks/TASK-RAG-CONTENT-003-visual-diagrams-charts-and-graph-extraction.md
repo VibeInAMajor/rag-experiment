@@ -1,7 +1,7 @@
 # TASK-RAG-CONTENT-003 — Visual diagrams, flowcharts, and chart understanding
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation blueprint; no qualified visual inference service exists  
 **Priority:** P1 — visual evidence after content assets and PDF layout  
 **Dependencies:** TASK-RAG-CONTENT-001, TASK-RAG-CHUNK-003; OCR-dependent scanned cases also require TASK-RAG-CONTENT-002  
@@ -114,6 +114,10 @@ Generate bounded human-readable retrieval text from **approved** graph facts and
 ### J6 — quality/regression gate
 On 20+ diagrams, measure node label hit rate, correctly oriented edges, decision-condition exact accuracy, unsupported-edge false positive rate, evidence/source citation accuracy and retrieval hit@5. On 10+ chart fixtures, measure axis/scale correctness, table/point agreement and numeric-answer unsupported rate. Test one corrupted arrow label, ambiguous arrow crossing, log-axis chart, unreadable value and PDF with picture-only page; require explicit uncertain states. Verify cross-workspace denial, asset hash tamper, missing VLM, timeout, restart, idempotent reingestion and old source version preservation. Report p50/p95 time and model invocation count separately; do not call the service "accurate" based on one example.
 
+### Microsoft visual sample adaptations and source fidelity — 2026-11-26
+
+Use pinned [visual document notebook](https://github.com/Azure-Samples/azure-ai-search-with-content-understanding-python/blob/82ade360894b5b7959ef546cbfe96f0ff9e1cc81/notebooks/search_with_visual_document.ipynb) and chart analyzer schema as reference. Adapt bounded figure cropping and structured fields (title/type/axes/series/units/values/footnotes) within existing PDF worker, validating coordinate frame, rotation, page and multi-region bounds. Do not insert descriptions into original Markdown or reuse invalidated original offsets. Keep unknown values null; exact chart data requires source support. Evaluate original image/region fidelity, field precision/coverage, invalid numbers/units/edges, known-facet retrieval and original evidence chain per [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md). Agent verifies gold against actual images; no external reviewer or Azure dependency. Missing local VLM is explicit not evaluated, not a fabricated description.
+
 ## K. Security / Governance / Observability
 
 Treat graphics, OCR labels, Markdown, model responses and extracted text as untrusted data; never execute displayed code or follow image/link URLs. No arbitrary provider URLs or prompt/body selected by source document. Verify image hashes, bounded crop geometry, allowed content types and per-workspace byte access. Model prompts and output schemas must be versioned, and should instruct extraction not obedience to embedded text; enforce by post-validation, not prompts alone. Keep token/image and VLM invocation budgets explicit; no covert remote exfiltration. Logs retain only trace/job/source/asset/processor IDs, latency, safe failure counts and review state; redact raw image, text, VLM output, keys and customer data. Subject asset deletion/retention to CONTENT-001 policy.
@@ -134,6 +138,8 @@ Run workbench-api Hatch test/types, then focused synthetic visual tests in app t
 - [ ] Workspace isolation, process isolation, storage tampering and restart negative tests pass.
 - [ ] Existing PDF table/heading, TXT/Markdown/Python, SQL and search regression suites remain green.
 - [ ] API capability flags distinguish visual description, graph extraction and chart numeric extraction exactly.
+
+- [ ] Actual crop/field source-fidelity and retrieval comparisons with validated locators, null unknowns, zero falsely verified values/edges; no original offset mutation.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
