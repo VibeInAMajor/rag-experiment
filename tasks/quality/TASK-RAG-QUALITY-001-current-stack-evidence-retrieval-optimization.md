@@ -115,6 +115,10 @@ Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file lim
 
 Apply section 4.2 of the [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) to the existing J.1 failure inventory: distinguish exact source/locator integrity, semantic qualifier loss, missing facets and unknown judgments. Report verified source-supported evidence units / assessed units, assessment coverage and invalid identity/locator counts, with examples and evidence pointers. Use the existing frozen original/representation/chunk mappings, and inspect actual context selected. No new scored arms, corpus perturbation or generation required here; answer faithfulness and NAG remain NOT_EVALUATED. The uniform matrix and subsequent UI continuation are complete; reuse their preserved artifacts for this pending assessment.
 
+### Closure and measured corrective handoff — 2026-11-26
+
+The [latest completion report](../evidence/quality-2026-11-25/report.md#завершение-quality-001-dense-fts-и-парное-сравнение-чанкинга--2026-11-26) supersedes earlier interim NOT_EVALUATED statements for the Markdown matched pair and bounded probes. Preserve the eight-arm NO-GO and the separate post-cleanup matched baseline (generic, 500/50, 31 original files, 306 OPEN questions, no TXT windows, 2048 source-content tokens): any-fact@1 194/261, @5 255/261, all-facts@5 237/261, all-facts@10 246/261, all-context 240/261. Do not conflate this with selected code-query from the older matrix or claim the combined policy was measured. Finish only the pending source-fidelity assessment using saved artifacts; then close QUALITY-001 as COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK, not release GO. Route actual improvements to [LEXICAL-001](TASK-RAG-LEXICAL-001-natural-language-query-policy.md), RERANK-001, CHUNK-004, EVIDENCE-002 and ANSWERABILITY-001. [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) owns separate primary/relevance judgment completion; do not make it a condition to finish the already scoped diagnostic. New functional checks use the existing local UI/Workbench evidence path; no full matrix rerun, production evaluation service or working-profile promotion.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -157,6 +161,8 @@ Additional diagnostic checks: test the failure classifier/aggregation with known
 - [x] Measured the separately authorized Markdown change with identical 31 originals, 306 questions, generic model/instruction, 500/50 policy and 2048-token context. Published before/after source-fact coverage, paired outcomes, clustered uncertainty and cohort breakdowns. This does not relabel sparse gold as primary evidence or generated-answer quality.
 
 - [ ] Source-fidelity counts and assessment coverage are reported from existing OPEN artifacts; extraction failures and context omissions are distinct; no generation claim or matrix restart.
+
+- [ ] Pending source-fidelity assessment completed or explicitly bounded with evidence; corrective owners linked; diagnostic status separate from unmet quality targets.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
