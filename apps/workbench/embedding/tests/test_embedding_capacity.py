@@ -27,10 +27,10 @@ from apps.workbench.embedding.embedding_capacity import (
 from apps.workbench.embedding.embedding_dispatch import QualificationCapacityPolicy, QualificationEmbeddingGovernor
 
 
-def _windows_access_error(code: int = 5) -> PermissionError:
-    error = PermissionError(13, "Windows replacement access refused")
-    error.winerror = code
-    return error
+class _WindowsAccessError(PermissionError):
+    def __init__(self, code: int = 5) -> None:
+        super().__init__(13, "Windows replacement access refused")
+        self.winerror = code
 
 
 @pytest.mark.asyncio
@@ -51,7 +51,7 @@ async def test_transient_windows_ledger_replace_preserves_successful_usage(
         nonlocal failures
         if failures < 2:
             failures += 1
-            raise _windows_access_error(windows_error)
+            raise _WindowsAccessError(windows_error)
         return original_replace(source, destination)
 
     try:
@@ -87,7 +87,7 @@ async def test_permanent_windows_ledger_failure_keeps_old_bytes_and_persistent_q
     def denied(_source: Path, _destination: Path) -> Path:
         nonlocal attempts
         attempts += 1
-        raise _windows_access_error()
+        raise _WindowsAccessError()
 
     try:
         with monkeypatch.context() as patch:
