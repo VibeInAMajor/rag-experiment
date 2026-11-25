@@ -1,8 +1,8 @@
 # External multidisciplinary retrieval dataset V1
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-24  
-**Status:** COLLECTED / SOURCE-ANCHORED DRAFT — actual documents and multilingual question/answer keys present; independent review, real ingestion and retrieval evaluation not yet executed. This is separate from [repository-specific seed](RETRIEVAL_EVALUATION_SEED_V1.md), not a replacement for it.
+**Updated:** 2026-11-25  
+**Status:** COLLECTED / SOURCE-ANCHORED DRAFT — actual documents and multilingual question/answer keys present; agent source verification, real ingestion and retrieval evaluation not yet executed. This is separate from [repository-specific seed](RETRIEVAL_EVALUATION_SEED_V1.md), not a replacement for it.
 
 ## Corpus and purpose
 
@@ -18,7 +18,7 @@ The corpus consists of **31 locally stored Markdown files** from external, pinne
 | Literature | 6 | 20 | 60 |
 | Total | 31 | 87 | 261 |
 
-An additional 15 no-answer families (45 language cases) produce **102 families and 306 total query cases**, exactly 102 per EN/RU/UK. Three translations of one question are correlated and never three independent gold cases. Candidate answer keys include full localized answers, original local file line ranges, mandatory evidence facets and explicit alternative source treatment. The 87 answerable families have 115 source-range/anchor checks. No-answer labels remain candidates until corpus-wide human verification. The corpus is independent of our project documentation, but questions and initial gold candidates are assistant-authored and visible: **not human-independent gold or a blind holdout**. Do not claim production generalization from this open dataset.
+An additional 15 no-answer families (45 language cases) produce **102 families and 306 total query cases**, exactly 102 per EN/RU/UK. Three translations of one question are correlated and never three independent gold cases. Candidate answer keys include full localized answers, original local file line ranges, mandatory evidence facets and explicit alternative source treatment. The 87 answerable families have 115 source-range/anchor checks. No-answer labels remain candidates until corpus-wide agent verification. The corpus is independent of our project documentation, but questions and initial gold candidates are assistant-authored and visible: **not yet source-verified gold or a held-out split**. Do not claim production generalization from this open dataset.
 
 ## What to ingest / what not to ingest
 
