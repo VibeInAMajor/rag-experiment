@@ -21,9 +21,110 @@ from apps.workbench.embedding.embedding_capacity import (
     MeasuredEmbeddingCapacityPolicy,
     ProductionEmbeddingGovernor,
     _Charge,
+    _replace_ledger,
     _rolling_tokens,
 )
 from apps.workbench.embedding.embedding_dispatch import QualificationCapacityPolicy, QualificationEmbeddingGovernor
+
+
+def _windows_access_error(code: int = 5) -> PermissionError:
+    error = PermissionError(13, "Windows replacement access refused")
+    error.winerror = code
+    return error
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("windows_error", [5, 32, 33])
+async def test_transient_windows_ledger_replace_preserves_successful_usage(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, windows_error: int
+) -> None:
+    """A brief Windows access conflict must not quarantine reconciled, successfully charged inference."""
+    clock = _Clock()
+    owner = _owner(tmp_path, clock)
+    await owner.warm_up_async()
+    reservation = await _reserve(owner, clock)
+    original_replace = Path.replace
+    failures = 0
+    delays: list[float] = []
+
+    def replace(source: Path, destination: Path) -> Path:
+        nonlocal failures
+        if failures < 2:
+            failures += 1
+            raise _windows_access_error(windows_error)
+        return original_replace(source, destination)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(Path, "replace", replace)
+            patch.setattr("apps.workbench.embedding.embedding_capacity.sleep", delays.append)
+            await _complete(owner, reservation, 100)
+        stored = json.loads(owner._ledger_path.read_bytes())
+        assert stored["requires_recalibration"] is False
+        assert len(stored["charges"]) == 1
+        assert stored["charges"][0]["outcome"] == "success"
+        assert stored["charges"][0]["usage_tokens"] == 100
+        assert owner.summary()["provider_reported_tokens"] == 100
+        assert owner.summary()["attempts_sent"] == 1
+        assert delays == [0.01, 0.02]
+        assert not await asyncio.to_thread(lambda: list(tmp_path.glob("*.tmp")))
+    finally:
+        await owner.close_async()
+
+
+@pytest.mark.asyncio
+async def test_permanent_windows_ledger_failure_keeps_old_bytes_and_persistent_quarantine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Bounded retries never publish partial JSON, remove the old ledger or admit a quarantined restart."""
+    clock = _Clock()
+    owner = _owner(tmp_path, clock)
+    await owner.warm_up_async()
+    previous = owner._ledger_path.read_bytes()
+    attempts = 0
+    delays: list[float] = []
+
+    def denied(_source: Path, _destination: Path) -> Path:
+        nonlocal attempts
+        attempts += 1
+        raise _windows_access_error()
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(Path, "replace", denied)
+            patch.setattr("apps.workbench.embedding.embedding_capacity.sleep", delays.append)
+            with pytest.raises(EmbeddingError, match="NOT_QUALIFIED"):
+                await owner._persist()
+        assert attempts == 6
+        assert sum(delays) == pytest.approx(0.31)
+        assert owner._ledger_path.read_bytes() == previous
+        assert owner.summary()["requires_recalibration"] is True
+        assert not await asyncio.to_thread(lambda: list(tmp_path.glob("*.tmp")))
+    finally:
+        await owner.close_async()
+    replacement = _owner(tmp_path, clock)
+    with pytest.raises(EmbeddingError, match="NOT_QUALIFIED"):
+        await replacement.warm_up_async()
+
+
+def test_unrelated_permission_error_is_not_retried(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """POSIX access errors retain immediate failure and preserve the last published ledger."""
+    temporary, destination = tmp_path / "next.tmp", tmp_path / "ledger.json"
+    temporary.write_text("new", encoding="utf-8")
+    destination.write_text("old", encoding="utf-8")
+    attempts = 0
+
+    def denied(_source: Path, _target: Path) -> Path:
+        nonlocal attempts
+        attempts += 1
+        raise PermissionError("permanent permission denied")
+
+    monkeypatch.setattr(Path, "replace", denied)
+    with pytest.raises(PermissionError, match="permanent permission denied"):
+        _replace_ledger(temporary, destination)
+    assert attempts == 1
+    assert destination.read_text(encoding="utf-8") == "old"
+    assert temporary.read_text(encoding="utf-8") == "new"
 
 
 @dataclass

@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Workbench measured embedding admission now retries brief Windows access or
+    sharing errors when atomically replacing its durable usage ledger. Successful
+    inference no longer loses qualification because of a transient replacement
+    conflict. Persistent failures still preserve the previous ledger and require
+    fresh calibration; charged usage and shared model ownership are unchanged.

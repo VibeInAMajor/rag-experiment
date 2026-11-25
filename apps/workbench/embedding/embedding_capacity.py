@@ -12,7 +12,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from time import monotonic, time
+from time import monotonic, sleep, time
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -29,6 +29,18 @@ from apps.workbench.embedding.embedding import (
     UsageProvenance,
 )
 from apps.workbench.embedding.embedding_dispatch import _deployment_lease_path
+
+
+def _replace_ledger(temporary: Path, destination: Path) -> None:
+    # Windows readers can briefly deny replacement even after our writer has closed its handle.
+    for delay in (0.01, 0.02, 0.04, 0.08, 0.16, None):
+        try:
+            temporary.replace(destination)
+            return
+        except PermissionError as error:
+            if getattr(error, "winerror", None) not in {5, 32, 33} or delay is None:
+                raise
+            sleep(delay)
 
 
 class MeasuredEmbeddingCapacityPolicy(BaseModel):
@@ -295,7 +307,7 @@ class ProductionEmbeddingGovernor:
                 json.dump(raw, output, separators=(",", ":"), allow_nan=False)
                 output.flush()
                 os.fsync(output.fileno())
-            temporary.replace(self._ledger_path)
+            _replace_ledger(temporary, self._ledger_path)
         finally:
             temporary.unlink(missing_ok=True)
 
