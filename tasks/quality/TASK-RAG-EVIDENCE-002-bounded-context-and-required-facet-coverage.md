@@ -58,6 +58,10 @@ Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file lim
 
 Implement context-to-original chain validation using existing source/version/locator metadata; no new asset resolver here. Report verified source-support/locator coverage, duplicate and irrelevant assessed token share, candidate ceiling vs selected pack, broken links and missing facts. Preserve actual serialized pack and hash locally for later NAG tests; label unjudged content unknown, not irrelevant. Compare bounded original paragraph/section neighbor expansion only where existing ownership permits and source integrity holds. [Quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) sections 4.2/4.3/4.5 define metrics; final answer-chain links belong to QUALITY-003.
 
+### Correct residual context losses on cleaned corpus — 2026-11-26
+
+Use the [matched cleaned baseline](../evidence/quality-2026-11-25/report.md): 246/261 all-facts@10, 240/261 all-facts in fixed 2048 source-content tokens. These aggregate differences are not a disjoint six-case loss count; inspect actual raw candidates and pack membership. Compare the existing stop-at-first-overflow ranked prefix against bounded skip-oversized/deduplication/coverage-diversity policy and source-preserving neighboring evidence when supported, without gold labels in selection. Count actual serialized context separately from the historical source-content-only budget; compare at matched budgets and report missing facets, duplication, selected/dropped IDs and source fidelity. Target >=95% all-facts in fixed context where feasible; if candidate ceiling is below target route upstream instead of hiding losses by raising budget. Preserve current source mapping and use existing local UI functional acceptance.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -77,6 +81,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Explicit empty/insufficient candidates; no runtime gold-label dependence.
 
 - [ ] Selected-pack source chain and assessed noise share are measured; context artifacts permit reproducible later NAG experiments; no gold-aware runtime selection.
+
+- [ ] Residual candidate vs selector losses measured; fixed-budget gain, provenance and cost reported without runtime gold or silent budget expansion.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
