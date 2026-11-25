@@ -2,9 +2,9 @@
 
 **Created:** 2026-11-24  
 **Updated:** 2026-11-26  
-**Status:** PROPOSED — specification only; no runtime tests executed  
+**Status:** COMPLETE_LOCAL — original delivery and OPEN baseline executed; later stress fixtures remain downstream work  
 **Priority:** P0  
-**Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md); existing qualified small-document ingestion and parsers; [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) for later actual embedding. Starter dataset exists but agent verification and gold freeze are pending.  
+**Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md); existing qualified small-document ingestion and parsers; [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) for later actual embedding. See [actual local delivery report](../evidence/dataset-2026-11-24/report.md); separate ranking-judgment completion belongs to [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md).  
 **Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44  
 **Target:** tasks/quality/TASK-RAG-DATASET-001-independent-evidence-gold-set.md  
 **Implementation order:** [Quality roadmap](IMPLEMENTATION_ORDER.md)
