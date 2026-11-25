@@ -2,10 +2,14 @@
 
 **Created:** 2026-11-24  
 **Updated:** 2026-11-25  
-**Status:** PROPOSED — specification only; no runtime tests executed  
+**Status:** IN PROGRESS — Windows ledger reliability fix committed and verified; 152 local checks and 108 backend checks pass; patched 52-case replay passed; uniform OPEN V2 matrix running
+
 **Priority:** P0  
 **Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md), completed EMBED-001/002, INDEX-001, PROFILE-001, CHUNK-001/002, CONFIG-001, RAG-002; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) for reviewed dataset; [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) valid current local admission.  
-**Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44  
+**Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44; continuation base fde9fbe
+
+**Implementation commits:** `9955252728b3653deb0b5e63339c6ed7c8802ccf` (instruction-bound calibration), `a44c9f9048130c7dcf8081dcbf4f91e6d9a80645` (bounded Windows atomic replacement recovery)
+
 **Target:** tasks/quality/TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md  
 **Implementation order:** [Quality roadmap](IMPLEMENTATION_ORDER.md)
 
@@ -29,6 +33,8 @@ Recompute preserved baseline independently, then run paired exact and FTS baseli
 
 Baseline reproduction, real parsing/chunking and governed embedding of small reviewed originals, fixed query-instruction and existing chunk policy grid, independent source-span scoring, lexical control, measured latency and regression evidence.
 
+**Runtime reliability amendment (2026-11-25):** two actual long-chunk attempts were refused by the existing governor after 125 and 246 completed HTTP/SQL pairs. An isolated exercise of its unchanged atomic ledger writer reproduced Windows `PermissionError` / `winerror=5` at `Path.replace` (6872 and 713 writes before failure). Include a narrow, bounded retry of the same fsynced temporary-file replacement for Windows access/sharing violations in the existing capacity owner. Preserve atomic publication, charged usage, shared lease and fail-closed quarantine for permanent failure. This does not add an application/API capability or alter ranking/admission policy. Restart all scored arms together on a new v2 execution snapshot; preserve v1 artifacts as interrupted/historical evidence.
+
 ## F. Non-Goals
 
 No Hybrid/BM25 integration, cross-encoder, ANN, answerability or generation. No new model or arbitrary threshold, no large-file work. No rewriting immutable baseline or original fixture.
@@ -42,6 +48,10 @@ Evaluation reuses existing scorer and Live evaluator; ingestion uses existing qu
 Versioned dataset/fixture digest, original evidence facets/grades and source locators; immutable candidate profile/input/chunk revision; run manifests, per-case ranks and latency, status PASS/FAIL/BLOCKED/NOT_EVALUABLE. Distinguish primary hit, primary recall, relevant recall, first-any vs first-primary MRR and graded nDCG; with two relevant labels Recall@1 max 0.5. No-answer metrics separate. Map rechunked outputs back to source spans, count each facet once and report unjudged results.
 
 ## I. Repository Files / Components Impacted
+
+**Execution amendment (2026-11-25):** DATASET-001's completed local handoff is recorded in [its actual report](../evidence/dataset-2026-11-24/report.md), despite older PROPOSED headers. Reuse the existing ignored `.local/evaluation-holdout/quality-check/rag_quality/` adapters and source-coverage scorer; preserve their original artifacts. Experiment code/raw predictions remain local; only sanitized reports/metrics and this task are repository deliverables. Existing capacity benchmark ownership may receive a backward-compatible internal instruction-profile qualification parameter, because a changed query instruction must have its own measured profile-bound admission rather than a copied fingerprint. No application, public API, UI, model-provider or CI capability change is authorized by this amendment.
+
+The reliability amendment additionally touches `apps/workbench/embedding/embedding_capacity.py` and its existing `tests/test_embedding_capacity.py`, plus a focused bugfix release note. Do not introduce a second ledger writer or delete/reset real admission state. Local exception-only diagnostics/probes remain ignored. The bounded Windows retry must be tested for successful recovery, permanent failure with preserved old ledger and quarantine, and immediate refusal of unrelated errors before the new uniform experiment snapshot starts.
 
 [embedding evaluator](../../scripts/workbench_embedding_evaluate.py), [Live Dense evaluator](../../scripts/workbench_dense_evaluate.py), [52-case fixture](../../apps/workbench/embedding/fixtures/embedding-retrieval-evaluation.json), [EmbeddingProfile / prepare_embedding_request](../../apps/workbench/embedding/embedding.py), [embedding_candidate_input](../../apps/workbench/embedding/embedding_ingestion.py), [apps/workbench/document_processing.yaml](../../apps/workbench/document_processing.yaml), existing embedding/retrieval tests and qualified ingestion owners. Extend existing runner(s) without a competing scorer; preserve exact/lexical contracts and original 52-case fixture. No migrations or UI changes unless separately scoped.
 
@@ -66,7 +76,11 @@ No unreviewed tuning on final holdout; no provider change or new public capabili
 
 ## L. Testing / Evaluation / Runtime Verification
 
+**Predeclared local comparison (2026-11-25):** OPEN V2 only (31 originals, 306 translated cases / 102 families), without reading ANSWER or Retrieval-R2 labels. Eight arms: existing 500/50 generic baseline; bounded global technical instruction; bounded global code instruction; 384/38 and 768/77 token policies; 500/0 and 500/75 overlap; existing heading-path input with equivalent native 8192-token admission. Change one semantic policy at a time; record integer overlap rounding and input/representation differences. Fixed candidate top-10 and fixed 2048 `o200k_base` source-content token prefix budget; no label-aware evidence selection. Use a fresh owned DB and real governed re-embedding per arm; new instruction fingerprints require separate fresh calibration/qualification. Baseline source/facet coverage remains sparse: unjudged results stay unknown, full graded nDCG/relevance recall are NOT_EVALUABLE unless exhaustively justified. Family-clustered uncertainty and language/domain/intent groups remain separate; no translation counted as independent sample. No candidate is promoted by this experiment.
+
 Independent metric reference, source-span/facet mapping and unjudged semantics, profile drift, input/Unicode, wrong source/tenant/version, partial coverage, provider outage, ranking and latency regression.
+
+The v1 scored baseline/short-chunk results are historical after the reliability fix. V2 must rerun all eight arms against identical patched owners; retain the original predeclared candidate grid, source/query split, selector and budget. Perform a real-filesystem isolated ledger stress replay before model experiments, and preserve the two pre-fix failures with exact OS category and cleanup evidence.
 
 Run hatch --version and configured scoped Hatch workbench-api:check/test/types, actual disposable PostgreSQL/qualified local model tests where applicable; web typecheck, format:check, test and build if touched. Record commands, versions, exit codes, test counts, skips and actual artifacts. A mock is not a runtime measurement.
 
@@ -74,7 +88,7 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 
 - [ ] External V1 actual API/model/SQL baseline and paired evaluation reports linked, separately by domain/language/family; no source/answer leakage.
 
-- [ ] Original 52-case regression preserved and actual metrics independently reproduced.
+- [x] Original 52-case regression preserved and actual metrics independently reproduced. Independent arithmetic and a fresh actual model/HTTP/SQL replay after the writer fix completed on 2026-11-25 under `.local/evaluation-holdout/quality-check/runs/current-stack-2026-11-25-v2/`; historical V1 artifacts are preserved. Public report follows the uniform paired run.
 - [ ] Reviewed tuning set, real ingestion/embedding and paired candidate reports with fixed token budget and all required metrics.
 - [ ] Best candidate or explicit insufficient-current-stack verdict, per-case failures and next-owner handoff.
 - [ ] No false quality/production claim; final holdout not used for tuning and all integrity gates pass.
@@ -85,7 +99,7 @@ Use tasks/evidence/ for actual reports; retain pinned old profile/generation and
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Reinspect source and dependencies; record reused owners and amended scope if needed.
+- [x] Reinspect source and dependencies; record reused owners and amended scope if needed. Scope amendments and the existing ingestion/scoring/capacity/HTTP/SQL owners are recorded above.
 - [ ] Run applicable unit, contract, integration, security, failure and regression tests.
 - [ ] Link actual commands and evidence, including blocked/unrun gates and limitations.
 - [ ] Verify immutable profile compatibility, data preservation and rollback.

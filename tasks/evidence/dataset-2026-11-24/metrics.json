@@ -1,0 +1,1180 @@
+{
+  "kind": "LOCAL_RETRIEVAL_QUALITY_REPORT",
+  "reported_at_utc": "2026-11-25T11:08:17.176520+00:00",
+  "scope": "Completed local DATASET-001 and actual306-query OPEN dense/FTS baseline; no production changes or tuning.",
+  "existing_baseline": {
+    "executed_date": "2026-11-24",
+    "source": "tasks/evidence/dense-2026-11-24/runtime-evaluation.json",
+    "source_sha256": "2d1df316551c7693cf98a08642c5d0ddda56a6b8519dcf12fe9fdc4541c8371f",
+    "fixture": "Existing repository-authored synthetic regression fixture",
+    "queries": 52,
+    "answerable_queries": 46,
+    "no_answer_queries": 6,
+    "metrics": {
+      "1": {
+        "recall": 0.44565217391304346,
+        "primary_recall": 0.6739130434782609,
+        "hit_rate": 0.8913043478260869,
+        "mrr": 0.8913043478260869,
+        "ndcg": 0.7049689440993789
+      },
+      "5": {
+        "recall": 0.9347826086956522,
+        "primary_recall": 0.9565217391304348,
+        "hit_rate": 1.0,
+        "mrr": 0.9420289855072465,
+        "ndcg": 0.8455193788618093
+      },
+      "10": {
+        "recall": 1.0,
+        "primary_recall": 1.0,
+        "hit_rate": 1.0,
+        "mrr": 0.9420289855072465,
+        "ndcg": 0.8634127219829909
+      }
+    },
+    "no_answer_with_forced_neighbors": 6,
+    "answerable_hard_negative_at_rank_one": 1,
+    "abstention_status": "NOT_IMPLEMENTED_RAW_NEAREST_NEIGHBORS"
+  },
+  "prepared_dataset": {
+    "groups": {
+      "open": {
+        "originals": 31,
+        "families": 102,
+        "answerable_families": 87,
+        "no_answer_families": 15,
+        "localized_records": 306,
+        "runtime_retrieval_evaluated": true
+      },
+      "answer": {
+        "originals": 50,
+        "families": 209,
+        "answerable_families": 149,
+        "no_answer_families": 60,
+        "localized_records": 627,
+        "runtime_retrieval_evaluated": false
+      },
+      "retrieval_r2": {
+        "originals": 22,
+        "families": 210,
+        "answerable_families": 151,
+        "no_answer_families": 59,
+        "localized_records": 630,
+        "runtime_retrieval_evaluated": false
+      }
+    },
+    "totals": {
+      "originals": 103,
+      "families": 521,
+      "answerable_families": 387,
+      "no_answer_families": 134,
+      "localized_records": 1563
+    },
+    "reference_review": "AUTOMATED_SOURCE_FIRST",
+    "quarantined_localized_records": 3,
+    "qualified_pdf_table_families": 10,
+    "pdf_table_planning_target": 40,
+    "pdf_table_planning_shortfall": 30,
+    "retrieval_quality_run": "OPEN_V2_EXECUTED_306_QUERIES; ANSWER_AND_R2_UNEVALUATED",
+    "retrieval_quality_metrics": {
+      "scope": "OPEN only,261answerable+45no-answer; source-facet coverage, not exhaustive graded relevance.",
+      "dense": {
+        "answerable": 261,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5210727969348659,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.6743295019157088,
+            "explicit_negative_only_chunks": 2,
+            "known_fact_reciprocal_rank": 0.6743295019157088,
+            "required_facet_coverage": 0.5967432950191571,
+            "unjudged_returned_chunks": 107
+          },
+          "10": {
+            "all_required_facets_hit": 0.8888888888888888,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.9655172413793104,
+            "explicit_negative_only_chunks": 16,
+            "known_fact_reciprocal_rank": 0.7865687526607067,
+            "required_facet_coverage": 0.9261813537675606,
+            "unjudged_returned_chunks": 2616
+          },
+          "5": {
+            "all_required_facets_hit": 0.8505747126436781,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.9425287356321839,
+            "explicit_negative_only_chunks": 9,
+            "known_fact_reciprocal_rank": 0.7829501915708812,
+            "required_facet_coverage": 0.8940613026819924,
+            "unjudged_returned_chunks": 1135
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 45,
+        "no_answer_with_forced_neighbors": 45,
+        "queries": 306,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "fts": {
+        "answerable": 261,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 45,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 306,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      }
+    }
+  },
+  "historical_source_ingestion": {
+    "open": {
+      "originals": 31,
+      "published_views": 144,
+      "chunks": 1080
+    },
+    "answer": {
+      "originals": 50,
+      "chunks": 148
+    },
+    "retrieval_r2": {
+      "originals": 22,
+      "chunks": 1478
+    },
+    "scope": "Three separate historical disposable contexts; not one live database or a quality score."
+  },
+  "relocation_verification": {
+    "local_existing_tests_passed": 130,
+    "production_changes": 0,
+    "source_question_reference_payloads_changed": 0,
+    "new_inference_backfill_search_scoring_calls": 0,
+    "scope": "Earlier relocation step only; subsequent real run is recorded separately under actual_open_retrieval."
+  },
+  "limitations": [
+    "Translations/source lineages/shared facts are correlated; no IID confidence or enterprise release claim.",
+    "Source-facet coverage is exact known-span coverage, not exhaustive semantic relevance or answer correctness.",
+    "Unjudged chunks remain unknown; full graded nDCG and exhaustive relevance recall are null.",
+    "No answer generation or answerability decision executed; forced neighbors are not classified as false answers.",
+    "PDF/table coverage10families from1PDFlineage vs40planning target; R2NA59vs60planning target.",
+    "ANSWER/R2 groups remain unevaluated by candidate retrieval; current measured benchmark is OPEN only."
+  ],
+  "task": {
+    "id": "DATASET-001",
+    "status": "COMPLETE_LOCAL",
+    "quality_optimization_or_release_claimed": false,
+    "human_or_separate_access_gate_required": false,
+    "completion_checklist": {
+      "source_grounded_local_corpus_and_references": true,
+      "original_source_sparse_facet_qrels_frozen": true,
+      "source_hashes_locators_and_query_joins_verified": true,
+      "local_evaluation_groups_and_dependency_records_frozen": true,
+      "labels_excluded_from_runtime_and_indexing": true,
+      "actual_open_api_model_sql_baseline_executed": true,
+      "owned_database_cleanup_verified": true,
+      "production_ci_and_legacy_fixture_preserved": true
+    }
+  },
+  "actual_open_retrieval": {
+    "queries": 306,
+    "source_originals": 31,
+    "published_views": 144,
+    "active_chunks": 1080,
+    "dataset_digest": "38ad2c628a7a578445998f14d05277d22e0f7ea79ec79839764e2ecd59a7ce9d",
+    "dense": {
+      "all:all": {
+        "answerable": 261,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5210727969348659,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.6743295019157088,
+            "explicit_negative_only_chunks": 2,
+            "known_fact_reciprocal_rank": 0.6743295019157088,
+            "required_facet_coverage": 0.5967432950191571,
+            "unjudged_returned_chunks": 107
+          },
+          "10": {
+            "all_required_facets_hit": 0.8888888888888888,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.9655172413793104,
+            "explicit_negative_only_chunks": 16,
+            "known_fact_reciprocal_rank": 0.7865687526607067,
+            "required_facet_coverage": 0.9261813537675606,
+            "unjudged_returned_chunks": 2616
+          },
+          "5": {
+            "all_required_facets_hit": 0.8505747126436781,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.9425287356321839,
+            "explicit_negative_only_chunks": 9,
+            "known_fact_reciprocal_rank": 0.7829501915708812,
+            "required_facet_coverage": 0.8940613026819924,
+            "unjudged_returned_chunks": 1135
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 45,
+        "no_answer_with_forced_neighbors": 45,
+        "queries": 306,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:ART": {
+        "answerable": 24,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.375,
+            "answerable_denominator": 24,
+            "any_fact_hit": 0.5416666666666666,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.5416666666666666,
+            "required_facet_coverage": 0.4270833333333333,
+            "unjudged_returned_chunks": 9
+          },
+          "10": {
+            "all_required_facets_hit": 0.75,
+            "answerable_denominator": 24,
+            "any_fact_hit": 1.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.7062499999999999,
+            "required_facet_coverage": 0.88125,
+            "unjudged_returned_chunks": 206
+          },
+          "5": {
+            "all_required_facets_hit": 0.7083333333333334,
+            "answerable_denominator": 24,
+            "any_fact_hit": 0.9166666666666666,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.6923611111111111,
+            "required_facet_coverage": 0.80625,
+            "unjudged_returned_chunks": 89
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 24,
+        "query_families": 8,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:AZ": {
+        "answerable": 36,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5833333333333334,
+            "answerable_denominator": 36,
+            "any_fact_hit": 0.75,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.75,
+            "required_facet_coverage": 0.6527777777777778,
+            "unjudged_returned_chunks": 6
+          },
+          "10": {
+            "all_required_facets_hit": 0.9166666666666666,
+            "answerable_denominator": 36,
+            "any_fact_hit": 0.9166666666666666,
+            "explicit_negative_only_chunks": 1,
+            "known_fact_reciprocal_rank": 0.8078703703703703,
+            "required_facet_coverage": 0.9166666666666666,
+            "unjudged_returned_chunks": 299
+          },
+          "5": {
+            "all_required_facets_hit": 0.8333333333333334,
+            "answerable_denominator": 36,
+            "any_fact_hit": 0.9166666666666666,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.8078703703703703,
+            "required_facet_coverage": 0.875,
+            "unjudged_returned_chunks": 126
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 36,
+        "query_families": 12,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:CS": {
+        "answerable": 42,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.7380952380952381,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.7380952380952381,
+            "required_facet_coverage": 0.6369047619047619,
+            "unjudged_returned_chunks": 5
+          },
+          "10": {
+            "all_required_facets_hit": 1.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 1.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.861111111111111,
+            "required_facet_coverage": 1.0,
+            "unjudged_returned_chunks": 336
+          },
+          "5": {
+            "all_required_facets_hit": 1.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 1.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.861111111111111,
+            "required_facet_coverage": 1.0,
+            "unjudged_returned_chunks": 129
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 42,
+        "query_families": 14,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:K8S": {
+        "answerable": 57,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5263157894736842,
+            "answerable_denominator": 57,
+            "any_fact_hit": 0.6491228070175439,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.6491228070175439,
+            "required_facet_coverage": 0.5804093567251463,
+            "unjudged_returned_chunks": 14
+          },
+          "10": {
+            "all_required_facets_hit": 0.8070175438596491,
+            "answerable_denominator": 57,
+            "any_fact_hit": 0.9473684210526315,
+            "explicit_negative_only_chunks": 6,
+            "known_fact_reciprocal_rank": 0.7558479532163743,
+            "required_facet_coverage": 0.8830409356725146,
+            "unjudged_returned_chunks": 470
+          },
+          "5": {
+            "all_required_facets_hit": 0.7894736842105263,
+            "answerable_denominator": 57,
+            "any_fact_hit": 0.9122807017543859,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.75,
+            "required_facet_coverage": 0.8494152046783625,
+            "unjudged_returned_chunks": 206
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 57,
+        "query_families": 19,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:LIT": {
+        "answerable": 60,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.48333333333333334,
+            "answerable_denominator": 60,
+            "any_fact_hit": 0.5333333333333333,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.5333333333333333,
+            "required_facet_coverage": 0.5083333333333333,
+            "unjudged_returned_chunks": 26
+          },
+          "10": {
+            "all_required_facets_hit": 0.9,
+            "answerable_denominator": 60,
+            "any_fact_hit": 0.95,
+            "explicit_negative_only_chunks": 6,
+            "known_fact_reciprocal_rank": 0.6962962962962963,
+            "required_facet_coverage": 0.9125,
+            "unjudged_returned_chunks": 513
+          },
+          "5": {
+            "all_required_facets_hit": 0.85,
+            "answerable_denominator": 60,
+            "any_fact_hit": 0.9166666666666666,
+            "explicit_negative_only_chunks": 6,
+            "known_fact_reciprocal_rank": 0.6916666666666667,
+            "required_facet_coverage": 0.8708333333333333,
+            "unjudged_returned_chunks": 220
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 60,
+        "query_families": 20,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:MATH": {
+        "answerable": 42,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.6190476190476191,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.8571428571428571,
+            "explicit_negative_only_chunks": 2,
+            "known_fact_reciprocal_rank": 0.8571428571428571,
+            "required_facet_coverage": 0.753968253968254,
+            "unjudged_returned_chunks": 2
+          },
+          "10": {
+            "all_required_facets_hit": 0.9285714285714286,
+            "answerable_denominator": 42,
+            "any_fact_hit": 1.0,
+            "explicit_negative_only_chunks": 3,
+            "known_fact_reciprocal_rank": 0.9103174603174603,
+            "required_facet_coverage": 0.9642857142857143,
+            "unjudged_returned_chunks": 342
+          },
+          "5": {
+            "all_required_facets_hit": 0.8809523809523809,
+            "answerable_denominator": 42,
+            "any_fact_hit": 1.0,
+            "explicit_negative_only_chunks": 3,
+            "known_fact_reciprocal_rank": 0.9103174603174603,
+            "required_facet_coverage": 0.9484126984126985,
+            "unjudged_returned_chunks": 140
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 42,
+        "query_families": 14,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:NA": {
+        "answerable": 0,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": null,
+            "answerable_denominator": 0,
+            "any_fact_hit": null,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": null,
+            "required_facet_coverage": null,
+            "unjudged_returned_chunks": 45
+          },
+          "10": {
+            "all_required_facets_hit": null,
+            "answerable_denominator": 0,
+            "any_fact_hit": null,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": null,
+            "required_facet_coverage": null,
+            "unjudged_returned_chunks": 450
+          },
+          "5": {
+            "all_required_facets_hit": null,
+            "answerable_denominator": 0,
+            "any_fact_hit": null,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": null,
+            "required_facet_coverage": null,
+            "unjudged_returned_chunks": 225
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 45,
+        "no_answer_with_forced_neighbors": 45,
+        "queries": 45,
+        "query_families": 15,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "language:en": {
+        "answerable": 87,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5172413793103449,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.6896551724137931,
+            "explicit_negative_only_chunks": 1,
+            "known_fact_reciprocal_rank": 0.6896551724137931,
+            "required_facet_coverage": 0.6053639846743295,
+            "unjudged_returned_chunks": 34
+          },
+          "10": {
+            "all_required_facets_hit": 0.896551724137931,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.9655172413793104,
+            "explicit_negative_only_chunks": 5,
+            "known_fact_reciprocal_rank": 0.7998084291187739,
+            "required_facet_coverage": 0.928735632183908,
+            "unjudged_returned_chunks": 870
+          },
+          "5": {
+            "all_required_facets_hit": 0.8505747126436781,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.9540229885057471,
+            "explicit_negative_only_chunks": 3,
+            "known_fact_reciprocal_rank": 0.7978927203065135,
+            "required_facet_coverage": 0.9009578544061303,
+            "unjudged_returned_chunks": 377
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 15,
+        "no_answer_with_forced_neighbors": 15,
+        "queries": 102,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "language:ru": {
+        "answerable": 87,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5287356321839081,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.6666666666666666,
+            "explicit_negative_only_chunks": 1,
+            "known_fact_reciprocal_rank": 0.6666666666666666,
+            "required_facet_coverage": 0.5996168582375478,
+            "unjudged_returned_chunks": 35
+          },
+          "10": {
+            "all_required_facets_hit": 0.8850574712643678,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.9655172413793104,
+            "explicit_negative_only_chunks": 6,
+            "known_fact_reciprocal_rank": 0.7842911877394636,
+            "required_facet_coverage": 0.924904214559387,
+            "unjudged_returned_chunks": 872
+          },
+          "5": {
+            "all_required_facets_hit": 0.8735632183908046,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.9540229885057471,
+            "explicit_negative_only_chunks": 3,
+            "known_fact_reciprocal_rank": 0.782375478927203,
+            "required_facet_coverage": 0.9114942528735632,
+            "unjudged_returned_chunks": 377
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 15,
+        "no_answer_with_forced_neighbors": 15,
+        "queries": 102,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "language:uk": {
+        "answerable": 87,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.5172413793103449,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.6666666666666666,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.6666666666666666,
+            "required_facet_coverage": 0.5852490421455938,
+            "unjudged_returned_chunks": 38
+          },
+          "10": {
+            "all_required_facets_hit": 0.8850574712643678,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.9655172413793104,
+            "explicit_negative_only_chunks": 5,
+            "known_fact_reciprocal_rank": 0.7756066411238824,
+            "required_facet_coverage": 0.924904214559387,
+            "unjudged_returned_chunks": 874
+          },
+          "5": {
+            "all_required_facets_hit": 0.8275862068965517,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.9195402298850575,
+            "explicit_negative_only_chunks": 3,
+            "known_fact_reciprocal_rank": 0.7685823754789272,
+            "required_facet_coverage": 0.8697318007662835,
+            "unjudged_returned_chunks": 381
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 15,
+        "no_answer_with_forced_neighbors": 15,
+        "queries": 102,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      }
+    },
+    "lexical": {
+      "all:all": {
+        "answerable": 261,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 261,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 45,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 306,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:ART": {
+        "answerable": 24,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 24,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 24,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 24,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 24,
+        "query_families": 8,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:AZ": {
+        "answerable": 36,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 36,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 36,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 36,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 36,
+        "query_families": 12,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:CS": {
+        "answerable": 42,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 42,
+        "query_families": 14,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:K8S": {
+        "answerable": 57,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 57,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 57,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 57,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 57,
+        "query_families": 19,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:LIT": {
+        "answerable": 60,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 60,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 60,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 60,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 60,
+        "query_families": 20,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:MATH": {
+        "answerable": 42,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 42,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 0,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 42,
+        "query_families": 14,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "domain:NA": {
+        "answerable": 0,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": null,
+            "answerable_denominator": 0,
+            "any_fact_hit": null,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": null,
+            "required_facet_coverage": null,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": null,
+            "answerable_denominator": 0,
+            "any_fact_hit": null,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": null,
+            "required_facet_coverage": null,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": null,
+            "answerable_denominator": 0,
+            "any_fact_hit": null,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": null,
+            "required_facet_coverage": null,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 45,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 45,
+        "query_families": 15,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "language:en": {
+        "answerable": 87,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 15,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 102,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "language:ru": {
+        "answerable": 87,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 15,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 102,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      },
+      "language:uk": {
+        "answerable": 87,
+        "cutoffs": {
+          "1": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "10": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          },
+          "5": {
+            "all_required_facets_hit": 0.0,
+            "answerable_denominator": 87,
+            "any_fact_hit": 0.0,
+            "explicit_negative_only_chunks": 0,
+            "known_fact_reciprocal_rank": 0.0,
+            "required_facet_coverage": 0.0,
+            "unjudged_returned_chunks": 0
+          }
+        },
+        "full_relevance_recall": null,
+        "graded_ndcg": null,
+        "no_answer": 15,
+        "no_answer_with_forced_neighbors": 0,
+        "queries": 102,
+        "query_families": 102,
+        "scope": "Exact coverage of known required source facets; unjudged chunks not assigned grade zero."
+      }
+    },
+    "timings": {
+      "fts_http_wall_ms": {
+        "max": 47.00000000048021,
+        "min": 30.99999999994907,
+        "p50": 30.99999999994907,
+        "p95": 47.000000000025466,
+        "samples": 306
+      },
+      "http_wall_ms": {
+        "max": 1032.0000000001528,
+        "min": 655.9999999999491,
+        "p50": 733.9999999994689,
+        "p95": 907.0000000001528,
+        "samples": 306
+      },
+      "provider_inference_ms": {
+        "max": 235.1582320000034,
+        "min": 20.039958000012348,
+        "p50": 38.51242100000718,
+        "p95": 219.98929700001213,
+        "samples": 306
+      },
+      "query_embedding_wall_ms": {
+        "max": 672.0000000000255,
+        "min": 391.0000000000764,
+        "p50": 452.99999999997453,
+        "p95": 639.9999999998727,
+        "samples": 306
+      },
+      "sql_oracle_wall_ms": {
+        "max": 63.00000000010186,
+        "min": 16.000000000076398,
+        "p50": 32.000000000152795,
+        "p95": 61.99999999989814,
+        "samples": 306
+      }
+    },
+    "sql_oracle_agreements": 306,
+    "model_profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+    "model_digest": "cd97e9cb507f62c0b69e6540ecabbb877508ba71437d2d227f25cd611b8ae67d",
+    "predictions_sha256": "1c81f2207fa403d373b8ccbd28e23b815d2d0e04ad919312c95b1882385b5b85",
+    "execution": "Real TEI HTTP inference, existing ingestion and API routes via ASGI, independent native PostgreSQL oracle",
+    "timing_scope": "In-process ASGI wall time; no network/UI/kernel-only latency claim",
+    "prediction_scoring_order": "Predictions frozen before reference scoring; no tuning or query rewriting",
+    "generation_executed": false,
+    "usage": {
+      "document_provider_reported_tokens": 197677,
+      "query_provider_reported_tokens": 14242,
+      "total_provider_reported_tokens": 211919,
+      "successful_requests": 557,
+      "unknown_or_proxy_usage": 0,
+      "calibration_workload_excluded_from_these_totals": true
+    }
+  },
+  "fts_control": {
+    "status": "PASS",
+    "positive_literal_controls": 10,
+    "source_originals": 3,
+    "chunks": 257,
+    "model_calls": 0,
+    "benchmark_queries_changed": false,
+    "owned_database_dropped": true,
+    "native_query_policy": "Existing plainto_tsquery('simple',full_query), conjunction of all lexemes",
+    "initial_regex_fragment_control_failed_and_not_counted": true
+  },
+  "calibration": {
+    "state": "FRESH_ACTUALLY_MEASURED",
+    "sustainable_tpm": 589824,
+    "profile_changed": false,
+    "expired_allowance_reused": false
+  },
+  "dataset_delivery": {
+    "revision": "local-v2",
+    "local_path": ".local/evaluation-holdout/quality-check/dataset-delivery/v2",
+    "documents": [
+      "CORPUS_MANIFEST.md",
+      "QUESTIONS.md",
+      "REFERENCE_ANSWERS.md",
+      "VALIDATION.md"
+    ],
+    "source_originals": 103,
+    "families": 521,
+    "localized_records": 1563,
+    "quarantined_localized_records": 3,
+    "source_original_sparse_grade_semantics": {
+      "primary": 3,
+      "support": 1,
+      "explicit_negative": 0,
+      "unjudged": null
+    },
+    "human_or_independent_benchmark_claimed": false
+  },
+  "verification": {
+    "delivery": "PASS",
+    "runtime_offline_replay": "PASS",
+    "recomputed_per_query_score_rows": 612,
+    "recomputed_macro_means": 264,
+    "frozen_private_artifact_members_verified": 215,
+    "local_existing_tests_passed": 130,
+    "local_evidence_coverage_tests_passed": 10,
+    "all_owned_databases_dropped": true,
+    "production_changes": 0
+  }
+}

@@ -296,3 +296,10 @@ tasks/evidence/dense-2026-11-24/*
 !tasks/evidence/dense-2026-11-24/dense-sql-tests.xml
 !tasks/evidence/dense-2026-11-24/native-tokenizer-tests.xml
 !tasks/evidence/dense-2026-11-24/artifact-safety-audit.json
+
+# Local RAG quality experiments: code, datasets, traces and temporary tests.
+.local/evaluation-holdout/
+!tasks/evidence/dataset-2026-11-24/
+tasks/evidence/dataset-2026-11-24/*
+!tasks/evidence/dataset-2026-11-24/report.md
+!tasks/evidence/dataset-2026-11-24/metrics.json
