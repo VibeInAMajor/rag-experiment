@@ -64,6 +64,10 @@ Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file lim
 
 Use [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) sections 4.1/4.2/4.5/4.6. Predeclare a paired clean vs ~5% distractor-document stress experiment (actual count/ratio and targeted hard negatives separately), using a disposable corpus and same source/query families, active truth and budgets. Compare known-facet/primary metrics at K=1/5/10, full Recall/nDCG only with sufficient judgments, hard-negative@1/@K, all-facets and delta pp; initial proposed <=5 pp drop in known-facet recall@5/all-facets@5, ratify on OPEN before candidate freeze. Distinguish true active contradictions and changed gold from forbidden stale/foreign results. Measure selected-context source chain, source-fidelity assessment coverage and OOD sufficiency; zero observed invalid scope/version/locator/false verification. No answer metrics until generation. Freeze all settings before R2, and use only local holdout; no human reviewer or enterprise approval. If hybrid NO-GO, qualify best justified dense path, not empty fusion.
 
+### Do not confuse diagnostic improvement with release qualification — 2026-11-26
+
+[Latest QUALITY-001 report](../evidence/quality-2026-11-25/report.md) establishes an improved but insufficient post-cleanup OPEN baseline (any-fact@1 74.33%, @5 97.70%, all-facts@5 90.80%, all-context 91.95%). Historical OPEN primary fields were any-complete-fact, not Primary Evidence Hit. Require [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) metric eligibility and frozen rubric; distinguish pooled from exhaustive relevance, and do not pass unsupported gates. Freeze candidate after corrective owner experiments (LEXICAL/HYBRID where useful, RERANK and CHUNK/EVIDENCE as measured, ANSWERABILITY). Run R2 only after candidate freeze, not as iterative tuning. Keep 95/98/95 targets unchanged; diagnostic proxy gaps are not proof of primary/relevance metric values. Existing local UI acceptance and no human approval requirement apply.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -86,6 +90,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] No enterprise or answer-quality claim from retrieval success.
 
 - [ ] Paired clean/stress and OOD retrieval results, source integrity, per-cohort uncertainty and explicit gate decisions recorded; sparse/unavailable metrics cannot be marked PASS.
+
+- [ ] Distinct primary/relevance/facet metrics and eligibility are explicit; final GO only after actual frozen R2 and robustness/sufficiency gates, no threshold dilution.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
