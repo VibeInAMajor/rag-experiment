@@ -1,7 +1,7 @@
 # TASK-RAG-QUALITY-002 — Qualify end-to-end retrieval quality and establish a permanent regression gate
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-25  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — specification only; no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md), [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md), [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) or documented NO-GO/approved baseline, [EVIDENCE-002](TASK-RAG-EVIDENCE-002-bounded-context-and-required-facet-coverage.md), [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md); [RERANK-001](TASK-RAG-RERANK-001-local-semantic-reranker-qualification.md)/[RERANK-002](TASK-RAG-RERANK-002-qualified-reranking-integration.md) and [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md)/[BM25-002](TASK-RAG-BM25-002-conditional-postgresql-bm25-search-profile.md) only if GO; [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) scoped integration.  
@@ -60,6 +60,10 @@ Run manifest with dataset/labels/corpus digest, source family split, profile/mod
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Paired adversarial retrieval and source integrity gate — 2026-11-26
+
+Use [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) sections 4.1/4.2/4.5/4.6. Predeclare a paired clean vs ~5% distractor-document stress experiment (actual count/ratio and targeted hard negatives separately), using a disposable corpus and same source/query families, active truth and budgets. Compare known-facet/primary metrics at K=1/5/10, full Recall/nDCG only with sufficient judgments, hard-negative@1/@K, all-facets and delta pp; initial proposed <=5 pp drop in known-facet recall@5/all-facets@5, ratify on OPEN before candidate freeze. Distinguish true active contradictions and changed gold from forbidden stale/foreign results. Measure selected-context source chain, source-fidelity assessment coverage and OOD sufficiency; zero observed invalid scope/version/locator/false verification. No answer metrics until generation. Freeze all settings before R2, and use only local holdout; no human reviewer or enterprise approval. If hybrid NO-GO, qualify best justified dense path, not empty fusion.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -80,6 +84,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Targets met for qualified local scope or explicit NO-GO/BLOCKED with no activation.
 - [ ] Regression suite and runbook reproduce results and detect injected ranking/identity failures.
 - [ ] No enterprise or answer-quality claim from retrieval success.
+
+- [ ] Paired clean/stress and OOD retrieval results, source integrity, per-cohort uncertainty and explicit gate decisions recorded; sparse/unavailable metrics cannot be marked PASS.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
