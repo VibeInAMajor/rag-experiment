@@ -1,7 +1,7 @@
 # TASK-RAG-OPS-001 — Cross-stage tracing, quality evaluation and operational observability
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-24  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — implementation blueprint, not implemented  
 **Priority:** P1  
 **Dependencies:** INDEX-001, PROFILE-001; integrate EMBED/DENSE/ANN/HYBRID and CONTENT pipelines as qualified  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
@@ -92,6 +92,10 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 
 **Cross-cutting constraints:** One shared capacity authority [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) enforces 0.92 desired and 0.95 hard; separate workers cannot bypass it.
 
+### Metric evidence integration (not a new service prerequisite) — 2026-11-26
+
+Reuse existing evaluation artifact owners for metric schema/version, clean/stress runs, source fidelity, chain consistency, calibration, noise, drift and correction window as defined in [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md). Consume aggregate counts and trace IDs from existing owners; do not build a competing evaluator, require OTEL for local metrics, log gold/raw prompts or infer production traffic from local probes. Optional alerts only after real drift/freshness baselines, with explicit thresholds and owner. Generation-dependent metrics remain NOT_EVALUATED until qualified.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext and FORCE RLS across all source, asset and index paths. Keep private source bytes, vectors, prompts, credentials, user identifiers and arbitrary URLs out of logs and public evidence. Treat source/model text as untrusted data. Enforce bounded CPU/GPU/DB/network requests, cancellation, timeout, retention, auditing and safe error codes with trace/job/run IDs. Test cross-workspace and provider outage negative cases.
@@ -120,6 +124,8 @@ Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, 
 - [ ] Embedding coverage, backlog, cost and p95 metrics use real samples
 - [ ] Alert and incident runbook for stale generation and missing original evidence
 - [ ] Legacy lexical, ingestion and UI smoke unchanged
+
+- [ ] Local report consumes versioned metric evidence and actual stage timestamps, with explicit missing metrics; no new telemetry dependency required for current quality.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
