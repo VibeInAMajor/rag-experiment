@@ -1,7 +1,7 @@
 # TASK-RAG-DATASET-001 — Build and validate a local source-grounded retrieval evaluation dataset
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-25  
+**Updated:** 2026-11-26  
 **Status:** PROPOSED — specification only; no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md); existing qualified small-document ingestion and parsers; [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) for later actual embedding. Starter dataset exists but agent verification and gold freeze are pending.  
@@ -60,6 +60,10 @@ Starter under tasks/quality/dataset/; add reviewed corpus/manifest and fixture l
 
 Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file limits (TXT/MD/Python 1 MiB; qualified text PDF 8 MiB/32 pages). Target 100–300 small documents, 1k–5k chunks only if measured within these bounds. No ANN, large-file ingestion, OCR, new parser or enterprise authorization prerequisite for this local quality phase. Retain existing RLS, source/version/profile/generation checks, shared model admission and exact float32 oracle. Follow [AGENTS.md](../../AGENTS.md) and [docs-website/ENGINEERING.md](../../docs-website/ENGINEERING.md); reuse existing owners, provider-neutral contracts and semantic names, no task IDs in code identifiers. Reinspect actual code/tests before implementation and amend A–O before scope expansion.
 
+### Additive stress fixtures (later quality consumers) — 2026-11-26
+
+The [actual local delivery report](../evidence/dataset-2026-11-24/report.md) records COMPLETE_LOCAL; do not reopen or overwrite it for this amendment. For subsequent consumer tasks, the coding agent prepares additive, versioned hard-negative/contradiction, changed-definition, OOD, noise and source-fidelity fixtures as required by the [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md). Keep original-source qrels and answers separate from runtime inputs, freeze paired clean/perturbed query labels, distinguish active conflicts from stale/foreign negatives, and retain unknowns. Visual cases require qualified producer and original image/region gold; unavailable modalities remain NOT_EVALUABLE. The existing local holdout stays untouched during tuning; no reviewer or special storage prerequisite.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Local fixtures/labels retain source license, provenance and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -80,6 +84,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Agent verification recorded; local holdout frozen with actual sample/cohort counts and disclosed limitations.
 - [ ] Gold labels never indexed; actual source/anchor validation and split leakage checks pass.
 - [ ] No unsupported format or unreviewed seed presented as qualified gold.
+
+- [ ] When a downstream stress suite is executed, its additive fixture revision, source checks and split/perturbation manifest are recorded; prior local delivery is preserved.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
