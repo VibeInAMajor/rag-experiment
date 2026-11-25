@@ -379,3 +379,15 @@ Evaluation runs may use dedicated disposable data/index spaces; never overwrite 
 - [ ] Privacy/cost and tenant isolation gates passed; no hidden model use.
 - [ ] Compatibility, rollback and documented strategy decision updated.
 - [ ] All A–O criteria resolved before marking COMPLETE.
+
+
+## QUALITY-001 failure-localization evidence
+
+QUALITY-001 OPEN V2 handoff (2026-11-25): earliest structural missing-facet attribution affects 41 baseline / 40 selected queries; all reviewed anchors remain coverable by the eligible indexed union. Inspect per-facet singleton feasibility, alternative sets and original/source-only view boundaries in ignored failure-analysis.json before changing policy. The separately authorized raw-markdown-r3 repair was verified through UI (31 replaced originals, 645 chunks, zero heading-only chunks); its relevance delta is NOT_EVALUATED. Future evidence mapping must distinguish source_span from projection_span and projection_sha256. Do not attribute all historical misses to service markup.
+
+Evidence: [V2 report](evidence/quality-2026-11-25/report.md). Raw per-query IDs, locators, alternative sets and next probes remain in the ignored existing V2 run; sanitized counts are in metrics.json → failure_localization.
+## QUALITY-001 UI completion evidence — 2026-11-26
+
+Matched original-only UI pair: 1441 → 634 chunks; any complete fact @1 177 → 194/261; all facets @5 222 → 237/261; fixed-context all facets 226 → 240/261. Same 31 normalized originals/model/instruction/settings and visible-source gold interpretation. This closes the Markdown relevance NOT_EVALUATED item above; clustered intervals and regressions remain explicit. Do not infer that service markup explains every historical failure.
+
+Evidence: [completed UI comparison](evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.

@@ -83,3 +83,15 @@ Preserve original candidate ranks and exact profiles. Keep experiment isolated; 
 - [ ] Link actual commands and evidence, including blocked/unrun gates and limitations.
 - [ ] Verify immutable profile compatibility, data preservation and rollback.
 - [ ] Record changed paths and implementation commit; mark COMPLETE only with evidence for applicable task gates.
+
+
+## QUALITY-001 failure-localization evidence
+
+QUALITY-001 OPEN V2 handoff (2026-11-25): earliest ranking attribution affects 70 baseline / 68 selected queries; individual-facet top-five ordering losses affect 14/16. Full required-fact union is present in top ten for 232/238 of 261 answerable questions, an upper bound rather than proof of fitting five chunks or 2048 tokens. Review captured ranks and singleton-vs-multi-chunk feasibility; a reranker cannot add missing candidates. No reranker was implemented or qualified by this diagnosis.
+
+Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query IDs, locators, alternative sets and next probes remain in the ignored existing V2 run; sanitized counts are in metrics.json → failure_localization.
+## QUALITY-001 UI completion evidence — 2026-11-26
+
+Matched original-only before/after pair: all-facts candidates available at 50 but missing at 10 affect 23/9 answerable queries; complete at 10 but missing at 5 affect 10/9. These are observed ranking losses, not proof that five whole chunks can cover every facet. Original frozen targeted ranks are also captured through 50; no reranker implemented or promoted.
+
+Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.

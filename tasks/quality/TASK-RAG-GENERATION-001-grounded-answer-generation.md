@@ -83,3 +83,15 @@ Additive answer capability and profile; disable without changing retrieval, corp
 - [ ] Link actual commands and evidence, including blocked/unrun gates and limitations.
 - [ ] Verify immutable profile compatibility, data preservation and rollback.
 - [ ] Record changed paths and implementation commit; mark COMPLETE only with evidence for applicable task gates.
+
+
+## QUALITY-001 failure-localization evidence
+
+QUALITY-001 OPEN V2 handoff (2026-11-25): generation and answer correctness are NOT_EVALUATED. The eight arms measure sparse reviewed source-facet coverage, not generated answer accuracy or hallucination rate. Preserve separate Primary Evidence Hit NOT_EVALUABLE when no separately judged primary label exists, and do not turn no-answer neighbors into fabricated generation failures.
+
+Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query IDs, locators, alternative sets and next probes remain in the ignored existing V2 run; sanitized counts are in metrics.json → failure_localization.
+## QUALITY-001 UI completion evidence — 2026-11-26
+
+The measured Markdown pair provides all reviewed source facets in the fixed context on 226 → 240/261. Treat the remaining gaps and automatic sparse gold as explicit generation inputs/limits; no generated-answer accuracy or faithfulness measurement exists. Generation remains NOT_EVALUATED.
+
+Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.

@@ -235,7 +235,9 @@ def _descriptor(format_id: FormatId) -> ParserDescriptor:
         kinds = (ElementKind.PYTHON_SOURCE,)
     return ParserDescriptor(
         parser_id=parser_id,
-        parser_revision=f"{parser_id}-r1" if qualified else "not-qualified",
+        parser_revision=("raw-markdown-r3" if format_id is FormatId.MARKDOWN else f"{parser_id}-r1")
+        if qualified
+        else "not-qualified",
         accepted_format_ids=(format_id,),
         available=qualified,
         qualified=qualified,
@@ -246,7 +248,7 @@ def _descriptor(format_id: FormatId) -> ParserDescriptor:
         emitted_element_kinds=kinds if qualified else (),
         required_provenance=("source_sha256", "source_span", "line_range") if qualified else (),
         constraints=("UTF8_ONLY", "IN_MEMORY_ONLY", "NO_NETWORK", "COOPERATIVE_DEADLINE")
-        + (("RAW_MARKDOWN_STRUCTURES",) if format_id is FormatId.MARKDOWN else ())
+        + (("SOURCE_MAPPED_MARKDOWN_PROJECTION", "NO_HUGO_EXPANSION") if format_id is FormatId.MARKDOWN else ())
         if qualified
         else ("PLANNED_APP_ADAPTER", "NO_PUBLIC_UPLOAD_CAPABILITY"),
     )

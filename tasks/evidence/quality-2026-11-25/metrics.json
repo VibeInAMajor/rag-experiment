@@ -57660,6 +57660,2666 @@
     "uncertainty_limits": "Query-family resampling groups translations; correlations across families with shared source lineage remain. Intervals are not adjusted for choosing among eight OPEN tuning arms. These diagnostic intervals do not establish IID population or production confidence.",
     "verdict": "INSUFFICIENT_WITH_CURRENT_STACK"
   },
+  "failure_localization": {
+    "arm_pair_differences": {
+      "code-query": {
+        "all_context": {
+          "improved": 6,
+          "regressed": 3
+        },
+        "all_facets_at_5": {
+          "improved": 4,
+          "regressed": 1
+        },
+        "any_fact_at_1": {
+          "improved": 10,
+          "regressed": 6
+        }
+      },
+      "generic-baseline": {
+        "all_context": {
+          "improved": 0,
+          "regressed": 0
+        },
+        "all_facets_at_5": {
+          "improved": 0,
+          "regressed": 0
+        },
+        "any_fact_at_1": {
+          "improved": 0,
+          "regressed": 0
+        }
+      },
+      "heading-input": {
+        "all_context": {
+          "improved": 6,
+          "regressed": 4
+        },
+        "all_facets_at_5": {
+          "improved": 6,
+          "regressed": 6
+        },
+        "any_fact_at_1": {
+          "improved": 8,
+          "regressed": 13
+        }
+      },
+      "long-chunks": {
+        "all_context": {
+          "improved": 4,
+          "regressed": 14
+        },
+        "all_facets_at_5": {
+          "improved": 4,
+          "regressed": 9
+        },
+        "any_fact_at_1": {
+          "improved": 22,
+          "regressed": 31
+        }
+      },
+      "no-overlap": {
+        "all_context": {
+          "improved": 0,
+          "regressed": 6
+        },
+        "all_facets_at_5": {
+          "improved": 0,
+          "regressed": 7
+        },
+        "any_fact_at_1": {
+          "improved": 8,
+          "regressed": 5
+        }
+      },
+      "short-chunks": {
+        "all_context": {
+          "improved": 2,
+          "regressed": 2
+        },
+        "all_facets_at_5": {
+          "improved": 1,
+          "regressed": 6
+        },
+        "any_fact_at_1": {
+          "improved": 19,
+          "regressed": 16
+        }
+      },
+      "technical-query": {
+        "all_context": {
+          "improved": 6,
+          "regressed": 6
+        },
+        "all_facets_at_5": {
+          "improved": 2,
+          "regressed": 5
+        },
+        "any_fact_at_1": {
+          "improved": 11,
+          "regressed": 15
+        }
+      },
+      "wider-overlap": {
+        "all_context": {
+          "improved": 0,
+          "regressed": 2
+        },
+        "all_facets_at_5": {
+          "improved": 0,
+          "regressed": 3
+        },
+        "any_fact_at_1": {
+          "improved": 8,
+          "regressed": 6
+        }
+      }
+    },
+    "artifacts": {
+      "FAILURE_ANALYSIS.md": "43145bf51afd7e5cd4d0096e623d046380ee7aa034e727f75aff15305be484ef",
+      "failure-analysis.json": "abfc4751a2cdc0c36faccaba15b3489190abf2fcd10bb88f4a287f19a23d361c"
+    },
+    "baseline_selected_union_investigations": 146,
+    "family_breakdown": "102 family records per arm retained in ignored failure-analysis.json; translations remain correlated",
+    "fts_native_controls": {
+      "captured_controls": 10,
+      "fresh_native_query_inspection": "NOT_EXECUTED_UI_HAS_NO_NATIVE_TOKEN_INSPECTOR",
+      "native_match_and_stored_projection_passes": 10
+    },
+    "generation_runs": 0,
+    "groups": {
+      "arm": {
+        "code-query/code-query": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 10,
+            "chunk_structure": 40,
+            "ranking": 68
+          },
+          "all_facets_at_10": 238,
+          "all_facets_at_5": 225,
+          "all_facets_in_context": 228,
+          "answerable": 261,
+          "any_fact_at_1": 180,
+          "any_fact_at_5": 247,
+          "candidate_loss_queries": 23,
+          "context_loss_queries": 12,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 14,
+            "chunk_structure": 74,
+            "covered": 439,
+            "ranking": 130
+          },
+          "failure_queries": 92,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 16,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2603
+        },
+        "generic-baseline/generic-baseline": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 11,
+            "chunk_structure": 41,
+            "ranking": 70
+          },
+          "all_facets_at_10": 232,
+          "all_facets_at_5": 222,
+          "all_facets_in_context": 225,
+          "answerable": 261,
+          "any_fact_at_1": 176,
+          "any_fact_at_5": 246,
+          "candidate_loss_queries": 29,
+          "context_loss_queries": 12,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 14,
+            "chunk_structure": 74,
+            "covered": 434,
+            "ranking": 135
+          },
+          "failure_queries": 95,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 14,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2616
+        },
+        "heading-input/heading-input": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 10,
+            "chunk_structure": 36,
+            "ranking": 75
+          },
+          "all_facets_at_10": 236,
+          "all_facets_at_5": 222,
+          "all_facets_in_context": 227,
+          "answerable": 261,
+          "any_fact_at_1": 171,
+          "any_fact_at_5": 247,
+          "candidate_loss_queries": 25,
+          "context_loss_queries": 14,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 17,
+            "chunk_structure": 67,
+            "covered": 432,
+            "ranking": 141
+          },
+          "failure_queries": 98,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 19,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2607
+        },
+        "long-chunks/long-chunks": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 13,
+            "chunk_structure": 39,
+            "ranking": 83
+          },
+          "all_facets_at_10": 235,
+          "all_facets_at_5": 217,
+          "all_facets_in_context": 215,
+          "answerable": 261,
+          "any_fact_at_1": 167,
+          "any_fact_at_5": 239,
+          "candidate_loss_queries": 26,
+          "context_loss_queries": 25,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 16,
+            "chunk_structure": 66,
+            "covered": 421,
+            "ranking": 154
+          },
+          "failure_queries": 107,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 26,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2610
+        },
+        "no-overlap/no-overlap": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 11,
+            "chunk_structure": 41,
+            "ranking": 73
+          },
+          "all_facets_at_10": 229,
+          "all_facets_at_5": 215,
+          "all_facets_in_context": 219,
+          "answerable": 261,
+          "any_fact_at_1": 179,
+          "any_fact_at_5": 244,
+          "candidate_loss_queries": 32,
+          "context_loss_queries": 17,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 17,
+            "chunk_structure": 68,
+            "covered": 435,
+            "ranking": 137
+          },
+          "failure_queries": 95,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 19,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2618
+        },
+        "short-chunks/short-chunks": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 14,
+            "chunk_structure": 41,
+            "ranking": 62
+          },
+          "all_facets_at_10": 231,
+          "all_facets_at_5": 217,
+          "all_facets_in_context": 225,
+          "answerable": 261,
+          "any_fact_at_1": 179,
+          "any_fact_at_5": 241,
+          "candidate_loss_queries": 30,
+          "context_loss_queries": 9,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 21,
+            "chunk_structure": 83,
+            "covered": 435,
+            "ranking": 118
+          },
+          "failure_queries": 98,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 19,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2594
+        },
+        "technical-query/technical-query": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 10,
+            "chunk_structure": 43,
+            "ranking": 74
+          },
+          "all_facets_at_10": 234,
+          "all_facets_at_5": 219,
+          "all_facets_in_context": 225,
+          "answerable": 261,
+          "any_fact_at_1": 172,
+          "any_fact_at_5": 242,
+          "candidate_loss_queries": 27,
+          "context_loss_queries": 15,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 14,
+            "chunk_structure": 79,
+            "covered": 420,
+            "ranking": 144
+          },
+          "failure_queries": 100,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 19,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2615
+        },
+        "wider-overlap/wider-overlap": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 11,
+            "chunk_structure": 40,
+            "ranking": 70
+          },
+          "all_facets_at_10": 232,
+          "all_facets_at_5": 219,
+          "all_facets_in_context": 223,
+          "answerable": 261,
+          "any_fact_at_1": 178,
+          "any_fact_at_5": 245,
+          "candidate_loss_queries": 29,
+          "context_loss_queries": 15,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 14,
+            "chunk_structure": 73,
+            "covered": 438,
+            "ranking": 132
+          },
+          "failure_queries": 95,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 306,
+          "top5_ordering_loss_queries": 18,
+          "translated_fact_observations": 657,
+          "unjudged_at_10": 2597
+        }
+      },
+      "domain": {
+        "code-query/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 10,
+            "ranking": 6
+          },
+          "all_facets_at_10": 21,
+          "all_facets_at_5": 17,
+          "all_facets_in_context": 16,
+          "answerable": 24,
+          "any_fact_at_1": 15,
+          "any_fact_at_5": 23,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 17,
+            "covered": 51,
+            "ranking": 16
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 203
+        },
+        "code-query/AZ": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 1,
+            "chunk_structure": 3,
+            "ranking": 7
+          },
+          "all_facets_at_10": 32,
+          "all_facets_at_5": 31,
+          "all_facets_in_context": 32,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 4,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "candidate_retrieval": 2,
+            "chunk_structure": 6,
+            "covered": 83,
+            "ranking": 17
+          },
+          "failure_queries": 10,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 1,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 298
+        },
+        "code-query/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 8
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 42,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 85,
+            "ranking": 17
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 336
+        },
+        "code-query/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 9,
+            "ranking": 21
+          },
+          "all_facets_at_10": 50,
+          "all_facets_at_5": 45,
+          "all_facets_in_context": 47,
+          "answerable": 57,
+          "any_fact_at_1": 36,
+          "any_fact_at_5": 52,
+          "candidate_loss_queries": 7,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 18,
+            "covered": 81,
+            "ranking": 39
+          },
+          "failure_queries": 25,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 7,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 461
+        },
+        "code-query/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 8,
+            "ranking": 20
+          },
+          "all_facets_at_10": 54,
+          "all_facets_at_5": 52,
+          "all_facets_in_context": 52,
+          "answerable": 60,
+          "any_fact_at_1": 34,
+          "any_fact_at_5": 55,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 9,
+            "chunk_structure": 14,
+            "covered": 61,
+            "ranking": 30
+          },
+          "failure_queries": 26,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 513
+        },
+        "code-query/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 4,
+            "ranking": 6
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 38,
+          "all_facets_in_context": 39,
+          "answerable": 42,
+          "any_fact_at_1": 37,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 4,
+            "covered": 78,
+            "ranking": 11
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 1,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 342
+        },
+        "code-query/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "generic-baseline/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 9,
+            "ranking": 8
+          },
+          "all_facets_at_10": 18,
+          "all_facets_at_5": 17,
+          "all_facets_in_context": 17,
+          "answerable": 24,
+          "any_fact_at_1": 13,
+          "any_fact_at_5": 22,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 49,
+            "ranking": 20
+          },
+          "failure_queries": 12,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 206
+        },
+        "generic-baseline/AZ": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 6
+          },
+          "all_facets_at_10": 33,
+          "all_facets_at_5": 30,
+          "all_facets_in_context": 33,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 84,
+            "ranking": 18
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 299
+        },
+        "generic-baseline/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 8
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 42,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 85,
+            "ranking": 17
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 336
+        },
+        "generic-baseline/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 9,
+            "ranking": 18
+          },
+          "all_facets_at_10": 46,
+          "all_facets_at_5": 45,
+          "all_facets_in_context": 46,
+          "answerable": 57,
+          "any_fact_at_1": 37,
+          "any_fact_at_5": 52,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 18,
+            "covered": 83,
+            "ranking": 35
+          },
+          "failure_queries": 24,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 470
+        },
+        "generic-baseline/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 9,
+            "ranking": 22
+          },
+          "all_facets_at_10": 54,
+          "all_facets_at_5": 51,
+          "all_facets_in_context": 50,
+          "answerable": 60,
+          "any_fact_at_1": 32,
+          "any_fact_at_5": 55,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 9,
+            "chunk_structure": 15,
+            "covered": 56,
+            "ranking": 34
+          },
+          "failure_queries": 28,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 513
+        },
+        "generic-baseline/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 5,
+            "ranking": 8
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 37,
+          "all_facets_in_context": 37,
+          "answerable": 42,
+          "any_fact_at_1": 36,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 2,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 5,
+            "covered": 77,
+            "ranking": 11
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 342
+        },
+        "generic-baseline/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "heading-input/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 9,
+            "ranking": 8
+          },
+          "all_facets_at_10": 18,
+          "all_facets_at_5": 17,
+          "all_facets_in_context": 17,
+          "answerable": 24,
+          "any_fact_at_1": 13,
+          "any_fact_at_5": 22,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 49,
+            "ranking": 20
+          },
+          "failure_queries": 12,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 206
+        },
+        "heading-input/AZ": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 6
+          },
+          "all_facets_at_10": 33,
+          "all_facets_at_5": 31,
+          "all_facets_in_context": 33,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 84,
+            "ranking": 18
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 300
+        },
+        "heading-input/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 11
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 41,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 28,
+          "any_fact_at_5": 41,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 76,
+            "ranking": 26
+          },
+          "failure_queries": 14,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 1,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 336
+        },
+        "heading-input/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 7,
+            "ranking": 16
+          },
+          "all_facets_at_10": 51,
+          "all_facets_at_5": 50,
+          "all_facets_in_context": 51,
+          "answerable": 57,
+          "any_fact_at_1": 37,
+          "any_fact_at_5": 54,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 14,
+            "covered": 89,
+            "ranking": 31
+          },
+          "failure_queries": 22,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 468
+        },
+        "heading-input/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 8,
+            "ranking": 23
+          },
+          "all_facets_at_10": 53,
+          "all_facets_at_5": 47,
+          "all_facets_in_context": 48,
+          "answerable": 60,
+          "any_fact_at_1": 32,
+          "any_fact_at_5": 55,
+          "candidate_loss_queries": 7,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 10,
+            "chunk_structure": 14,
+            "covered": 59,
+            "ranking": 31
+          },
+          "failure_queries": 30,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 6,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 513
+        },
+        "heading-input/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 11
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 36,
+          "all_facets_in_context": 36,
+          "answerable": 42,
+          "any_fact_at_1": 34,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 3,
+            "covered": 75,
+            "ranking": 15
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 334
+        },
+        "heading-input/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "long-chunks/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 2
+          },
+          "all_facets_at_10": 21,
+          "all_facets_at_5": 21,
+          "all_facets_in_context": 21,
+          "answerable": 24,
+          "any_fact_at_1": 20,
+          "any_fact_at_5": 24,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 2,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 74,
+            "ranking": 4
+          },
+          "failure_queries": 6,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 207
+        },
+        "long-chunks/AZ": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 6
+          },
+          "all_facets_at_10": 33,
+          "all_facets_at_5": 30,
+          "all_facets_in_context": 33,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 84,
+            "ranking": 18
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 297
+        },
+        "long-chunks/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 7
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 42,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 32,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 87,
+            "ranking": 15
+          },
+          "failure_queries": 10,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 342
+        },
+        "long-chunks/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 9,
+            "ranking": 22
+          },
+          "all_facets_at_10": 46,
+          "all_facets_at_5": 44,
+          "all_facets_in_context": 46,
+          "answerable": 57,
+          "any_fact_at_1": 33,
+          "any_fact_at_5": 51,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 18,
+            "covered": 76,
+            "ranking": 40
+          },
+          "failure_queries": 30,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 469
+        },
+        "long-chunks/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 9,
+            "ranking": 23
+          },
+          "all_facets_at_10": 54,
+          "all_facets_at_5": 46,
+          "all_facets_in_context": 40,
+          "answerable": 60,
+          "any_fact_at_1": 34,
+          "any_fact_at_5": 53,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 15,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 9,
+            "chunk_structure": 15,
+            "covered": 52,
+            "ranking": 38
+          },
+          "failure_queries": 29,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 8,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 505
+        },
+        "long-chunks/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 23
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 34,
+          "all_facets_in_context": 33,
+          "answerable": 42,
+          "any_fact_at_1": 21,
+          "any_fact_at_5": 36,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 8,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 48,
+            "ranking": 39
+          },
+          "failure_queries": 23,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 8,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 340
+        },
+        "long-chunks/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "no-overlap/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 9,
+            "ranking": 8
+          },
+          "all_facets_at_10": 18,
+          "all_facets_at_5": 17,
+          "all_facets_in_context": 17,
+          "answerable": 24,
+          "any_fact_at_1": 13,
+          "any_fact_at_5": 22,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 49,
+            "ranking": 20
+          },
+          "failure_queries": 12,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 206
+        },
+        "no-overlap/AZ": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 6
+          },
+          "all_facets_at_10": 33,
+          "all_facets_at_5": 30,
+          "all_facets_in_context": 33,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 84,
+            "ranking": 18
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 297
+        },
+        "no-overlap/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 8
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 42,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 85,
+            "ranking": 17
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 336
+        },
+        "no-overlap/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 9,
+            "ranking": 18
+          },
+          "all_facets_at_10": 46,
+          "all_facets_at_5": 45,
+          "all_facets_in_context": 46,
+          "answerable": 57,
+          "any_fact_at_1": 37,
+          "any_fact_at_5": 52,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 18,
+            "covered": 83,
+            "ranking": 35
+          },
+          "failure_queries": 24,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 470
+        },
+        "no-overlap/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 9,
+            "ranking": 20
+          },
+          "all_facets_at_10": 51,
+          "all_facets_at_5": 47,
+          "all_facets_in_context": 46,
+          "answerable": 60,
+          "any_fact_at_1": 39,
+          "any_fact_at_5": 55,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 7,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 12,
+            "chunk_structure": 9,
+            "covered": 65,
+            "ranking": 28
+          },
+          "failure_queries": 23,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 514
+        },
+        "no-overlap/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 5,
+            "ranking": 13
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 34,
+          "all_facets_in_context": 35,
+          "answerable": 42,
+          "any_fact_at_1": 32,
+          "any_fact_at_5": 40,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 5,
+            "covered": 69,
+            "ranking": 19
+          },
+          "failure_queries": 16,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 345
+        },
+        "no-overlap/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "short-chunks/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 13,
+            "ranking": 1
+          },
+          "all_facets_at_10": 18,
+          "all_facets_at_5": 17,
+          "all_facets_in_context": 17,
+          "answerable": 24,
+          "any_fact_at_1": 17,
+          "any_fact_at_5": 23,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 1,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 28,
+            "covered": 54,
+            "ranking": 2
+          },
+          "failure_queries": 13,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 1,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 201
+        },
+        "short-chunks/AZ": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 6
+          },
+          "all_facets_at_10": 33,
+          "all_facets_at_5": 30,
+          "all_facets_in_context": 33,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 84,
+            "ranking": 18
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 299
+        },
+        "short-chunks/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 8
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 41,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 85,
+            "ranking": 17
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 1,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 339
+        },
+        "short-chunks/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 9,
+            "ranking": 20
+          },
+          "all_facets_at_10": 46,
+          "all_facets_at_5": 45,
+          "all_facets_in_context": 46,
+          "answerable": 57,
+          "any_fact_at_1": 34,
+          "any_fact_at_5": 51,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 2,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 8,
+            "chunk_structure": 18,
+            "covered": 75,
+            "ranking": 40
+          },
+          "failure_queries": 26,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 470
+        },
+        "short-chunks/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 7,
+            "ranking": 17
+          },
+          "all_facets_at_10": 53,
+          "all_facets_at_5": 48,
+          "all_facets_in_context": 50,
+          "answerable": 60,
+          "any_fact_at_1": 36,
+          "any_fact_at_5": 51,
+          "candidate_loss_queries": 7,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 13,
+            "chunk_structure": 13,
+            "covered": 62,
+            "ranking": 26
+          },
+          "failure_queries": 26,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 6,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 504
+        },
+        "short-chunks/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 10
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 36,
+          "all_facets_in_context": 37,
+          "answerable": 42,
+          "any_fact_at_1": 34,
+          "any_fact_at_5": 41,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 2,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 3,
+            "covered": 75,
+            "ranking": 15
+          },
+          "failure_queries": 13,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 331
+        },
+        "short-chunks/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "technical-query/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 12,
+            "ranking": 8
+          },
+          "all_facets_at_10": 19,
+          "all_facets_at_5": 15,
+          "all_facets_in_context": 13,
+          "answerable": 24,
+          "any_fact_at_1": 13,
+          "any_fact_at_5": 20,
+          "candidate_loss_queries": 5,
+          "context_loss_queries": 8,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 21,
+            "covered": 43,
+            "ranking": 20
+          },
+          "failure_queries": 15,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 206
+        },
+        "technical-query/AZ": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 1,
+            "chunk_structure": 3,
+            "ranking": 7
+          },
+          "all_facets_at_10": 32,
+          "all_facets_at_5": 30,
+          "all_facets_in_context": 32,
+          "answerable": 36,
+          "any_fact_at_1": 26,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 4,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "candidate_retrieval": 2,
+            "chunk_structure": 6,
+            "covered": 81,
+            "ranking": 19
+          },
+          "failure_queries": 10,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 298
+        },
+        "technical-query/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 8
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 42,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 85,
+            "ranking": 17
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 336
+        },
+        "technical-query/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 9,
+            "ranking": 18
+          },
+          "all_facets_at_10": 48,
+          "all_facets_at_5": 45,
+          "all_facets_in_context": 48,
+          "answerable": 57,
+          "any_fact_at_1": 38,
+          "any_fact_at_5": 52,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 18,
+            "covered": 83,
+            "ranking": 37
+          },
+          "failure_queries": 22,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 6,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 466
+        },
+        "technical-query/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 9,
+            "ranking": 21
+          },
+          "all_facets_at_10": 54,
+          "all_facets_at_5": 50,
+          "all_facets_in_context": 51,
+          "answerable": 60,
+          "any_fact_at_1": 33,
+          "any_fact_at_5": 54,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 9,
+            "chunk_structure": 15,
+            "covered": 59,
+            "ranking": 31
+          },
+          "failure_queries": 27,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 516
+        },
+        "technical-query/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 4,
+            "ranking": 12
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 37,
+          "all_facets_in_context": 39,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 41,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 4,
+            "covered": 69,
+            "ranking": 20
+          },
+          "failure_queries": 15,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 343
+        },
+        "technical-query/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        },
+        "wider-overlap/ART": {
+          "affected_queries_by_category": {
+            "chunk_structure": 9,
+            "ranking": 8
+          },
+          "all_facets_at_10": 18,
+          "all_facets_at_5": 17,
+          "all_facets_in_context": 17,
+          "answerable": 24,
+          "any_fact_at_1": 13,
+          "any_fact_at_5": 22,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 28,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 49,
+            "ranking": 20
+          },
+          "failure_queries": 12,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 24,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 84,
+          "unjudged_at_10": 206
+        },
+        "wider-overlap/AZ": {
+          "affected_queries_by_category": {
+            "chunk_structure": 3,
+            "ranking": 6
+          },
+          "all_facets_at_10": 33,
+          "all_facets_at_5": 30,
+          "all_facets_in_context": 33,
+          "answerable": 36,
+          "any_fact_at_1": 27,
+          "any_fact_at_5": 33,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 36,
+          "facet_observation_causes": {
+            "chunk_structure": 6,
+            "covered": 84,
+            "ranking": 18
+          },
+          "failure_queries": 9,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 36,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 108,
+          "unjudged_at_10": 298
+        },
+        "wider-overlap/CS": {
+          "affected_queries_by_category": {
+            "chunk_structure": 6,
+            "ranking": 8
+          },
+          "all_facets_at_10": 42,
+          "all_facets_at_5": 42,
+          "all_facets_in_context": 42,
+          "answerable": 42,
+          "any_fact_at_1": 31,
+          "any_fact_at_5": 42,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 39,
+          "facet_observation_causes": {
+            "chunk_structure": 15,
+            "covered": 85,
+            "ranking": 17
+          },
+          "failure_queries": 11,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 117,
+          "unjudged_at_10": 336
+        },
+        "wider-overlap/K8S": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 9,
+            "ranking": 18
+          },
+          "all_facets_at_10": 46,
+          "all_facets_at_5": 45,
+          "all_facets_in_context": 46,
+          "answerable": 57,
+          "any_fact_at_1": 37,
+          "any_fact_at_5": 52,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 47,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 18,
+            "covered": 83,
+            "ranking": 35
+          },
+          "failure_queries": 24,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 57,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 141,
+          "unjudged_at_10": 470
+        },
+        "wider-overlap/LIT": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 8,
+            "ranking": 20
+          },
+          "all_facets_at_10": 54,
+          "all_facets_at_5": 49,
+          "all_facets_in_context": 48,
+          "answerable": 60,
+          "any_fact_at_1": 36,
+          "any_fact_at_5": 55,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 7,
+          "distinct_family_fact_ids": 38,
+          "facet_observation_causes": {
+            "candidate_retrieval": 9,
+            "chunk_structure": 14,
+            "covered": 63,
+            "ranking": 28
+          },
+          "failure_queries": 26,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 60,
+          "top5_ordering_loss_queries": 6,
+          "translated_fact_observations": 114,
+          "unjudged_at_10": 495
+        },
+        "wider-overlap/MATH": {
+          "affected_queries_by_category": {
+            "chunk_structure": 5,
+            "ranking": 10
+          },
+          "all_facets_at_10": 39,
+          "all_facets_at_5": 36,
+          "all_facets_in_context": 37,
+          "answerable": 42,
+          "any_fact_at_1": 34,
+          "any_fact_at_5": 41,
+          "candidate_loss_queries": 3,
+          "context_loss_queries": 2,
+          "distinct_family_fact_ids": 31,
+          "facet_observation_causes": {
+            "chunk_structure": 5,
+            "covered": 74,
+            "ranking": 14
+          },
+          "failure_queries": 13,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 0,
+          "queries": 42,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 93,
+          "unjudged_at_10": 342
+        },
+        "wider-overlap/NA": {
+          "affected_queries_by_category": {},
+          "all_facets_at_10": 0,
+          "all_facets_at_5": 0,
+          "all_facets_in_context": 0,
+          "answerable": 0,
+          "any_fact_at_1": 0,
+          "any_fact_at_5": 0,
+          "candidate_loss_queries": 0,
+          "context_loss_queries": 0,
+          "distinct_family_fact_ids": 0,
+          "facet_observation_causes": {},
+          "failure_queries": 0,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 45,
+          "queries": 45,
+          "top5_ordering_loss_queries": 0,
+          "translated_fact_observations": 0,
+          "unjudged_at_10": 450
+        }
+      },
+      "language": {
+        "code-query/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 2,
+            "chunk_structure": 13,
+            "ranking": 20
+          },
+          "all_facets_at_10": 81,
+          "all_facets_at_5": 75,
+          "all_facets_in_context": 77,
+          "answerable": 87,
+          "any_fact_at_1": 64,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 6,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 24,
+            "covered": 153,
+            "ranking": 39
+          },
+          "failure_queries": 27,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 7,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 864
+        },
+        "code-query/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 13,
+            "ranking": 22
+          },
+          "all_facets_at_10": 80,
+          "all_facets_at_5": 76,
+          "all_facets_in_context": 78,
+          "answerable": 87,
+          "any_fact_at_1": 61,
+          "any_fact_at_5": 82,
+          "candidate_loss_queries": 7,
+          "context_loss_queries": 2,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 24,
+            "covered": 151,
+            "ranking": 40
+          },
+          "failure_queries": 29,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 868
+        },
+        "code-query/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 14,
+            "ranking": 26
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 74,
+          "all_facets_in_context": 73,
+          "answerable": 87,
+          "any_fact_at_1": 55,
+          "any_fact_at_5": 82,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 26,
+            "covered": 135,
+            "ranking": 51
+          },
+          "failure_queries": 36,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 871
+        },
+        "generic-baseline/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 13,
+            "ranking": 23
+          },
+          "all_facets_at_10": 78,
+          "all_facets_at_5": 74,
+          "all_facets_in_context": 76,
+          "answerable": 87,
+          "any_fact_at_1": 60,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 24,
+            "covered": 146,
+            "ranking": 45
+          },
+          "failure_queries": 31,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 870
+        },
+        "generic-baseline/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 23
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 76,
+          "all_facets_in_context": 76,
+          "answerable": 87,
+          "any_fact_at_1": 58,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 25,
+            "covered": 145,
+            "ranking": 44
+          },
+          "failure_queries": 31,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 2,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 872
+        },
+        "generic-baseline/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 24
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 72,
+          "all_facets_in_context": 73,
+          "answerable": 87,
+          "any_fact_at_1": 58,
+          "any_fact_at_5": 80,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 6,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 25,
+            "covered": 143,
+            "ranking": 46
+          },
+          "failure_queries": 33,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 7,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 874
+        },
+        "heading-input/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 12,
+            "ranking": 27
+          },
+          "all_facets_at_10": 79,
+          "all_facets_at_5": 75,
+          "all_facets_in_context": 76,
+          "answerable": 87,
+          "any_fact_at_1": 56,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 8,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 22,
+            "covered": 143,
+            "ranking": 50
+          },
+          "failure_queries": 33,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 6,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 866
+        },
+        "heading-input/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 11,
+            "ranking": 24
+          },
+          "all_facets_at_10": 78,
+          "all_facets_at_5": 76,
+          "all_facets_in_context": 77,
+          "answerable": 87,
+          "any_fact_at_1": 57,
+          "any_fact_at_5": 84,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 21,
+            "covered": 145,
+            "ranking": 46
+          },
+          "failure_queries": 32,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 3,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 870
+        },
+        "heading-input/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 13,
+            "ranking": 24
+          },
+          "all_facets_at_10": 79,
+          "all_facets_at_5": 71,
+          "all_facets_in_context": 74,
+          "answerable": 87,
+          "any_fact_at_1": 58,
+          "any_fact_at_5": 80,
+          "candidate_loss_queries": 8,
+          "context_loss_queries": 7,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 24,
+            "covered": 144,
+            "ranking": 45
+          },
+          "failure_queries": 33,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 10,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 871
+        },
+        "long-chunks/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 2,
+            "chunk_structure": 13,
+            "ranking": 28
+          },
+          "all_facets_at_10": 80,
+          "all_facets_at_5": 72,
+          "all_facets_in_context": 71,
+          "answerable": 87,
+          "any_fact_at_1": 57,
+          "any_fact_at_5": 80,
+          "candidate_loss_queries": 7,
+          "context_loss_queries": 9,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 2,
+            "chunk_structure": 22,
+            "covered": 141,
+            "ranking": 54
+          },
+          "failure_queries": 35,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 10,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 867
+        },
+        "long-chunks/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 13,
+            "ranking": 27
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 73,
+          "all_facets_in_context": 72,
+          "answerable": 87,
+          "any_fact_at_1": 56,
+          "any_fact_at_5": 80,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 8,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 8,
+            "chunk_structure": 22,
+            "covered": 141,
+            "ranking": 48
+          },
+          "failure_queries": 36,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 7,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 872
+        },
+        "long-chunks/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 13,
+            "ranking": 28
+          },
+          "all_facets_at_10": 78,
+          "all_facets_at_5": 72,
+          "all_facets_in_context": 72,
+          "answerable": 87,
+          "any_fact_at_1": 54,
+          "any_fact_at_5": 79,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 8,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 22,
+            "covered": 139,
+            "ranking": 52
+          },
+          "failure_queries": 36,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 9,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 871
+        },
+        "no-overlap/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 13,
+            "ranking": 23
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 73,
+          "all_facets_in_context": 75,
+          "answerable": 87,
+          "any_fact_at_1": 61,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 22,
+            "covered": 147,
+            "ranking": 45
+          },
+          "failure_queries": 30,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 871
+        },
+        "no-overlap/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 25
+          },
+          "all_facets_at_10": 76,
+          "all_facets_at_5": 72,
+          "all_facets_in_context": 73,
+          "answerable": 87,
+          "any_fact_at_1": 59,
+          "any_fact_at_5": 82,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 6,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 23,
+            "covered": 145,
+            "ranking": 45
+          },
+          "failure_queries": 32,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 873
+        },
+        "no-overlap/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 25
+          },
+          "all_facets_at_10": 76,
+          "all_facets_at_5": 70,
+          "all_facets_in_context": 71,
+          "answerable": 87,
+          "any_fact_at_1": 59,
+          "any_fact_at_5": 79,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 8,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 23,
+            "covered": 143,
+            "ranking": 47
+          },
+          "failure_queries": 33,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 9,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 874
+        },
+        "short-chunks/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 13,
+            "ranking": 22
+          },
+          "all_facets_at_10": 78,
+          "all_facets_at_5": 74,
+          "all_facets_in_context": 77,
+          "answerable": 87,
+          "any_fact_at_1": 59,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 27,
+            "covered": 144,
+            "ranking": 44
+          },
+          "failure_queries": 33,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 6,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 861
+        },
+        "short-chunks/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 13,
+            "ranking": 20
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 74,
+          "all_facets_in_context": 76,
+          "answerable": 87,
+          "any_fact_at_1": 60,
+          "any_fact_at_5": 81,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 1,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 7,
+            "chunk_structure": 27,
+            "covered": 147,
+            "ranking": 38
+          },
+          "failure_queries": 32,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 865
+        },
+        "short-chunks/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 15,
+            "ranking": 20
+          },
+          "all_facets_at_10": 76,
+          "all_facets_at_5": 69,
+          "all_facets_in_context": 72,
+          "answerable": 87,
+          "any_fact_at_1": 60,
+          "any_fact_at_5": 77,
+          "candidate_loss_queries": 11,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 10,
+            "chunk_structure": 29,
+            "covered": 144,
+            "ranking": 36
+          },
+          "failure_queries": 33,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 9,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 868
+        },
+        "technical-query/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 2,
+            "chunk_structure": 14,
+            "ranking": 21
+          },
+          "all_facets_at_10": 79,
+          "all_facets_at_5": 74,
+          "all_facets_in_context": 77,
+          "answerable": 87,
+          "any_fact_at_1": 62,
+          "any_fact_at_5": 83,
+          "candidate_loss_queries": 8,
+          "context_loss_queries": 4,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 26,
+            "covered": 148,
+            "ranking": 42
+          },
+          "failure_queries": 30,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 7,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 869
+        },
+        "technical-query/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 24
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 73,
+          "all_facets_in_context": 74,
+          "answerable": 87,
+          "any_fact_at_1": 58,
+          "any_fact_at_5": 80,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 6,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 6,
+            "chunk_structure": 26,
+            "covered": 144,
+            "ranking": 43
+          },
+          "failure_queries": 32,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 873
+        },
+        "technical-query/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 15,
+            "ranking": 29
+          },
+          "all_facets_at_10": 78,
+          "all_facets_at_5": 72,
+          "all_facets_in_context": 74,
+          "answerable": 87,
+          "any_fact_at_1": 52,
+          "any_fact_at_5": 79,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 27,
+            "covered": 128,
+            "ranking": 59
+          },
+          "failure_queries": 38,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 7,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 873
+        },
+        "wider-overlap/en": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 3,
+            "chunk_structure": 12,
+            "ranking": 22
+          },
+          "all_facets_at_10": 78,
+          "all_facets_at_5": 74,
+          "all_facets_in_context": 76,
+          "answerable": 87,
+          "any_fact_at_1": 61,
+          "any_fact_at_5": 84,
+          "candidate_loss_queries": 9,
+          "context_loss_queries": 3,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 23,
+            "covered": 149,
+            "ranking": 43
+          },
+          "failure_queries": 30,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 5,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 865
+        },
+        "wider-overlap/ru": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 23
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 75,
+          "all_facets_in_context": 75,
+          "answerable": 87,
+          "any_fact_at_1": 59,
+          "any_fact_at_5": 82,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 5,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 25,
+            "covered": 146,
+            "ranking": 43
+          },
+          "failure_queries": 31,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 4,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 865
+        },
+        "wider-overlap/uk": {
+          "affected_queries_by_category": {
+            "candidate_retrieval": 4,
+            "chunk_structure": 14,
+            "ranking": 25
+          },
+          "all_facets_at_10": 77,
+          "all_facets_at_5": 70,
+          "all_facets_in_context": 72,
+          "answerable": 87,
+          "any_fact_at_1": 58,
+          "any_fact_at_5": 79,
+          "candidate_loss_queries": 10,
+          "context_loss_queries": 7,
+          "distinct_family_fact_ids": 219,
+          "facet_observation_causes": {
+            "candidate_retrieval": 5,
+            "chunk_structure": 25,
+            "covered": 143,
+            "ranking": 46
+          },
+          "failure_queries": 34,
+          "indexed_union_incomplete_queries": 0,
+          "no_answer": 15,
+          "queries": 102,
+          "top5_ordering_loss_queries": 9,
+          "translated_fact_observations": 219,
+          "unjudged_at_10": 867
+        }
+      }
+    },
+    "inventory_rows": 2448,
+    "no_answer_decisions": 0,
+    "no_answer_query_rows": 360,
+    "paired_by_domain_and_language": {
+      "domain": {
+        "ART": {
+          "improved": 3,
+          "mixed": 0,
+          "not_evaluable": 0,
+          "regressed": 1,
+          "unchanged": 20
+        },
+        "AZ": {
+          "improved": 2,
+          "mixed": 0,
+          "not_evaluable": 0,
+          "regressed": 2,
+          "unchanged": 32
+        },
+        "CS": {
+          "improved": 0,
+          "mixed": 0,
+          "not_evaluable": 0,
+          "regressed": 0,
+          "unchanged": 42
+        },
+        "K8S": {
+          "improved": 3,
+          "mixed": 0,
+          "not_evaluable": 0,
+          "regressed": 3,
+          "unchanged": 51
+        },
+        "LIT": {
+          "improved": 6,
+          "mixed": 0,
+          "not_evaluable": 0,
+          "regressed": 2,
+          "unchanged": 52
+        },
+        "MATH": {
+          "improved": 3,
+          "mixed": 1,
+          "not_evaluable": 0,
+          "regressed": 0,
+          "unchanged": 38
+        },
+        "NA": {
+          "improved": 0,
+          "mixed": 0,
+          "not_evaluable": 45,
+          "regressed": 0,
+          "unchanged": 0
+        }
+      },
+      "language": {
+        "en": {
+          "improved": 8,
+          "mixed": 0,
+          "not_evaluable": 15,
+          "regressed": 2,
+          "unchanged": 77
+        },
+        "ru": {
+          "improved": 6,
+          "mixed": 0,
+          "not_evaluable": 15,
+          "regressed": 1,
+          "unchanged": 80
+        },
+        "uk": {
+          "improved": 3,
+          "mixed": 1,
+          "not_evaluable": 15,
+          "regressed": 5,
+          "unchanged": 78
+        }
+      }
+    },
+    "paired_outcomes": {
+      "improved": 17,
+      "mixed": 1,
+      "not_evaluable": 45,
+      "regressed": 8,
+      "unchanged": 235
+    },
+    "queries_per_arm": {
+      "code-query": 306,
+      "generic-baseline": 306,
+      "heading-input": 306,
+      "long-chunks": 306,
+      "no-overlap": 306,
+      "short-chunks": 306,
+      "technical-query": 306,
+      "wider-overlap": 306
+    },
+    "scope": "Frozen OPEN artifacts only; offline analysis, no new retrieval or model execution",
+    "source_or_index_coverage": "Complete reviewed evidence maps to eligible captured indexed chunk unions; no demonstrated missing-index cause",
+    "unknowns": {
+      "fts_per_query_native_lexemes": "UNKNOWN; captured native positive controls prove storage/tokenization, but per-natural-query tsquery/lexeme dumps were not captured; UI has no native SQL inspector",
+      "new_markdown_quality_delta": "NOT_EVALUATED; new UI ingestion is a separate corpus, not a ninth scored arm",
+      "no_answer_neighbor_sufficiency": "UNKNOWN; no answerability decision executed; original automated absence records retained for all 45 cases",
+      "rank_beyond_top10": "UNKNOWN; historical disposable databases were removed, main UI advertises lexical only and uses a changed corpus; an exact pinned replay cannot be substituted with current UI results"
+    }
+  },
   "failure_routes_best_candidate": {
     "CHUNK-004: no single ingested chunk covers a complete known primary facet": 8,
     "EVIDENCE-002: required evidence exceeds ranked context prefix": 2,
@@ -75585,6 +78245,2683 @@
       "skipped": "0",
       "tests": "108",
       "time": "6.577"
+    }
+  },
+  "ui_completion": {
+    "answerability": "NOT_IMPLEMENTED_NOT_EVALUATED",
+    "backfill_cost": {
+      "after": {
+        "generated_inputs": 634,
+        "model_http_attempts": 94,
+        "provider_reported_tokens": 194749,
+        "ready_chunk_bindings": 634,
+        "reused_chunks": 0,
+        "scope": "Fresh owned database backfill only; calibration/query traffic excluded; not an incremental cache-reuse benchmark",
+        "successful_model_http_attempts": 94,
+        "unknown_usage_attempts": 0
+      },
+      "before": {
+        "generated_inputs": 1380,
+        "model_http_attempts": 195,
+        "provider_reported_tokens": 198023,
+        "ready_chunk_bindings": 1441,
+        "reused_chunks": 59,
+        "scope": "Fresh owned database backfill only; calibration/query traffic excluded; not an incremental cache-reuse benchmark",
+        "successful_model_http_attempts": 195,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "code_checks": {
+      "artifact": "runs/ui-comparison-2026-11-25/code-checks/scoped.xml",
+      "execution": "UI-triggered existing Hatch workbench-api interpreter",
+      "failed": 0,
+      "junit_counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 364
+      },
+      "passed": 364,
+      "targets": [
+        "existing parser tests",
+        "existing chunker tests",
+        "ignored local quality tests"
+      ]
+    },
+    "context_tokens": {
+      "after": {
+        "p50": 1826,
+        "p95": 2028,
+        "p99": 2045,
+        "samples": 306
+      },
+      "before": {
+        "p50": 1657,
+        "p95": 1996,
+        "p99": 2027,
+        "samples": 306
+      }
+    },
+    "dataset_digest": "38ad2c628a7a578445998f14d05277d22e0f7ea79ec79839764e2ecd59a7ce9d",
+    "family_clustered_deltas": {
+      "all_context": {
+        "families": 87,
+        "interval_95": [
+          0.011494252873563218,
+          0.10344827586206896
+        ],
+        "mean": 0.05363984674329502,
+        "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+        "rows": 261,
+        "samples": 2000,
+        "seed": 20261125
+      },
+      "all_facets_at_10": {
+        "families": 87,
+        "interval_95": [
+          0.011494252873563218,
+          0.10344827586206896
+        ],
+        "mean": 0.05363984674329502,
+        "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+        "rows": 261,
+        "samples": 2000,
+        "seed": 20261125
+      },
+      "all_facets_at_5": {
+        "families": 87,
+        "interval_95": [
+          0.01532567049808429,
+          0.10727969348659004
+        ],
+        "mean": 0.05747126436781609,
+        "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+        "rows": 261,
+        "samples": 2000,
+        "seed": 20261125
+      },
+      "any_fact_at_1": {
+        "families": 87,
+        "interval_95": [
+          -0.003831417624521073,
+          0.13793103448275862
+        ],
+        "mean": 0.06513409961685825,
+        "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+        "rows": 261,
+        "samples": 2000,
+        "seed": 20261125
+      },
+      "any_fact_at_5": {
+        "families": 87,
+        "interval_95": [
+          0.007662835249042145,
+          0.08045977011494253
+        ],
+        "mean": 0.038314176245210725,
+        "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+        "rows": 261,
+        "samples": 2000,
+        "seed": 20261125
+      }
+    },
+    "frozen_probes": {
+      "frozen-code": {
+        "changed_top10_replays": 0,
+        "complete_at_20": 25,
+        "complete_at_50": 44,
+        "complete_queries_at20": 11,
+        "complete_queries_at50": 20,
+        "identical_top10_replays": 23,
+        "missing_facet_observations": 50,
+        "outside_top50": 6,
+        "probed_queries": 23,
+        "strict_identical_replay_complete_at20": 25,
+        "strict_identical_replay_complete_at50": 44,
+        "strict_identical_replay_missing_facets": 50,
+        "strict_identical_replay_outside50": 6
+      },
+      "frozen-generic": {
+        "changed_top10_replays": 1,
+        "complete_at_20": 35,
+        "complete_at_50": 53,
+        "complete_queries_at20": 17,
+        "complete_queries_at50": 26,
+        "identical_top10_replays": 28,
+        "missing_facet_observations": 59,
+        "outside_top50": 6,
+        "probed_queries": 29,
+        "strict_identical_replay_complete_at20": 35,
+        "strict_identical_replay_complete_at50": 51,
+        "strict_identical_replay_missing_facets": 57,
+        "strict_identical_replay_outside50": 6
+      }
+    },
+    "frozen_restore_scope": "Verified chunk identities/contents/original span capture for title-free, heading-free document input; source presentation, original upload history and full file-version metadata were not cloned. Actual top-ten ranking replay is checked separately; this is a bounded rank probe, not a new full ingestion benchmark.",
+    "full_relevance_ndcg_recall": "NOT_EVALUABLE_SPARSE_QRELS",
+    "generation": "NOT_EVALUATED",
+    "groups": {
+      "after": {
+        "all": {
+          "all_context": {
+            "denominator": 261,
+            "hits": 240.0,
+            "rate": 0.9195402298850575
+          },
+          "all_facets_at_10": {
+            "denominator": 261,
+            "hits": 246.0,
+            "rate": 0.9425287356321839
+          },
+          "all_facets_at_5": {
+            "denominator": 261,
+            "hits": 237.0,
+            "rate": 0.9080459770114943
+          },
+          "answerable": 261,
+          "any_fact_at_1": {
+            "denominator": 261,
+            "hits": 194.0,
+            "rate": 0.7432950191570882
+          },
+          "any_fact_at_5": {
+            "denominator": 261,
+            "hits": 255.0,
+            "rate": 0.9770114942528736
+          },
+          "no_answer": 45,
+          "queries": 306
+        },
+        "domain": {
+          "ART": {
+            "all_context": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "all_facets_at_10": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "all_facets_at_5": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "answerable": 24,
+            "any_fact_at_1": {
+              "denominator": 24,
+              "hits": 16.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 24,
+              "hits": 23.0,
+              "rate": 0.9583333333333334
+            },
+            "no_answer": 0,
+            "queries": 24
+          },
+          "AZ": {
+            "all_context": {
+              "denominator": 36,
+              "hits": 36.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 36,
+              "hits": 36.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 36,
+              "hits": 33.0,
+              "rate": 0.9166666666666666
+            },
+            "answerable": 36,
+            "any_fact_at_1": {
+              "denominator": 36,
+              "hits": 33.0,
+              "rate": 0.9166666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 36,
+              "hits": 36.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 36
+          },
+          "CS": {
+            "all_context": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "answerable": 42,
+            "any_fact_at_1": {
+              "denominator": 42,
+              "hits": 36.0,
+              "rate": 0.8571428571428571
+            },
+            "any_fact_at_5": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 42
+          },
+          "K8S": {
+            "all_context": {
+              "denominator": 57,
+              "hits": 54.0,
+              "rate": 0.9473684210526315
+            },
+            "all_facets_at_10": {
+              "denominator": 57,
+              "hits": 54.0,
+              "rate": 0.9473684210526315
+            },
+            "all_facets_at_5": {
+              "denominator": 57,
+              "hits": 53.0,
+              "rate": 0.9298245614035088
+            },
+            "answerable": 57,
+            "any_fact_at_1": {
+              "denominator": 57,
+              "hits": 40.0,
+              "rate": 0.7017543859649122
+            },
+            "any_fact_at_5": {
+              "denominator": 57,
+              "hits": 57.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 57
+          },
+          "LIT": {
+            "all_context": {
+              "denominator": 60,
+              "hits": 50.0,
+              "rate": 0.8333333333333334
+            },
+            "all_facets_at_10": {
+              "denominator": 60,
+              "hits": 54.0,
+              "rate": 0.9
+            },
+            "all_facets_at_5": {
+              "denominator": 60,
+              "hits": 51.0,
+              "rate": 0.85
+            },
+            "answerable": 60,
+            "any_fact_at_1": {
+              "denominator": 60,
+              "hits": 32.0,
+              "rate": 0.5333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 60,
+              "hits": 55.0,
+              "rate": 0.9166666666666666
+            },
+            "no_answer": 0,
+            "queries": 60
+          },
+          "MATH": {
+            "all_context": {
+              "denominator": 42,
+              "hits": 40.0,
+              "rate": 0.9523809523809523
+            },
+            "all_facets_at_10": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 42,
+              "hits": 40.0,
+              "rate": 0.9523809523809523
+            },
+            "answerable": 42,
+            "any_fact_at_1": {
+              "denominator": 42,
+              "hits": 37.0,
+              "rate": 0.8809523809523809
+            },
+            "any_fact_at_5": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 42
+          },
+          "NA": {
+            "answerable": 0,
+            "no_answer": 45,
+            "queries": 45
+          }
+        },
+        "intent": {
+          "art-absent-source": {
+            "answerable": 0,
+            "no_answer": 6,
+            "queries": 6
+          },
+          "az-configuration-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "az-pricing-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "az-private-record": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "causal": {
+            "all_context": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "answerable": 30,
+            "any_fact_at_1": {
+              "denominator": 30,
+              "hits": 24.0,
+              "rate": 0.8
+            },
+            "any_fact_at_5": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 30
+          },
+          "character": {
+            "all_context": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "answerable": 6,
+            "any_fact_at_1": {
+              "denominator": 6,
+              "hits": 4.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 6
+          },
+          "code": {
+            "all_context": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "answerable": 12,
+            "any_fact_at_1": {
+              "denominator": 12,
+              "hits": 7.0,
+              "rate": 0.5833333333333334
+            },
+            "any_fact_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 12
+          },
+          "comparison": {
+            "all_context": {
+              "denominator": 30,
+              "hits": 27.0,
+              "rate": 0.9
+            },
+            "all_facets_at_10": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 30,
+              "hits": 28.0,
+              "rate": 0.9333333333333333
+            },
+            "answerable": 30,
+            "any_fact_at_1": {
+              "denominator": 30,
+              "hits": 26.0,
+              "rate": 0.8666666666666667
+            },
+            "any_fact_at_5": {
+              "denominator": 30,
+              "hits": 29.0,
+              "rate": 0.9666666666666667
+            },
+            "no_answer": 0,
+            "queries": 30
+          },
+          "concept": {
+            "all_context": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "all_facets_at_10": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "all_facets_at_5": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "answerable": 12,
+            "any_fact_at_1": {
+              "denominator": 12,
+              "hits": 5.0,
+              "rate": 0.4166666666666667
+            },
+            "any_fact_at_5": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "no_answer": 0,
+            "queries": 12
+          },
+          "configuration": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "cross-language": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "cross-missing-mapping": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "cs-code-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "cs-runtime-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "definition": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "factual": {
+            "all_context": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "answerable": 18,
+            "any_fact_at_1": {
+              "denominator": 18,
+              "hits": 13.0,
+              "rate": 0.7222222222222222
+            },
+            "any_fact_at_5": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 18
+          },
+          "failure": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 1.0,
+              "rate": 0.3333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "formula": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "hierarchy": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "identifier": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "interpretation": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 12.0,
+              "rate": 0.8
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "k8s-configuration-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "k8s-runtime-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "lit-absent-chapter": {
+            "answerable": 0,
+            "no_answer": 6,
+            "queries": 6
+          },
+          "lit-unavailable-record": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "math-outside-scope": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "math-specific-data-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "multi-document": {
+            "all_context": {
+              "denominator": 21,
+              "hits": 10.0,
+              "rate": 0.47619047619047616
+            },
+            "all_facets_at_10": {
+              "denominator": 21,
+              "hits": 12.0,
+              "rate": 0.5714285714285714
+            },
+            "all_facets_at_5": {
+              "denominator": 21,
+              "hits": 7.0,
+              "rate": 0.3333333333333333
+            },
+            "answerable": 21,
+            "any_fact_at_1": {
+              "denominator": 21,
+              "hits": 9.0,
+              "rate": 0.42857142857142855
+            },
+            "any_fact_at_5": {
+              "denominator": 21,
+              "hits": 20.0,
+              "rate": 0.9523809523809523
+            },
+            "no_answer": 0,
+            "queries": 21
+          },
+          "multi-facet": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "negation": {
+            "all_context": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "answerable": 12,
+            "any_fact_at_1": {
+              "denominator": 12,
+              "hits": 11.0,
+              "rate": 0.9166666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 12
+          },
+          "notation": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "numeric": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "numerical": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "procedure": {
+            "all_context": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "all_facets_at_10": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "all_facets_at_5": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "answerable": 6,
+            "any_fact_at_1": {
+              "denominator": 6,
+              "hits": 4.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 6
+          },
+          "troubleshooting": {
+            "all_context": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "answerable": 6,
+            "any_fact_at_1": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 6
+          }
+        },
+        "language": {
+          "en": {
+            "all_context": {
+              "denominator": 87,
+              "hits": 80.0,
+              "rate": 0.9195402298850575
+            },
+            "all_facets_at_10": {
+              "denominator": 87,
+              "hits": 82.0,
+              "rate": 0.9425287356321839
+            },
+            "all_facets_at_5": {
+              "denominator": 87,
+              "hits": 79.0,
+              "rate": 0.9080459770114943
+            },
+            "answerable": 87,
+            "any_fact_at_1": {
+              "denominator": 87,
+              "hits": 68.0,
+              "rate": 0.7816091954022989
+            },
+            "any_fact_at_5": {
+              "denominator": 87,
+              "hits": 85.0,
+              "rate": 0.9770114942528736
+            },
+            "no_answer": 15,
+            "queries": 102
+          },
+          "ru": {
+            "all_context": {
+              "denominator": 87,
+              "hits": 81.0,
+              "rate": 0.9310344827586207
+            },
+            "all_facets_at_10": {
+              "denominator": 87,
+              "hits": 82.0,
+              "rate": 0.9425287356321839
+            },
+            "all_facets_at_5": {
+              "denominator": 87,
+              "hits": 80.0,
+              "rate": 0.9195402298850575
+            },
+            "answerable": 87,
+            "any_fact_at_1": {
+              "denominator": 87,
+              "hits": 66.0,
+              "rate": 0.7586206896551724
+            },
+            "any_fact_at_5": {
+              "denominator": 87,
+              "hits": 86.0,
+              "rate": 0.9885057471264368
+            },
+            "no_answer": 15,
+            "queries": 102
+          },
+          "uk": {
+            "all_context": {
+              "denominator": 87,
+              "hits": 79.0,
+              "rate": 0.9080459770114943
+            },
+            "all_facets_at_10": {
+              "denominator": 87,
+              "hits": 82.0,
+              "rate": 0.9425287356321839
+            },
+            "all_facets_at_5": {
+              "denominator": 87,
+              "hits": 78.0,
+              "rate": 0.896551724137931
+            },
+            "answerable": 87,
+            "any_fact_at_1": {
+              "denominator": 87,
+              "hits": 60.0,
+              "rate": 0.6896551724137931
+            },
+            "any_fact_at_5": {
+              "denominator": 87,
+              "hits": 84.0,
+              "rate": 0.9655172413793104
+            },
+            "no_answer": 15,
+            "queries": 102
+          }
+        }
+      },
+      "before": {
+        "all": {
+          "all_context": {
+            "denominator": 261,
+            "hits": 226.0,
+            "rate": 0.8659003831417624
+          },
+          "all_facets_at_10": {
+            "denominator": 261,
+            "hits": 232.0,
+            "rate": 0.8888888888888888
+          },
+          "all_facets_at_5": {
+            "denominator": 261,
+            "hits": 222.0,
+            "rate": 0.8505747126436781
+          },
+          "answerable": 261,
+          "any_fact_at_1": {
+            "denominator": 261,
+            "hits": 177.0,
+            "rate": 0.6781609195402298
+          },
+          "any_fact_at_5": {
+            "denominator": 261,
+            "hits": 245.0,
+            "rate": 0.9386973180076629
+          },
+          "no_answer": 45,
+          "queries": 306
+        },
+        "domain": {
+          "ART": {
+            "all_context": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "all_facets_at_10": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "all_facets_at_5": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "answerable": 24,
+            "any_fact_at_1": {
+              "denominator": 24,
+              "hits": 18.0,
+              "rate": 0.75
+            },
+            "any_fact_at_5": {
+              "denominator": 24,
+              "hits": 22.0,
+              "rate": 0.9166666666666666
+            },
+            "no_answer": 0,
+            "queries": 24
+          },
+          "AZ": {
+            "all_context": {
+              "denominator": 36,
+              "hits": 33.0,
+              "rate": 0.9166666666666666
+            },
+            "all_facets_at_10": {
+              "denominator": 36,
+              "hits": 33.0,
+              "rate": 0.9166666666666666
+            },
+            "all_facets_at_5": {
+              "denominator": 36,
+              "hits": 30.0,
+              "rate": 0.8333333333333334
+            },
+            "answerable": 36,
+            "any_fact_at_1": {
+              "denominator": 36,
+              "hits": 27.0,
+              "rate": 0.75
+            },
+            "any_fact_at_5": {
+              "denominator": 36,
+              "hits": 33.0,
+              "rate": 0.9166666666666666
+            },
+            "no_answer": 0,
+            "queries": 36
+          },
+          "CS": {
+            "all_context": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "answerable": 42,
+            "any_fact_at_1": {
+              "denominator": 42,
+              "hits": 31.0,
+              "rate": 0.7380952380952381
+            },
+            "any_fact_at_5": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 42
+          },
+          "K8S": {
+            "all_context": {
+              "denominator": 57,
+              "hits": 46.0,
+              "rate": 0.8070175438596491
+            },
+            "all_facets_at_10": {
+              "denominator": 57,
+              "hits": 46.0,
+              "rate": 0.8070175438596491
+            },
+            "all_facets_at_5": {
+              "denominator": 57,
+              "hits": 44.0,
+              "rate": 0.7719298245614035
+            },
+            "answerable": 57,
+            "any_fact_at_1": {
+              "denominator": 57,
+              "hits": 33.0,
+              "rate": 0.5789473684210527
+            },
+            "any_fact_at_5": {
+              "denominator": 57,
+              "hits": 51.0,
+              "rate": 0.8947368421052632
+            },
+            "no_answer": 0,
+            "queries": 57
+          },
+          "LIT": {
+            "all_context": {
+              "denominator": 60,
+              "hits": 50.0,
+              "rate": 0.8333333333333334
+            },
+            "all_facets_at_10": {
+              "denominator": 60,
+              "hits": 54.0,
+              "rate": 0.9
+            },
+            "all_facets_at_5": {
+              "denominator": 60,
+              "hits": 51.0,
+              "rate": 0.85
+            },
+            "answerable": 60,
+            "any_fact_at_1": {
+              "denominator": 60,
+              "hits": 32.0,
+              "rate": 0.5333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 60,
+              "hits": 55.0,
+              "rate": 0.9166666666666666
+            },
+            "no_answer": 0,
+            "queries": 60
+          },
+          "MATH": {
+            "all_context": {
+              "denominator": 42,
+              "hits": 37.0,
+              "rate": 0.8809523809523809
+            },
+            "all_facets_at_10": {
+              "denominator": 42,
+              "hits": 39.0,
+              "rate": 0.9285714285714286
+            },
+            "all_facets_at_5": {
+              "denominator": 42,
+              "hits": 37.0,
+              "rate": 0.8809523809523809
+            },
+            "answerable": 42,
+            "any_fact_at_1": {
+              "denominator": 42,
+              "hits": 36.0,
+              "rate": 0.8571428571428571
+            },
+            "any_fact_at_5": {
+              "denominator": 42,
+              "hits": 42.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 42
+          },
+          "NA": {
+            "answerable": 0,
+            "no_answer": 45,
+            "queries": 45
+          }
+        },
+        "intent": {
+          "art-absent-source": {
+            "answerable": 0,
+            "no_answer": 6,
+            "queries": 6
+          },
+          "az-configuration-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "az-pricing-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "az-private-record": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "causal": {
+            "all_context": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "answerable": 30,
+            "any_fact_at_1": {
+              "denominator": 30,
+              "hits": 22.0,
+              "rate": 0.7333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 30
+          },
+          "character": {
+            "all_context": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "answerable": 6,
+            "any_fact_at_1": {
+              "denominator": 6,
+              "hits": 4.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 6
+          },
+          "code": {
+            "all_context": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "answerable": 12,
+            "any_fact_at_1": {
+              "denominator": 12,
+              "hits": 8.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 12
+          },
+          "comparison": {
+            "all_context": {
+              "denominator": 30,
+              "hits": 27.0,
+              "rate": 0.9
+            },
+            "all_facets_at_10": {
+              "denominator": 30,
+              "hits": 30.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 30,
+              "hits": 28.0,
+              "rate": 0.9333333333333333
+            },
+            "answerable": 30,
+            "any_fact_at_1": {
+              "denominator": 30,
+              "hits": 20.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 30,
+              "hits": 29.0,
+              "rate": 0.9666666666666667
+            },
+            "no_answer": 0,
+            "queries": 30
+          },
+          "concept": {
+            "all_context": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "all_facets_at_10": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "all_facets_at_5": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "answerable": 12,
+            "any_fact_at_1": {
+              "denominator": 12,
+              "hits": 5.0,
+              "rate": 0.4166666666666667
+            },
+            "any_fact_at_5": {
+              "denominator": 12,
+              "hits": 9.0,
+              "rate": 0.75
+            },
+            "no_answer": 0,
+            "queries": 12
+          },
+          "configuration": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 3.0,
+              "rate": 0.3333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "cross-language": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "cross-missing-mapping": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "cs-code-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "cs-runtime-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "definition": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "factual": {
+            "all_context": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "answerable": 18,
+            "any_fact_at_1": {
+              "denominator": 18,
+              "hits": 13.0,
+              "rate": 0.7222222222222222
+            },
+            "any_fact_at_5": {
+              "denominator": 18,
+              "hits": 18.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 18
+          },
+          "failure": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 2.0,
+              "rate": 0.6666666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "formula": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "hierarchy": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "identifier": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 0.0,
+              "rate": 0.0
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "interpretation": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 15.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 12.0,
+              "rate": 0.8
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 14.0,
+              "rate": 0.9333333333333333
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "k8s-configuration-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "k8s-runtime-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "lit-absent-chapter": {
+            "answerable": 0,
+            "no_answer": 6,
+            "queries": 6
+          },
+          "lit-unavailable-record": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "math-outside-scope": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "math-specific-data-missing": {
+            "answerable": 0,
+            "no_answer": 3,
+            "queries": 3
+          },
+          "multi-document": {
+            "all_context": {
+              "denominator": 21,
+              "hits": 10.0,
+              "rate": 0.47619047619047616
+            },
+            "all_facets_at_10": {
+              "denominator": 21,
+              "hits": 12.0,
+              "rate": 0.5714285714285714
+            },
+            "all_facets_at_5": {
+              "denominator": 21,
+              "hits": 7.0,
+              "rate": 0.3333333333333333
+            },
+            "answerable": 21,
+            "any_fact_at_1": {
+              "denominator": 21,
+              "hits": 6.0,
+              "rate": 0.2857142857142857
+            },
+            "any_fact_at_5": {
+              "denominator": 21,
+              "hits": 19.0,
+              "rate": 0.9047619047619048
+            },
+            "no_answer": 0,
+            "queries": 21
+          },
+          "multi-facet": {
+            "all_context": {
+              "denominator": 15,
+              "hits": 13.0,
+              "rate": 0.8666666666666667
+            },
+            "all_facets_at_10": {
+              "denominator": 15,
+              "hits": 13.0,
+              "rate": 0.8666666666666667
+            },
+            "all_facets_at_5": {
+              "denominator": 15,
+              "hits": 12.0,
+              "rate": 0.8
+            },
+            "answerable": 15,
+            "any_fact_at_1": {
+              "denominator": 15,
+              "hits": 12.0,
+              "rate": 0.8
+            },
+            "any_fact_at_5": {
+              "denominator": 15,
+              "hits": 13.0,
+              "rate": 0.8666666666666667
+            },
+            "no_answer": 0,
+            "queries": 15
+          },
+          "negation": {
+            "all_context": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "answerable": 12,
+            "any_fact_at_1": {
+              "denominator": 12,
+              "hits": 11.0,
+              "rate": 0.9166666666666666
+            },
+            "any_fact_at_5": {
+              "denominator": 12,
+              "hits": 12.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 12
+          },
+          "notation": {
+            "all_context": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "answerable": 3,
+            "any_fact_at_1": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 3,
+              "hits": 3.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 3
+          },
+          "numeric": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 5.0,
+              "rate": 0.5555555555555556
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "numerical": {
+            "all_context": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "all_facets_at_10": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "all_facets_at_5": {
+              "denominator": 9,
+              "hits": 6.0,
+              "rate": 0.6666666666666666
+            },
+            "answerable": 9,
+            "any_fact_at_1": {
+              "denominator": 9,
+              "hits": 4.0,
+              "rate": 0.4444444444444444
+            },
+            "any_fact_at_5": {
+              "denominator": 9,
+              "hits": 9.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 9
+          },
+          "procedure": {
+            "all_context": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "all_facets_at_10": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "all_facets_at_5": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "answerable": 6,
+            "any_fact_at_1": {
+              "denominator": 6,
+              "hits": 5.0,
+              "rate": 0.8333333333333334
+            },
+            "any_fact_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 6
+          },
+          "troubleshooting": {
+            "all_context": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "all_facets_at_10": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "all_facets_at_5": {
+              "denominator": 6,
+              "hits": 3.0,
+              "rate": 0.5
+            },
+            "answerable": 6,
+            "any_fact_at_1": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "any_fact_at_5": {
+              "denominator": 6,
+              "hits": 6.0,
+              "rate": 1.0
+            },
+            "no_answer": 0,
+            "queries": 6
+          }
+        },
+        "language": {
+          "en": {
+            "all_context": {
+              "denominator": 87,
+              "hits": 76.0,
+              "rate": 0.8735632183908046
+            },
+            "all_facets_at_10": {
+              "denominator": 87,
+              "hits": 78.0,
+              "rate": 0.896551724137931
+            },
+            "all_facets_at_5": {
+              "denominator": 87,
+              "hits": 74.0,
+              "rate": 0.8505747126436781
+            },
+            "answerable": 87,
+            "any_fact_at_1": {
+              "denominator": 87,
+              "hits": 61.0,
+              "rate": 0.7011494252873564
+            },
+            "any_fact_at_5": {
+              "denominator": 87,
+              "hits": 83.0,
+              "rate": 0.9540229885057471
+            },
+            "no_answer": 15,
+            "queries": 102
+          },
+          "ru": {
+            "all_context": {
+              "denominator": 87,
+              "hits": 76.0,
+              "rate": 0.8735632183908046
+            },
+            "all_facets_at_10": {
+              "denominator": 87,
+              "hits": 77.0,
+              "rate": 0.8850574712643678
+            },
+            "all_facets_at_5": {
+              "denominator": 87,
+              "hits": 76.0,
+              "rate": 0.8735632183908046
+            },
+            "answerable": 87,
+            "any_fact_at_1": {
+              "denominator": 87,
+              "hits": 59.0,
+              "rate": 0.6781609195402298
+            },
+            "any_fact_at_5": {
+              "denominator": 87,
+              "hits": 82.0,
+              "rate": 0.9425287356321839
+            },
+            "no_answer": 15,
+            "queries": 102
+          },
+          "uk": {
+            "all_context": {
+              "denominator": 87,
+              "hits": 74.0,
+              "rate": 0.8505747126436781
+            },
+            "all_facets_at_10": {
+              "denominator": 87,
+              "hits": 77.0,
+              "rate": 0.8850574712643678
+            },
+            "all_facets_at_5": {
+              "denominator": 87,
+              "hits": 72.0,
+              "rate": 0.8275862068965517
+            },
+            "answerable": 87,
+            "any_fact_at_1": {
+              "denominator": 87,
+              "hits": 57.0,
+              "rate": 0.6551724137931034
+            },
+            "any_fact_at_5": {
+              "denominator": 87,
+              "hits": 80.0,
+              "rate": 0.9195402298850575
+            },
+            "no_answer": 15,
+            "queries": 102
+          }
+        }
+      }
+    },
+    "invalidated_attempts": [
+      {
+        "accepted_for_scoring": false,
+        "attempt": "before-invalidated-1795644619",
+        "cause": "Local console reused an application-closed connection pool after all uploads; failed before model backfill and queries",
+        "owned_database_dropped": true
+      }
+    ],
+    "lifecycle": {
+      "after": "Retained owned local test database for the delivered Live Dense pipeline; explicit cleanup control in local console",
+      "before": "OWNERSHIP_VERIFIED_DATABASE_DROPPED",
+      "frozen-code": "OWNERSHIP_VERIFIED_DATABASE_DROPPED",
+      "frozen-generic": "OWNERSHIP_VERIFIED_DATABASE_DROPPED"
+    },
+    "matched_answerable": 261,
+    "matched_families": 102,
+    "matched_integrity": {
+      "after_owner": "current Markdown r3 / chunk r3",
+      "before_owner_commit": "8cef42a",
+      "evidence_projection": "visible-markdown-r1; same original locators and removed-service mask on both sides",
+      "identical_embedding_profile": true,
+      "identical_original_hashes": true,
+      "identical_processing_settings": true,
+      "original_source_sha256": {
+        "ART-01": "df149085cb97c97e4c3f5148faaac42859fe8332d52fb581018f9dee32fd2a0b",
+        "ART-02": "79b5e4b08d608ce1dd9403edfc7910dbb615c4a6bd95aa46eb289dc0bdd4932c",
+        "ART-03": "e6ef312cf45ca1a9d395b934150864cc50250c8baadab8b885879cc2840511f0",
+        "AZ-01": "3b738b55fad219418de76f78603748efb2169f08fe50ff184d7b58892c3a2a22",
+        "AZ-02": "a1cb3eac2d9574753a8f5f86eae14bb35de8501cdee837f2e1d99a66660ab0bc",
+        "AZ-03": "1df10282b0a7c1f6e927044c2a9e7eebe3913ff3ab83b513f38021ab5010a2f9",
+        "AZ-04": "b888f996247200184349ae03ac5304960ac25770fc63614b65d474c29c4ff153",
+        "CS-01": "8ef650a6c2444de3cb1b64e2f72c002774aaef64ccecafb9c55be061808654c1",
+        "CS-02": "d5839822e730987c8115ac29daca398dcc5d8f1464c77a67166cab29b622d473",
+        "CS-03": "ec756e964696a23b6f2a2a2339eaf153288ffe8aa1fb45446155c0da7313d974",
+        "CS-04": "d51a4b2e2138222f44579e8244f3c5cfee6a81469f36b422b1ab3c990f454e8a",
+        "CS-05": "2534a1121b0704d8888cfae8ae0185963eaf27a4ca18773f0fb499b5178e9986",
+        "CS-06": "310b1616406a824bf90aad7dfcc0448d50110e25fde03559138b30dc864d4ddd",
+        "K8S-01": "f91e09e878c333fb57818ccc6750b3605cb2d9ba77f9e71431d25bdf9a66ae8a",
+        "K8S-02": "f362efe6f73f9a84fbdb84c69237eba39a341a6dd8a7c3c2d4c0972721d8d4b1",
+        "K8S-03": "c236314b03cd1fffc5f654783dac32133c06ceae41389ce9c2031b13eb53406f",
+        "K8S-04": "f82ce0b80ad16eaa354365dc14be5b97800783443bdb97d9835f3acb7282bc74",
+        "K8S-05": "f0cff94935122e4d94d1132fd70e4b7a1c90137034fd981c6e1d96902ed6a45b",
+        "K8S-06": "55925baaa4371aa3fcb36e2583ac3b4a0af771969b9c6633b093573fbfd96fe9",
+        "K8S-07": "1e07ffbb7dc69d1e41cb2d2b84df10ace803b9d63d73d7eb44f5e11cb4fdb63d",
+        "LIT-01": "09d9c7bf7e704ff0355ccca67ecdc13fc7356da438fe3637d2d7b5aba2f96590",
+        "LIT-02": "69de6e43f2a378a3dab2d0a320a5de17adc018a3bcb4dab8e30cd2a5abfe9429",
+        "LIT-03": "095863cfc3fa1a1650870c1e566b328e6c36d99b74a8c05c51b6fd362a6ece86",
+        "LIT-04": "ce5bcfdf5c74e9a01cf89bbdee7de2eb5821c88f49cdf2c2db0af84783741cf9",
+        "LIT-05": "2aea3a44da855158f3cb45cf2365f39bf22a17aef944032e1456b83119219eed",
+        "LIT-06": "f5c4a02c4b2d3835215eb48e5acca56eca908f6cceb4d4f2ef83aa75492c295d",
+        "MATH-01": "71f7b90dd460f3277d0a10d3e6fad424c626c8f41ef118e068a160a95c3b9135",
+        "MATH-02": "bb653ec0c6cc4122e1874595f2abdda44c210e92daa05bb0d30ab4fb78711b12",
+        "MATH-03": "a4247324daa4ec2a45dd95e8581d8b1bab984b2b0120006c0759775c63f2b015",
+        "MATH-04": "2313e47c421e2a3dcdbb2e3f56bfd21370e68c54af8d03a97260d1e33e73512e",
+        "MATH-05": "64f4243d46e6d1fcd3bd581f730a95b336404bf170f542444d405fa631caa900"
+      }
+    },
+    "matched_losses": {
+      "after": {
+        "available_at_10_missing_at_5": 9,
+        "available_at_50_missing_at_10": 9,
+        "missing_all_facts_at_50": 6,
+        "no_answer_with_forced_neighbors": 45,
+        "top10_complete_context_incomplete": 6
+      },
+      "before": {
+        "available_at_10_missing_at_5": 10,
+        "available_at_50_missing_at_10": 23,
+        "missing_all_facts_at_50": 6,
+        "no_answer_with_forced_neighbors": 45,
+        "top10_complete_context_incomplete": 6
+      }
+    },
+    "matched_questions": 306,
+    "matched_source_count": 31,
+    "native_fts": {
+      "after": {
+        "and_zero": 306,
+        "diagnoses": {
+          "NO_AND_MATCH_ABSENT_CORPUS_LEXEMES": 252,
+          "NO_AND_MATCH_CONJUNCTION_NOT_COLOCATED": 54
+        },
+        "literal_native_passes": 306,
+        "or_positive_source_hit_queries": 197,
+        "questions": 306,
+        "stored_vector_mismatches": 0
+      },
+      "before": {
+        "and_zero": 306,
+        "diagnoses": {
+          "NO_AND_MATCH_ABSENT_CORPUS_LEXEMES": 252,
+          "NO_AND_MATCH_CONJUNCTION_NOT_COLOCATED": 54
+        },
+        "literal_native_passes": 306,
+        "or_positive_source_hit_queries": 197,
+        "questions": 306,
+        "stored_vector_mismatches": 0
+      },
+      "frozen-code": {
+        "and_zero": 306,
+        "diagnoses": {
+          "NO_AND_MATCH_ABSENT_CORPUS_LEXEMES": 252,
+          "NO_AND_MATCH_CONJUNCTION_NOT_COLOCATED": 54
+        },
+        "literal_native_passes": 306,
+        "or_positive_source_hit_queries": 197,
+        "questions": 306,
+        "stored_vector_mismatches": 0
+      },
+      "frozen-generic": {
+        "and_zero": 306,
+        "diagnoses": {
+          "NO_AND_MATCH_ABSENT_CORPUS_LEXEMES": 252,
+          "NO_AND_MATCH_CONJUNCTION_NOT_COLOCATED": 54
+        },
+        "literal_native_passes": 306,
+        "or_positive_source_hit_queries": 197,
+        "questions": 306,
+        "stored_vector_mismatches": 0
+      }
+    },
+    "observer_with_oracle_ms": {
+      "after": {
+        "p50": 869.7510999991209,
+        "p95": 1031.3855999993393,
+        "p99": 1099.2899000011676,
+        "samples": 306
+      },
+      "before": {
+        "p50": 888.000999999349,
+        "p95": 1082.7315999995335,
+        "p99": 1163.8673999987077,
+        "samples": 306
+      },
+      "frozen-code": {
+        "p50": 882.5558999997156,
+        "p95": 1019.8804000028758,
+        "p99": 1054.7241999993275,
+        "samples": 23
+      },
+      "frozen-generic": {
+        "p50": 817.1977999991213,
+        "p95": 1042.0226999995066,
+        "p99": 1136.0012000004645,
+        "samples": 29
+      }
+    },
+    "oracle_sql_ms": {
+      "after": {
+        "p50": 31.9999999992433,
+        "p95": 47.0000000022992,
+        "p99": 62.999999998282874,
+        "samples": 306
+      },
+      "before": {
+        "p50": 47.0000000022992,
+        "p95": 77.9999999977008,
+        "p99": 78.00000000133878,
+        "samples": 306
+      },
+      "frozen-code": {
+        "p50": 45.9999999984575,
+        "p95": 46.999999998661224,
+        "p99": 46.999999998661224,
+        "samples": 23
+      },
+      "frozen-generic": {
+        "p50": 46.999999998661224,
+        "p95": 63.00000000192085,
+        "p99": 63.00000000192085,
+        "samples": 29
+      }
+    },
+    "paired_outcomes": {
+      "NOT_EVALUABLE_NO_ANSWER": 45,
+      "improved": 34,
+      "regressed": 10,
+      "unchanged": 217
+    },
+    "phases": {
+      "after": {
+        "all_facets_at_10": 246,
+        "all_facets_at_5": 237,
+        "all_facets_in_context": 240,
+        "answerability": "NOT_IMPLEMENTED_NOT_EVALUATED",
+        "answerable": 261,
+        "any_fact_at_1": 194,
+        "any_fact_at_5": 255,
+        "chunks": 634,
+        "fts_queries": 306,
+        "fts_vector_mismatches": 0,
+        "generation": "NOT_EVALUATED",
+        "implementation_unchanged": true,
+        "literal_native_controls_passed": 306,
+        "no_answer": 45,
+        "oracle_agreements": 306,
+        "phase": "after",
+        "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+        "queries": 306,
+        "status": "ACTUAL_UI_EXECUTED"
+      },
+      "before": {
+        "all_facets_at_10": 232,
+        "all_facets_at_5": 222,
+        "all_facets_in_context": 226,
+        "answerability": "NOT_IMPLEMENTED_NOT_EVALUATED",
+        "answerable": 261,
+        "any_fact_at_1": 177,
+        "any_fact_at_5": 245,
+        "chunks": 1441,
+        "fts_queries": 306,
+        "fts_vector_mismatches": 0,
+        "generation": "NOT_EVALUATED",
+        "implementation_unchanged": true,
+        "literal_native_controls_passed": 306,
+        "no_answer": 45,
+        "oracle_agreements": 306,
+        "phase": "before",
+        "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+        "queries": 306,
+        "status": "ACTUAL_UI_EXECUTED"
+      },
+      "frozen-code": {
+        "all_facets_at_10": 0,
+        "all_facets_at_5": 0,
+        "all_facets_in_context": 0,
+        "answerability": "NOT_IMPLEMENTED_NOT_EVALUATED",
+        "answerable": 23,
+        "any_fact_at_1": 5,
+        "any_fact_at_5": 11,
+        "chunks": 1080,
+        "fts_queries": 306,
+        "fts_vector_mismatches": 0,
+        "generation": "NOT_EVALUATED",
+        "implementation_unchanged": true,
+        "literal_native_controls_passed": 306,
+        "no_answer": 0,
+        "oracle_agreements": 23,
+        "phase": "frozen-code",
+        "profile_fingerprint": "bb1e8f65cded4a3dd4e07c8bf5eb2b0c8e5a714859d2e35e15624ced874bfb09",
+        "queries": 23,
+        "status": "ACTUAL_UI_EXECUTED"
+      },
+      "frozen-generic": {
+        "all_facets_at_10": 0,
+        "all_facets_at_5": 0,
+        "all_facets_in_context": 0,
+        "answerability": "NOT_IMPLEMENTED_NOT_EVALUATED",
+        "answerable": 29,
+        "any_fact_at_1": 8,
+        "any_fact_at_5": 17,
+        "chunks": 1080,
+        "fts_queries": 306,
+        "fts_vector_mismatches": 0,
+        "generation": "NOT_EVALUATED",
+        "implementation_unchanged": true,
+        "literal_native_controls_passed": 306,
+        "no_answer": 0,
+        "oracle_agreements": 29,
+        "phase": "frozen-generic",
+        "profile_fingerprint": "5e3513dc019d264f3009f81febe768b0121d65a3eb9c26c3d304bc7550318354",
+        "queries": 29,
+        "status": "ACTUAL_UI_EXECUTED"
+      }
+    },
+    "primary_hit": "NOT_EVALUABLE_NO_SEPARATE_PRIMARY_LABEL",
+    "promotion": false,
+    "replay_drift_status": "One generic prefix drift is explicitly isolated from strict identical-replay facet totals; cause UNKNOWN, existing embedding-owner input/batch-repeat probe required. Original eight-arm rankings/scores are unchanged.",
+    "schema": "quality-ui-matched-comparison-v1",
+    "scope": "UI-executed matched original-only pair; historical source-window arms are separate",
+    "server_reported_ms": {
+      "after": {
+        "p50": 813.0000000019209,
+        "p95": 984.0000000003783,
+        "p99": 1047.0000000022992,
+        "samples": 306
+      },
+      "before": {
+        "p50": 828.0000000013388,
+        "p95": 1031.0000000026776,
+        "p99": 1108.9999999967404,
+        "samples": 306
+      },
+      "frozen-code": {
+        "p50": 844.0000000009604,
+        "p95": 953.0000000013388,
+        "p99": 953.0000000013388,
+        "samples": 23
+      },
+      "frozen-generic": {
+        "p50": 780.9999999990396,
+        "p95": 985.0000000005821,
+        "p99": 1094.0000000009604,
+        "samples": 29
+      }
+    },
+    "server_stage_ms": {
+      "after": {
+        "projection": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "samples": 306
+        },
+        "query_embedding": {
+          "p50": 547.0000000022992,
+          "p95": 702.9999999977008,
+          "p99": 735.0000000005821,
+          "samples": 306
+        },
+        "vector_search": {
+          "p50": 32.00000000288128,
+          "p95": 47.0000000022992,
+          "p99": 47.0000000022992,
+          "samples": 306
+        }
+      },
+      "before": {
+        "projection": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "samples": 306
+        },
+        "query_embedding": {
+          "p50": 547.0000000022992,
+          "p95": 704.0000000015425,
+          "p99": 764.9999999994179,
+          "samples": 306
+        },
+        "vector_search": {
+          "p50": 46.999999998661224,
+          "p95": 61.99999999807915,
+          "p99": 63.00000000192085,
+          "samples": 306
+        }
+      },
+      "frozen-code": {
+        "projection": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "samples": 23
+        },
+        "query_embedding": {
+          "p50": 562.0000000017171,
+          "p95": 655.9999999990396,
+          "p99": 686.9999999980791,
+          "samples": 23
+        },
+        "vector_search": {
+          "p50": 47.0000000022992,
+          "p95": 47.0000000022992,
+          "p99": 47.0000000022992,
+          "samples": 23
+        }
+      },
+      "frozen-generic": {
+        "projection": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "samples": 29
+        },
+        "query_embedding": {
+          "p50": 484.00000000037835,
+          "p95": 688.0000000019209,
+          "p99": 750.0,
+          "samples": 29
+        },
+        "vector_search": {
+          "p50": 46.999999998661224,
+          "p95": 47.0000000022992,
+          "p99": 47.0000000022992,
+          "samples": 29
+        }
+      }
+    },
+    "ui_pipeline": {
+      "capture_scope": "Observed through Workbench UI after scored captures were finalized; excluded from scored denominators",
+      "corpus_revision": "corpus-45c4733c3eca7e5519a691f4267b6aa47061287a07c3b07d7b7b16b0eb245467",
+      "embedding_profile_revision": "qwen3-4b-capacity-32k-r1",
+      "export_filename": "quality-001---dense-after-markdown.json",
+      "export_sha256": "51de9e7867ed24c2e75b52240a01eed0f72c39e72a68198686e70bfdcd599116",
+      "first_result_score": 0.2450032088158589,
+      "graph": [
+        "Search query",
+        "Query embedding",
+        "Dense search",
+        "Search results"
+      ],
+      "index_generation": "31",
+      "known_ui_issue": "Search result cards still display Page unavailable for Markdown; document chunk view already uses source lines. This display issue does not alter retrieval/scoring.",
+      "mode": "live",
+      "name": "QUALITY-001 · Dense after Markdown",
+      "observed_duration_ms": 1031,
+      "observed_results": 5,
+      "observed_source_title": "services.md",
+      "profile_id": "postgres-dense-exact",
+      "profile_revision": "postgres-dense-exact-r1",
+      "request_id": "d45a2caf54734255abbc8843c445973f",
+      "score_type": "cosine_distance",
+      "server_run_id": "6fcd610d0da24e08983781a5ff4710ee",
+      "stages": {
+        "projection": {
+          "duration_ms": 0,
+          "status": "success"
+        },
+        "query_embedding": {
+          "duration_ms": 734,
+          "status": "success"
+        },
+        "vector_search": {
+          "duration_ms": 31,
+          "status": "success"
+        }
+      },
+      "status": "Completed",
+      "trace_id": "575d0fe8284b4d2786b96433f9096a5e",
+      "workspace_id": "development"
+    },
+    "verdict": "INSUFFICIENT_WITH_CURRENT_STACK"
+  },
+  "ui_markdown_repair": {
+    "active_corpus_chunks_observed_via_ui": 645,
+    "additional_current_corpus_ui_controls": {
+      "literal_subset_results": 5,
+      "natural_question_results": 0
+    },
+    "automated_unit_suites": "NOT_RUN_USER_REQUESTED_UI_FUNCTIONAL_CHECKS",
+    "code_examples_preserved": true,
+    "control_document_chunks": 5,
+    "documents_replaced_via_ui": 31,
+    "heading_only_chunks_observed": 0,
+    "live_profile": "postgres-fts-baseline-r1",
+    "new_dense_scores": "NOT_EVALUATED",
+    "pipeline_export": "Downloads/quality-001---markdown-evidence.json",
+    "pipeline_name": "QUALITY-001 · Markdown evidence",
+    "scope": "Separate live UI acceptance; not a scored ninth arm or a Dense qualification",
+    "services_after_chunks": 43,
+    "services_before_chunks": 154,
+    "unclosed_frontmatter_ui": {
+      "body_preserved": true,
+      "chunks": 1
     }
   }
 }

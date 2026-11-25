@@ -83,3 +83,15 @@ Version selection policy and preserve raw retrieval output; disable policy to us
 - [ ] Link actual commands and evidence, including blocked/unrun gates and limitations.
 - [ ] Verify immutable profile compatibility, data preservation and rollback.
 - [ ] Record changed paths and implementation commit; mark COMPLETE only with evidence for applicable task gates.
+
+
+## QUALITY-001 failure-localization evidence
+
+QUALITY-001 OPEN V2 handoff (2026-11-25): the captured fixed 2048-token ranked prefix loses an otherwise available candidate facet on 12 baseline and 12 selected questions. All required facts survive the final context for 225/228 of 261 answerable cases. These overlap candidate/structural/ranking losses and must not be added as disjoint failure totals. Use captured selected_chunk_ids, source ranges and token costs to benchmark a bounded selector without label-aware runtime selection.
+
+Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query IDs, locators, alternative sets and next probes remain in the ignored existing V2 run; sanitized counts are in metrics.json → failure_localization.
+## QUALITY-001 UI completion evidence — 2026-11-26
+
+Matched UI pair fixed 2048-token ranked source-content prefix: all facets retained on 226 → 240/261; complete top10 but incomplete final context on 6 → 6. Preserve actual chunk sizes/projection provenance and paired regressions. This is source coverage, not semantic sufficiency, and does not authorize label-aware runtime selection.
+
+Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.

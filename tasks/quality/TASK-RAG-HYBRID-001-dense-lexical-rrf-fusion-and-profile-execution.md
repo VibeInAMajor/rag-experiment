@@ -133,3 +133,15 @@ Enable hybrid only as a new immutable profile, leave current lexical and exact d
 - [ ] Mark COMPLETE only with proof of every applicable acceptance check.
 
 **Documentation convention:** no feature is marked qualified merely because a test is described; amend A–O before any material scope expansion.
+
+
+## QUALITY-001 failure-localization evidence
+
+QUALITY-001 OPEN V2 handoff (2026-11-25): candidate-pool facet losses affect 29 baseline / 23 selected queries; earliest candidate attribution (after structural causes) affects 11/10. Eligible indexed evidence exists, but missing exact ranks beyond top ten remain UNKNOWN. Obtain only targeted top-20/50 evidence on the original pinned corpus/profile; do not replace it with current changed-corpus UI results. Historical FTS native source controls passed 10/10, while original AND questions returned zero. Per-question native lexeme/AND/subset/OR evidence is missing and current UI has no inspector. Benchmark lexical policy before fusion; no BM25/fusion quality claim follows from the controls.
+
+Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query IDs, locators, alternative sets and next probes remain in the ignored existing V2 run; sanitized counts are in metrics.json → failure_localization.
+## QUALITY-001 UI completion evidence — 2026-11-26
+
+The previously missing native/rank probes are now UI-executed on the original 1080-chunk corpus: generic 29 queries, code-query 23; all required facts recovered by rank 50 on 26/29 and 20/23. Exact per-facet union/singleton ranks are local; outside-top50 remains bounded unknown. Native FTS confirms AND-policy misses with zero stored-vector mismatches and 306 literal controls per phase. Previous statements that these probes are missing/no UI inspector was available are historical. This qualifies the failure diagnosis, not BM25 or fusion.
+
+Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.

@@ -172,11 +172,12 @@ def test_representative_text_and_markdown_projection(name: str, text: str) -> No
     assert result.parser_revision
     assert [element.order for element in result.elements] == list(range(len(result.elements)))
     assert len({element.element_id for element in result.elements}) == len(result.elements)
+    projected_text = result.extracted_text if result.extracted_text is not None else text
     previous_end = 0
     for element in result.elements:
         start, end = element.source_span.start, element.source_span.end
-        assert 0 <= previous_end <= start < end <= len(text)
-        assert element.text == text[start:end]
+        assert 0 <= previous_end <= start < end <= len(projected_text)
+        assert element.text == projected_text[start:end]
         assert element.line_start >= 1
         assert element.line_end >= element.line_start
         previous_end = end
@@ -369,7 +370,12 @@ def test_unsupported_markdown_constructs_do_not_fabricate_headings(text: str) ->
     headings = [element for element in result.elements if element.kind == ElementKind.HEADING]
     assert len(headings) == 1
     assert headings[0].heading_path == ("Real",)
-    assert any(element.kind == ElementKind.PROTECTED_RAW for element in result.elements)
+    if text.startswith(("<!--", "---")):
+        assert result.extracted_text is not None
+        assert "Hidden" not in result.extracted_text
+        assert not any(element.kind == ElementKind.PROTECTED_RAW for element in result.elements)
+    else:
+        assert any(element.kind == ElementKind.PROTECTED_RAW for element in result.elements)
 
 
 def test_extraction_deadline_is_checked_before_returning_elements(monkeypatch: pytest.MonkeyPatch) -> None:

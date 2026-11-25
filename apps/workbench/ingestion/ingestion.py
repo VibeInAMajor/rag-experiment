@@ -210,7 +210,7 @@ def _prepare_publication(
         ChunkingInput(
             parsed_document=parsed,
             normalized_content=parsed.extracted_text
-            if parsed.extracted_text is not None
+            if parsed.format_id is FormatId.PDF and parsed.extracted_text is not None
             else upload.content.decode("utf-8-sig"),
             workspace_id=job.workspace_id,
             source_id=job.source_id,

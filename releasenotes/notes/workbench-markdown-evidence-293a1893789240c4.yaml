@@ -1,0 +1,15 @@
+---
+fixes:
+  - |
+    Workbench Markdown indexing removes service HTML comments, frontmatter and
+    Hugo delimiters outside literal code, and keeps headings with body text and
+    nearby structural blocks within the configured chunk limits. Source line
+    numbers and original hashes remain available through explicit projection
+    provenance. External Hugo resources are not expanded.
+upgrade:
+  - |
+    Existing Workbench Markdown versions keep their indexed content. Restart the
+    local API and use Documents → Replace file with the original to apply the
+    revised parser and chunking policy. Re-embed changed versions before using
+    them with a qualified Dense profile. Evidence mappers must distinguish
+    ``projection_span`` from the original ``source_span`` envelope.

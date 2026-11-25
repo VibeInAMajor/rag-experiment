@@ -34,7 +34,7 @@ from apps.workbench.parsing.parsing import (
 from apps.workbench.persistence.models import Chunk
 
 _logger = logging.getLogger(__name__)
-_ALGORITHM_REVISION = "structural-token-chunks-r2"
+_ALGORITHM_REVISION = "structural-token-chunks-r3"
 _IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _SHA256 = re.compile(r"[a-f0-9]{64}")
 _MAX_METADATA_BYTES = 16_384
@@ -44,7 +44,7 @@ _DEADLINE_SECONDS = 10
 
 @dataclass(frozen=True)
 class ChunkingInput:
-    """Server-owned identities and exact decoded text accompanying a successful parser result."""
+    """Server-owned identities with decoded original text, or the verified extracted text for PDF."""
 
     parsed_document: ParsedDocument
     normalized_content: str
@@ -134,6 +134,8 @@ class PreparedChunk:
     protected_span: SourceSpan | None = None
     start_line: int | None = None
     end_line: int | None = None
+    projection_sha256: str | None = None
+    projection_span: SourceSpan | None = None
 
     def metadata(self) -> dict[str, Any]:
         """Return a fresh, bounded JSON projection; native page defaults are deliberately absent."""
@@ -210,6 +212,12 @@ class PreparedChunk:
             metadata["protected_source_span"] = asdict(self.protected_span)
         if self.start_line is not None and self.end_line is not None:
             metadata.update({"start_line": self.start_line, "end_line": self.end_line})
+        if self.projection_span is not None:
+            metadata["projection_span"] = asdict(self.projection_span)
+        if self.projection_sha256 is not None:
+            metadata.update(
+                {"projection_sha256": self.projection_sha256, "text_projection": "source-mapped-markdown-r1"}
+            )
         if self.length_model_token is not None:
             metadata.update(
                 {
@@ -314,6 +322,16 @@ def _validate_source(source: ChunkingInput) -> DocumentFeatures:
             or text != "\n\n".join(block.text for block in pdf.blocks)
         ):
             raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE, reason="PDF_PROJECTION_CONFLICT")
+    if parsed.format_id is FormatId.MARKDOWN:
+        from apps.workbench.parsing.markdown_projection import project_markdown
+
+        projection = project_markdown(text).text
+        if (
+            parsed.extracted_text != projection
+            or parsed.projection_sha256 != hashlib.sha256(projection.encode("utf-8")).hexdigest()
+        ):
+            raise ChunkingError(ChunkingErrorCode.INVALID_STRUCTURE, reason="MARKDOWN_PROJECTION_CONFLICT")
+        text = projection
     _validate_elements(text, parsed.elements)
     kinds = tuple(dict.fromkeys(element.kind for element in parsed.elements))
     if kinds != parsed.classification.element_kinds or parsed.classification.has_protected_spans != (
@@ -427,10 +445,25 @@ def _sections(source: ChunkingInput) -> tuple[_Section, ...]:
     sections = []
     if headings[0].source_span.start > 0:
         sections.append(_Section(0, headings[0].source_span.start, (), "root"))
+    pending_start: int | None = None
     for index, heading in enumerate(headings):
         end = headings[index + 1].source_span.start if index + 1 < len(headings) else len(source.normalized_content)
-        sections.append(_Section(heading.source_span.start, end, heading.heading_path, heading.element_id))
+        start = pending_start if pending_start is not None else heading.source_span.start
+        if (
+            index + 1 < len(headings)
+            and headings[index + 1].heading_path[:-1] == heading.heading_path
+            and _heading_only(source, start, end)
+        ):
+            pending_start = start
+            continue
+        sections.append(_Section(start, end, heading.heading_path, heading.element_id))
+        pending_start = None
     return tuple(sections)
+
+
+def _heading_only(source: ChunkingInput, start: int, end: int) -> bool:
+    elements = [element for element in source.parsed_document.elements if start <= element.source_span.start < end]
+    return bool(elements) and all(element.kind is ElementKind.HEADING for element in elements)
 
 
 def _runs(source: ChunkingInput, section: _Section) -> tuple[tuple[int, int, tuple[str, ...], bool], ...]:
@@ -448,7 +481,28 @@ def _runs(source: ChunkingInput, section: _Section) -> tuple[tuple[int, int, tup
         cursor = element.source_span.end
     if cursor < section.end:
         runs.append((cursor, section.end, (), False))
+    if len(runs) > 1 and _heading_only(source, runs[0][0], runs[0][1]):
+        # Keep the section heading with its first table/list/code unit, subject to the same token ceiling.
+        first, body = runs[:2]
+        runs[:2] = [(first[0], body[1], body[2], body[3])]
     return tuple(runs)
+
+
+def _pack_runs(
+    source: ChunkingInput, section: _Section, profile: ChunkingProfile
+) -> tuple[tuple[int, int, tuple[str, ...], bool], ...]:
+    from apps.workbench.chunking.chunking_adapters import count_tokens
+
+    packed: list[tuple[int, int, tuple[str, ...], bool]] = []
+    for run in _runs(source, section):
+        if packed:
+            previous = packed[-1]
+            combined = source.normalized_content[previous[0] : run[1]]
+            if len(combined) <= profile.hard_character_limit and count_tokens(combined) <= profile.target_size:
+                packed[-1] = (previous[0], run[1], tuple(dict.fromkeys(previous[2] + run[2])), previous[3] or run[3])
+                continue
+        packed.append(run)
+    return tuple(packed)
 
 
 def _model_size(
@@ -530,6 +584,9 @@ def _prepared(
         ),
         model_counter_revision=admission.counter_revision if admission else None,
         python_span=python_span,
+        projection_sha256=source.parsed_document.projection_sha256
+        if source.parsed_document.format_id is FormatId.MARKDOWN
+        else None,
     )
     chunk.metadata()
     return chunk
@@ -676,6 +733,39 @@ def _prepare_python(
     return tuple(code_chunks)
 
 
+def _indexable_source(source: ChunkingInput) -> ChunkingInput:
+    if source.parsed_document.format_id is FormatId.MARKDOWN:
+        return replace(source, normalized_content=source.parsed_document.extracted_text or "")
+    return source
+
+
+def _original_markdown_spans(source: ChunkingInput, chunks: list[PreparedChunk]) -> tuple[PreparedChunk, ...]:
+    if source.parsed_document.format_id is not FormatId.MARKDOWN:
+        return tuple(chunks)
+    from apps.workbench.parsing.markdown_projection import project_markdown
+
+    projection = project_markdown(source.normalized_content)
+    offsets = _line_offsets(source.normalized_content)
+    result = []
+    for chunk in chunks:
+        start, end = projection.source_bounds(chunk.source_span.start, chunk.source_span.end)
+        protected_span = chunk.protected_span
+        if protected_span is not None:
+            left, right = projection.source_bounds(protected_span.start, protected_span.end)
+            protected_span = SourceSpan(start=left, end=right)
+        result.append(
+            replace(
+                chunk,
+                projection_span=chunk.source_span,
+                source_span=SourceSpan(start=start, end=end),
+                protected_span=protected_span,
+                start_line=bisect_right(offsets, start),
+                end_line=bisect_right(offsets, end - 1),
+            )
+        )
+    return tuple(result)
+
+
 def _prepare(
     source: ChunkingInput,
     *,
@@ -703,6 +793,7 @@ def _prepare(
     if declared.token_counter_revision != actual.token_counter_revision:
         raise ChunkingError(ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE, reason="COUNTER_REVISION_MISMATCH")
     decision = resolve_chunking(source, profile=profile, resources=declared, pdf_profile=pdf_profile)
+    original_source, source = source, _indexable_source(source)
     if isinstance(decision.profile, PdfChunkingProfile):
         from apps.workbench.chunking.pdf.pdf_chunk_preparation import prepare_pdf_chunks
 
@@ -751,7 +842,7 @@ def _prepare(
     total_bytes = 0
     line_offsets = _line_offsets(source.normalized_content)
     for section in _sections(source):
-        for start, end, warnings, protected in _runs(source, section):
+        for start, end, warnings, protected in _pack_runs(source, section, profile):
             text = source.normalized_content[start:end]
             if not text.strip():
                 continue
@@ -796,7 +887,7 @@ def _prepare(
                     raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PREPARED_BYTES")
                 chunks.append(chunk)
     _verify_output(source, chunks)
-    return tuple(chunks)
+    return _original_markdown_spans(original_source, chunks)
 
 
 def prepare_chunks(

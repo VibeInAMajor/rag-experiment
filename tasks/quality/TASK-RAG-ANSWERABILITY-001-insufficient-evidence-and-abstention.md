@@ -83,3 +83,15 @@ Version decision policy; if unqualified, do not enable grounded generation. Pres
 - [ ] Link actual commands and evidence, including blocked/unrun gates and limitations.
 - [ ] Verify immutable profile compatibility, data preservation and rollback.
 - [ ] Record changed paths and implementation commit; mark COMPLETE only with evidence for applicable task gates.
+
+
+## QUALITY-001 failure-localization evidence
+
+QUALITY-001 OPEN V2 handoff (2026-11-25): 45 no-answer questions / 15 translated families have original automated corpus-absence records, captured neighbors, negative-span overlap and distance margins on every arm (360 observations). No sufficiency decision executed; neighbor presence is not false acceptance, zero lexical results are not abstention. Inspect the original absence rubric and near-neighbors through an authorized UI case review; semantic sufficiency remains UNKNOWN. No cosine threshold was tuned or qualified.
+
+Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query IDs, locators, alternative sets and next probes remain in the ignored existing V2 run; sanitized counts are in metrics.json → failure_localization.
+## QUALITY-001 UI completion evidence — 2026-11-26
+
+Two additional matched UI phases each submit all 45 no-answer questions; forced neighbors observed on 45/45. No answerability decision or generation executed. Native FTS zeros are traced to actual lexical AND conditions and cannot serve as an abstention label. Final holdout remains unused.
+
+Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.

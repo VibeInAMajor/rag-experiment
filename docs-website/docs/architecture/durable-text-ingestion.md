@@ -48,6 +48,16 @@ Job status is fetched only by a known upload/error `job_id`. **Inspect confirmed
 
 To roll back this frontend integration, disable Live Documents and retain explicit Preview operation. Preserve the existing API, source/version/chunk/job rows, local-original registrations and named PostgreSQL volume. No reseed, destructive downgrade or volume deletion is required. Current integration evidence and remaining gates belong to [UI-003](../../../tasks/TASK-UI-003-live-document-management.md), separately from the historical backend qualification below.
 
+## Markdown indexing projection
+
+The qualified ``raw-markdown-r3`` parser removes service HTML comments, YAML/TOML frontmatter and Hugo shortcode delimiters outside literal code. Tooltip ``text`` (or ``term_id``) values and the bodies of paired shortcodes remain text. Fenced, indented and inline code examples remain literal. Hugo resources such as glossary definitions, included code files and version variables are not executed, downloaded or expanded; removing their directives does not supply their missing content.
+
+Markdown headings accompany their body text, including small tables, lists and code blocks that fit the configured token/character limits. Consecutive ancestor headings without intervening body text accompany the next child section. Small adjacent structural units are packed within one section; oversized protected blocks retain the existing bounded splitting and warning behavior. A document containing only headings cannot acquire invented body text. TXT, Python AST and PDF page provenance retain their existing owners.
+
+The parser's ``extracted_text`` and element spans describe the cleaned projection. Line separators are retained. Each published Markdown chunk has ``source_sha256`` for the uploaded original, ``source_span`` for its original character envelope, ``start_line`` / ``end_line`` for original one-based inclusive lines, and ``projection_span`` / ``projection_sha256`` for its indexed text coordinates. ``text_projection=source-mapped-markdown-r1`` distinguishes this contract from byte-identical source slices: the original envelope may contain removed markup. Content hashes cover the actual cleaned chunk. Evidence mappers must use this projection contract rather than compare the original envelope's bytes directly with the chunk content.
+
+The ``structural-token-chunks-r3`` processing fingerprint changes for new ingestion. Existing source versions are retained; use **Documents → Replace file** with the original to adopt the policy. The existing active-version guard, atomic publication and any profile-bound re-embedding requirements still apply. Reverting code does not reconstruct or reindex historical versions automatically.
+
 ## HTTP operations
 
 All routes use the existing `rag-api-v1.0` correlation envelope and server-authorized `development` workspace:

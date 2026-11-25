@@ -67,13 +67,14 @@ def _assert_valid_chunks(source: ChunkingInput, chunks: tuple[PreparedChunk, ...
     assert chunks
     assert len({chunk.chunk_id for chunk in chunks}) == len(chunks)
     assert {chunk.processing_fingerprint for chunk in chunks} == {chunks[0].processing_fingerprint}
-    text = source.normalized_content
+    text = source.parsed_document.extracted_text or source.normalized_content
     headings = [element for element in source.parsed_document.elements if element.kind is ElementKind.HEADING]
     covered = bytearray(len(text))
     previous_end = 0
     previous: PreparedChunk | None = None
     for ordinal, chunk in enumerate(chunks):
-        start, end = chunk.source_span.start, chunk.source_span.end
+        span = chunk.projection_span or chunk.source_span
+        start, end = span.start, span.end
         assert chunk.ordinal == ordinal
         assert 0 <= start < end <= len(text)
         assert chunk.content == text[start:end]
@@ -94,13 +95,21 @@ def _assert_valid_chunks(source: ChunkingInput, chunks: tuple[PreparedChunk, ...
             else:
                 actual_overlap = chunking_adapters.count_tokens(text[start:previous_end]) if start < previous_end else 0
                 assert chunk.overlap_tokens == actual_overlap
-            assert start > previous.source_span.start
+            previous_span = previous.projection_span or previous.source_span
+            assert start > previous_span.start
         expected_path: tuple[str, ...] = ()
         for heading in headings:
             if heading.source_span.start <= start:
                 expected_path = heading.heading_path
             elif heading.source_span.start < end:
-                pytest.fail("A chunk crossed a verified heading boundary")
+                preceding = [
+                    element
+                    for element in source.parsed_document.elements
+                    if start <= element.source_span.start < heading.source_span.start
+                ]
+                assert preceding and all(element.kind is ElementKind.HEADING for element in preceding)
+                assert heading.heading_path[:-1] == expected_path
+                expected_path = heading.heading_path
         assert chunk.heading_path == expected_path
         covered[start:end] = b"\1" * (end - start)
         stored = chunk.to_chunk(title="Verified source")
@@ -111,7 +120,7 @@ def _assert_valid_chunks(source: ChunkingInput, chunks: tuple[PreparedChunk, ...
         metadata = chunk.metadata()
         assert "page_number" not in metadata and "page" not in metadata
         assert metadata["length_tiktoken"] == chunk.effective_size
-        assert metadata["split_idx_start"] == start
+        assert metadata["split_idx_start"] == chunk.source_span.start
         assert len(json.dumps(metadata, ensure_ascii=False).encode("utf-8")) <= 16_384
         previous_end, previous = end, chunk
     assert all(covered[index] or character.isspace() for index, character in enumerate(text))
@@ -121,23 +130,18 @@ def _assert_valid_chunks(source: ChunkingInput, chunks: tuple[PreparedChunk, ...
 def _assert_protected_coverage(source: ChunkingInput, chunks: tuple[PreparedChunk, ...]) -> None:
     for element in source.parsed_document.elements:
         if element.kind is ElementKind.PROTECTED_RAW:
-            matching = [chunk for chunk in chunks if chunk.source_span == element.source_span]
-            if matching:
-                assert len(matching) == 1
-                assert matching[0].content == element.text
-                assert set(element.warning_codes).issubset(matching[0].warning_codes)
-            else:
-                fragments = [chunk for chunk in chunks if chunk.protected_span == element.source_span]
-                assert len(fragments) > 1
-                assert "".join(chunk.content for chunk in fragments) == element.text
-                for fragment in fragments:
-                    assert set(element.warning_codes).issubset(fragment.warning_codes)
-                    assert "PROTECTED_RAW_FRAGMENT" in fragment.warning_codes
-                    assert fragment.overlap_tokens == 0
-                    assert fragment.metadata()["protected_source_span"] == {
-                        "start": element.source_span.start,
-                        "end": element.source_span.end,
-                    }
+            covered = bytearray(len(element.text))
+            for chunk in chunks:
+                span = chunk.projection_span or chunk.source_span
+                start = max(span.start, element.source_span.start)
+                end = min(span.end, element.source_span.end)
+                if start >= end:
+                    continue
+                relative_start, relative_end = start - element.source_span.start, end - element.source_span.start
+                assert chunk.content[start - span.start : end - span.start] == element.text[relative_start:relative_end]
+                assert set(element.warning_codes).issubset(chunk.warning_codes)
+                covered[relative_start:relative_end] = b"\1" * (end - start)
+            assert all(covered)
 
 
 @pytest.mark.parametrize("newline", ["\n", "\r\n", "\r"])
@@ -193,6 +197,26 @@ def test_curated_parser_chunking_corpus(case: dict[str, Any], resources: Chunkin
         assert "missing_usable_headings" in chunks[0].decision.fallback_reasons
     if "large" in case["tags"]:
         assert len(chunks) > 1
+
+
+def test_markdown_cleanup_preserves_original_citations_and_heading_body(resources: ChunkingResources) -> None:
+    """Cleaned text retains exact original citation envelopes and complete heading context."""
+    text = (
+        "# Root\n<!-- internal -->\n## Child\n{{< note >}}\n"
+        'Body with {{< glossary_tooltip term_id="pod" text="Pods" >}}.\n{{< /note >}}\n'
+    )
+    source = _input(text, filename="clean.md")
+    chunks = prepare_chunks(source, resources=resources)
+    assert len(chunks) == 1
+    chunk = chunks[0]
+    assert chunk.content == "# Root\n\n## Child\n\nBody with Pods.\n\n"
+    assert chunk.heading_path == ("Root", "Child")
+    assert chunk.source_span == SourceSpan(start=0, end=len(text))
+    assert chunk.start_line == 1 and chunk.end_line == 6
+    assert chunk.source_sha256 == hashlib.sha256(text.encode()).hexdigest()
+    assert chunk.metadata()["projection_span"] == {"start": 0, "end": len(chunk.content)}
+    assert chunk.metadata()["text_projection"] == "source-mapped-markdown-r1"
+    _assert_valid_chunks(source, chunks)
 
 
 def test_nested_markdown_golden_preserves_paths_sections_and_offsets(resources: ChunkingResources) -> None:

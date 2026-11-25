@@ -92,7 +92,7 @@ class InspectedSource:
 
 @dataclass(frozen=True)
 class SourceSpan:
-    """Half-open character offsets in the UTF-8-sig decoded original, before normalization."""
+    """Half-open character bounds; the owning record declares original or extracted-projection coordinates."""
 
     start: int
     end: int
@@ -100,7 +100,7 @@ class SourceSpan:
 
 @dataclass(frozen=True)
 class ParsedElement:
-    """Observed source span; protected Markdown makes no AST or table-cell claim."""
+    """Observed text span, relative to extracted_text when present; raw blocks make no AST/table-cell claim."""
 
     element_id: str
     order: int
@@ -126,7 +126,7 @@ class ProcessingClassification:
 
 @dataclass(frozen=True)
 class ParsedDocument:
-    """Revisioned internal handoff to chunking, with no storage or workspace authority."""
+    """Revisioned internal handoff; Markdown/PDF elements use extracted_text, while source hashes bind originals."""
 
     inspected_source: InspectedSource
     format_id: FormatId
@@ -470,6 +470,10 @@ def parse_source(
                 raise
             except Exception:
                 raise ParsingError(ParseErrorCode.PARSE_FAILED, reason="EXTRACTION_FAILED") from None
+        if source.format_id is FormatId.MARKDOWN:
+            from apps.workbench.parsing.markdown_projection import project_markdown
+
+            text = project_markdown(text).text
         code_symbols: tuple[PythonSymbol, ...] = ()
         elements: tuple[ParsedElement, ...]
         if pdf_document is not None:
@@ -521,8 +525,10 @@ def parse_source(
             classification=classification,
             code_symbols=code_symbols,
             pdf_document=pdf_document,
-            extracted_text=text if pdf_document is not None else None,
-            projection_sha256=hashlib.sha256(text.encode("utf-8")).hexdigest() if pdf_document is not None else None,
+            extracted_text=text if pdf_document is not None or source.format_id is FormatId.MARKDOWN else None,
+            projection_sha256=hashlib.sha256(text.encode("utf-8")).hexdigest()
+            if pdf_document is not None or source.format_id is FormatId.MARKDOWN
+            else None,
         )
     except ParsingError as error:
         _logger.info(
