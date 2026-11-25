@@ -70,6 +70,10 @@ Reuse existing local evaluation adapters, `scripts/workbench_embedding_evaluate.
 5. If GO, add/qualify a separate immutable lexical policy using existing registry and SQL owner; preserve the original baseline. Verify actual HTTP behavior and compatibility. If NO-GO, document why and route to BM25 feasibility or a dense-only rerank experiment; do not present empty-arm fusion as meaningful hybrid improvement.
 6. Use existing local corpus limits (10,000 active chunks, 50 MiB) and no holdout inspection. Reuse actual tests and local evaluation reports; record commands, exit codes and failures.
 
+### Measured next experiment after Markdown cleanup — 2026-11-26
+
+Use the latest [QUALITY-001 completion](../evidence/quality-2026-11-25/report.md#завершение-quality-001-dense-fts-и-парное-сравнение-чанкинга--2026-11-26) rather than repeating its completed native diagnostics: four corpora, 1224 diagnostic sets, all natural AND queries empty, all native literal controls 1224/1224 successful, zero stored-vector mismatches. Per corpus 252 questions contain absent lexemes; for 54 all words exist but never together in one chunk. Reuse captured lexemes/OR probes; compare meaningful term subsets, bounded OR and mixed phrase/exact-term policies with the new canonical-LF post-cleanup corpus, preserving 306/306 native literal controls on that corpus and the original profile. Freeze useful contribution criterion before testing: proposed >=5 additional distinct answerable OPEN cases with known evidence absent from matched dense top-10 at equal total candidate budget, no scope/version errors, and show actual hard-negative/cost trade-off; if smaller gain, report NO-GO or evidence-backed limited experimental result without promotion. Use same 306 query IDs and report language/domain results; cross-language mismatch is not solved by OR alone. Run new functional acceptance through existing local UI/Workbench, not a new evaluation service. No need to wait for DATASET-002 to measure known-facet coverage; use its distinct primary/pooled judgments when ready.
+
 ## K. Security / Governance / Observability
 
 Keep server-derived WorkspaceContext, RLS, active version, profile fences, parameterized SQL, query length/time/term limits and existing cancellation semantics. No arbitrary operator syntax, credentials, raw content or vectors in normal logs. No external data egress. Retain local benchmark artifacts and safe aggregate report under existing evidence policy.
@@ -85,6 +89,8 @@ Focused unit/contract tests for Unicode, punctuation, exact identifiers, numbers
 - [ ] Literal control and existing profile unchanged; all relevant regressions and safety checks pass.
 - [ ] GO/NO-GO justified by measured useful lexical contribution, not hit count alone.
 - [ ] If GO, separate immutable profile tested through actual API and ready for HYBRID-001; if NO-GO, explicit alternative route.
+
+- [ ] Native cause reused, useful lexical contribution and hard-negative trade-off measured against matched cleaned Dense baseline; no empty fusion or artificial metric pass.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
