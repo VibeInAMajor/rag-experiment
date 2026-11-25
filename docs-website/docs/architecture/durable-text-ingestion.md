@@ -17,6 +17,8 @@ The [ingestion task](../../../tasks/completed/TASK-RAG-002-ingest-text-and-markd
 
 ## Upgrade an existing volume
 
+Large Markdown quotes, lists, raw tables and fences below the file byte limit no longer fail just because one protected block exceeds the chunk target. Bounded raw fragments preserve original source spans and disclose `PROTECTED_RAW_FRAGMENT` without claiming table or code parsing. `PAYLOAD_TOO_LARGE` now identifies file/request bytes, while `DOCUMENT_PROCESSING_LIMIT_EXCEEDED` (422) identifies processing limits and `CORPUS_LIMIT_EXCEEDED` (409) identifies workspace capacity. A terminal failed job still replays its original result: use a new explicit upload operation after correcting the cause.
+
 Use the existing administrator credentials and preserve the named volume. Stop old application writers, check status and explicitly apply the current migration `0003`; API startup and the launcher never migrate or seed:
 
 ```powershell

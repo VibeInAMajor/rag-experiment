@@ -27,6 +27,7 @@ from apps.workbench.chunking.chunking_profiles import (
     resolve_profile,
 )
 from apps.workbench.configuration.document_processing import DocumentProcessingSettings
+from apps.workbench.contracts.schemas import UploadLocation
 from apps.workbench.embedding.model_token_counter import LocalQwenTokenCounter
 from apps.workbench.ingestion.upload_policy import pdf_upload_candidate, upload_file_byte_limit
 from apps.workbench.observability.events import log_event
@@ -73,6 +74,8 @@ _ERROR_POLICIES = {
     "PDF_BUSY": (429, True),
     "UNSUPPORTED_MEDIA_TYPE": (415, False),
     "PAYLOAD_TOO_LARGE": (413, False),
+    "DOCUMENT_PROCESSING_LIMIT_EXCEEDED": (422, False),
+    "CORPUS_LIMIT_EXCEEDED": (409, False),
     "MODEL_TOKEN_LIMIT_EXCEEDED": (413, False),
     "DOCUMENT_NOT_FOUND": (404, False),
     "WORKSPACE_NOT_FOUND": (404, False),
@@ -93,6 +96,16 @@ class IngestionError(Exception):
         self.code = code if code in _ERROR_POLICIES else "INGESTION_FAILED"
         self.status, self.retryable = _ERROR_POLICIES[self.code]
         self.job_id = job_id
+        self.message = {
+            "PAYLOAD_TOO_LARGE": "The upload exceeds the server's file or request byte limit.",
+            "DOCUMENT_PROCESSING_LIMIT_EXCEEDED": (
+                "The file was received, but processing exceeded a chunk count, text or metadata limit."
+            ),
+            "CORPUS_LIMIT_EXCEEDED": (
+                "The workspace has reached its indexed document capacity; this is not the file byte limit."
+            ),
+            "MODEL_TOKEN_LIMIT_EXCEEDED": "A prepared passage exceeds the embedding model's token budget.",
+        }.get(self.code, "The upload or document operation could not be completed.")
         super().__init__(self.code)
 
 
@@ -106,9 +119,17 @@ class UploadInput:
     idempotency_key: str
     source_id: str | None = None
     expected_active_version_id: str | None = None
+    upload_location: UploadLocation | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.content, bytes) or not isinstance(self.filename, str):
+            raise IngestionError("INVALID_REQUEST")
+        if self.upload_location is not None and (
+            not isinstance(self.upload_location, UploadLocation)
+            or self.source_id is not None
+            or unicodedata.normalize("NFC", self.upload_location.path.split("/")[-1])
+            != unicodedata.normalize("NFC", self.filename)
+        ):
             raise IngestionError("INVALID_REQUEST")
         if len(self.content) > upload_file_byte_limit(filename=self.filename, declared_mime=self.declared_mime):
             raise IngestionError("PAYLOAD_TOO_LARGE")
@@ -160,7 +181,7 @@ class _Publication:
 
 
 def _request_fingerprint(upload: UploadInput, source_sha256: str) -> str:
-    payload = {
+    payload: dict[str, object] = {
         "request_contract": "txt-markdown-upload-v1",
         "source_sha256": source_sha256,
         "filename": unicodedata.normalize("NFC", upload.filename),
@@ -168,6 +189,8 @@ def _request_fingerprint(upload: UploadInput, source_sha256: str) -> str:
         "source_id": upload.source_id,
         "expected_active_version_id": upload.expected_active_version_id,
     }
+    if upload.upload_location is not None:
+        payload["upload_location"] = upload.upload_location.model_dump()
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
@@ -284,7 +307,11 @@ def _prepare_publication(
             source_id=job.source_id,
             title=parsed.inspected_source.safe_basename,
             media_type=parsed.inspected_source.verified_mime,
-            metadata={"origin": "uploaded", "original_content_available": False},
+            metadata={
+                "origin": "uploaded",
+                "original_content_available": False,
+                **({"upload_location": upload.upload_location.model_dump()} if upload.upload_location else {}),
+            },
         ),
         version=SourceVersion(
             workspace_id=job.workspace_id,
@@ -306,7 +333,7 @@ def _parse_failure_code(error: ParsingError) -> str:
     if error.reason == "DEADLINE_EXCEEDED":
         return "INGESTION_TIMEOUT"
     if error.code is ParseErrorCode.CONTENT_LIMIT_EXCEEDED:
-        return "PAYLOAD_TOO_LARGE"
+        return "PAYLOAD_TOO_LARGE" if error.reason == "MAX_BYTES" else "DOCUMENT_PROCESSING_LIMIT_EXCEEDED"
     if error.code is ParseErrorCode.UNSUPPORTED_FORMAT or error.reason in {
         "FORMAT_NOT_QUALIFIED",
         "INVALID_MIME",
@@ -327,7 +354,7 @@ def _chunk_failure_code(error: ChunkingError) -> str:
     if error.code is ChunkingErrorCode.MODEL_TOKEN_LIMIT_EXCEEDED:
         return "MODEL_TOKEN_LIMIT_EXCEEDED"
     if error.code is ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED:
-        return "PAYLOAD_TOO_LARGE"
+        return "PAYLOAD_TOO_LARGE" if error.reason == "MAX_SOURCE_BYTES" else "DOCUMENT_PROCESSING_LIMIT_EXCEEDED"
     if error.code in {
         ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE,
         ChunkingErrorCode.SENTENCE_RESOURCE_UNAVAILABLE,
@@ -351,7 +378,7 @@ def _mapped_error(error: Exception, *, job_id: str | None = None) -> IngestionEr
         (VersionConflict, "VERSION_CONFLICT"),
         (IngestionOwnershipLost, "INGESTION_IN_PROGRESS"),
         (IngestionInProgress, "INGESTION_IN_PROGRESS"),
-        (CorpusLimitExceeded, "PAYLOAD_TOO_LARGE"),
+        (CorpusLimitExceeded, "CORPUS_LIMIT_EXCEEDED"),
         (PersistenceError, "DEPENDENCY_UNAVAILABLE"),
     ):
         if isinstance(error, kind):

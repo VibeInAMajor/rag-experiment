@@ -805,8 +805,21 @@
   font-size: 12px;
 }
 .documents-upload-dialog {
+  min-width: min(480px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  min-height: min(320px, calc(100dvh - 40px));
   max-height: calc(100dvh - 40px);
   overflow: auto;
+  resize: both;
+}
+.documents-upload-dialog .documents-upload-items {
+  max-height: min(50dvh, 480px);
+}
+.documents-upload-dialog .view-actions {
+  flex-wrap: wrap;
+}
+.documents-resize-help {
+  margin-bottom: 0;
 }
 .documents-upload-field {
   margin-top: 24px;
@@ -815,6 +828,45 @@
   padding: 12px 0;
   max-width: 100%;
   min-height: 44px;
+}
+.documents-folder-row {
+  background: var(--bg-card-muted);
+}
+.documents-folder-icon {
+  color: #a86c12;
+  background: linear-gradient(145deg, #fff6db, #ffe6a3);
+  box-shadow: inset 0 1px 0 #ffffffb3;
+}
+.documents-folder-icon svg {
+  fill: #ffd479;
+  stroke-width: 1.5;
+}
+.documents-folder-table .data-name > svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.documents-folder-table .data-name:disabled {
+  cursor: default;
+  color: var(--text-secondary);
+}
+.documents-upload-items {
+  padding-left: 20px;
+  max-height: 320px;
+  overflow: auto;
+}
+.documents-upload-items li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-hairline);
+  overflow-wrap: anywhere;
+}
+.documents-upload-item-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.documents-upload-item-heading span {
+  color: var(--text-secondary);
 }
 .documents-live
   :is(button, input, select, summary, [role="tabpanel"]):focus-visible,

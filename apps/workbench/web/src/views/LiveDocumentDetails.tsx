@@ -4,7 +4,7 @@ import type { LiveDocumentsModel } from "../hooks/useLiveDocuments";
 import {
   boundedDocumentText,
   documentMetadataText,
-  documentPage,
+  documentChunkCaption,
   documentTimestamp,
 } from "./documentPresentation";
 
@@ -65,7 +65,7 @@ export function DocumentChunks({
             data-page={chunk.page ?? ""}
           >
             <div className="detail-caption mono">
-              Order {chunk.order} · Page {documentPage(chunk.page)}
+              {documentChunkCaption(chunk, model.detail?.media_type)}
             </div>
             {!compact && (
               <dl className="detail-metadata">

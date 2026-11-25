@@ -3,7 +3,11 @@ async function smoke(page) {
   const check = (condition, message) => {
     if (!condition) throw new Error(message);
   };
-  await page.reload();
+  const initialUrl = new URL(page.url());
+  initialUrl.searchParams.delete("page");
+  initialUrl.searchParams.delete("mode");
+  initialUrl.hash = "";
+  await page.goto(initialUrl.href);
   await page.getByRole("button", { name: "Run", exact: true }).waitFor();
   check(
     (await page.locator(".react-flow__node").count()) === 6,

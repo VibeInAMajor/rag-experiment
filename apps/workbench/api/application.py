@@ -62,6 +62,7 @@ from apps.workbench.retrieval.dense import DenseSearchResult, DenseService
 from apps.workbench.retrieval.profile_registry import ProfileRegistry
 from apps.workbench.retrieval.profiles import resolve_profile, validate_search_policy
 from apps.workbench.retrieval.services import LexicalServicePort, ReadinessProbe, ReadinessSnapshot, RetrievalService
+from apps.workbench.sources.folders import document_folder_states
 from apps.workbench.sources.local_sources import (
     FileRevealFailed,
     LocalFileLauncher,
@@ -365,6 +366,7 @@ class _Routes:
                 documents=available,
                 search=available,
                 upload=ingestion_available,
+                upload_folders=ingestion_available,
                 document_details=details_available,
                 jobs=details_available,
             ),
@@ -438,7 +440,11 @@ class _Routes:
                 revision=corpus.corpus_revision,
                 ids=[item.source_id for item in records],
             )
-            page = [DocumentItem.model_validate(item.model_dump()) for item in records[offset : offset + limit]]
+            folders = document_folder_states(records)
+            page = [
+                DocumentItem.model_validate({**item.model_dump(), "folder_states": folders.get(item.source_id)})
+                for item in records[offset : offset + limit]
+            ]
             following = (
                 self.cursors.encode(
                     kind="documents", context=context, revision=corpus.corpus_revision, after=page[-1].source_id

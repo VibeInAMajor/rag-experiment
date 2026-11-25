@@ -1,5 +1,6 @@
 """Real bounded HTTP uploads publish into the same PostgreSQL corpus used by Haystack search."""
 
+import json
 from collections.abc import AsyncIterator
 from typing import Any
 from uuid import uuid4
@@ -94,6 +95,75 @@ async def _search(client: httpx.AsyncClient, query: str) -> dict[str, Any]:
     )
     assert response.status_code == 200, response.text
     return response.json()
+
+
+async def test_folder_location_survives_replay_replacement_and_new_repository(
+    ingestion_client: httpx.AsyncClient, disposable_database: DisposableDatabase
+) -> None:
+    """Persist display hierarchy without moving originals or changing retry identity."""
+    capabilities = await ingestion_client.get("/api/v1/capabilities")
+    assert capabilities.json()["features"]["upload_folders"] is True
+    location = {"group_id": "folder-selection", "path": "Research/Українська/notes.txt", "folder_totals": [2, 1]}
+    key = uuid4().hex
+    created = await _upload(ingestion_client, key=key, fields={"upload_location": json.dumps(location)})
+    assert created.status_code == 201, created.text
+    source = created.json()["source_id"]
+    replay = await _upload(ingestion_client, key=key, fields={"upload_location": json.dumps(location)})
+    assert replay.status_code == 200 and replay.json()["replayed"]
+    changed = {**location, "path": "Elsewhere/Українська/notes.txt"}
+    conflict = await _upload(ingestion_client, key=key, fields={"upload_location": json.dumps(changed)})
+    _error(conflict, status=409, code="IDEMPOTENCY_CONFLICT")
+    replacement = await _upload(
+        ingestion_client,
+        content=b"replacementfolderprobe",
+        fields={"source_id": source, "expected_active_version_id": created.json()["source_version_id"]},
+    )
+    assert replacement.status_code == 200, replacement.text
+    page = (await ingestion_client.get(_DOCUMENTS)).json()
+    assert next(item for item in page["items"] if item["source_id"] == source)["upload_location"] == location
+    assert next(item for item in page["items"] if item["source_id"] == source)["folder_states"] == [
+        {"file_count": 1, "ready_count": 1, "status": "ready"},
+        {"file_count": 1, "ready_count": 1, "status": "ready"},
+    ]
+    detail = await ingestion_client.get(f"{_DOCUMENTS}/{source}")
+    assert detail.status_code == 200 and detail.json()["upload_location"] == location
+    repository = PostgresPersistence(disposable_database.app_dsn)
+    await repository.start()
+    try:
+        stored = await repository.get_source_detail(_CONTEXT, source_id=source)
+        assert stored is not None and stored.source.metadata["upload_location"] == location
+    finally:
+        await repository.close()
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "| Field | Evidence |\n| --- | --- |\n" + "| row | rawfragmentprobe data preserved exactly |\n" * 300,
+        "> rawfragmentprobe " + "Quoted text remains source-exact and inert. " * 1200 + "\n",
+    ],
+)
+async def test_markdown_below_byte_limit_publishes_large_raw_structures(
+    ingestion_client: httpx.AsyncClient, raw: str
+) -> None:
+    """A large table or quote fits bounded chunks instead of masquerading as an oversized upload."""
+    text = "# Raw evidence\n\n" + raw
+    assert len(text.encode()) < 1048576
+    response = await _upload(ingestion_client, content=text.encode(), filename="large-raw.md", mime="text/markdown")
+    assert response.status_code == 201, response.text
+    source = response.json()["source_id"]
+    detail = (await ingestion_client.get(f"{_DOCUMENTS}/{source}")).json()
+    assert "PROTECTED_RAW_FRAGMENT" in detail["warnings"]
+    page = (await ingestion_client.get(f"{_DOCUMENTS}/{source}/chunks?limit=100")).json()
+    fragments = [item for item in page["items"] if "protected_source_span" in item["metadata"]]
+    assert len(fragments) > 1
+    for fragment in fragments:
+        span = fragment["metadata"]["source_span"]
+        assert fragment["content"] == text[span["start"] : span["end"]]
+        assert fragment["metadata"]["length_tiktoken"] <= 500
+        assert fragment["metadata"]["start_line"] == text.count("\n", 0, span["start"]) + 1
+        assert fragment["metadata"]["end_line"] == text.count("\n", 0, span["end"] - 1) + 1
+    assert source in {item["source_id"] for item in (await _search(ingestion_client, "rawfragmentprobe"))["results"]}
 
 
 def _counts(database: DisposableDatabase) -> tuple[int, int, int, int]:

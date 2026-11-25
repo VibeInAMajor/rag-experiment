@@ -2,7 +2,11 @@
 import "../test/dialog";
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { BackendCapabilities } from "../api/contracts";
+import type {
+  BackendCapabilities,
+  DocumentDetail,
+  JsonValue,
+} from "../api/contracts";
 import { emptyLiveDocuments } from "../domain/liveDocuments";
 import type { LiveDocumentsModel } from "../hooks/useLiveDocuments";
 import { DocumentsView } from "./DocumentsView";
@@ -11,10 +15,92 @@ import { DocumentUploadDialog } from "./DocumentUploadDialog";
 
 afterEach(cleanup);
 
+const markdownDetail: DocumentDetail = {
+  contract_revision: "rag-api-v1.0",
+  request_id: "request",
+  trace_id: "trace",
+  workspace_id: "development",
+  corpus_revision: "corpus",
+  source_id: "source",
+  title: "notes.md",
+  media_type: "text/markdown",
+  status: "ready",
+  active_version_id: "version",
+  chunk_count: 1,
+  updated_at: "2026-11-25T12:00:00Z",
+  warnings: [],
+  original_content_available: false,
+};
+
+it("expands folders with icons and preserves the parent error while filtering Ready descendants", () => {
+  const model = controller();
+  const common = {
+    media_type: "text/plain",
+    active_version_id: "version-1",
+    chunk_count: 1,
+    updated_at: "2026-11-25T12:00:00Z",
+  };
+  model.documents = [
+    {
+      ...common,
+      source_id: "ready",
+      title: "ready.txt",
+      status: "ready",
+      upload_location: {
+        group_id: "selection",
+        path: "Research/ready.txt",
+        folder_totals: [2],
+      },
+    },
+    {
+      ...common,
+      source_id: "error",
+      title: "broken.txt",
+      status: "error",
+      upload_location: {
+        group_id: "selection",
+        path: "Research/sub/broken.txt",
+        folder_totals: [2, 1],
+      },
+    },
+  ];
+  const { container } = render(
+    <DocumentsView
+      mode="live"
+      controller={model}
+      capabilities={capabilities}
+    />,
+  );
+  expect(screen.queryByText("ready.txt")).toBeNull();
+  expect(screen.getByText("1 / 2 files ready")).toBeTruthy();
+  expect(container.querySelector(".documents-folder-icon svg")).toBeTruthy();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Expand folder Research" }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Expand folder Research/sub",
+    }),
+  );
+  expect(screen.getByText("broken.txt")).toBeTruthy();
+  fireEvent.change(screen.getByRole("combobox", { name: "Document status" }), {
+    target: { value: "ready" },
+  });
+  expect(screen.queryByText("broken.txt")).toBeNull();
+  expect(screen.getByText("ready.txt")).toBeTruthy();
+  expect(screen.getByText("Error")).toBeTruthy();
+});
+
 function controller(): LiveDocumentsModel {
   return {
     ...emptyLiveDocuments(),
     status: "ready",
+    uploadQueue: [],
+    uploadQueueBusy: false,
+    chooseFiles: vi.fn(),
+    startUploads: vi.fn(),
+    stopUploads: vi.fn(),
+    retryQueuedUpload: vi.fn(),
     refresh: vi.fn(async () => {}),
     loadMore: vi.fn(async () => {}),
     selectSource: vi.fn(),
@@ -80,8 +166,9 @@ it("labels loaded-only filtering and never substitutes Preview for an empty live
   ).toBeNull();
 });
 
-it("keeps malicious chunk content inert and preserves missing page provenance", () => {
+it("keeps malicious content inert and labels Markdown fragments with source lines", () => {
   const model = controller();
+  model.detail = markdownDetail;
   const malicious = '<img src="https://attacker.invalid" onerror="alert(1)">';
   model.chunks = [
     {
@@ -106,9 +193,55 @@ it("keeps malicious chunk content inert and preserves missing page provenance", 
   );
   expect(screen.getByText(malicious)).toBeTruthy();
   expect(container.querySelector("img")).toBeNull();
-  expect(screen.getByText("Order 0 · Page Unavailable")).toBeTruthy();
+  expect(screen.getByText("Фрагмент 1 · Строки 4–9")).toBeTruthy();
+  expect(screen.queryByText(/Page Unavailable/)).toBeNull();
   expect(container.textContent).toContain('"start_line": 4');
   expect(container.textContent).toContain('"table_row_start": 0');
+});
+
+it("preserves the actual PDF page number without changing it to the fragment ordinal", () => {
+  const model = controller();
+  model.detail = {
+    ...markdownDetail,
+    media_type: "application/pdf",
+    title: "notes.pdf",
+  };
+  model.chunks = [
+    {
+      chunk_id: "pdf",
+      order: 4,
+      content: "PDF text",
+      content_hash: "a".repeat(64),
+      page: 7,
+      section_path: [],
+      metadata: {},
+    },
+  ];
+  render(<DocumentChunks model={model} compact />);
+  expect(screen.getByText("Order 4 · Page 7")).toBeTruthy();
+});
+
+it.each<Record<string, JsonValue>>([
+  {},
+  { start_line: "4", end_line: 9 },
+  { start_line: 4, end_line: 3 },
+])("does not invent Markdown lines from invalid metadata %j", (metadata) => {
+  const model = controller();
+  model.detail = markdownDetail;
+  model.chunks = [
+    {
+      chunk_id: "md",
+      order: 50,
+      content: "Markdown text",
+      content_hash: "a".repeat(64),
+      page: null,
+      section_path: [],
+      metadata,
+    },
+  ];
+  render(<DocumentChunks model={model} compact />);
+  expect(screen.getByText("Фрагмент 51")).toBeTruthy();
+  expect(screen.queryByText(/Page/)).toBeNull();
 });
 
 it("preserves server correlation and known job identifiers", () => {
@@ -129,13 +262,17 @@ it("preserves server correlation and known job identifiers", () => {
   );
 });
 
-it("opens an accessible single-file dialog with conditional PDF and explicit confirmation", () => {
+it("offers multiple files and recursive folders, with explicit queue confirmation", () => {
   const model = controller();
-  model.upload = {
-    phase: "ready",
-    file: new File(["hello"], "hello.py", { type: "text/x-python" }),
-    response: null,
-  };
+  const file = new File(["hello"], "hello.py", { type: "text/x-python" });
+  model.uploadQueue = [
+    {
+      id: "operation-1",
+      path: "folder/sub/hello.py",
+      phase: "ready",
+      file,
+    },
+  ];
   const close = vi.fn();
   render(
     <DocumentUploadDialog
@@ -147,12 +284,27 @@ it("opens an accessible single-file dialog with conditional PDF and explicit con
     />,
   );
   expect(screen.getByRole("dialog", { name: "Upload document" })).toBeTruthy();
-  const input = screen.getByLabelText("Source file");
+  const input = screen.getByLabelText("Choose files");
   expect(input.getAttribute("accept")).toBe(".txt,.md,.markdown,.py");
-  expect(input.hasAttribute("multiple")).toBe(false);
+  expect(input.hasAttribute("multiple")).toBe(true);
   expect(document.activeElement).toBe(input);
-  fireEvent.click(screen.getByRole("button", { name: "Confirm upload" }));
-  expect(model.submitUpload).toHaveBeenCalledOnce();
+  const modal = screen.getByRole("dialog", { name: "Upload document" });
+  expect(modal.getAttribute("style")).toContain("1000px");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Use compact upload window" }),
+  );
+  expect(modal.getAttribute("style")).toContain("560px");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Use wide upload window" }),
+  );
+  expect(modal.getAttribute("style")).toContain("1000px");
+  const folder = screen.getByLabelText("Choose folder (including subfolders)");
+  expect(folder.hasAttribute("webkitdirectory")).toBe(true);
+  fireEvent.change(folder, { target: { files: [file] } });
+  expect(model.chooseFiles).toHaveBeenCalledWith([file]);
+  expect(model.startUploads).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Upload 1 file" }));
+  expect(model.startUploads).toHaveBeenCalledOnce();
 });
 
 it("exposes same-operation retry and disables writes after capability loss", () => {
@@ -167,7 +319,7 @@ it("exposes same-operation retry and disables writes after capability loss", () 
     <DocumentUploadDialog
       model={model}
       capabilities={capabilities}
-      replace={false}
+      replace
       uploadAllowed
       onClose={vi.fn()}
     />,
@@ -178,7 +330,7 @@ it("exposes same-operation retry and disables writes after capability loss", () 
     <DocumentUploadDialog
       model={model}
       capabilities={capabilities}
-      replace={false}
+      replace
       uploadAllowed={false}
       onClose={vi.fn()}
     />,
@@ -221,7 +373,7 @@ it("passes replacement intent with the selected File and closes the native modal
   expect(model.submitUpload).not.toHaveBeenCalled();
 });
 
-it("stops a pending POST locally on modal cancellation without claiming rollback", () => {
+it("keeps the asynchronous queue running when the modal is dismissed", () => {
   const model = controller();
   model.upload = {
     phase: "submitting",
@@ -229,6 +381,15 @@ it("stops a pending POST locally on modal cancellation without claiming rollback
     response: null,
   };
   const onClose = vi.fn();
+  model.uploadQueueBusy = true;
+  model.uploadQueue = [
+    {
+      id: "pending",
+      path: "pending.txt",
+      file: model.upload.file,
+      phase: "submitting",
+    },
+  ];
   render(
     <DocumentUploadDialog
       model={model}
@@ -238,12 +399,11 @@ it("stops a pending POST locally on modal cancellation without claiming rollback
       onClose={onClose}
     />,
   );
-  expect(
-    screen.getByText("Publishing synchronously… Waiting for the server."),
-  ).toBeTruthy();
+  expect(screen.getByText("Uploading and processing…")).toBeTruthy();
   const modal = screen.getByRole("dialog", { name: "Upload document" });
   fireEvent(modal, new Event("cancel", { cancelable: true }));
-  expect(model.stopUpload).toHaveBeenCalledOnce();
+  expect(model.stopUpload).not.toHaveBeenCalled();
+  expect(model.stopUploads).not.toHaveBeenCalled();
   expect(onClose).toHaveBeenCalledOnce();
   expect(model.clearUpload).not.toHaveBeenCalled();
 });

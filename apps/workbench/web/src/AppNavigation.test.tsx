@@ -9,6 +9,10 @@ import {
   within,
 } from "@testing-library/react";
 import { App } from "./App";
+import {
+  readWorkbenchLocation,
+  workbenchLocationUrl,
+} from "./domain/workbenchLocation";
 
 vi.mock("./components/PipelineEditor", () => ({
   PipelineEditor: () => <div>Pipeline workspace</div>,
@@ -31,6 +35,55 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   window.history.replaceState(null, "", "/");
+});
+
+it.each([
+  "pipelines",
+  "documents",
+  "runs",
+  "configuration",
+  "settings",
+] as const)("keeps %s and the explicit mode after a remount", async (page) => {
+  window.history.replaceState(null, "", `/?page=${page}&mode=live`);
+  const first = render(<App />);
+  const label =
+    page === "configuration"
+      ? "Configuration workspace"
+      : page[0].toUpperCase() + page.slice(1);
+  if (page === "configuration")
+    await screen.findByRole("region", { name: label });
+  else await screen.findByRole("heading", { name: label, level: 1 });
+  expect(
+    (screen.getByRole("radio", { name: "Live" }) as HTMLInputElement).checked,
+  ).toBe(true);
+  first.unmount();
+  render(<App />);
+  if (page === "configuration")
+    await screen.findByRole("region", { name: label });
+  else await screen.findByRole("heading", { name: label, level: 1 });
+  expect(
+    (screen.getByRole("radio", { name: "Live" }) as HTMLInputElement).checked,
+  ).toBe(true);
+  fireEvent.click(screen.getByRole("radio", { name: "Preview" }));
+  expect(new URL(window.location.href).searchParams.get("mode")).toBe(
+    "preview",
+  );
+  expect(new URL(window.location.href).searchParams.get("page")).toBe(page);
+});
+
+it("round-trips the editor URL without consuming content anchors or unrelated query parameters", () => {
+  const href = workbenchLocationUrl(
+    "http://localhost/?other=value#main-content",
+    { page: "editor", mode: "live" },
+  );
+  expect(href).toContain("other=value");
+  expect(href).toContain("#main-content");
+  expect(readWorkbenchLocation(new URL(href, "http://localhost").href)).toEqual(
+    { page: "editor", mode: "live" },
+  );
+  expect(
+    readWorkbenchLocation("http://localhost/?page=invalid&mode=invalid"),
+  ).toEqual({ page: "editor", mode: "preview" });
 });
 
 it("places Configuration directly after Runs with a wrench and an active page state", async () => {

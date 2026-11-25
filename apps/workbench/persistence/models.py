@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import ConfigDict, Field, JsonValue, field_validator, model_validator
 
-from apps.workbench.contracts.schemas import ContractModel, Identifier
+from apps.workbench.contracts.schemas import ContractModel, Identifier, UploadLocation
 
 if TYPE_CHECKING:
     from apps.workbench.embedding.embedding import EmbeddingProfile
@@ -217,6 +217,7 @@ class DocumentRecord(ContractModel):
     chunk_count: int = Field(ge=0)
     updated_at: str
     error_code: str | None = None
+    upload_location: UploadLocation | None = None
 
 
 class CorpusSnapshot(ContractModel):

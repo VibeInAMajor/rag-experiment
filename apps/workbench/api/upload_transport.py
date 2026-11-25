@@ -6,16 +6,18 @@ from email.headerregistry import BaseHeader
 from email.message import EmailMessage
 from email.policy import default
 
+from pydantic import ValidationError
 from python_multipart import MultipartParser
 from python_multipart.exceptions import MultipartParseError
 from python_multipart.multipart import parse_options_header
 from starlette.requests import Request
 
+from apps.workbench.contracts.schemas import UploadLocation
 from apps.workbench.ingestion.upload_policy import upload_file_byte_limit
 
 _IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _IDEMPOTENCY_KEY = re.compile(r"[A-Za-z0-9_-]{8,128}")
-_FIELDS = frozenset({"file", "source_id", "expected_active_version_id"})
+_FIELDS = frozenset({"file", "source_id", "expected_active_version_id", "upload_location"})
 _FILENAME = b"filename"
 _BACKSLASH = b"\\"
 _FORM_DATA = b"form-data"
@@ -52,6 +54,7 @@ class UploadParts:
     idempotency_key: str
     source_id: str | None
     expected_active_version_id: str | None
+    upload_location: UploadLocation | None = None
 
 
 class _MultipartUpload:
@@ -70,7 +73,7 @@ class _MultipartUpload:
 
     def on_part_begin(self) -> None:
         self._part_count += 1
-        if self._part_count > 3:
+        if self._part_count > len(_FIELDS):
             raise UploadTransportError()
         self._headers = {}
         self._part = bytearray()
@@ -123,6 +126,8 @@ class _MultipartUpload:
         limit = (
             upload_file_byte_limit(filename=self.filename or "", declared_mime=self.mime)
             if self._name == "file"
+            else 8192
+            if self._name == "upload_location"
             else 128
         )
         if len(self._part) + end - start > limit:
@@ -182,6 +187,14 @@ async def read_upload(request: Request) -> UploadParts:
             fields[name] = value
     if ("source_id" in fields) != ("expected_active_version_id" in fields):
         raise UploadTransportError()
+    try:
+        location = (
+            UploadLocation.model_validate_json(form.parts["upload_location"])
+            if "upload_location" in form.parts
+            else None
+        )
+    except ValidationError:
+        raise UploadTransportError() from None
     return UploadParts(
         content=form.parts["file"],
         filename=form.filename,
@@ -189,4 +202,5 @@ async def read_upload(request: Request) -> UploadParts:
         idempotency_key=keys[0],
         source_id=fields.get("source_id"),
         expected_active_version_id=fields.get("expected_active_version_id"),
+        upload_location=location,
     )

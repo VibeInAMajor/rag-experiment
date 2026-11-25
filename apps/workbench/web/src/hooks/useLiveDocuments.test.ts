@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { useLiveDocuments } from "./useLiveDocuments";
 import { WorkbenchApiError } from "../api/client";
+import { DocumentUploadQueue } from "../domain/documentUploadQueue";
+import { documentUploadReport } from "../domain/documentUploadReport";
 import type {
   ActiveChunkPageResponse,
   BackendCapabilities,
@@ -201,6 +203,230 @@ function setup(overrides: Partial<DocumentsClient> = {}) {
 }
 const textFile = () =>
   new File(["trusted test bytes"], "source.txt", { type: "text/plain" });
+
+describe("asynchronous document upload queue", () => {
+  it("keeps uploads compatible with older APIs and sends hierarchy when the server advertises it", async () => {
+    const upload = vi.fn<DocumentsClient["uploadDocument"]>(async () =>
+      uploaded(),
+    );
+    const { queue, change } = queueSetup(upload);
+    const file = textFile();
+    Object.defineProperty(file, "webkitRelativePath", {
+      value: "Research/sub/source.txt",
+    });
+    queue.choose([file]);
+    queue.start();
+    await settle();
+    expect(upload.mock.calls[0][1].uploadLocation).toBeUndefined();
+    change({
+      capabilities: {
+        ...capabilities,
+        features: { ...capabilities.features, upload_folders: true },
+      },
+    });
+    queue.choose([file]);
+    queue.start();
+    await settle();
+    expect(upload.mock.calls[1][1].uploadLocation).toMatchObject({
+      path: "Research/sub/source.txt",
+      folder_totals: [1, 1],
+    });
+  });
+  it("exports every failed, skipped and unconfirmed path with a reason, including entries beyond the visible page", () => {
+    const items = Array.from({ length: 101 }, (_, index) => ({
+      id: String(index),
+      path: `folder/файл-${index}.txt`,
+      file: null,
+      phase: "succeeded" as const,
+    }));
+    const report = documentUploadReport(
+      [
+        ...items,
+        {
+          id: "failed",
+          path: "folder/failed.md",
+          file: null,
+          phase: "failed",
+          error: {
+            code: "PAYLOAD_TOO_LARGE",
+            message: "Backend request failed.",
+            retryable: false,
+          },
+        },
+        {
+          id: "unknown",
+          path: "folder/unconfirmed.txt",
+          file: null,
+          phase: "unknown",
+        },
+        {
+          id: "skipped",
+          path: "folder/пропущено.csv",
+          file: null,
+          phase: "skipped",
+          error: {
+            code: "INVALID_FILE",
+            message: "Unsupported format",
+            retryable: false,
+          },
+        },
+      ],
+      new Date("2026-11-25T12:00:00Z"),
+    );
+    expect(report).toContain("Files requiring attention: 3");
+    expect(report).toContain("File: folder/failed.md");
+    expect(report).toContain("Code: PAYLOAD_TOO_LARGE");
+    expect(report).toContain("file or request byte limit");
+    expect(report).toContain("This file may already have been published");
+    expect(report).toContain("folder/пропущено.csv");
+    expect(report).not.toContain("файл-100.txt");
+  });
+  function queueSetup(uploadDocument: DocumentsClient["uploadDocument"]) {
+    let context: LiveDocumentsContext = {
+      mode: "live",
+      workspaceId: "workspace-1",
+      capabilities,
+    };
+    const published = vi.fn();
+    const settled = vi.fn();
+    const queue = new DocumentUploadQueue(
+      { ...setup().client, uploadDocument },
+      () => context,
+      vi.fn(),
+      published,
+      settled,
+    );
+    return {
+      queue,
+      published,
+      settled,
+      change: (patch: Partial<LiveDocumentsContext>) => {
+        context = { ...context, ...patch };
+        queue.contextChanged();
+      },
+    };
+  }
+
+  it("uploads nested files with at most two requests and refreshes once after all settle", async () => {
+    const pending = Array.from({ length: 4 }, () =>
+      deferred<IngestionResponse>(),
+    );
+    const upload = vi.fn<DocumentsClient["uploadDocument"]>();
+    pending.forEach((request) =>
+      upload.mockImplementationOnce(() => request.promise),
+    );
+    const { queue, published, settled, change } = queueSetup(upload);
+    const first = textFile();
+    Object.defineProperty(first, "webkitRelativePath", {
+      value: "root/sub/source.txt",
+    });
+    queue.choose([first, textFile(), textFile(), textFile()]);
+    expect(queue.items[0].path).toBe("root/sub/source.txt");
+    expect(upload).not.toHaveBeenCalled();
+    queue.start();
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(new Set(queue.items.map((item) => item.id)).size).toBe(4);
+    change({ enabled: false, profileRevision: "changed" });
+    expect(upload.mock.calls[0][2]?.signal?.aborted).toBe(false);
+    pending[0].resolve(uploaded());
+    await settle();
+    expect(upload).toHaveBeenCalledTimes(3);
+    expect(settled).not.toHaveBeenCalled();
+    pending[1].resolve(uploaded());
+    await settle();
+    expect(upload).toHaveBeenCalledTimes(4);
+    pending[2].resolve(uploaded());
+    pending[3].resolve(uploaded());
+    await settle();
+    expect(
+      queue.items.every(
+        (item) => item.phase === "succeeded" && item.file === null,
+      ),
+    ).toBe(true);
+    expect(published).toHaveBeenCalledTimes(4);
+    expect(settled).toHaveBeenCalledOnce();
+  });
+
+  it("reports unsupported and oversized files without blocking valid files", async () => {
+    const upload = vi.fn(async () => uploaded());
+    const { queue } = queueSetup(upload);
+    queue.choose([
+      new File(["data"], "data.csv"),
+      new File(["x".repeat(1048577)], "large.txt"),
+      textFile(),
+    ]);
+    expect(queue.items.map((item) => item.phase)).toEqual([
+      "skipped",
+      "skipped",
+      "ready",
+    ]);
+    queue.start();
+    await settle();
+    expect(upload).toHaveBeenCalledOnce();
+    expect(queue.items[2].phase).toBe("succeeded");
+  });
+
+  it("continues after a timeout and retries using the original file and operation key", async () => {
+    const upload = vi
+      .fn<DocumentsClient["uploadDocument"]>()
+      .mockRejectedValueOnce(
+        new WorkbenchApiError("timed out", {
+          kind: "timeout",
+          code: "TIMEOUT",
+          retryable: true,
+        }),
+      )
+      .mockResolvedValue(uploaded());
+    const { queue } = queueSetup(upload);
+    queue.choose([textFile(), textFile(), textFile()]);
+    queue.start();
+    await settle();
+    expect(queue.items.map((item) => item.phase)).toEqual([
+      "unknown",
+      "succeeded",
+      "succeeded",
+    ]);
+    queue.retry(queue.items[0].id);
+    await settle();
+    expect(upload.mock.calls[3][1]).toEqual(upload.mock.calls[0][1]);
+    expect(queue.items[0].phase).toBe("succeeded");
+  });
+
+  it("stops waiting files, marks active outcomes unknown and ignores late success", async () => {
+    const pending = deferred<IngestionResponse>();
+    const upload = vi.fn(() => pending.promise);
+    const { queue, published } = queueSetup(upload);
+    queue.choose([textFile(), textFile(), textFile()]);
+    queue.start();
+    queue.stop();
+    expect(queue.items.map((item) => item.phase)).toEqual([
+      "unknown",
+      "unknown",
+      "ready",
+    ]);
+    pending.resolve(uploaded());
+    await settle();
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(published).not.toHaveBeenCalled();
+  });
+
+  it("clears files and aborts active requests on workspace changes", async () => {
+    const pending = deferred<IngestionResponse>();
+    const upload = vi.fn<DocumentsClient["uploadDocument"]>(
+      () => pending.promise,
+    );
+    const { queue, published, change } = queueSetup(upload);
+    queue.choose([textFile(), textFile(), textFile()]);
+    queue.start();
+    change({ workspaceId: "another-workspace" });
+    expect(queue.items).toEqual([]);
+    expect(upload.mock.calls[0][2]?.signal?.aborted).toBe(true);
+    pending.resolve(uploaded());
+    await settle();
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(published).not.toHaveBeenCalled();
+  });
+});
 
 describe("live document snapshot lifecycle", () => {
   it("loads persisted detail and version-enveloped chunks without Preview", async () => {
@@ -649,6 +875,39 @@ describe("qualified advisory upload validation", () => {
 });
 
 describe("useLiveDocuments React lifecycle", () => {
+  it("keeps uploads alive across page navigation and clears the queue on mode change", async () => {
+    const pending = deferred<IngestionResponse>();
+    const upload = vi.fn<DocumentsClient["uploadDocument"]>(
+      () => pending.promise,
+    );
+    const { client } = setup({ uploadDocument: upload });
+    const context: LiveDocumentsContext = {
+      mode: "live",
+      workspaceId: "workspace-1",
+      capabilities,
+      enabled: true,
+    };
+    const { result, rerender, unmount } = renderHook(
+      ({ current }) => useLiveDocuments(current, { client }),
+      { initialProps: { current: context } },
+    );
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    act(() => result.current.chooseFiles([textFile()]));
+    act(() => result.current.startUploads());
+    rerender({ current: { ...context, enabled: false } });
+    expect(result.current.uploadQueue[0].phase).toBe("submitting");
+    expect(upload.mock.calls[0][2]?.signal?.aborted).toBe(false);
+    await act(async () => {
+      pending.resolve(uploaded());
+      await settle();
+    });
+    expect(result.current.uploadQueue[0].phase).toBe("succeeded");
+    rerender({ current: { ...context, mode: "preview" } });
+    expect(result.current.uploadQueue).toEqual([]);
+    unmount();
+    cleanup();
+  });
+
   it("strict-mode cleanup cannot let ignored-abort requests resurrect data", async () => {
     const first = deferred<DocumentPage>();
     const list = vi

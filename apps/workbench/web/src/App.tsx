@@ -52,14 +52,17 @@ import {
 } from "./domain/liveSearch";
 import { ExecutionControls } from "./components/ExecutionControls";
 import { useConfirmation } from "./components/ConfirmationDialog";
+import {
+  readWorkbenchLocation,
+  workbenchLocationUrl,
+  type WorkbenchPage as Page,
+} from "./domain/workbenchLocation";
 import { PipelinesView } from "./views/PipelinesView";
 import { DocumentsView } from "./views/DocumentsView";
 import { RunsView } from "./views/RunsView";
 import { SettingsView } from "./views/SettingsView";
 import "./views/views.css";
 
-type Page =
-  "editor" | "pipelines" | "documents" | "runs" | "configuration" | "settings";
 const ConfigurationView = lazy(() =>
   import("./views/ConfigurationView").then((module) => ({
     default: module.ConfigurationView,
@@ -78,6 +81,11 @@ function retainSessionRuns(entries: RunEntry[]): RunEntry[] {
 }
 
 export function App() {
+  const [initialLocation] = useState(() =>
+    typeof window === "undefined"
+      ? { page: "editor" as const, mode: "preview" as const }
+      : readWorkbenchLocation(window.location.href),
+  );
   const { confirm, confirmationDialog } = useConfirmation();
   const [pipelines, setPipelines] = useState<Pipeline[]>(() =>
     structuredClone(initialPipelines),
@@ -116,17 +124,20 @@ export function App() {
       ]);
     });
   const [settings, setSettings] = useState(defaultSettings);
-  const [mode, setMode] = useState<ExecutionMode>("preview");
+  const [mode, setMode] = useState<ExecutionMode>(initialLocation.mode);
   const discovery = useBackendDiscovery(mode);
   const [activeId, setActiveId] = useState(initialPipelines[0].id);
   const [sourceSearchTargets, setSourceSearchTargets] = useState<
     Record<string, { workspaceId: string; sourceId: string; versionId: string }>
   >({});
-  const [page, setPage] = useState<Page>(() =>
-    typeof window !== "undefined" && window.location.hash === "#configuration"
-      ? "configuration"
-      : "editor",
-  );
+  const [page, setPage] = useState<Page>(initialLocation.page);
+  useEffect(() => {
+    window.history.replaceState(
+      window.history.state,
+      "",
+      workbenchLocationUrl(window.location.href, { page, mode }),
+    );
+  }, [page, mode]);
   const [configurationDirty, setConfigurationDirty] = useState(false);
   const [configurationSaving, setConfigurationSaving] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -269,11 +280,6 @@ export function App() {
       )
         return;
     }
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${window.location.search}${next === "configuration" ? "#configuration" : ""}`,
-    );
     setPage(next);
   };
   const newPipeline = (template: TemplateId) => {

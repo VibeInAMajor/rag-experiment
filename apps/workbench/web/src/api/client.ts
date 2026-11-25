@@ -15,6 +15,7 @@ import type {
   ActiveChunkPageResponse,
   IngestionResponse,
   IngestionJobResponse,
+  UploadLocation,
 } from "./contracts";
 import {
   decodeCapabilities,
@@ -56,6 +57,7 @@ export type DocumentUploadRequest = {
   sourceId?: string;
   expectedActiveVersionId?: string;
   pdfAvailable?: boolean;
+  uploadLocation?: UploadLocation;
 };
 type RequestTransport = {
   method?: "POST" | "PUT";
@@ -361,8 +363,19 @@ export function createWorkbenchApiClient({
         if (!response.ok) {
           const failure = decodeFailure(value, response.status);
           correlate(response, failure);
+          const messages: Record<string, string> = {
+            PAYLOAD_TOO_LARGE:
+              "The upload exceeds the server's file or request byte limit.",
+            DOCUMENT_PROCESSING_LIMIT_EXCEEDED:
+              "The file was received, but its processing exceeded a chunk count, text or metadata limit.",
+            CORPUS_LIMIT_EXCEEDED:
+              "The workspace has reached its indexed document capacity. This is not the file upload size limit.",
+            MODEL_TOKEN_LIMIT_EXCEEDED:
+              "A prepared passage exceeds the embedding model's token budget. This is not the file byte limit.",
+          };
           throw new WorkbenchApiError(
-            "Backend request failed. Check the reported code and retry when available.",
+            messages[failure.error.code] ??
+              "Backend request failed. Check the reported code and retry when available.",
             {
               kind: "http",
               code: failure.error.code,
@@ -473,6 +486,8 @@ export function createWorkbenchApiClient({
           validateResourceId(body.expectedActiveVersionId),
         );
       }
+      if (body.uploadLocation !== undefined)
+        form.append("upload_location", JSON.stringify(body.uploadLocation));
       return request(
         `/workspaces/${encodeURIComponent(scope)}/documents`,
         (value, status) =>

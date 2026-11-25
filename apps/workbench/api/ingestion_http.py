@@ -20,6 +20,7 @@ from apps.workbench.contracts.schemas import (
     IngestionJobResponse,
     IngestionResponse,
     IngestionStageTiming,
+    UploadLocation,
 )
 from apps.workbench.ingestion.ingestion import IngestionError, IngestionResult, IngestionService, UploadInput
 from apps.workbench.ingestion.upload_policy import pdf_upload_candidate
@@ -37,6 +38,7 @@ _CHUNK_METADATA = frozenset(
     {
         "ordinal",
         "source_span",
+        "protected_source_span",
         "heading_path",
         "parent_structural_id",
         "processing_fingerprint",
@@ -193,7 +195,9 @@ class IngestionRoutes:
                 request_meta(request),
                 status=error.status,
                 code=error.code,
-                message="The upload or document operation could not be completed.",
+                message=error.message
+                if isinstance(error, IngestionError)
+                else "The upload or document operation could not be completed.",
                 retryable=error.retryable if isinstance(error, IngestionError) else False,
                 job_id=error.job_id if isinstance(error, IngestionError) else None,
             )
@@ -320,6 +324,9 @@ class IngestionRoutes:
                 active_version_id=detail.version.version_id if detail.version else None,
                 chunk_count=detail.chunk_count,
                 updated_at=detail.updated_at,
+                upload_location=UploadLocation.model_validate(detail.source.metadata["upload_location"])
+                if detail.source.metadata.get("upload_location") is not None
+                else None,
                 processing_profile=profile if isinstance(profile, dict) else None,
                 processing_profile_fingerprint=_text_metadata(metadata, "processing_profile_fingerprint"),
                 ingestion_policy_revision=_text_metadata(metadata, "ingestion_policy_revision"),
@@ -448,7 +455,7 @@ def register_ingestion_routes(app: FastAPI, routes: IngestionRoutes) -> None:
         name="upload_document",
         responses={
             200: {"model": IngestionResponse},
-            **{status: {"model": ErrorResponse} for status in (409, 413, 415, 429, 504)},
+            **{status: {"model": ErrorResponse} for status in (409, 413, 415, 422, 429, 504)},
         },
         openapi_extra={
             "requestBody": {
@@ -471,6 +478,15 @@ def register_ingestion_routes(app: FastAPI, routes: IngestionRoutes) -> None:
                                 },
                                 "source_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},
                                 "expected_active_version_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},
+                                "upload_location": {
+                                    "type": "string",
+                                    "maxLength": 8192,
+                                    "description": (
+                                        "Optional JSON UploadLocation for new sources: group_id, relative path "
+                                        "including filename, and folder_totals (recursive selected-file counts "
+                                        "for each ancestor, root first). Display metadata only; never a server path."
+                                    ),
+                                },
                             },
                         }
                     }

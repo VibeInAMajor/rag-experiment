@@ -125,6 +125,7 @@ class Features(ContractModel):
     documents: bool = False
     search: bool = False
     upload: bool = False
+    upload_folders: bool = False
     document_details: bool = False
     jobs: bool = False
 
@@ -233,6 +234,39 @@ class WorkspacePage(Meta):
     next_cursor: str | None
 
 
+class UploadLocation(ContractModel):
+    """Display-only location in one folder selection, never a server filesystem path."""
+
+    group_id: Identifier
+    path: str = Field(min_length=1, max_length=2048)
+    folder_totals: list[int] = Field(min_length=1, max_length=64)
+
+    @model_validator(mode="after")
+    def _validate_tree(self) -> "UploadLocation":
+        parts = self.path.split("/")
+        if (
+            len(parts) != len(self.folder_totals) + 1
+            or any(part in {"", ".", ".."} for part in parts)
+            or any(character in self.path for character in ("\\", ":"))
+            or any(
+                ord(character) < 32 or ord(character) == 127 or 0xD800 <= ord(character) <= 0xDFFF
+                for character in self.path
+            )
+            or any(total < 1 or total > 1000000 for total in self.folder_totals)
+            or self.folder_totals != sorted(self.folder_totals, reverse=True)
+        ):
+            raise ValueError("Invalid upload folder location.")
+        return self
+
+
+class FolderState(ContractModel):
+    """Recursive status of documents actually present in one corpus snapshot."""
+
+    file_count: int = Field(ge=1)
+    ready_count: int = Field(ge=0)
+    status: Literal["ready", "processing", "error"]
+
+
 class DocumentItem(ContractModel):
     source_id: Identifier
     title: str
@@ -242,6 +276,8 @@ class DocumentItem(ContractModel):
     chunk_count: int = Field(ge=0)
     updated_at: str
     error_code: str | None = None
+    upload_location: UploadLocation | None = None
+    folder_states: list[FolderState] | None = None
 
 
 class DocumentPage(Meta):
@@ -297,6 +333,7 @@ class DocumentDetail(Meta):
     active_version_id: Identifier | None
     chunk_count: int = Field(ge=0)
     updated_at: str
+    upload_location: UploadLocation | None = None
     processing_profile: dict[str, JsonValue] | None = None
     processing_profile_fingerprint: str | None = None
     ingestion_policy_revision: str | None = None

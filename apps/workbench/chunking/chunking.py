@@ -4,11 +4,13 @@ import hashlib
 import json
 import logging
 import re
+from bisect import bisect_right
 from collections import Counter
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from time import perf_counter
 from typing import Any, Protocol
 
+from apps.workbench.chunking.chunking_adapters import SplitSpan
 from apps.workbench.chunking.chunking_profiles import (
     ChunkingDecision,
     ChunkingError,
@@ -32,7 +34,7 @@ from apps.workbench.parsing.parsing import (
 from apps.workbench.persistence.models import Chunk
 
 _logger = logging.getLogger(__name__)
-_ALGORITHM_REVISION = "structural-token-chunks-r1"
+_ALGORITHM_REVISION = "structural-token-chunks-r2"
 _IDENTIFIER = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _SHA256 = re.compile(r"[a-f0-9]{64}")
 _MAX_METADATA_BYTES = 16_384
@@ -129,6 +131,9 @@ class PreparedChunk:
     python_span: PythonSpan | None = None
     pdf_metadata_json: bytes | None = None
     page: int | None = None
+    protected_span: SourceSpan | None = None
+    start_line: int | None = None
+    end_line: int | None = None
 
     def metadata(self) -> dict[str, Any]:
         """Return a fresh, bounded JSON projection; native page defaults are deliberately absent."""
@@ -201,6 +206,10 @@ class PreparedChunk:
                     metadata["decorators"] = list(innermost[0].decorators)
         if self.pdf_metadata_json is not None:
             metadata.update(json.loads(self.pdf_metadata_json))
+        if self.protected_span is not None:
+            metadata["protected_source_span"] = asdict(self.protected_span)
+        if self.start_line is not None and self.end_line is not None:
+            metadata.update({"start_line": self.start_line, "end_line": self.end_line})
         if self.length_model_token is not None:
             metadata.update(
                 {
@@ -563,6 +572,28 @@ def _processing_fingerprint(
     )
 
 
+def _split_protected(text: str, *, decision: ChunkingDecision[ChunkingProfile]) -> tuple[SplitSpan, ...]:
+    from apps.workbench.chunking.chunking_adapters import split_prose
+
+    profile = replace(
+        decision.profile,
+        overlap=0,
+        separator_profile_id="prose_token_configured",
+        separators=("\n",),
+        sentence_language=None,
+        sentence_resource_revision=None,
+        require_sentences=False,
+    )
+    return split_prose(text, decision=replace(decision, profile=profile))
+
+
+def _line_offsets(text: str) -> list[int]:
+    offsets = [0]
+    for line in text.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+    return offsets
+
+
 def _verify_output(source: ChunkingInput, chunks: list[PreparedChunk]) -> None:
     from apps.workbench.chunking import chunking_adapters as adapters
 
@@ -718,17 +749,22 @@ def _prepare(
             native_warnings = ("HEADER_BOUNDARIES_RECONCILED",)
     chunks: list[PreparedChunk] = []
     total_bytes = 0
+    line_offsets = _line_offsets(source.normalized_content)
     for section in _sections(source):
         for start, end, warnings, protected in _runs(source, section):
             text = source.normalized_content[start:end]
             if not text.strip():
                 continue
             spans: tuple[adapters.SplitSpan, ...]
+            protected_span = None
             if protected:
                 size = adapters.count_tokens(text)
                 if size > profile.target_size or len(text) > profile.hard_character_limit:
-                    raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PROTECTED_SPAN_OVERFLOW")
-                spans = (adapters.SplitSpan(start=0, end=len(text), token_count=size, overlap_tokens=0),)
+                    spans = _split_protected(text, decision=text_decision)
+                    warnings += ("PROTECTED_RAW_FRAGMENT",)
+                    protected_span = SourceSpan(start=start, end=end)
+                else:
+                    spans = (adapters.SplitSpan(start=0, end=len(text), token_count=size, overlap_tokens=0),)
             else:
                 spans = adapters.split_prose(text, decision=text_decision)
             for span in spans:
@@ -748,6 +784,13 @@ def _prepare(
                     admission=admission,
                     counter=counter,
                 )
+                chunk = replace(
+                    chunk,
+                    protected_span=protected_span,
+                    start_line=bisect_right(line_offsets, chunk.source_span.start),
+                    end_line=bisect_right(line_offsets, chunk.source_span.end - 1),
+                )
+                chunk.metadata()
                 total_bytes += len(chunk.content.encode("utf-8"))
                 if total_bytes > _MAX_PREPARED_BYTES:
                     raise ChunkingError(ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, reason="PREPARED_BYTES")

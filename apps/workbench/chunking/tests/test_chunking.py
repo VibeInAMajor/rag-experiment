@@ -115,12 +115,55 @@ def _assert_valid_chunks(source: ChunkingInput, chunks: tuple[PreparedChunk, ...
         assert len(json.dumps(metadata, ensure_ascii=False).encode("utf-8")) <= 16_384
         previous_end, previous = end, chunk
     assert all(covered[index] or character.isspace() for index, character in enumerate(text))
+    _assert_protected_coverage(source, chunks)
+
+
+def _assert_protected_coverage(source: ChunkingInput, chunks: tuple[PreparedChunk, ...]) -> None:
     for element in source.parsed_document.elements:
         if element.kind is ElementKind.PROTECTED_RAW:
             matching = [chunk for chunk in chunks if chunk.source_span == element.source_span]
-            assert len(matching) == 1
-            assert matching[0].content == element.text
-            assert set(element.warning_codes).issubset(matching[0].warning_codes)
+            if matching:
+                assert len(matching) == 1
+                assert matching[0].content == element.text
+                assert set(element.warning_codes).issubset(matching[0].warning_codes)
+            else:
+                fragments = [chunk for chunk in chunks if chunk.protected_span == element.source_span]
+                assert len(fragments) > 1
+                assert "".join(chunk.content for chunk in fragments) == element.text
+                for fragment in fragments:
+                    assert set(element.warning_codes).issubset(fragment.warning_codes)
+                    assert "PROTECTED_RAW_FRAGMENT" in fragment.warning_codes
+                    assert fragment.overlap_tokens == 0
+                    assert fragment.metadata()["protected_source_span"] == {
+                        "start": element.source_span.start,
+                        "end": element.source_span.end,
+                    }
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n", "\r"])
+def test_markdown_source_lines_match_original_offsets(newline: str, resources: ChunkingResources) -> None:
+    """Source lines are one-based, inclusive and preserve original newline and Unicode coordinates."""
+    text = newline.join(
+        [
+            "# Заголовок",
+            "",
+            "First paragraph.",
+            "",
+            "```text",
+            *("Исходная строка text " for _ in range(150)),
+            "```",
+            "",
+        ]
+    )
+    source = _input(text, filename="lines.md", bom=True)
+    chunks = prepare_chunks(source, resources=resources)
+    _assert_valid_chunks(source, chunks)
+    char_lines = [number for number, line in enumerate(text.splitlines(keepends=True), 1) for _ in line]
+    for chunk in chunks:
+        assert chunk.metadata()["start_line"] == char_lines[chunk.source_span.start]
+        assert chunk.metadata()["end_line"] == char_lines[chunk.source_span.end - 1]
+    assert chunks[0].metadata()["start_line"] == 1
+    assert chunks[0].metadata()["end_line"] == 4
 
 
 @pytest.mark.parametrize("case", _CASES, ids=lambda case: case["case_id"])
@@ -219,12 +262,14 @@ def test_utf8_bom_identity_matches_exact_decoded_source(resources: ChunkingResou
         "| Header | Data |\n| --- | --- |\n" + "| cell | protected data |\n" * 600,
     ],
 )
-def test_oversized_protected_structure_refuses_the_whole_document(protected: str, resources: ChunkingResources) -> None:
-    """A fence or table cannot be silently split or partially published to satisfy a token budget."""
+def test_oversized_protected_structure_has_explicit_source_exact_fragments(
+    protected: str, resources: ChunkingResources
+) -> None:
+    """Oversized raw structures keep every byte and carry parent-span warnings without AST claims."""
     source = _input("# Title\n\nValid preface.\n\n" + protected, filename="protected.md")
-    with pytest.raises(ChunkingError) as error:
-        prepare_chunks(source, resources=resources)
-    assert error.value.code is ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED
+    chunks = prepare_chunks(source, resources=resources)
+    _assert_valid_chunks(source, chunks)
+    assert any("PROTECTED_RAW_FRAGMENT" in chunk.warning_codes for chunk in chunks)
 
 
 def test_chunk_limit_refuses_without_partial_result(resources: ChunkingResources) -> None:
@@ -235,17 +280,17 @@ def test_chunk_limit_refuses_without_partial_result(resources: ChunkingResources
     assert error.value.code is ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED
 
 
-def test_tighter_character_limit_refines_prose_but_refuses_protected_structure(resources: ChunkingResources) -> None:
-    """Secondary character bounds can refine prose without authorizing cuts through protected spans."""
+def test_tighter_character_limit_refines_prose_and_explicit_raw_fragments(resources: ChunkingResources) -> None:
+    """The same character ceiling applies to prose and labeled raw fragments."""
     profile = ChunkingProfile(hard_character_limit=12, overlap=0)
     source = _input("A bounded processing stage preserves source identity. " * 10)
     chunks = prepare_chunks(source, profile=profile, resources=resources)
     _assert_valid_chunks(source, chunks)
     assert all(len(chunk.content) <= 12 for chunk in chunks)
     protected = _input("```text\nAn opaque protected structure.\n```\n", filename="protected.md")
-    with pytest.raises(ChunkingError) as error:
-        prepare_chunks(protected, profile=profile, resources=resources)
-    assert error.value.code is ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED
+    fragments = prepare_chunks(protected, profile=profile, resources=resources)
+    _assert_valid_chunks(protected, fragments)
+    assert all(len(chunk.content) <= 12 for chunk in fragments)
 
 
 def _replace_parsed(source: ChunkingInput, parsed: ParsedDocument) -> ChunkingInput:

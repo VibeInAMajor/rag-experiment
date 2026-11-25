@@ -15,10 +15,12 @@ from typing import Any, Literal
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from apps.workbench.chunking import chunking_adapters as adapters
 from apps.workbench.chunking.chunking_profiles import ChunkingError, ChunkingErrorCode, structural_token_profile
 from apps.workbench.configuration.document_processing import DocumentProcessingSettings, load_document_processing
+from apps.workbench.contracts.schemas import UploadLocation
 from apps.workbench.embedding.embedding import EmbeddingProfile
 from apps.workbench.embedding.embedding_ingestion import embedding_candidate_input
 from apps.workbench.embedding.embedding_jobs import EmbeddingCandidate
@@ -214,6 +216,33 @@ def deny_processing_network(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _upload(content: bytes, *, key: str = "test-upload-key", filename: str = "notes.txt", **kwargs: Any) -> UploadInput:
     return UploadInput(content=content, filename=filename, declared_mime=None, idempotency_key=key, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "path,totals",
+    [
+        ("../notes.txt", [1]),
+        ("/notes.txt", [1]),
+        ("a//notes.txt", [1, 1]),
+        ("C:\\notes.txt", [1]),
+        ("a/notes.txt", [0]),
+        ("a/sub/notes.txt", [1, 2]),
+        ("a/notes.txt", [1, 1]),
+    ],
+)
+def test_upload_location_rejects_unsafe_paths_and_inconsistent_totals(path: str, totals: list[int]) -> None:
+    """Folder metadata accepts only bounded relative tree locations and consistent counts."""
+    with pytest.raises(ValidationError):
+        UploadLocation(group_id="selection", path=path, folder_totals=totals)
+
+
+def test_upload_location_requires_matching_filename_and_cannot_move_a_replacement() -> None:
+    """A new selection describes its own file; replacement retains its existing folder."""
+    location = UploadLocation(group_id="selection", path="a/notes.txt", folder_totals=[1])
+    with pytest.raises(IngestionError, match="INVALID_REQUEST"):
+        _upload(b"text", filename="different.txt", upload_location=location)
+    with pytest.raises(IngestionError, match="INVALID_REQUEST"):
+        _upload(b"text", source_id="source-1", expected_active_version_id="v1", upload_location=location)
 
 
 def _embedding_inputs(version: SourceVersion, chunks: list[Chunk]) -> dict[str, tuple[str, str]]:
@@ -568,7 +597,7 @@ async def test_failed_publication_keeps_old_active_version(filename: str) -> Non
     ("error_code", "expected"),
     [
         (ChunkingErrorCode.TOKEN_COUNTER_UNAVAILABLE, "DEPENDENCY_UNAVAILABLE"),
-        (ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, "PAYLOAD_TOO_LARGE"),
+        (ChunkingErrorCode.CONTENT_LIMIT_EXCEEDED, "DOCUMENT_PROCESSING_LIMIT_EXCEEDED"),
     ],
 )
 async def test_chunk_failure_is_durable_and_never_publishes(

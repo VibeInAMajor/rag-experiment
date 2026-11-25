@@ -644,6 +644,11 @@
                   "expected_active_version_id": {
                     "type": "string",
                     "pattern": "^[A-Za-z0-9_-]{1,128}$"
+                  },
+                  "upload_location": {
+                    "type": "string",
+                    "maxLength": 8192,
+                    "description": "Optional JSON UploadLocation for new sources: group_id, relative path including filename, and folder_totals (recursive selected-file counts for each ancestor, root first). Display metadata only; never a server path."
                   }
                 }
               }
@@ -2400,6 +2405,16 @@
             "type": "string",
             "title": "Updated At"
           },
+          "upload_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UploadLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "processing_profile": {
             "anyOf": [
               {
@@ -2616,6 +2631,30 @@
               }
             ],
             "title": "Error Code"
+          },
+          "upload_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UploadLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "folder_states": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FolderState"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folder States"
           }
         },
         "additionalProperties": false,
@@ -2868,6 +2907,11 @@
             "title": "Upload",
             "default": false
           },
+          "upload_folders": {
+            "type": "boolean",
+            "title": "Upload Folders",
+            "default": false
+          },
           "document_details": {
             "type": "boolean",
             "title": "Document Details",
@@ -2882,6 +2926,38 @@
         "additionalProperties": false,
         "type": "object",
         "title": "Features"
+      },
+      "FolderState": {
+        "properties": {
+          "file_count": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "File Count"
+          },
+          "ready_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Ready Count"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "processing",
+              "error"
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file_count",
+          "ready_count",
+          "status"
+        ],
+        "title": "FolderState",
+        "description": "Recursive status of documents actually present in one corpus snapshot."
       },
       "IngestionJobResponse": {
         "properties": {
@@ -3865,6 +3941,39 @@
         "additionalProperties": false,
         "type": "object",
         "title": "TopKParameter"
+      },
+      "UploadLocation": {
+        "properties": {
+          "group_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
+            "title": "Group Id"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Path"
+          },
+          "folder_totals": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Folder Totals"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "group_id",
+          "path",
+          "folder_totals"
+        ],
+        "title": "UploadLocation",
+        "description": "Display-only location in one folder selection, never a server filesystem path."
       },
       "WorkspaceItem": {
         "properties": {

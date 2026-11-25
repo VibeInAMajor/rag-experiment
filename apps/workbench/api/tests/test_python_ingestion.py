@@ -77,7 +77,7 @@ async def test_python_upload_search_restart_replay_and_atomic_refusals(disposabl
             (b"x = '\xff'", "text/x-python", "INVALID_DOCUMENT", 400),
             (b"x = '\0'", "text/x-python", "INVALID_DOCUMENT", 400),
             (content, "application/pdf", "UNSUPPORTED_MEDIA_TYPE", 415),
-            (b"x = '" + b"z" * 33_000 + b"'", "text/x-python", "PAYLOAD_TOO_LARGE", 413),
+            (b"x = '" + b"z" * 33_000 + b"'", "text/x-python", "DOCUMENT_PROCESSING_LIMIT_EXCEEDED", 422),
         ]:
             failure = await _upload(client, filename="ledger.py", mime=mime, content=body, fields=fields)
             error = _error(failure, status=status, code=code)

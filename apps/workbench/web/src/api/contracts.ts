@@ -69,6 +69,7 @@ export type BackendCapabilities = ApiMeta & {
     documents: boolean;
     search: boolean;
     upload: boolean;
+    upload_folders?: boolean;
     document_details: boolean;
     jobs: boolean;
   };
@@ -145,6 +146,12 @@ export type SearchResponse = ApiMeta & {
   results: SearchResult[];
 };
 
+export type UploadLocation = {
+  group_id: string;
+  path: string;
+  folder_totals: number[];
+};
+
 export type DocumentItem = {
   source_id: string;
   title: string;
@@ -154,6 +161,14 @@ export type DocumentItem = {
   chunk_count: number;
   updated_at: string;
   error_code?: string | null;
+  upload_location?: UploadLocation | null;
+  folder_states?:
+    | {
+        file_count: number;
+        ready_count: number;
+        status: "ready" | "processing" | "error";
+      }[]
+    | null;
 };
 
 export type DocumentPage = ApiMeta & {

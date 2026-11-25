@@ -10,7 +10,12 @@ import {
   IngestionStatus,
 } from "./LiveDocumentDetails";
 import { DocumentUploadDialog } from "./DocumentUploadDialog";
-import { documentTimestamp } from "./documentPresentation";
+import { DocumentUploadQueue } from "./DocumentUploadQueue";
+import {
+  buildDocumentFolders,
+  filterDocumentFolders,
+} from "../domain/documentFolders";
+import { DocumentFolderTable } from "./DocumentFolderTable";
 
 export type LiveDocumentsProps = {
   controller: LiveDocumentsModel;
@@ -40,10 +45,14 @@ export function LiveDocumentsContent({
     capabilities.features.upload === true &&
     !["idle", "unavailable"].includes(model.status);
   const detail = model.detail;
-  const visible = model.documents.filter(
-    (item) =>
-      item.title.toLowerCase().includes(query.toLowerCase()) &&
-      (status === "all" || item.status === status),
+  const visible = filterDocumentFolders(
+    buildDocumentFolders(
+      model.documents,
+      model.uploadQueue,
+      !model.nextCursor && !model.listBusy,
+    ),
+    query,
+    status,
   );
   const openUpload = (replacement: boolean) => {
     const activeElement = document.activeElement;
@@ -146,67 +155,16 @@ export function LiveDocumentsContent({
         className={`view-detail-layout${model.selectedSourceId ? " has-detail" : ""}`}
       >
         <div className="data-panel data-scroll" aria-busy={model.listBusy}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Chunks</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((item) => (
-                <tr
-                  key={item.source_id}
-                  className={
-                    item.source_id === model.selectedSourceId
-                      ? "data-selected"
-                      : ""
-                  }
-                >
-                  <td>
-                    <button
-                      type="button"
-                      className="data-name"
-                      aria-pressed={item.source_id === model.selectedSourceId}
-                      onClick={(event) => {
-                        lastSelectedButton.current = event.currentTarget;
-                        model.selectSource(item.source_id);
-                        setTab("content");
-                      }}
-                    >
-                      <span className="data-file-icon">
-                        <FileText size={17} aria-hidden="true" />
-                      </span>
-                      <span>
-                        <strong>{item.title}</strong>
-                        <small className="mono">
-                          {item.media_type} · {item.source_id}
-                        </small>
-                      </span>
-                    </button>
-                  </td>
-                  <td>
-                    <span
-                      className={`status ${item.status === "ready" ? "success" : item.status === "error" ? "error" : "running"}`}
-                    >
-                      {item.status}
-                    </span>
-                    {item.error_code && (
-                      <small className="documents-error-code mono">
-                        {item.error_code}
-                      </small>
-                    )}
-                  </td>
-                  <td className="mono">{item.chunk_count}</td>
-                  <td className="data-date">
-                    {documentTimestamp(item.updated_at)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DocumentFolderTable
+            nodes={visible}
+            selectedSourceId={model.selectedSourceId}
+            expandMatches={query.trim() !== "" || status !== "all"}
+            onSelect={(sourceId, button) => {
+              lastSelectedButton.current = button;
+              model.selectSource(sourceId);
+              setTab("content");
+            }}
+          />
           {!visible.length && !model.listBusy && (
             <div className="view-empty">
               <FileText size={28} aria-hidden="true" />
@@ -344,6 +302,7 @@ export function LiveDocumentsContent({
                       <button
                         type="button"
                         className="button"
+                        disabled={model.uploadQueueBusy}
                         onClick={() => openUpload(true)}
                       >
                         Replace file
@@ -439,6 +398,9 @@ export function LiveDocumentsContent({
         jobsAvailable={capabilities?.features.jobs === true}
         uploadAllowed={uploadAllowed}
       />
+      {!uploadOpen && (
+        <DocumentUploadQueue model={model} uploadAllowed={uploadAllowed} />
+      )}
       {uploadOpen && (
         <DocumentUploadDialog
           model={model}

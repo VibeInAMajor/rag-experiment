@@ -122,6 +122,7 @@ def test_default_discovery_does_not_claim_an_execution_backend(monkeypatch: pyte
             "documents": False,
             "search": False,
             "upload": False,
+            "upload_folders": False,
             "document_details": False,
             "jobs": False,
         }
@@ -358,6 +359,7 @@ def test_qualified_executor_cannot_bypass_unconfigured_postgresql() -> None:
             "search": False,
             "documents": False,
             "upload": False,
+            "upload_folders": False,
             "document_details": False,
             "jobs": False,
         }

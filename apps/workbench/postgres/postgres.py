@@ -442,7 +442,8 @@ class PostgresPersistence(PostgresEmbeddingMixin):
     ) -> list[DocumentRecord]:
         rows = await (
             await connection.execute(
-                "SELECT s.source_id,s.title,s.media_type,active.version_id AS active_version_id, "
+                "SELECT s.source_id,s.title,s.media_type,s.metadata->'upload_location' AS upload_location, "
+                "active.version_id AS active_version_id, "
                 "COALESCE(active.chunk_count,0)::bigint AS chunk_count, "
                 "greatest(s.updated_at,COALESCE(latest.updated_at,s.updated_at)) AS updated_at, "
                 "CASE WHEN latest.status='error' THEN 'error' WHEN latest.status='staged' THEN 'processing' "

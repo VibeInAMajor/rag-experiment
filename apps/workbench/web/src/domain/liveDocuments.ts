@@ -112,7 +112,7 @@ export function documentsContextFingerprint(
 function scope(context: LiveDocumentsContext): string {
   return JSON.stringify([context.mode, context.workspaceId]);
 }
-function documentError(error: unknown): DocumentError {
+export function documentError(error: unknown): DocumentError {
   if (error instanceof WorkbenchApiError)
     return {
       code: error.code,

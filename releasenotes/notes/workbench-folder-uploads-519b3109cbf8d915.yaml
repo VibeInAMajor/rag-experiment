@@ -1,0 +1,48 @@
+features:
+  - |
+    Workbench Live Documents accepts multiple files or a folder with all its subfolders.
+    Uploads run in a session queue with at most two concurrent requests, per-file
+    results and retries that retain the original operation key. Unsupported files
+    are listed as skipped. Closing Upload or switching pages keeps the queue running;
+    switching workspace or execution mode clears it. Keep the browser tab open.
+  - |
+    Folder selections appear as collapsible folders and subfolders with recursive
+    readiness counts. The API persists their display paths in source metadata.
+    A folder is Ready when all persisted descendant documents are ready. Attempts
+    that did not create a document stay in the queue and report. Folder counts and
+    status cover persisted descendants before pagination and filtering. Older sources without
+    saved paths remain at the root. No database migration is required.
+  - |
+    Upload opens in a wide, resizable window with compact and wide controls.
+    Download a UTF-8 TXT report of failed, skipped and unconfirmed files, including
+    their relative paths, reasons and error codes, using one queue button.
+  - |
+    Workbench keeps its page and execution mode in the URL. Reloading Documents,
+    Runs, Settings, Configuration or the pipeline workspace restores that section
+    and mode; restoring Live only checks discovery and does not rerun operations.
+fixes:
+  - |
+    Markdown chunk cards show one-based fragment numbers and inclusive source-line
+    ranges when recorded, instead of a missing-page placeholder. New text chunks
+    record source lines; PDF cards retain their actual page numbers.
+  - |
+    Markdown files below the upload byte limit no longer fail merely because a
+    quote, table, list or fence exceeds the chunk target. Large raw structures use
+    source-exact, bounded fragments with explicit warnings and original block spans.
+    File byte limits, processing limits and workspace capacity now have distinct
+    error codes and readable messages.
+upgrade:
+  - |
+    Closing the Workbench Upload dialog no longer interrupts its request. Use
+    ``Stop queue locally`` or the replacement operation's ``Stop locally`` control
+    to interrupt explicitly; a local stop does not confirm a server rollback.
+  - |
+    Restart the Workbench API alongside the new frontend to accept the optional
+    ``upload_location`` multipart field and return persisted folder metadata.
+  - |
+    Raw-fragment processing uses a new processing fingerprint. Existing sources
+    and terminal job results remain unchanged; retry a previously failed file as
+    a new upload operation after upgrading the API.
+
+
+

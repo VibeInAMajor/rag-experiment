@@ -138,6 +138,48 @@ function operation(
 afterEach(() => vi.useRealTimers());
 
 describe("live document runtime contracts", () => {
+  it("decodes persisted folder locations and rejects traversal and inconsistent totals", () => {
+    const location = {
+      group_id: "selection",
+      path: "Research/sub/notes.txt",
+      folder_totals: [2, 1],
+    };
+    const page = {
+      ...scope,
+      items: [{ ...document, upload_location: location }],
+      next_cursor: null,
+    };
+    expect(
+      decodeDocumentPage(page, "development").items[0].upload_location,
+    ).toEqual(location);
+    for (const bad of [
+      { ...location, path: "../sub/notes.txt" },
+      { ...location, folder_totals: [1, 2] },
+    ]) {
+      expect(() =>
+        decodeDocumentPage(
+          { ...page, items: [{ ...document, upload_location: bad }] },
+          "development",
+        ),
+      ).toThrow();
+    }
+  });
+
+  it("sends folder metadata separately from the safe multipart filename", async () => {
+    const { client, fetchImpl } = setup();
+    const location = {
+      group_id: "selection",
+      path: "Research/sub/example.txt",
+      folder_totals: [2, 1],
+    };
+    await client.uploadDocument("development", {
+      ...operation(),
+      uploadLocation: location,
+    });
+    const body = fetchImpl.mock.calls[0][1]?.body as FormData;
+    expect(body.get("upload_location")).toBe(JSON.stringify(location));
+    expect((body.get("file") as File).name).toBe("example.txt");
+  });
   it("retains all capability fields and fails closed for missing or malformed required flags", () => {
     expect(decodeCapabilities(caps).features).toEqual(caps.features);
     expect(decodeCapabilities(caps).pdf_ingestion).toEqual(caps.pdf_ingestion);
@@ -430,7 +472,7 @@ describe("shared document transport", () => {
       );
   });
 
-  it.each([400, 404, 409, 413, 415, 429, 503, 504])(
+  it.each([400, 404, 409, 413, 415, 422, 429, 503, 504])(
     "retains error job correlation for HTTP %s",
     async (status) => {
       const { client } = setup(
@@ -454,6 +496,34 @@ describe("shared document transport", () => {
         requestId: "request-1",
         traceId: "trace-1",
       });
+    },
+  );
+
+  it.each([
+    ["PAYLOAD_TOO_LARGE", 413, "file or request byte limit"],
+    ["DOCUMENT_PROCESSING_LIMIT_EXCEEDED", 422, "processing exceeded"],
+    ["CORPUS_LIMIT_EXCEEDED", 409, "workspace has reached"],
+  ] as const)(
+    "explains %s without displaying arbitrary server diagnostics",
+    async (code, status, message) => {
+      const { client } = setup(
+        {
+          ...meta,
+          error: {
+            code,
+            message: "private diagnostic must remain hidden",
+            retryable: false,
+            http_status: status,
+          },
+        },
+        status,
+      );
+      await expect(
+        client.uploadDocument("development", operation()),
+      ).rejects.toThrow(message);
+      await expect(
+        client.uploadDocument("development", operation()),
+      ).rejects.not.toThrow("private diagnostic");
     },
   );
 

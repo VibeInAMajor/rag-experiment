@@ -447,6 +447,9 @@ export function decodeCapabilities(value: unknown): BackendCapabilities {
       documents: boolean(features.documents),
       search: boolean(features.search),
       upload: boolean(features.upload),
+      ...(features.upload_folders === undefined
+        ? {}
+        : { upload_folders: boolean(features.upload_folders) }),
       document_details: boolean(features.document_details),
       jobs: boolean(features.jobs),
     },
@@ -693,10 +696,55 @@ function documentItem(value: unknown): DocumentItem {
     active_version_id: nullableId(item.active_version_id),
     chunk_count: nonnegativeInteger(item.chunk_count),
     updated_at: timestamp(item.updated_at),
+    ...(item.upload_location == null
+      ? {}
+      : { upload_location: uploadLocation(item.upload_location) }),
+    ...(item.folder_states == null
+      ? {}
+      : {
+          folder_states: documentFolderStates(
+            item.folder_states,
+            item.upload_location,
+          ),
+        }),
     ...(item.error_code === undefined
       ? {}
       : { error_code: optionalText(item.error_code) }),
   };
+}
+
+function documentFolderStates(value: unknown, location: unknown) {
+  const path = uploadLocation(location);
+  const states = array(value, 64).map((value) => {
+    const item = object(value);
+    const count = positiveInteger(item.file_count);
+    const ready = nonnegativeInteger(item.ready_count);
+    const status = choice(item.status, ["ready", "processing", "error"]);
+    if (ready > count || (status === "ready") !== (ready === count))
+      invalidResponse();
+    return { file_count: count, ready_count: ready, status };
+  });
+  if (states.length !== path.folder_totals.length) invalidResponse();
+  return states;
+}
+
+function uploadLocation(value: unknown) {
+  const item = object(value);
+  const path = text(item.path, 2048);
+  const parts = path.split("/");
+  const totals = array(item.folder_totals, 64).map(positiveInteger);
+  if (
+    parts.length !== totals.length + 1 ||
+    !totals.length ||
+    parts.some((part) => ["", ".", ".."].includes(part)) ||
+    /[\\:\u0000-\u001f\u007f\ud800-\udfff]/u.test(path) ||
+    totals.some(
+      (total, index) =>
+        total > 1000000 || (index > 0 && total > totals[index - 1]),
+    )
+  )
+    invalidResponse();
+  return { group_id: identifier(item.group_id), path, folder_totals: totals };
 }
 
 export type DocumentDecodeContext = {
