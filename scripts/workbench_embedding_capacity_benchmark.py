@@ -22,6 +22,7 @@ from apps.workbench.embedding.embedding import (
     EmbeddingItem,
     EmbeddingProfile,
     EmbeddingRequest,
+    EmbeddingRuntimeIdentity,
 )
 from apps.workbench.embedding.embedding_adapters import TeiEmbeddingAdapter
 from apps.workbench.embedding.embedding_capacity import MeasuredEmbeddingCapacityPolicy, ProductionEmbeddingGovernor
@@ -116,32 +117,47 @@ async def _measure_candidate(
     }
 
 
+def _calibration_profile(identity: EmbeddingRuntimeIdentity, query_instruction: str | None = None) -> EmbeddingProfile:
+    profile = EmbeddingProfile(
+        profile_id="qwen3-embedding-4b-local",
+        profile_revision="qwen3-4b-capacity-32k-r1",
+        provider_adapter_id="tei-openai",
+        model_id=_MODEL_ID,
+        model_revision=_REVISION,
+        model_digest=identity.model_digest,
+        tokenizer_digest=identity.tokenizer_digest,
+        tokenizer_revision=identity.tokenizer_revision,
+        dimensions=2560,
+        max_tokens=8192,
+        max_batch_tokens=32768,
+        max_batch_items=8,
+        timeout_seconds=60.0,
+    )
+    if query_instruction is None:
+        return profile
+    instruction_digest = hashlib.sha256(query_instruction.encode("utf-8")).hexdigest()[:16]
+    return EmbeddingProfile.model_validate(
+        {
+            **profile.model_dump(),
+            "query_instruction": query_instruction,
+            "profile_revision": f"qwen3-4b-query-{instruction_digest}-r1",
+        }
+    )
+
+
 async def calibrate_capacity(
     *,
     directory: Path,
     endpoint: str = _DEFAULT_ENDPOINT,
     container: str = _DEFAULT_CONTAINER,
     output: Path | None = None,
+    query_instruction: str | None = None,
 ) -> tuple[EmbeddingProfile, MeasuredEmbeddingCapacityPolicy, dict[str, Any]]:
-    """Measure the highest qualifying candidate before fixing the later ten-minute denominator."""
+    """Measure capacity for the selected immutable input profile before fixing its denominator."""
     async with httpx.AsyncClient(base_url=endpoint, trust_env=False, follow_redirects=False, timeout=10) as client:
         verifier = LocalDeploymentVerifier(directory, container, client, endpoint=endpoint)
         identity = await verifier.initialize()
-        profile = EmbeddingProfile(
-            profile_id="qwen3-embedding-4b-local",
-            profile_revision="qwen3-4b-capacity-32k-r1",
-            provider_adapter_id="tei-openai",
-            model_id=_MODEL_ID,
-            model_revision=_REVISION,
-            model_digest=identity.model_digest,
-            tokenizer_digest=identity.tokenizer_digest,
-            tokenizer_revision=identity.tokenizer_revision,
-            dimensions=2560,
-            max_tokens=8192,
-            max_batch_tokens=32768,
-            max_batch_items=8,
-            timeout_seconds=60.0,
-        )
+        profile = _calibration_profile(identity, query_instruction)
         qualification = QualificationEmbeddingGovernor(
             QualificationCapacityPolicy(
                 profile_id=profile.profile_id,
