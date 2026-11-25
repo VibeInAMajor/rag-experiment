@@ -58,6 +58,10 @@ Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file lim
 
 Use QUALITY-001 failure handoff and compare raw candidate ceiling vs reordered top-k. Dense-only qualification may proceed if lexical NO-GO; add hybrid arm only when useful lexical/hybrid profile qualifies. On OPEN compare hard-negative@1, known-facet/primary hits and all-required-facets at equal budget, including Art/Literature/Kubernetes, multilingual and close contradictory passages. Follow [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md); do not infer answerability from ranker score or claim exhaustive recall/nDCG with sparse qrels.
 
+### Activate dense-only qualification from measured ranking gap — 2026-11-26
+
+The historical selected code-query had 63 cases with a complete singleton fact below rank one within top ten; 15 had no complete singleton in the known indexed representation and 3 had one outside top ten. Targeted top-50 replay recovered 44/50 missing facet observations, 25 by rank 20; these are historical, not the cleaned corpus. Use [latest matched Markdown baseline](../evidence/quality-2026-11-25/report.md) and preserved current top-50 captures; run a dense-only reranker experiment now without waiting for lexical GO. Start with one compatible small local cross-encoder (Qwen3-Reranker-0.6B candidate if qualified); compare raw Dense vs reranked top-10/20/50, same candidate pool and final budget, source singleton feasibility and oracle ceiling. Proposed component GO: >=5 pp paired any-complete-fact@1 gain on OPEN and no reduction in all-facts@5 or fixed-budget all-facts, disclose clustered uncertainty, domain/language regressions, actual shared GPU/latency cost; freeze criterion before running. If ceiling below final targets, route to CHUNK-004 or candidate retrieval; never inflate ranks by gold. DATASET-002 provides distinct primary/relevance labels; do not misname any-fact scores. Use existing UI/local quality evidence path for new functional acceptance; no production integration until qualified RERANK-002.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -77,6 +81,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] GO/NO-GO with measured bounds, no production claim; conditional RERANK-002 handoff.
 
 - [ ] Paired hard-negative and cohort results, candidate ceiling, cost and material gain/no-go are reported; unavailable hybrid arm explicitly not evaluated.
+
+- [ ] Dense-only candidate qualification executed or measured NO-GO, with equal-budget ceiling and paired gains against cleaned baseline; hybrid arm added only if qualified.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
