@@ -303,3 +303,11 @@ tasks/evidence/dense-2026-11-24/*
 tasks/evidence/dataset-2026-11-24/*
 !tasks/evidence/dataset-2026-11-24/report.md
 !tasks/evidence/dataset-2026-11-24/metrics.json
+!tasks/evidence/dataset-ranking-2026-11-26/
+tasks/evidence/dataset-ranking-2026-11-26/*
+!tasks/evidence/dataset-ranking-2026-11-26/report.md
+!tasks/evidence/dataset-ranking-2026-11-26/metrics.json
+!tasks/evidence/dataset-ranking-full-open-2026-11-26/
+tasks/evidence/dataset-ranking-full-open-2026-11-26/*
+!tasks/evidence/dataset-ranking-full-open-2026-11-26/report.md
+!tasks/evidence/dataset-ranking-full-open-2026-11-26/metrics.json

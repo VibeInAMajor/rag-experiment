@@ -70,6 +70,14 @@ Use [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26
 
 ## K. Security / Governance / Observability
 
+### DATASET-002 metric-eligibility handoff — 2026-11-26
+
+[Completed full OPEN ranking revision](../evidence/dataset-ranking-full-open-2026-11-26/report.md) supersedes the preserved 21-family diagnostic subset. All 87 answerable families / 261 queries and 15 no-answer families / 45 queries are assessed. Frozen pool: 1241/1241 occurrences, 226 primary / 393 support / 622 explicit negative, 0 UNKNOWN, all 3060 baseline top-10 positions judged. Revision digest: `a87a8e7c1fef975111acb59d6579e125c2c8c2a5d7eb74c16e29f97c5827d6a4`. Primary@1 209/261, @5 252/261, @10 257/261; first-primary MRR@5 0.87414; pooled nDCG@5 0.78748, @10 0.85343. All reported @1/@5/@10 metrics are eligible for every answerable query. The previous remaining-69-family and top-10-UNKNOWN limitations are resolved.
+
+Reuse the ignored local `rag_quality/ranking/` owner and `runs/ranking-judgments-full-open-2026-11-26/` artifacts. Known primary source units: 209; support units: 10. Separate pooled occurrence recall, known-unit union/singleton recall and historical any-fact/all-facts definitions. Preserve the old revision and unchanged saved predictions. New-arm candidates still require assessment and additive pool refreeze; chunk IDs cannot establish negatives across rechunking. Full corpus Recall/nDCG remain NOT_EVALUABLE_POOL_IS_NOT_CORPUS. No retrieval improvement is claimed by rescoring the same baseline.
+
+409 scoped tests passed through UI, including independent actual ranking formulas @1/@5/@10, complete 306-query coverage and preserved parent bytes/labels. Full report and aggregate metrics include cohort/family uncertainty and local artifact pointers. No production evaluation service was added. `R2_RUBRIC.json` remains PREPARED_NOT_APPLIED (r2 in the OPEN revision name is only a revision number). R2/ANSWER were not opened; final evaluation remains after candidate freeze without tuning on its outcomes. Robustness, sufficiency/abstention, generation and final release GO are still separate gates; release thresholds are unchanged.
+
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
 
 No raw customer content in CI logs; keep reference answers out of training/tuning inputs.

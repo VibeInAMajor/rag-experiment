@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-Starts the local Workbench, API, validator, PostgreSQL and project embedding container.
+Starts the local Workbench, API, validator, PostgreSQL, embedding and reranker containers.
 .DESCRIPTION
 Run .\start.ps1 from the repository root. Existing healthy services are reused.
 Database setup, migrations and seeding remain explicit operations.
@@ -176,6 +176,7 @@ try {
     New-Item -ItemType Directory -Path $logRoot -Force | Out-Null
     Start-LocalPostgres -Executable (Get-RequiredCommand -Name 'docker.exe')
     & (Join-Path $projectRoot 'apps/workbench/embedding/start.ps1') -StartOnly
+    & (Join-Path $projectRoot 'apps/workbench/reranking/start.ps1') -StartOnly
     foreach ($service in @(
         @{ Name = 'API'; Kind = 'api'; Port = 8011; Url = 'http://127.0.0.1:8011/api/v1/health/live' },
         @{ Name = 'Validator'; Kind = 'validator'; Port = 8010; Url = 'http://127.0.0.1:8010/health' },
@@ -188,6 +189,7 @@ try {
     Write-Host 'Workbench: http://127.0.0.1:4173/'
     Write-Host 'API:       http://127.0.0.1:8011/api/v1/health/ready'
     Write-Host 'Embedding: http://127.0.0.1:8082/info (model readiness is independent of lexical search)'
+    Write-Host 'Reranker:  http://127.0.0.1:8083/health (standalone; not connected to search)'
     Write-Host "Logs:      $logRoot"
 }
 finally {

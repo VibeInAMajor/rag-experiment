@@ -1,0 +1,1203 @@
+{
+  "status": "COMPLETE_BOUNDED_OPEN_JUDGMENT_REVISION",
+  "date": "2026-11-26",
+  "revision_digest": "29a8ddccdb18eca67b9558a92b809419f9e622ce24383a4d4d95daaf261f7e3b",
+  "rubric_sha256": "0840d9fa3546997c7533619be02dea383221d4168bc8dc30e35c54d803fff239",
+  "scope": {
+    "answerable_families": 18,
+    "answerable_queries": 54,
+    "assessed_occurrences": 143,
+    "corpus_chunks": 634,
+    "corpus_sources": 31,
+    "families": 21,
+    "grade_counts": {
+      "0": 68,
+      "1": 39,
+      "3": 36
+    },
+    "no_answer_queries": 9,
+    "original_answerable_queries": 261,
+    "pool_occurrences": 143,
+    "primary_source_units": 45,
+    "queries": 63,
+    "selection": "prior purposive source-fidelity families, all three translations; not a random or independent validation sample",
+    "support_source_units": 4,
+    "unknown_occurrences": 0
+  },
+  "cutoffs": {
+    "1": {
+      "all_known_primary_singleton": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5925925925925926,
+            0.9444444444444444
+          ],
+          "mean": 0.7777777777777778,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.0,
+        "value": 0.7777777777777778
+      },
+      "all_known_primary_union": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5925925925925926,
+            0.9444444444444444
+          ],
+          "mean": 0.7777777777777778,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.0,
+        "value": 0.7777777777777778
+      },
+      "answerable_queries": 54,
+      "families": 18,
+      "first_primary_reciprocal_rank": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5925925925925926,
+            0.9444444444444444
+          ],
+          "mean": 0.7777777777777778,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.0,
+        "value": 0.7777777777777778
+      },
+      "judged_precision": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6666666666666666,
+            0.9629629629629629
+          ],
+          "mean": 0.8333333333333334,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 45.0,
+        "value": 0.8333333333333334
+      },
+      "judgment_coverage": {
+        "judged": 63,
+        "returned": 63,
+        "unknown": 0
+      },
+      "known_primary_singleton_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5925925925925926,
+            0.9444444444444444
+          ],
+          "mean": 0.7777777777777778,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.0,
+        "value": 0.7777777777777778
+      },
+      "known_primary_union_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5925925925925926,
+            0.9444444444444444
+          ],
+          "mean": 0.7777777777777778,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.0,
+        "value": 0.7777777777777778
+      },
+      "legacy_all_required_facets_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.537037037037037,
+            0.9074074074074073
+          ],
+          "mean": 0.7407407407407408,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 40.0,
+        "value": 0.7407407407407407
+      },
+      "legacy_any_fact_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6666666666666666,
+            0.9629629629629629
+          ],
+          "mean": 0.8333333333333334,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 45.0,
+        "value": 0.8333333333333334
+      },
+      "pooled_ndcg": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6005291005291006,
+            0.9444444444444444
+          ],
+          "mean": 0.7857142857142857,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.42857142857143,
+        "value": 0.7857142857142857
+      },
+      "pooled_primary_occurrence_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.34259259259259256,
+            0.6666666666666666
+          ],
+          "mean": 0.5046296296296297,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 27.25,
+        "value": 0.5046296296296297
+      },
+      "pooled_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.16234567901234567,
+            0.2756172839506173
+          ],
+          "mean": 0.2185185185185185,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 11.799999999999999,
+        "value": 0.2185185185185185
+      },
+      "primary_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5925925925925926,
+            0.9444444444444444
+          ],
+          "mean": 0.7777777777777778,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.0,
+        "value": 0.7777777777777778
+      },
+      "primary_source_unit_micro": {
+        "independence": "Units across translations are correlated; unique source-unit count is in scope.",
+        "singleton_recall": 0.7777777777777778,
+        "singleton_recovered": 105,
+        "translated_unit_observations": 135,
+        "union_recall": 0.7777777777777778,
+        "union_recovered": 105
+      }
+    },
+    "10": {
+      "all_known_primary_singleton": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7222222222222222,
+            1.0
+          ],
+          "mean": 0.8888888888888888,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 48.0,
+        "value": 0.8888888888888888
+      },
+      "all_known_primary_union": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7222222222222222,
+            1.0
+          ],
+          "mean": 0.8888888888888888,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 48.0,
+        "value": 0.8888888888888888
+      },
+      "answerable_queries": 54,
+      "families": 18,
+      "first_primary_reciprocal_rank": {
+        "clustered": {
+          "families": 17,
+          "interval_95": [
+            0.7620915032679738,
+            0.9803921568627452
+          ],
+          "mean": 0.8869281045751634,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 51,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 17,
+        "eligible_queries": 51,
+        "ineligible_queries": 3,
+        "sum": 45.233333333333334,
+        "value": 0.8869281045751635
+      },
+      "judged_precision": {
+        "clustered": {
+          "families": 1,
+          "interval_95": [
+            0.2,
+            0.2
+          ],
+          "mean": 0.2,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 1,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 1,
+        "eligible_queries": 1,
+        "ineligible_queries": 53,
+        "sum": 0.2,
+        "value": 0.2
+      },
+      "judgment_coverage": {
+        "judged": 399,
+        "returned": 630,
+        "unknown": 231
+      },
+      "known_primary_singleton_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.8055555555555556,
+            1.0
+          ],
+          "mean": 0.9212962962962963,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 49.75,
+        "value": 0.9212962962962963
+      },
+      "known_primary_union_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.8055555555555556,
+            1.0
+          ],
+          "mean": 0.9212962962962963,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 49.75,
+        "value": 0.9212962962962963
+      },
+      "legacy_all_required_facets_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6666666666666666,
+            1.0
+          ],
+          "mean": 0.8333333333333334,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 45.0,
+        "value": 0.8333333333333334
+      },
+      "legacy_any_fact_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            1.0,
+            1.0
+          ],
+          "mean": 1.0,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 54.0,
+        "value": 1.0
+      },
+      "pooled_ndcg": {
+        "clustered": null,
+        "eligible_families": 0,
+        "eligible_queries": 0,
+        "ineligible_queries": 54,
+        "sum": 0,
+        "value": null
+      },
+      "pooled_primary_occurrence_recall": {
+        "clustered": null,
+        "eligible_families": 0,
+        "eligible_queries": 0,
+        "ineligible_queries": 54,
+        "sum": 0,
+        "value": null
+      },
+      "pooled_recall": {
+        "clustered": null,
+        "eligible_families": 0,
+        "eligible_queries": 0,
+        "ineligible_queries": 54,
+        "sum": 0,
+        "value": null
+      },
+      "primary_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            1.0,
+            1.0
+          ],
+          "mean": 1.0,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 53,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 53,
+        "ineligible_queries": 1,
+        "sum": 53.0,
+        "value": 1.0
+      },
+      "primary_source_unit_micro": {
+        "independence": "Units across translations are correlated; unique source-unit count is in scope.",
+        "singleton_recall": 0.9037037037037037,
+        "singleton_recovered": 122,
+        "translated_unit_observations": 135,
+        "union_recall": 0.9037037037037037,
+        "union_recovered": 122
+      }
+    },
+    "5": {
+      "all_known_primary_singleton": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6851851851851852,
+            1.0
+          ],
+          "mean": 0.8518518518518519,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 46.0,
+        "value": 0.8518518518518519
+      },
+      "all_known_primary_union": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6851851851851852,
+            1.0
+          ],
+          "mean": 0.8518518518518519,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 46.0,
+        "value": 0.8518518518518519
+      },
+      "answerable_queries": 54,
+      "families": 18,
+      "first_primary_reciprocal_rank": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6777777777777777,
+            0.9629629629629629
+          ],
+          "mean": 0.8314814814814815,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 44.9,
+        "value": 0.8314814814814815
+      },
+      "judged_precision": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.5407407407407407,
+            0.7518518518518519
+          ],
+          "mean": 0.6444444444444444,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 34.8,
+        "value": 0.6444444444444444
+      },
+      "judgment_coverage": {
+        "judged": 315,
+        "returned": 315,
+        "unknown": 0
+      },
+      "known_primary_singleton_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7222222222222222,
+            1.0
+          ],
+          "mean": 0.8703703703703703,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 47.0,
+        "value": 0.8703703703703703
+      },
+      "known_primary_union_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7222222222222222,
+            1.0
+          ],
+          "mean": 0.8703703703703703,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 47.0,
+        "value": 0.8703703703703703
+      },
+      "legacy_all_required_facets_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6111111111111112,
+            0.9444444444444444
+          ],
+          "mean": 0.7962962962962963,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 43.0,
+        "value": 0.7962962962962963
+      },
+      "legacy_any_fact_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.9074074074074073,
+            1.0
+          ],
+          "mean": 0.9629629629629629,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 52.0,
+        "value": 0.9629629629629629
+      },
+      "pooled_ndcg": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.6693382709184763,
+            0.885970043410476
+          ],
+          "mean": 0.7860416721801098,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.446250297725925,
+        "value": 0.7860416721801097
+      },
+      "pooled_primary_occurrence_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7037037037037037,
+            0.9351851851851851
+          ],
+          "mean": 0.8333333333333334,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 45.0,
+        "value": 0.8333333333333334
+      },
+      "pooled_recall": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7098765432098766,
+            0.8660493827160494
+          ],
+          "mean": 0.7895061728395061,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 42.63333333333333,
+        "value": 0.7895061728395062
+      },
+      "primary_hit": {
+        "clustered": {
+          "families": 18,
+          "interval_95": [
+            0.7777777777777778,
+            1.0
+          ],
+          "mean": 0.9074074074074073,
+          "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+          "rows": 54,
+          "samples": 2000,
+          "seed": 20261125
+        },
+        "eligible_families": 18,
+        "eligible_queries": 54,
+        "ineligible_queries": 0,
+        "sum": 49.0,
+        "value": 0.9074074074074074
+      },
+      "primary_source_unit_micro": {
+        "independence": "Units across translations are correlated; unique source-unit count is in scope.",
+        "singleton_recall": 0.8592592592592593,
+        "singleton_recovered": 116,
+        "translated_unit_observations": 135,
+        "union_recall": 0.8592592592592593,
+        "union_recovered": 116
+      }
+    }
+  },
+  "cohorts": {
+    "domain": {
+      "art": {
+        "answerable_queries": 9,
+        "families": 3,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              0.0,
+              1.0
+            ],
+            "mean": 0.5555555555555555,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 5.0,
+          "value": 0.5555555555555556
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              0.6666666666666666,
+              1.0
+            ],
+            "mean": 0.8888888888888888,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 8.0,
+          "value": 0.8888888888888888
+        },
+        "first_primary_mrr_at_5": 0.6555555555555556,
+        "pooled_ndcg_at_5": 0.6805889106874381,
+        "known_primary_unit_recall_at_5": 0.7222222222222222
+      },
+      "azure": {
+        "answerable_queries": 9,
+        "families": 3,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 9.0,
+          "value": 1.0
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 9.0,
+          "value": 1.0
+        },
+        "first_primary_mrr_at_5": 1.0,
+        "pooled_ndcg_at_5": 0.9349786531665766,
+        "known_primary_unit_recall_at_5": 1.0
+      },
+      "csharp": {
+        "answerable_queries": 9,
+        "families": 3,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 9.0,
+          "value": 1.0
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 9.0,
+          "value": 1.0
+        },
+        "first_primary_mrr_at_5": 1.0,
+        "pooled_ndcg_at_5": 0.9010409863357631,
+        "known_primary_unit_recall_at_5": 1.0
+      },
+      "kubernetes": {
+        "answerable_queries": 9,
+        "families": 3,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              0.0,
+              1.0
+            ],
+            "mean": 0.6666666666666666,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 6.0,
+          "value": 0.6666666666666666
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              0.0,
+              1.0
+            ],
+            "mean": 0.6666666666666666,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 6.0,
+          "value": 0.6666666666666666
+        },
+        "first_primary_mrr_at_5": 0.6666666666666666,
+        "pooled_ndcg_at_5": 0.6894147483730867,
+        "known_primary_unit_recall_at_5": 0.6666666666666666
+      },
+      "literature": {
+        "answerable_queries": 9,
+        "families": 3,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              0.0,
+              1.0
+            ],
+            "mean": 0.4444444444444444,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 4.0,
+          "value": 0.4444444444444444
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              0.6666666666666666,
+              1.0
+            ],
+            "mean": 0.8888888888888888,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 8.0,
+          "value": 0.8888888888888888
+        },
+        "first_primary_mrr_at_5": 0.6666666666666666,
+        "pooled_ndcg_at_5": 0.6523245167629665,
+        "known_primary_unit_recall_at_5": 0.8333333333333334
+      },
+      "mathematics": {
+        "answerable_queries": 9,
+        "families": 3,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 9.0,
+          "value": 1.0
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 3,
+            "interval_95": [
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 9,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 3,
+          "eligible_queries": 9,
+          "ineligible_queries": 0,
+          "sum": 9.0,
+          "value": 1.0
+        },
+        "first_primary_mrr_at_5": 1.0,
+        "pooled_ndcg_at_5": 0.8579022177548273,
+        "known_primary_unit_recall_at_5": 1.0
+      }
+    },
+    "language": {
+      "en": {
+        "answerable_queries": 18,
+        "families": 18,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 18,
+            "interval_95": [
+              0.6666666666666666,
+              1.0
+            ],
+            "mean": 0.8333333333333334,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 18,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 18,
+          "eligible_queries": 18,
+          "ineligible_queries": 0,
+          "sum": 15.0,
+          "value": 0.8333333333333334
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 18,
+            "interval_95": [
+              0.7222222222222222,
+              1.0
+            ],
+            "mean": 0.8888888888888888,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 18,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 18,
+          "eligible_queries": 18,
+          "ineligible_queries": 0,
+          "sum": 16.0,
+          "value": 0.8888888888888888
+        },
+        "first_primary_mrr_at_5": 0.8444444444444444,
+        "pooled_ndcg_at_5": 0.7877566668396841,
+        "known_primary_unit_recall_at_5": 0.8472222222222222
+      },
+      "ru": {
+        "answerable_queries": 18,
+        "families": 18,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 18,
+            "interval_95": [
+              0.5555555555555556,
+              0.9444444444444444
+            ],
+            "mean": 0.7777777777777778,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 18,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 18,
+          "eligible_queries": 18,
+          "ineligible_queries": 0,
+          "sum": 14.0,
+          "value": 0.7777777777777778
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 18,
+            "interval_95": [
+              0.8333333333333334,
+              1.0
+            ],
+            "mean": 0.9444444444444444,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 18,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 18,
+          "eligible_queries": 18,
+          "ineligible_queries": 0,
+          "sum": 17.0,
+          "value": 0.9444444444444444
+        },
+        "first_primary_mrr_at_5": 0.8444444444444444,
+        "pooled_ndcg_at_5": 0.8115396494347409,
+        "known_primary_unit_recall_at_5": 0.9027777777777778
+      },
+      "uk": {
+        "answerable_queries": 18,
+        "families": 18,
+        "primary_hit_at_1": {
+          "clustered": {
+            "families": 18,
+            "interval_95": [
+              0.5,
+              0.8888888888888888
+            ],
+            "mean": 0.7222222222222222,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 18,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 18,
+          "eligible_queries": 18,
+          "ineligible_queries": 0,
+          "sum": 13.0,
+          "value": 0.7222222222222222
+        },
+        "primary_hit_at_5": {
+          "clustered": {
+            "families": 18,
+            "interval_95": [
+              0.7222222222222222,
+              1.0
+            ],
+            "mean": 0.8888888888888888,
+            "method": "family-cluster bootstrap; correlated translations averaged before resampling",
+            "rows": 18,
+            "samples": 2000,
+            "seed": 20261125
+          },
+          "eligible_families": 18,
+          "eligible_queries": 18,
+          "ineligible_queries": 0,
+          "sum": 16.0,
+          "value": 0.8888888888888888
+        },
+        "first_primary_mrr_at_5": 0.8055555555555556,
+        "pooled_ndcg_at_5": 0.7588287002659042,
+        "known_primary_unit_recall_at_5": 0.8611111111111112
+      }
+    }
+  },
+  "historical_full_open_preserved": {
+    "all_context": 240,
+    "all_facts_at_10": 246,
+    "all_facts_at_5": 237,
+    "answerable_queries": 261,
+    "any_fact_at_1": 194,
+    "any_fact_at_5": 255
+  },
+  "context": {
+    "all_known_primary_singleton": 45,
+    "all_known_primary_union": 45,
+    "budget_source_content_tokens": 2048,
+    "legacy_all_facts": 42,
+    "queries": 54
+  },
+  "no_answer": {
+    "abstention_accuracy": "NOT_EVALUATED",
+    "false_acceptance": "NOT_EVALUATED_NO_DECISION_OR_GENERATION",
+    "families": 3,
+    "queries": 9,
+    "transport_errors": 0
+  },
+  "exhaustive_release_gates": "NOT_EVALUABLE_POOL_IS_NOT_CORPUS",
+  "R2_ANSWER": "NOT_OPENED_RUBRIC_PREPARED_ONLY",
+  "new_retrieval_runs": 0,
+  "input_hashes_verified": 38,
+  "preserved_legacy_fixture_sha256": "a9e5af753d68a77bfdcc1d1b50c63ca0c3101e0eb749ab89bcbe454e3ef92d7f",
+  "limitations": [
+    "Only selected21 families and baseline top5 pool; future arms require extension/refreeze.",
+    "Distinct overlapping occurrences can receive separate nDCG gain; source-unit recall deduplicates alternatives.",
+    "Family bootstrap describes this purposive subset, not population representativeness.",
+    "Prior QUALITY-001 exposure prevents an independent-blinding claim.",
+    "Missing ranks and unassessed outside-pool occurrences remain unknown."
+  ],
+  "raw_artifacts": ".local/evaluation-holdout/quality-check/runs/ranking-judgments-2026-11-26",
+  "validation": {
+    "hatch": "1.18.2",
+    "ui_scoped_tests": {
+      "passed": 406,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 43.05,
+      "exit_code": 0,
+      "local_artifact": "code-checks/scoped.xml",
+      "new_local_ranking_cases": 34
+    },
+    "static_ruff": "PASS; format and F/E9 with --no-cache",
+    "frontend_and_full_haystack": "NOT_RUN_NO_PRODUCTION_CHANGES",
+    "new_live_retrieval": "NOT_RUN_SAVED_CAPTURES_ONLY",
+    "publication_safety": {
+      "status": "PASS",
+      "files": 2,
+      "configured_secret_matches": 0,
+      "credential_url_matches": 0,
+      "raw_float_array_matches": 0,
+      "private_payload_fields": 0,
+      "local_artifact": "artifact-safety-audit.json",
+      "ui_action": "Проверить безопасность отчёта"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+name: rag-workbench-reranker
+
+services:
+  reranker:
+    container_name: rag-workbench-reranker-1
+    # Official vLLM 0.34.0 linux/amd64 manifest.
+    image: vllm/vllm-openai@sha256:cf5b2fdd087eb4f6d261736967cc5cde974bd22ff4df50365f8fa419b6b4c484
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8083:8000"
+    volumes:
+      - type: bind
+        source: ${WORKBENCH_RERANKER_MODEL_DIRECTORY:?Set the absolute local reranker model directory}
+        target: /models/qwen3-reranker-0.6b
+        read_only: true
+        bind:
+          create_host_path: false
+    environment:
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      VLLM_NO_USAGE_STATS: "1"
+      DO_NOT_TRACK: "1"
+    command:
+      - /models/qwen3-reranker-0.6b
+      - --served-model-name
+      - Qwen/Qwen3-Reranker-0.6B
+      - --runner
+      - pooling
+      - --hf-overrides
+      - '{"architectures":["Qwen3ForSequenceClassification"],"classifier_from_token":["no","yes"],"is_original_qwen3_reranker":true}'
+      - --chat-template
+      - /models/qwen3-reranker-0.6b/chat_template.jinja
+      - --dtype
+      - float16
+      - --max-model-len
+      - "4096"
+      - --max-num-batched-tokens
+      - "4096"
+      - --max-num-seqs
+      - "1"
+      - --gpu-memory-utilization
+      - "0.14"
+      - --enforce-eager
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+    shm_size: 1gb
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "2", "http://127.0.0.1:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 600s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

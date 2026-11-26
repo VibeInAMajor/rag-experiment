@@ -1,0 +1,8 @@
+---
+enhancements:
+  - |
+    Local Workbench startup now starts or reuses a standalone
+    Qwen3-Reranker-0.6B container on loopback port 8083. Configure the local
+    model directory in ``apps/workbench/reranking/.env`` before first startup.
+    The service is available for future clients; application retrieval
+    profiles and search behavior remain unchanged.

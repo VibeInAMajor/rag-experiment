@@ -1,7 +1,7 @@
 # Project Map — RAG Experiment
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-24
+**Updated:** 2026-11-26
 **Status:** Repository-verified navigation document; not a runtime architecture specification.  
 **Evidence:** GitHub recursive tree `5e7086364f62d4f15b7370e55767a8f84ed4dc14` (12,946 files; complete tree), plus relevant source and README files, inspected on 2026-11-20.
 
@@ -18,6 +18,8 @@
 **Configuration update:** [CONFIG-001](../tasks/completed/TASK-CONFIG-001-document-splitting-and-default-language.md) owns strict external document-processing settings and their mapping to the existing splitter/native-counter seams. See the [operator reference](docs/architecture/document-processing-configuration.md). Implementation, offline/native-counter and local live/restart gates passed; 854 backend tests passed with zero skips. Prior metrics remain historical, with the [overwritten stability artifact limitation](docs/architecture/document-processing-configuration.md#test-artifact-isolation-and-historical-limitation) explicitly recorded.
 
 ## 1. Repository shape (verified)
+
+**Standalone reranker deployment (2026-11-26):** `apps/workbench/reranking/compose.yaml`, `start.ps1` and `README.md` own the local Qwen3-Reranker-0.6B vLLM service on loopback 8083. Root `start.ps1` starts stopped/missing containers and reuses running processes. See [deployment scope and checks](../tasks/TASK-OPS-002-local-reranker-container.md). No application adapter, database migration, executable reranking profile or quality qualification follows from starting this service.
 
 **Live Dense update (2026-11-24):** `retrieval/dense.py` composes qualified query embedding and exact PostgreSQL retrieval over migration `0005`'s durable vectors. The [operator guide](docs/architecture/live-dense-search.md) describes the explicit measured-runtime launcher, immutable dense profile and capability gate. Source/profile/model/coverage fences remain server-owned; ordinary startup remains lexical. Actual SQL/HTTP/browser evidence is tracked in [DENSE-001](../tasks/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md). ANN and generated answers remain separate.
 
