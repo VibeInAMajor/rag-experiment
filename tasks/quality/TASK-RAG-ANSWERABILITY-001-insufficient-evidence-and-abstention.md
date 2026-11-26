@@ -105,3 +105,9 @@ Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query I
 Two additional matched UI phases each submit all 45 no-answer questions; forced neighbors observed on 45/45. No answerability decision or generation executed. Native FTS zeros are traced to actual lexical AND conditions and cannot serve as an abstention label. Final holdout remains unused.
 
 Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.
+
+## QUALITY-001 source-fidelity handoff — 2026-11-26
+
+Source-supported gold does not imply support by the actual pack: 18 semantic cases contain 15 supported, 1 partial and 2 absent. Consume context sufficiency separately from original corpus answerability. No sufficiency threshold or false-acceptance metric was measured.
+
+Evidence: [completed bounded source-fidelity assessment](../evidence/quality-2026-11-25/report.md); metrics.json → source_fidelity. This handoff does not implement or qualify this owner task.

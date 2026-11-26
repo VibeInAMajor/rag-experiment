@@ -77,3 +77,9 @@ Additive local revision; retain prior oracle and reports. No runtime migration. 
 - [ ] Create, verify and freeze judgments and metric definitions.
 - [ ] Run arithmetic/contract/regression checks and record evidence.
 - [ ] Report unknowns, actual counts and handoff to QUALITY-002.
+
+## QUALITY-001 source-fidelity handoff — 2026-11-26
+
+QUALITY-001 source-fidelity scope is complete as bounded diagnosis: 18/18 original-supported semantic units, coverage 18/219; 201 remain semantically unassessed. This is not primary/relevance gold completion, and does not turn source-span overlap into fully judged Recall/nDCG. Existing frozen labels are unchanged.
+
+Evidence: [completed bounded source-fidelity assessment](../evidence/quality-2026-11-25/report.md); metrics.json → source_fidelity. This handoff does not implement or qualify this owner task.

@@ -107,3 +107,9 @@ Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query I
 Matched UI pair fixed 2048-token ranked source-content prefix: all facets retained on 226 → 240/261; complete top10 but incomplete final context on 6 → 6. Preserve actual chunk sizes/projection provenance and paired regressions. This is source coverage, not semantic sufficiency, and does not authorize label-aware runtime selection.
 
 Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.
+
+## QUALITY-001 source-fidelity handoff — 2026-11-26
+
+After-cleanup pack retains 616/657 required-facet observations; 31 absent in top10 and 10 lost at prefix selection. Semantic UI inspection found readiness qualification partial, governing-lines history absent, and Bingley annual income absent despite near-topic monetary values. These are missing support, not fabricated source bytes.
+
+Evidence: [completed bounded source-fidelity assessment](../evidence/quality-2026-11-25/report.md); metrics.json → source_fidelity. This handoff does not implement or qualify this owner task.

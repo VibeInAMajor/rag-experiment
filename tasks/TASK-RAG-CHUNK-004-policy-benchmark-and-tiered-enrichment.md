@@ -403,3 +403,9 @@ Evidence: [V2 report](evidence/quality-2026-11-25/report.md). Raw per-query IDs,
 Matched original-only UI pair: 1441 → 634 chunks; any complete fact @1 177 → 194/261; all facets @5 222 → 237/261; fixed-context all facets 226 → 240/261. Same 31 normalized originals/model/instruction/settings and visible-source gold interpretation. This closes the Markdown relevance NOT_EVALUATED item above; clustered intervals and regressions remain explicit. Do not infer that service markup explains every historical failure.
 
 Evidence: [completed UI comparison](evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.
+
+## QUALITY-001 source-fidelity handoff — 2026-11-26
+
+All 182 original anchors are coverable in every existing indexed union. Eighteen source-supported semantic units were inspected; readiness context lacked a necessary cross-document qualification. Prefer bounded source-context expansion/complete units; no demonstrated global parser corruption or qualified enrichment score follows.
+
+Evidence: [completed bounded source-fidelity assessment](evidence/quality-2026-11-25/report.md); metrics.json → source_fidelity. This handoff does not implement or qualify this owner task.

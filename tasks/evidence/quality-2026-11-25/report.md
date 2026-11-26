@@ -312,3 +312,64 @@ Server duration берётся из штатного ответа; p50/p95/p99 �
 Три ранних принятых UI-корпуса и БД неудачной подготовки «до» удалены после проверки owner marker. Неудачная подготовка пула сохранена отдельно и не включена в scores. Финальная owned test-БД оставлена для доставленного Live Dense-пайплайна; в локальном UI есть отдельная кнопка удаления завершённого временного корпуса. Основная БД, её документы и рабочий профиль не изменены. Исходные восемь временных БД были удалены ранее. Raw captures, SQL lexemes, вопросы, тексты результатов, case IDs, тестовые логи, calibration и implementation manifests остаются в `.local/evaluation-holdout/quality-check/runs/ui-comparison-2026-11-25/`.
 
 Использованы существующие create_app/upload owners, parser/chunker/projection, PostgresPersistence, capacity calibration/governor/backfill, DenseService, _ObservedEmbedding/_sql_oracle/_audit_response, EvidenceCoverage и family-cluster bootstrap. Новых зависимостей, production evaluation-модуля и миграций нет. Наблюдаемые границы: FTS AND-policy, evidence ниже candidate cutoff, потери порядка/контекста и отсутствие semantic sufficiency. Исправления этих отдельных возможностей переданы существующим owner tasks; QUALITY-001 завершена без заявления о прохождении retrieval release gate.
+
+## Source fidelity: завершение обновления QUALITY-001 — 2026-11-26
+
+**COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK.** Новое требование выполнено как явно ограниченная source-fidelity диагностика. Прежние восемь scored arms и отдельный matched baseline после Markdown cleanup сохранены; новые retrieval/model/DB операции не выполнялись. Source fidelity не подменяет answer faithfulness.
+
+### Единицы проверки и воспроизводимость
+
+Детерминированная единица — одна captured chunk mapping либо одно появление chunk ID в фактически выбранном 2048-token pack. Проверены исходный dataset/review digest, SHA-256, char/byte/line locators через существующий EvidenceCoverage, source/version связи, actual HTTP bodies там, где они сохранены, и точное совпадение selected prefix/token count. Для очищенного Markdown проверяется production projection и её hash/bounds. Смысловая единица — уникальная пара query family / required facet, а не каждый её перевод.
+
+Проверены **10990 chunk mapping units** и **23259 selected-context occurrences** по 306 вопросам в каждом из десяти артефактных вариантов. Все 182 уникальных исходных anchor locators сопоставлены в каждом варианте. Наблюдаемые invalid source identity / locator / content hash / context chain: **0 / 0 / 0 / 0**. Это проверка сохранённых цепочек на момент прогонов, не новая инспекция актуальной БД или независимый tenant-security test.
+
+Actual HTTP result content проверен в двух matched captures: **30600 top-50 occurrences**, включая **4631 selected-context occurrences**. Для старых восьми arms сохранены ссылки/IDs/ingestion hashes и SQL-oracle evidence, но не независимые тела HTTP результатов: **18628 context occurrences** воспроизведены из source spans и проверенных chunk hashes. Этот предел не объявляется полным actual-body coverage.
+
+Все использованные входные файлы зафиксированы SHA-256 до разбора и повторно сверены при завершении. Список hashes и детальные case records находятся локально в `runs/ui-comparison-2026-11-25/source-fidelity-2026-11-26/`. Никакие источники, labels, profiles или scored predictions не перезаписаны.
+
+### Полнота фактов в реально выбранном контексте
+
+| Capture | Mapping units | Context occurrences | Полные anchors / facet observations | Candidate omissions | Context omissions |
+|---|---:|---:|---:|---:|---:|
+| after | 634 | 2104 | 616/657 | 31 | 10 |
+| before | 1441 | 2527 | 588/657 | 61 | 8 |
+| code-query | 1080 | 2308 | 582/657 | 50 | 25 |
+| generic-baseline | 1080 | 2317 | 578/657 | 59 | 20 |
+| heading-input | 1080 | 2357 | 588/657 | 47 | 22 |
+| long-chunks | 1258 | 2209 | 566/657 | 52 | 39 |
+| no-overlap | 1076 | 2337 | 568/657 | 62 | 27 |
+| short-chunks | 1176 | 2496 | 576/657 | 72 | 9 |
+| technical-query | 1080 | 2299 | 574/657 | 54 | 29 |
+| wider-overlap | 1085 | 2305 | 574/657 | 59 | 24 |
+
+Итого 6570 translated facet observations: 5810 полностью присутствуют, 547 отсутствуют уже в captured top-10, 213 теряются при выборе prefix. Ни одного недоступного исходного anchor union в этих captures не обнаружено. Это отсутствие известных source-fact anchors, не число сфабрикованных фактов, не independent samples и не семантический support score. Объединять эти числа с количеством failed queries нельзя.
+
+Post-cleanup baseline неизменён: any-fact@1 **194/261**, any-fact@5 **255/261**, all-facts@5 **237/261**, all-facts@10 **246/261**, all-context **240/261**. В его финальном pack полны 616/657 facet observations; 31 отсутствует в top-10, ещё 10 потеряны prefix selection. Это отдельный generic 500/50 original-only baseline, не измерение его комбинации с историческим code-query.
+
+### Ограниченная смысловая оценка через UI
+
+До просмотра заданы 18 разных family/facet units: шесть доменов × qualifier-risk EN, context-gap RU, covered-control UK. Gap/control slots применяют условие, если такой случай существует среди ещё не выбранных семейств, иначе берут covered fallback; поэтому имя слота не означает автоматически найденную ошибку. Просмотрены исходные alternative spans с соседними условиями и полный фактически выбранный pack. Reviewer — Codex agent; отдельная независимая человеческая или cloud-judge квалификация не заявляется.
+
+**Source-supported / semantically assessed = 18/18. Assessment coverage = 18/219 уникальных family/facet units (8,22%).** В выборке unknown = 0; вне смысловой оценки остаётся **201/219 (91,78%)**, их статус не превращён в PASS. Целостность hash не использовалась как семантическое доказательство.
+
+**Selected-context dispositions:** 15 supported, 1 partial, 2 absent. Для present units, подвергнутых оценке, full support = **15/16**; отдельно зафиксированы две omissions. Знаменатель по всем 18 рассмотренным парам original/context даёт 15/18 полностью поддержанных; это диагностическая purposive sample, не accuracy всего корпуса. Demonstrated qualifier loss = 0 только в этих 18 случаях. Статистический интервал для нерandomной выборки не заявляется; proposed >=95% enrichment/population gate не квалифицирован. Ответы и решения о достаточности не генерировались.
+
+| Пример из существующего OPEN | Original evidence | Фактический context | Вывод |
+|---|---|---|---|
+| Kubernetes, EndpointSlices без selector | services.md L201–204 | rank 1 сохраняет отсутствие selector и отрицание automatic creation | SOURCE_SUPPORTED / CONTEXT_SUPPORTED; qualifier сохранён |
+| Kubernetes, замена Pods и readiness | deployments.md L20–21 или L1181–1183 + probes.md L123–127 | Deployment passages есть, readiness traffic-gating passage отсутствует | SOURCE_SUPPORTED / CONTEXT_PARTIAL; omission qualification, не изменение bytes |
+| Azure, RA-GRS до failover | storage-redundancy.md L120–125 | rank 1 сохраняет RA/ordinary-GRS distinction и исключение Azure Files | SOURCE_SUPPORTED / CONTEXT_SUPPORTED |
+| C#, async без await | async.md L22 | rank 1 сохраняет условие и синхронное выполнение | SOURCE_SUPPORTED / CONTEXT_SUPPORTED |
+| Math, slope 30 degrees | calculus-symbols-relative-growth.md L95–109 | rank 1 сохраняет угол и dy/dx = 1/1.73 | SOURCE_SUPPORTED / CONTEXT_SUPPORTED; 0.002 — metadata rubric, не цитата source |
+| Art, governing lines и past history | ruskin-sketching-nature.md L27–55 | Near-topic drawing/tint passages без связи governing lines с историей | SOURCE_SUPPORTED / CONTEXT_ABSENT |
+| Literature, Bingley annual income | austen-chapters-01-05.md L43–46 + preceding actor | В pack есть Darcy income и суммы capital/fortune, но нет нужного Bingley annual income | SOURCE_SUPPORTED / CONTEXT_ABSENT; actor/unit mismatch risk, generated error не измерялся |
+
+Полные facts, locators, source hashes, chunk IDs, выбранные context texts и 18 индивидуальных rationale сохранены локально в `review-items.json`, `judgments.json`, `result.json`. Все 18 disposition записаны через UI. UI: `http://127.0.0.1:8018/source-fidelity`; кнопка «Открыть смысловой разбор» позволяет повторно посмотреть существующие записи без новой модели.
+
+### Проверки и корректирующая передача
+
+**372 passed, 0 failed/errors/skipped** через кнопку существующего локального UI: прежние parser/chunker и local quality suites плюс восемь проверок отказа при подмене source/version/chunk/content и разграничения indexed gap / candidate omission / context omission / coverage. Предыдущие 364-case XML/log сохранены отдельно перед запуском. Ruff F/E9 и diff checks выполнены статически. Полный Haystack/frontend suite и model-load qualification не запускались: production code в этом продолжении не менялся.
+
+LEXICAL-001 получает natural-language AND/candidate gaps; RERANK-001 — порядок внутри доступного candidate ceiling; CHUNK-004 — полные multi-span units и соседние условия; EVIDENCE-002 — сохранение недостающих source facts в pack; ANSWERABILITY-001 — partial/insufficient context; DATASET-002 — отдельные primary/relevance judgments и оставшуюся семантическую оценку. Эти задачи не выполнены данным аудитом и не блокируют закрытие явно ограниченной QUALITY-001 диагностики. Answer faithfulness, NAG, generation и sufficiency decision остаются NOT_EVALUATED.
+
+Изменены только этот отчёт, агрегированные metrics и существующие task/handoff документы. Игнорируемая локальная обвязка использует существующие EvidenceCoverage, map_original_evidence, projection owner, frozen failure inventory и budget_prefix; новых production API/dependencies/migrations нет. Старые рейтинги/NO-GO и matched scores сохранены. Ограничения: purposive 18/219 coverage, sparse qrels, зависимые переводы/общие источники и отсутствие старых HTTP bodies. Именно поэтому завершение означает COMPLETE_DIAGNOSTIC, а не retrieval release GO.

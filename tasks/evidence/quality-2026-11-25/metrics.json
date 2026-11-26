@@ -78229,6 +78229,691 @@
       "exit_code": 0
     }
   ],
+  "source_fidelity": {
+    "NAG": "NOT_EVALUATED_NO_GENERATION",
+    "answer_faithfulness": "NOT_EVALUATED_NO_GENERATION",
+    "arms": {
+      "after": {
+        "CANDIDATE_OMISSION": 31,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 616,
+        "CONTEXT_SELECTION_OMISSION": 10,
+        "active_chunk_mapping_units_assessed": 634,
+        "answerable": 261,
+        "context_body_occurrences_assessed": 2104,
+        "context_chunk_occurrences": 2104,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 12,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 72
+          },
+          "domain/AZ": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 108
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 4,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 135,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 93,
+            "CONTEXT_SELECTION_OMISSION": 6
+          },
+          "domain/MATH": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 91,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 10,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 205,
+            "CONTEXT_SELECTION_OMISSION": 4
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 11,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 207,
+            "CONTEXT_SELECTION_OMISSION": 1
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 10,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 204,
+            "CONTEXT_SELECTION_OMISSION": 5
+          }
+        },
+        "http_body_occurrences_assessed": 15300,
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "before": {
+        "CANDIDATE_OMISSION": 61,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 588,
+        "CONTEXT_SELECTION_OMISSION": 8,
+        "active_chunk_mapping_units_assessed": 1441,
+        "answerable": 261,
+        "context_body_occurrences_assessed": 2527,
+        "context_chunk_occurrences": 2527,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 13,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 71
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 24,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 93,
+            "CONTEXT_SELECTION_OMISSION": 6
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 88,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 19,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 197,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 198,
+            "CONTEXT_SELECTION_OMISSION": 1
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 22,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 193,
+            "CONTEXT_SELECTION_OMISSION": 4
+          }
+        },
+        "http_body_occurrences_assessed": 15300,
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "code-query": {
+        "CANDIDATE_OMISSION": 50,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 582,
+        "CONTEXT_SELECTION_OMISSION": 25,
+        "active_chunk_mapping_units_assessed": 1080,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2308,
+        "context_chunk_occurrences": 2308,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 9,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 61,
+            "CONTEXT_SELECTION_OMISSION": 14
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 8,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 100
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 119,
+            "CONTEXT_SELECTION_OMISSION": 7
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 95,
+            "CONTEXT_SELECTION_OMISSION": 4
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 90
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 14,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 199,
+            "CONTEXT_SELECTION_OMISSION": 6
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 197,
+            "CONTEXT_SELECTION_OMISSION": 7
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 21,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 186,
+            "CONTEXT_SELECTION_OMISSION": 12
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "generic-baseline": {
+        "CANDIDATE_OMISSION": 59,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 578,
+        "CONTEXT_SELECTION_OMISSION": 20,
+        "active_chunk_mapping_units_assessed": 1080,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2317,
+        "context_chunk_occurrences": 2317,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 12,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 63,
+            "CONTEXT_SELECTION_OMISSION": 9
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 23,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 115,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 93,
+            "CONTEXT_SELECTION_OMISSION": 6
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 88,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 19,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 196,
+            "CONTEXT_SELECTION_OMISSION": 4
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 193,
+            "CONTEXT_SELECTION_OMISSION": 6
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 189,
+            "CONTEXT_SELECTION_OMISSION": 10
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "heading-input": {
+        "CANDIDATE_OMISSION": 47,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 588,
+        "CONTEXT_SELECTION_OMISSION": 22,
+        "active_chunk_mapping_units_assessed": 1080,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2357,
+        "context_chunk_occurrences": 2357,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 12,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 63,
+            "CONTEXT_SELECTION_OMISSION": 9
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 10,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 128,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 16,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 91,
+            "CONTEXT_SELECTION_OMISSION": 7
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 87,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 14,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 201,
+            "CONTEXT_SELECTION_OMISSION": 4
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 17,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 196,
+            "CONTEXT_SELECTION_OMISSION": 6
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 16,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 191,
+            "CONTEXT_SELECTION_OMISSION": 12
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "long-chunks": {
+        "CANDIDATE_OMISSION": 52,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 566,
+        "CONTEXT_SELECTION_OMISSION": 39,
+        "active_chunk_mapping_units_assessed": 1258,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2209,
+        "context_chunk_occurrences": 2209,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 79,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 25,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 116
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 73,
+            "CONTEXT_SELECTION_OMISSION": 26
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 79,
+            "CONTEXT_SELECTION_OMISSION": 11
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 14,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 189,
+            "CONTEXT_SELECTION_OMISSION": 16
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 188,
+            "CONTEXT_SELECTION_OMISSION": 11
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 18,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 189,
+            "CONTEXT_SELECTION_OMISSION": 12
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "no-overlap": {
+        "CANDIDATE_OMISSION": 62,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 568,
+        "CONTEXT_SELECTION_OMISSION": 27,
+        "active_chunk_mapping_units_assessed": 1076,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2337,
+        "context_chunk_occurrences": 2337,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 12,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 63,
+            "CONTEXT_SELECTION_OMISSION": 9
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 23,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 115,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 18,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 86,
+            "CONTEXT_SELECTION_OMISSION": 10
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 85,
+            "CONTEXT_SELECTION_OMISSION": 5
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 195,
+            "CONTEXT_SELECTION_OMISSION": 4
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 21,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 188,
+            "CONTEXT_SELECTION_OMISSION": 10
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 21,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 185,
+            "CONTEXT_SELECTION_OMISSION": 13
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "short-chunks": {
+        "CANDIDATE_OMISSION": 72,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 576,
+        "CONTEXT_SELECTION_OMISSION": 9,
+        "active_chunk_mapping_units_assessed": 1176,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2496,
+        "context_chunk_occurrences": 2496,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 18,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 65,
+            "CONTEXT_SELECTION_OMISSION": 1
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 26,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 113,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 19,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 91,
+            "CONTEXT_SELECTION_OMISSION": 4
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 88,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 21,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 195,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 24,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 194,
+            "CONTEXT_SELECTION_OMISSION": 1
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 27,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 187,
+            "CONTEXT_SELECTION_OMISSION": 5
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "technical-query": {
+        "CANDIDATE_OMISSION": 54,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 574,
+        "CONTEXT_SELECTION_OMISSION": 29,
+        "active_chunk_mapping_units_assessed": 1080,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2299,
+        "context_chunk_occurrences": 2299,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 11,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 52,
+            "CONTEXT_SELECTION_OMISSION": 21
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 8,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 100
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 17,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 121,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 94,
+            "CONTEXT_SELECTION_OMISSION": 5
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 90
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 16,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 195,
+            "CONTEXT_SELECTION_OMISSION": 8
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 19,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 190,
+            "CONTEXT_SELECTION_OMISSION": 10
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 19,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 189,
+            "CONTEXT_SELECTION_OMISSION": 11
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      },
+      "wider-overlap": {
+        "CANDIDATE_OMISSION": 59,
+        "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 574,
+        "CONTEXT_SELECTION_OMISSION": 24,
+        "active_chunk_mapping_units_assessed": 1085,
+        "answerable": 261,
+        "context_body_occurrences_not_independently_captured": 2305,
+        "context_chunk_occurrences": 2305,
+        "groups": {
+          "domain/ART": {
+            "CANDIDATE_OMISSION": 12,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 63,
+            "CONTEXT_SELECTION_OMISSION": 9
+          },
+          "domain/AZ": {
+            "CANDIDATE_OMISSION": 6,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 102
+          },
+          "domain/CS": {
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 117
+          },
+          "domain/K8S": {
+            "CANDIDATE_OMISSION": 23,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 115,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "domain/LIT": {
+            "CANDIDATE_OMISSION": 15,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 89,
+            "CONTEXT_SELECTION_OMISSION": 10
+          },
+          "domain/MATH": {
+            "CANDIDATE_OMISSION": 3,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 88,
+            "CONTEXT_SELECTION_OMISSION": 2
+          },
+          "language/en": {
+            "CANDIDATE_OMISSION": 19,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 197,
+            "CONTEXT_SELECTION_OMISSION": 3
+          },
+          "language/ru": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 190,
+            "CONTEXT_SELECTION_OMISSION": 9
+          },
+          "language/uk": {
+            "CANDIDATE_OMISSION": 20,
+            "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 187,
+            "CONTEXT_SELECTION_OMISSION": 12
+          }
+        },
+        "invalid_content_hash": 0,
+        "invalid_context_chain": 0,
+        "invalid_locator": 0,
+        "invalid_source_identity": 0,
+        "no_answer": 45,
+        "original_anchors_assessed": 182,
+        "queries": 306,
+        "required_facet_observations": 657,
+        "semantic_support_from_hashes": "NOT_INFERRED"
+      }
+    },
+    "code_checks": {
+      "execution": "Explicit local UI button in Hatch workbench-api environment",
+      "junit": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 372
+      },
+      "scope": "Existing parser/chunker and ignored local quality tests, including eight new refusal/omission checks"
+    },
+    "corrective_handoff": {
+      "ANSWERABILITY-001": "Decline or clarify insufficient/partial context; no acceptance metrics here",
+      "CHUNK-004": "Bounded neighboring/source context for cross-span facts; qualifier conditions preserved in inspected literal samples",
+      "DATASET-002": "Separate primary/relevance judgments and remaining semantic assessment; not a dependency to close this bounded diagnostic",
+      "EVIDENCE-002": "Actual pack missing readiness qualification / governing-lines history / Bingley annual income; distinguish partial support from absent fact",
+      "LEXICAL-001": "Natural-language AND policy and exact-term candidate omissions; original literal baseline unchanged",
+      "RERANK-001": "Ordering within captured candidate ceiling, not recovery of absent evidence"
+    },
+    "dataset_digest": "38ad2c628a7a578445998f14d05277d22e0f7ea79ec79839764e2ecd59a7ce9d",
+    "input_hashes_unchanged": true,
+    "new_database_operations": 0,
+    "new_model_calls": 0,
+    "schema": "source-fidelity-open-artifacts-v1",
+    "semantic": {
+      "confidence_interval": "NOT_ESTIMATED_PURPOSIVE_SAMPLE",
+      "context_dispositions": {
+        "absent": 2,
+        "partial": 1,
+        "supported": 15
+      },
+      "context_omissions": 2,
+      "context_present_units_assessed": 16,
+      "context_supported": 15,
+      "dispositioned_units": 18,
+      "population_or_enrichment_gate": "NOT_QUALIFIED_BY_BOUNDED_SAMPLE",
+      "predeclared_units": 18,
+      "reviewer": "Codex agent original/context inspection through local UI; no independent human or model-judge qualification",
+      "selection": "Predeclared deterministic 18 unique family/facet units: six domains x qualifier-risk/en, context-gap/ru, covered-control/uk; non-random diagnostic sample, not population qualification",
+      "selection_fallback": "Context-gap selects an omitted facet where available; otherwise it keeps the first eligible covered case. No cases are relabeled as omissions merely because they occupy that slot.",
+      "source_assessed": 18,
+      "source_assessment_coverage": 0.0821917808219178,
+      "source_support_rate": 1.0,
+      "source_supported": 18,
+      "source_unassessed_population": 201,
+      "source_unknown_in_sample": 0,
+      "unique_required_family_facets": 219
+    },
+    "source_locator_counts_scope": "Verified captured original-span/ID/hash/context-reference chain, not current live DB inspection; legacy HTTP result bodies were not captured independently",
+    "status": "COMPLETE_BOUNDED_DIAGNOSTIC",
+    "totals": {
+      "CANDIDATE_OMISSION": 547,
+      "COMPLETE_ORIGINAL_ANCHOR_IN_CONTEXT": 5810,
+      "CONTEXT_SELECTION_OMISSION": 213,
+      "active_chunk_mapping_units_assessed": 10990,
+      "context_body_occurrences_assessed": 4631,
+      "context_body_occurrences_not_independently_captured": 18628,
+      "context_chunk_occurrences": 23259,
+      "http_body_occurrences_assessed": 30600,
+      "invalid_content_hash": 0,
+      "invalid_context_chain": 0,
+      "invalid_locator": 0,
+      "invalid_source_identity": 0,
+      "required_facet_observations": 6570
+    },
+    "verdict": "COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK"
+  },
   "test_suites": {
     "local-tests-final.xml": {
       "errors": "0",

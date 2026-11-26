@@ -102,3 +102,9 @@ Version new policy separately, document native ranking and limits. Disable new p
 - [ ] Run bounded local lexical comparisons and source-grounded checks.
 - [ ] Run applicable configured tests, preserve baseline and record actual evidence.
 - [ ] Document GO/NO-GO, scope, affected paths and commit; mark complete only after evidence. No reviewer or external approval prerequisite.
+
+## QUALITY-001 source-fidelity handoff — 2026-11-26
+
+Matched post-cleanup context has 31/657 missing facet observations already absent from top10. Native AND explanation is preserved; source-fidelity inspection distinguishes missing source-supported evidence from incorrect extraction. Benchmark the lexical policy before hybrid fusion; no lexical promotion occurred.
+
+Evidence: [completed bounded source-fidelity assessment](../evidence/quality-2026-11-25/report.md); metrics.json → source_fidelity. This handoff does not implement or qualify this owner task.

@@ -107,3 +107,9 @@ Evidence: [V2 report](../evidence/quality-2026-11-25/report.md). Raw per-query I
 Matched original-only before/after pair: all-facts candidates available at 50 but missing at 10 affect 23/9 answerable queries; complete at 10 but missing at 5 affect 10/9. These are observed ranking losses, not proof that five whole chunks can cover every facet. Original frozen targeted ranks are also captured through 50; no reranker implemented or promoted.
 
 Evidence: [completed UI comparison](../evidence/quality-2026-11-25/report.md); metrics.json → ui_completion. Raw case details remain ignored locally.
+
+## QUALITY-001 source-fidelity handoff — 2026-11-26
+
+Original-span/selected-pack source chains are valid in the captured scope, while known facts remain absent from candidate/context cutoffs. Reorder only the available pool; Bingley actor/income near-matches are a concrete risk, not a measured generated-answer error.
+
+Evidence: [completed bounded source-fidelity assessment](../evidence/quality-2026-11-25/report.md); metrics.json → source_fidelity. This handoff does not implement or qualify this owner task.
