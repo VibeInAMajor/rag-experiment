@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Implemented. The initial live calibration measured `NO_GO`. A revised evidence prompt is pending live qualification.
+**Status:** Implemented. The initial live calibration measured `NO_GO`. Evidence prompt revision 3 is in live qualification.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -147,6 +147,14 @@ The operator ran `hatch run calibrate --allow-external --report calibration/live
 #### Evidence prompt revision 2
 
 `judge_evidence/2` requires the quoted contribution to be attributable to the requested entity, event or record. When competing attributions are explicitly unresolved and there is no independently attributable contribution, the expected result is `unknown`. A separate authored development probe assesses the same rule with an unassigned equipment reading. The revised qualification fingerprint is `08f3a44a620f8f9430b3b3298f956e56e98bd422bffe9fa2fb05295f8d2356ff`. The 32 qualification requests and gate thresholds are from the same frozen control manifest.
+
+The live development run matched 2 of 4 probes. `dev-reference-sensor-model` ended in `PROVIDER_FAILURE` without returned model or usage metadata. `dev-evidence-unassigned-sensor-reading` returned usage and then failed with `INVALID_OUTPUT`. The frozen qualification run was held at the development gate.
+
+#### Evidence prompt revision 3
+
+`judge_evidence/3` specifies the structured representation for ambiguity. An unassignable fact uses `unknown` and an empty quote list. Spans may be empty when the candidate supplies no attributable evidence. The runner also records a bounded operational failure stage in the local report. The public invocation schema and qualification controls are unchanged.
+
+The revised development fingerprint is `69a127152bba4d67e383bd220c69bab613c0e98688d5672f881b170e39c5e9f4`. All four development probes passed with `gpt-6.1-sol`, four requests, zero retries and estimated usage cost of USD 0.01954975. The qualification fingerprint is `1e42c13277cbf8bdfb3570e300fe5a03365dbbc5f2578703bd4645049d77f83a`.
 
 ## M. Acceptance Criteria
 

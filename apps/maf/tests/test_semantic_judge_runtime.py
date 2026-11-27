@@ -9,7 +9,7 @@ from pydantic import JsonValue
 from agent_runtime.agents.semantic_judge.contracts import DeriveReferenceResult
 from agent_runtime.configuration import SEMANTIC_REVIEW_PROFILE, RunPolicy, load_profiles
 from agent_runtime.contracts import ErrorCode, InvocationRequest
-from agent_runtime.runtime import AgentApplication, AgentRuntime
+from agent_runtime.runtime import AgentApplication, AgentRuntime, ProviderObservation
 
 _KEY = "test-only-credential"
 _SOURCE = "Ship launches in July."
@@ -84,11 +84,13 @@ def test_application_validates_and_locates_returned_quote(verbatim: bool) -> Non
     port = AsyncMock(spec=AgentRuntime)
     port.invoke.return_value = json.dumps(reply)
     app = AgentApplication(lambda: port, load_profiles({}))
+    observation = ProviderObservation()
     result = asyncio.run(
         app.invoke(
             _request(),
             policy=RunPolicy(allow_external=True, data_classification="synthetic"),
             environ={"OPENAI_API_KEY": _KEY},
+            observation=observation,
         )
     )
 
@@ -96,9 +98,11 @@ def test_application_validates_and_locates_returned_quote(verbatim: bool) -> Non
     assert json.loads(port.invoke.call_args.kwargs["input_json"]) == _INPUT
     assert result.metadata.prompt_revision == "derive_reference/1"
     if verbatim:
+        assert observation.failure_stage is None
         verdict = DeriveReferenceResult.model_validate(result.output)
         assert verdict.facts[0].quotes[0].start == 140 + _SOURCE.index(_QUOTE)
     else:
         assert result.error is not None
         assert result.error.code == ErrorCode.INVALID_OUTPUT
+        assert observation.failure_stage == "evidence_validation"
         assert result.output is None

@@ -49,7 +49,7 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
             ),
         ),
         "judge_evidence": JudgeInstructions(
-            revision="judge_evidence/2",
+            revision="judge_evidence/3",
             text=_GROUNDING
             + _FROZEN_REFERENCE
             + (
@@ -65,7 +65,8 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
                 "the scoped fact. Before awarding a positive grade, establish which entity, event, or record the "
                 "quoted contribution belongs to. If the text explicitly leaves competing attributions unresolved "
                 "and establishes no independent contribution to a requested fact, use unknown and a null grade, "
-                "even if a value matches the frozen reference. An unanswered "
+                "even if a value matches the frozen reference. For that result, set unassignable facts to unknown "
+                "with no quotes. Leave spans empty if no evidence can be attributed. An unanswered "
                 "question can still have a determinately unhelpful candidate. Keep "
                 "matched, partial, missing and conflicting facts distinct. Quote evidence spans from the candidate."
             ),

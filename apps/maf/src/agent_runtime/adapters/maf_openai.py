@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from agent_runtime.configuration import ModelProfile
 from agent_runtime.contracts import ErrorCode, Usage, decode_json
-from agent_runtime.runtime import ProviderObservation, RuntimeFailure
+from agent_runtime.runtime import FailureStage, ProviderObservation, RuntimeFailure
 
 _BASE_URL = "https://api.openai.com/v1"
 _RESPONSES_URL = f"{_BASE_URL}/responses"
@@ -126,13 +126,17 @@ class _ResponsesTransport(httpx2.AsyncBaseTransport):
         await self._transport.aclose()
 
     async def handle_async_request(self, request: httpx2.Request) -> httpx2.Response:
+        stage: FailureStage = "request_guard"
         try:
             request = self._guarded_request(request)
             self._observation.requests += 1
+            stage = "transport"
             response = await self._transport.handle_async_request(request)
+            stage = "provider_response"
             return await self._read_response(response)
         except Exception as exc:
             # MAF can log the SDK exception at debug level. Sanitize before it crosses into the SDK.
+            self._observation.failure_stage = stage
             raise RuntimeFailure(_error_code(exc)) from None
 
     async def _read_response(self, response: httpx2.Response) -> httpx2.Response:

@@ -92,4 +92,6 @@ hatch run calibrate --allow-external --report calibration/live-report.jsonl
 
 The runner submits authored cases and public original-source excerpts through `semantic-review`. It checks predeclared outcomes and repeats a subset across languages or opaque IDs. Use `--development` and a separate report path to run authored development probes. Check the qualification report and its gate results before using a revision to audit a dataset. An inconclusive or disputed case remains unresolved for that dataset's caller. [Calibration task and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md)
 
+On a failure, the local calibration checkpoint can include a bounded `failure_stage` such as `transport`, `output_schema`, or `evidence_validation`. The public JSON envelope continues to carry the same error codes.
+
 Bump the corresponding mode revision when its prompt, output contract, or rubric changes. Preserve the exact prompt and schema fingerprints together with the model/profile, control manifest digest, per-case verdicts, and observed usage. Qualify any changed revision with the same gates before adopting it. [Versioned prompts](src/agent_runtime/agents/semantic_judge/instructions.py)

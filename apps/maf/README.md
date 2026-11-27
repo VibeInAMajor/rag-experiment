@@ -25,7 +25,7 @@ Hatch creates a Python 3.12 environment. The first setup may need package-index 
 
 ## Run the live smoke
 
-Provision `OPENAI_API_KEY` in the launching process's environment through your secret manager. The app reads it only for an invocation that passes local admission. Configuration comes from the process environment. [Environment variable example](.env.example)
+Provision `OPENAI_API_KEY` in the launching process's environment. The app reads it only for an invocation that passes local admission. `apps/maf/.env` is ignored by Git. A local launcher can export the key from that file into its own process. [Environment variable example](.env.example)
 
 ```sh
 hatch run smoke --allow-external

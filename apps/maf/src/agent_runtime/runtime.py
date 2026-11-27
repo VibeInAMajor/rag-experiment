@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from importlib.metadata import version
 from time import perf_counter
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, JsonValue
 
@@ -33,6 +33,8 @@ from agent_runtime.contracts import (
 
 _RUNTIME_REVISION = version("rag-maf-agent-runtime")
 
+type FailureStage = Literal["request_guard", "transport", "provider_response", "output_schema", "evidence_validation"]
+
 
 @dataclass(slots=True)
 class ProviderObservation:
@@ -42,6 +44,7 @@ class ProviderObservation:
     usage: Usage | None = None
     correlation_id: str | None = None
     requests: int = 0
+    failure_stage: FailureStage | None = None
 
 
 class RuntimeFailure(Exception):
@@ -85,12 +88,17 @@ class AgentApplication:
         self._profiles = dict(profiles)
 
     async def invoke(
-        self, request: InvocationRequest, *, policy: RunPolicy, environ: Mapping[str, str]
+        self,
+        request: InvocationRequest,
+        *,
+        policy: RunPolicy,
+        environ: Mapping[str, str],
+        observation: ProviderObservation | None = None,
     ) -> InvocationResult:
         start = perf_counter()
         agent = None
         profile = self._profiles.get(request.profile_id)
-        observation = ProviderObservation()
+        observation = ProviderObservation() if observation is None else observation
         output: dict[str, JsonValue] | None = None
         error = None
         try:
@@ -109,7 +117,7 @@ class AgentApplication:
                     observation=observation,
                 )
             output = _validate_output(
-                raw_output, agent=agent, validated_input=validated_input, profile=profile, usage=observation.usage
+                raw_output, agent=agent, validated_input=validated_input, profile=profile, observation=observation
             )
         except RuntimeFailure as exc:
             error = exc.code
@@ -207,8 +215,14 @@ def _resolve_key(environ: Mapping[str, str], *, profile: ModelProfile, input_jso
 
 
 def _validate_output(
-    output: str, *, agent: AgentDefinition, validated_input: BaseModel, profile: ModelProfile, usage: Usage | None
+    output: str,
+    *,
+    agent: AgentDefinition,
+    validated_input: BaseModel,
+    profile: ModelProfile,
+    observation: ProviderObservation,
 ) -> dict[str, JsonValue]:
+    usage = observation.usage
     if usage and (
         (usage.input_tokens is not None and usage.input_tokens > profile.max_input_tokens)
         or (usage.output_tokens is not None and usage.output_tokens > profile.max_output_tokens)
@@ -218,8 +232,13 @@ def _validate_output(
         if len(output.encode("utf-8")) > profile.max_response_bytes:
             raise RuntimeFailure(ErrorCode.RESPONSE_TOO_LARGE)
         validated_output = agent.output_schema.model_validate(decode_json(output))
-        if agent.validate_output is not None:
-            validated_output = agent.validate_output(validated_input, validated_output)
-        return validated_output.model_dump(mode="json")
     except (ValueError, RecursionError):
+        observation.failure_stage = "output_schema"
         raise RuntimeFailure(ErrorCode.INVALID_OUTPUT) from None
+    if agent.validate_output is not None:
+        try:
+            validated_output = agent.validate_output(validated_input, validated_output)
+        except (ValueError, RecursionError):
+            observation.failure_stage = "evidence_validation"
+            raise RuntimeFailure(ErrorCode.INVALID_OUTPUT) from None
+    return validated_output.model_dump(mode="json")

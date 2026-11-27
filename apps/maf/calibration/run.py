@@ -18,7 +18,7 @@ from agent_runtime.agents.semantic_judge.instructions import INSTRUCTIONS
 from agent_runtime.composition import create_runtime
 from agent_runtime.configuration import PRICING_VERSION, SEMANTIC_REVIEW_PROFILE, ModelProfile, RunPolicy, load_profiles
 from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationRequest, InvocationResult
-from agent_runtime.runtime import AgentApplication
+from agent_runtime.runtime import AgentApplication, ProviderObservation
 from calibration.controls import CASES, DEVELOPMENT_CASES, CalibrationCase
 from calibration.scoring import GRADE_PERCENT, OTHER_MODE_PERCENT, SUPPORT_PERCENT, score_case, summarize
 
@@ -160,12 +160,14 @@ async def _run_live(
         if loop.time() >= deadline:
             stop_reason = "RUN_DEADLINE"
             break
+        observation = ProviderObservation()
         try:
             async with asyncio.timeout_at(deadline):
                 result = await application.invoke(
                     _request(case),
                     policy=RunPolicy(allow_external=True, data_classification=case.classification),
                     environ=os.environ,
+                    observation=observation,
                 )
         except TimeoutError:
             stop_reason = "RUN_DEADLINE"
@@ -184,6 +186,7 @@ async def _run_live(
                 "provenance": case.provenance,
                 "mode": case.input["mode"],
                 "language": case.input["language"],
+                "failure_stage": observation.failure_stage,
                 "expected": case.expected,
                 "checks": {
                     "passed": score.passed,
