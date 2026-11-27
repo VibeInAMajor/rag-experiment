@@ -1,7 +1,7 @@
 # TASK-RAG-QUALITY-002 — Qualify end-to-end retrieval quality and establish a permanent regression gate
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-26  
+**Updated:** 2026-11-27  
 **Status:** PROPOSED — specification only; no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md), [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md), [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) or documented NO-GO/approved baseline, [EVIDENCE-002](TASK-RAG-EVIDENCE-002-bounded-context-and-required-facet-coverage.md), [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md); [RERANK-001](TASK-RAG-RERANK-001-local-semantic-reranker-qualification.md)/[RERANK-002](TASK-RAG-RERANK-002-qualified-reranking-integration.md) and [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md)/[BM25-002](TASK-RAG-BM25-002-conditional-postgresql-bm25-search-profile.md) only if GO; [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) scoped integration.  
@@ -68,6 +68,10 @@ Use [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26
 
 [Latest QUALITY-001 report](../evidence/quality-2026-11-25/report.md) establishes an improved but insufficient post-cleanup OPEN baseline (any-fact@1 74.33%, @5 97.70%, all-facts@5 90.80%, all-context 91.95%). Historical OPEN primary fields were any-complete-fact, not Primary Evidence Hit. Require [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) metric eligibility and frozen rubric; distinguish pooled from exhaustive relevance, and do not pass unsupported gates. Freeze candidate after corrective owner experiments (LEXICAL/HYBRID where useful, RERANK and CHUNK/EVIDENCE as measured, ANSWERABILITY). Run R2 only after candidate freeze, not as iterative tuning. Keep 95/98/95 targets unchanged; diagnostic proxy gaps are not proof of primary/relevance metric values. Existing local UI acceptance and no human approval requirement apply.
 
+### Semantic eligibility and external evaluation judge — 2026-11-27
+
+The previous [DATASET-002 full OPEN report](../evidence/dataset-ranking-full-open-2026-11-26/report.md) is a historical, provisional measurement after user-observed relevance failures. Require the reopened [DATASET-002 semantic audit](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) and the calibrated standalone [MAF Semantic Judge](../maf/TASK-MAF-002-semantic-judge-agent.md) revision for semantic scoring before final quality GO. Freeze candidate, rubric, judge profile/model/prompt/schema and source scope before opening R2. The local evaluation runner supplies approved source excerpts and saved predictions through a typed JSON/CLI boundary; MAF never queries the RAG or sees old grades, model/ranker identity or ranking position during passage assessment. Keep deterministic metric computation in the existing evaluator. Distinguish source-first references, strict useful-chunk precision, direct evidence, merely topical/irrelevant/wrong-scope/contradictory candidates, unique fact coverage and actual selected-context sufficiency. Proposed additional local selected-context targets: useful-chunk precision >=0.90 and irrelevant chunk rate <=0.10; predeclare exact denominators and policy on unknowns before final run; retain existing retrieval gates. Report relevant source-span/token coverage where verifiable, and never equate pooled relevance with exhaustive recall/nDCG. External judge is evaluation-only, not a new RAG runtime dependency or authority to approve release. Missing API access, forbidden egress, uncalibrated judge or unresolved semantic references make the affected gate NOT_EVALUABLE/BLOCKED, not PASS. No human reviewer or cloud service is required for ordinary RAG search.
+
 ## K. Security / Governance / Observability
 
 ### DATASET-002 metric-eligibility handoff — 2026-11-26
@@ -100,6 +104,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Paired clean/stress and OOD retrieval results, source integrity, per-cohort uncertainty and explicit gate decisions recorded; sparse/unavailable metrics cannot be marked PASS.
 
 - [ ] Distinct primary/relevance/facet metrics and eligibility are explicit; final GO only after actual frozen R2 and robustness/sufficiency gates, no threshold dilution.
+
+- [ ] Final semantic evaluation uses a qualified, pinned MAF judge and source-first reference revision; strict context precision and constraint outcomes measured; errors/unknowns and unsupported metric gates remain explicit; no RAG runtime dependency.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
