@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Priority:** P1  
 **Repository snapshot inspected:** `dc4b1cd45fb48b7154fdafcdd712a2536ee5da47`  
 **Related tasks:** [MAF-002](maf/TASK-MAF-002-semantic-judge-agent.md), [DATASET-002](quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md), [QUALITY-003](quality/TASK-RAG-QUALITY-003-grounded-answer-correctness-evaluation.md)
@@ -70,13 +70,17 @@ Do not weaken authorization, workspace isolation, trust boundaries or determinis
 
 Verify the documentation diff is limited to the four authorized Markdown paths; inspect inserted headings and relative links, preserve all original text, confirm the A–O sections and dates, and verify no runtime, calibration or historical files changed. Python/unit/integration/runtime/AI/CI execution: N/A — documentation-only, no executable or evaluation protocol changes. Do not claim newly executed calibration or tests.
 
+### Verification record — 2026-11-27
+
+Static documentation verification: inspected the existing root and scoped guidance, verified all three insertions are additive (removing the new text reproduces each original document exactly), checked the engineering heading and both incoming links, confirmed the QUALITY-003 target exists, and verified all A–O headings and required dates. The update is limited to the three instruction documents and this task record. No runtime, calibration, prompt/schema or historical evidence modifications are included. Python tests, live calls, and a new qualification were not run because behavior and scoring are unchanged.
+
 ## M. Acceptance Criteria
 
-- [ ] Root rule links to the exact engineering heading.
-- [ ] Engineering policy covers stale findings, normative ownership, minimal counterexamples, conflict resolution, regression verification and frozen evaluation integrity.
-- [ ] Judge clarification preserves qualified behavior and explicitly distinguishes future hardening and caller responsibilities.
-- [ ] Diff contains only the three instruction documents and this A–O task; original content and qualification history preserved.
-- [ ] All new relative links and headings verified; no new runtime or live qualification claim.
+- [x] Root rule links to the exact engineering heading.
+- [x] Engineering policy covers stale findings, normative ownership, minimal counterexamples, conflict resolution, regression verification and frozen evaluation integrity.
+- [x] Judge clarification preserves qualified behavior and explicitly distinguishes future hardening and caller responsibilities.
+- [x] Diff contains only the three instruction documents and this A–O task; original content and qualification history preserved.
+- [x] All new relative links and headings verified; no new runtime or live qualification claim.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -84,7 +88,7 @@ Additive Markdown-only change. No schema, index, config, API or provider migrati
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Inspect current repository and scoped guidance.
-- [ ] Insert agreed English instructions without altering existing behavior.
-- [ ] Verify scoped diff, links and A–O structure.
-- [ ] Record checks run/not run and remaining limitations.
+- [x] Inspect current repository and scoped guidance.
+- [x] Insert agreed English instructions without altering existing behavior.
+- [x] Verify scoped diff, links and A–O structure.
+- [x] Record checks run/not run and remaining limitations.

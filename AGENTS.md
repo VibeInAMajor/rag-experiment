@@ -5,6 +5,7 @@
 
 - **Find existing logic:** [Project map](docs-website/PROJECT_MAP.md).
 - **Naming, reuse, testing and integration rules:** [Engineering conventions](docs-website/ENGINEERING.md).
+- **Contract consistency and stale findings:** Before acting on a review finding, recheck the latest relevant repository revision, owning contract, implementation, tests and measured evidence. Do not implement an already resolved finding or reopen a completed task solely because an earlier review requested a fix. When instructions, schemas, validators, tests or evaluation gates disagree, follow [Contract consistency and review before change](docs-website/ENGINEERING.md#contract-consistency-and-review-before-change). Do not silently relax validation or qualification gates.
 - **UI:** [Workbench README](apps/workbench/web/README.md). In `apps/workbench/web`, run `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` (after `npm ci` if needed).
 - **Haystack Python:** [Engineering conventions](docs-website/ENGINEERING.md#haystack-python) and [CONTRIBUTING.md](CONTRIBUTING.md). Use Hatch; run targeted tests and configured quality checks.
 - **Standalone agent subsystem:** [MAF runtime README](apps/maf/README.md), [architecture](tasks/maf/MAF_ARCHITECTURE.md), and [Semantic Judge contract](apps/maf/SEMANTIC_JUDGE.md). Keep `apps/maf/` and Workbench/Haystack independent. Use the versioned invocation contract. RAG evaluation remains caller-owned, and ordinary RAG execution must work without MAF or external API access.
