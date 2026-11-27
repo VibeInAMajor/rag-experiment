@@ -1,8 +1,12 @@
 # External multidisciplinary retrieval dataset V1
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-25  
+**Updated:** 2026-11-27  
 **Status:** COLLECTED / SOURCE-ANCHORED DRAFT — actual documents and multilingual question/answer keys present; agent source verification, real ingestion and retrieval evaluation not yet executed. This is separate from [repository-specific seed](RETRIEVAL_EVALUATION_SEED_V1.md), not a replacement for it.
+
+## Source-checked Golden Reference Answer Set
+
+The additive [OPEN Golden Reference Answer Set V1](golden_set/README.md) contains **306 actual reference answers** for the unchanged questions, with source locators and required facts in EN/RU/UK. This is the candidate reference for independent MAF Semantic Review, not already validated gold. The original V1 answer keys remain historical; do not overwrite them. Exclude the entire golden_set directory and all question/answer keys from ingestion. See the [actual local dataset report](../../evidence/dataset-2026-11-24/report.md) for later runtime evidence; the historical collection status above describes the initial delivery.
 
 ## Corpus and purpose
 
