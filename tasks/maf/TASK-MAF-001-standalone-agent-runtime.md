@@ -5,7 +5,8 @@
 **Status:** PROPOSED — implementation and real API smoke pending  
 **Priority:** P0  
 **Repository snapshot inspected:** `d31eb5ca283523f90584a61c80ca6a90d6fccfe9`  
-**Consumer:** [MAF-002](TASK-MAF-002-semantic-judge-agent.md)
+**Consumer:** [MAF-002](TASK-MAF-002-semantic-judge-agent.md)  
+**Architecture:** [MAF module boundary](MAF_ARCHITECTURE.md)
 
 ## A. Title
 
@@ -84,6 +85,10 @@ MUST NOT modify `haystack/`, `apps/workbench/`, Workbench dependency versions, r
 5. No tools, retrieval access, web/file search, code execution, persistent sessions, conversation carry-over or hosted memory in the initial agent profile. Each invocation is stateless. Treat supplied text as untrusted data. Set and verify `store=false` on Responses requests if supported; fail closed for external evaluation if required privacy settings cannot be applied. Do not describe this as zero provider retention.
 6. Enforce explicit external-call opt-in, request/response size, token/output, timeout, total requests and concurrency bounds; account for retries and estimated cost, with a finite run budget. No indefinite retry, background server or hidden automatic execution. Report actual usage where available and estimated spend with pricing version, not invented cost. Keep secrets out of child process arguments and logs.
 7. Execute the standalone CLI from its own project, with Workbench and local GPU services stopped or absent in the test environment. Prove real OpenAI structured response and actual model/usage metadata using a non-sensitive synthetic smoke input. If key/access/network unavailable, record BLOCKED_REAL_API, do not simulate success. No user-provided private document needed for smoke.
+
+### Runtime boundary clarification — 2026-11-27
+
+The [MAF architecture](MAF_ARCHITECTURE.md) is the shared module layout and ownership reference. The existing profile `semantic-review` initially maps to `gpt-6.1-sol` as requested; the [newer GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol) is an optional separately qualified profile, not an automatic replacement. Verify actual account entitlement by a live smoke. Keep explicit package entry point and versioned JSON transport independent of the repository working directory. No Workbench imports in MAF, no MAF imports in Workbench, no RAG startup hook. Limit per-run estimated maximum spend before submission; report actual usage, uncertainty and retry consumption. Reuse complete identical case outputs only through caller-owned checkpoint hashes; no persistent shared conversational state.
 
 ## K. Security / Governance / Observability
 
