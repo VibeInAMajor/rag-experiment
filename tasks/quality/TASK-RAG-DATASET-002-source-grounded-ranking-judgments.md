@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-26  
 **Updated:** 2026-11-27  
-**Status:** REOPENED — historical full OPEN coverage and arithmetic verification completed; semantic correctness of the reference/occurrence judgments is under audit after user-observed failures. Previous metrics are provisional, not qualified gold. New independent MAF semantic judge and audit pending.
+**Status:** REOPENED — historical full OPEN coverage and arithmetic verification completed; semantic correctness of the reference/occurrence judgments is under audit after user-observed failures. Previous metrics are provisional, not qualified gold. New independent MAF semantic judge and audit pending. Candidate source-first golden-set delivery precedes judge execution.
 **Priority:** P0  
 **Dependencies:** DATASET-001 local delivery; QUALITY-001 completed diagnostic evidence; [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) standalone runtime and [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) calibrated judge for the reopened semantic audit.
 **Repository snapshot inspected:** `472f550e8d91658228eb3ceeb1dfd2a79e2dbb47`
@@ -59,6 +59,12 @@ Existing local dataset delivery, local ranking/coverage adapters and tests; sani
 4. Freeze new revision/digest, preserve all historical scores and labels; recompute post-cleanup baseline from saved predictions (no new full matrix). Compare old and new metrics by explicit name, not by overwriting historical primary fields. Use only OPEN for development. Prepare or apply the same rubric to the local R2 set only during final evaluation, after candidate freeze; no tuning on its judgments, questions or detailed outcomes. If the relevant universe remains incomplete, keep affected gate NOT_EVALUABLE.
 5. Coordinate with QUALITY-001 pending source-fidelity diagnostic; use existing artifacts rather than duplicating the check. Agent performs all work autonomously; no new infrastructure. Record actual counts, uncertainty, unresolved judgments and remaining gate limitations.
 
+### Source-first reference delivery before Semantic Review — 2026-11-27
+
+The user explicitly requires an actual reference answer set before the external judge runs. Prepare an additive OPEN candidate golden set under `dataset/golden_set/`, with the existing question IDs unchanged, complete source-derived answers, required facts, exact original source locators, scope constraints and explicit no-evidence responses. Cover the checked-in 87 answerable and 15 no-answer families, and all their EN/RU/UK query IDs. The reference author reads original source text directly; existing answer keys may locate passages but are not proof of correctness. Do not use retrieval outputs to author the reference. Record the source commit, corpus coverage and unresolved limitations. No access to local R2/ANSWER holdout. Keep historical answer files and metrics unchanged. This is a source-checked candidate reference, NOT semantically qualified gold; MAF is not a prerequisite to drafting it.
+
+During the subsequent Semantic Review, MAF-002 first derives the reference independently from supplied original material without seeing this draft, old references, ranks or candidate results. Freeze its source-first output, compare with the authored reference, validate differences against original passages, resolve or quarantine discrepancies, then freeze a new admitted revision and judge candidates. No automatic acceptance of agreement alone, no circular self-evaluation and no user-authored review prerequisite. The existing reopened audit continues after actual judge calibration. The golden-set directory MUST NOT be ingested or provided to runtime retrieval/reranking/generation. It belongs solely to the evaluation runner.
+
 ### Reopened semantic audit — 2026-11-27
 
 Execute after MAF-001 and MAF-002 pass real standalone smoke/calibration. Keep original DATASET-001, prior DATASET-002 revisions and historical reports immutable. Do not edit questions or lower metrics to make a run look successful.
@@ -97,6 +103,8 @@ Known ranking fixtures: primary vs support, unknown vs explicit negative, duplic
 - [ ] All 102 OPEN families / 306 variants and the full existing 1241-occurrence pool plus actual selected context assessed under frozen judge revision; unknown/blocked/error cases remain explicit, no fabricated completion.
 - [ ] New versioned source references, evidence judgments, strict relevance/context metrics and old-vs-new grade change report exist; deterministic scorer recalculates from verified inputs with no new retrieval run required.
 - [ ] External payload classification, actual usage, checkpoint/resume and no holdout tuning verified; no production RAG dependency or service introduced.
+
+- [ ] Candidate OPEN golden set is delivered before judge execution; all 306 existing query IDs map to source-backed answerable/absence references; semantic admission occurs only after independent source-first MAF review.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
