@@ -68,7 +68,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         _write({"status": "REPORT_IO_ERROR"})
         return 1
     _write(summary)
-    return 0 if summary["status"] in {"PASS", "DEVELOPMENT_ONLY"} and summary["stop_reason"] is None else 1
+    accepted = summary["status"] == "PASS" or (
+        summary["status"] == "DEVELOPMENT_ONLY" and summary["all_controls_matched"] is True
+    )
+    return 0 if accepted and summary["stop_reason"] is None else 1
 
 
 async def _preflight(

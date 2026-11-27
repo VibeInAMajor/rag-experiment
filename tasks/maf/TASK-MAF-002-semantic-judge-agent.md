@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Implemented. Live qualification is tracked in the verification record.
+**Status:** Implemented. The initial live calibration measured `NO_GO`. A revised evidence prompt is pending live qualification.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -123,17 +123,38 @@ The standalone `semantic-judge` reuses the MAF-001 admission path, OpenAI Respon
 | `hatch run calibrate --check` | Passed for 29 distinct controls and 3 stateless repeats. The separate development set contains three cases. |
 | Public-source provenance | Verified 13 excerpt occurrences against the exact Unicode slices of the LF-normalized Austen, Ruskin and Azure originals. SHA-256 checks passed for all supplied snippets. |
 
-The frozen qualification manifest SHA-256 is `caa72c9408c4ab4a2066671524be825824addebbc5491b94fead1597c4b606cf`. The calibration SHA-256 is `e0d6b1bab9798b40e116f8e45ac6688aa217a7fc54340536a8fd38f0de87be9b`. It fixes the model profile `semantic-review` (`gpt-6.1-sol`, `medium`), prompt/schema revisions and digests, scoring thresholds, concurrency of one, a 420-second deadline, zero retries and a maximum estimated run cost of USD 1.441792. Determinate controls remain in their denominators when a result is missing, ambiguous or operationally invalid. [Controls](../../apps/maf/calibration/controls.py) · [Runner](../../apps/maf/calibration/run.py) · [Scoring](../../apps/maf/calibration/scoring.py)
+The frozen qualification control manifest SHA-256 is `caa72c9408c4ab4a2066671524be825824addebbc5491b94fead1597c4b606cf`. Each calibration fixes the model profile `semantic-review` (`gpt-6.1-sol`, `medium`), prompt/schema revisions and digests, scoring thresholds, concurrency of one, a 420-second deadline, zero retries and a maximum estimated run cost of USD 1.441792. Determinate controls remain in their denominators when a result is missing, ambiguous or operationally invalid. [Controls](../../apps/maf/calibration/controls.py) · [Runner](../../apps/maf/calibration/run.py) · [Scoring](../../apps/maf/calibration/scoring.py)
 
 The built-in controls use Austen's beginning-of-novel rental and income report, Azure storage redundancy with no invoice data, and Ruskin's tracing-paper step. They include separate reference, evidence, context and answer cases, plus EN/RU/UK repeats. The source shards and distractors are local to the MAF control manifest. The dataset audit remains caller-owned.
+
+#### Initial live qualification
+
+The operator ran `hatch run calibrate --allow-external --report calibration/live-report-rag.jsonl` using the existing project credential. The run used implementation `bf1267a` and calibration fingerprint `e0d6b1bab9798b40e116f8e45ac6688aa217a7fc54340536a8fd38f0de87be9b`. The reused editable Hatch environment reported distribution metadata `0.1.0`. The recorded mode and manifest fingerprints identify the running judge source. Recreating the standalone Hatch environment installed distribution metadata `0.2.0` for the follow-up.
+
+| Measure | Initial run |
+| --- | --- |
+| Validated verdicts and actual provider model | 32/32, `gpt-6.1-sol` |
+| Determinate grade agreement and binary support | 16/16 for each |
+| Non-evidence mode agreement | 12/12 |
+| Critical controls and expected `unknown` | 15/16 and 0/1 |
+| Repeatability and original-source diagnostics | 3/3 repeats, all 9 original-source controls plus both original-source repeats |
+| Fact and required-quote checks | 30/30 and 3/3 |
+| Provider usage | 37,400 input tokens, 12,177 output including 2,471 reasoning, 0 cached input |
+| Provider attempts and estimated Standard usage cost | 32 attempts, 0 retries, USD 0.236797 |
+
+`billing-ambiguous-row` produced `partial` with grade 1 even though the candidate explicitly left the amount's account attribution unresolved. The frozen control requires `unknown` with a null grade. This failed the critical and unknown gates. All responses met the structural and quote validators and none overclaimed complete source coverage. The initial result is `NO_GO`.
+
+#### Evidence prompt revision 2
+
+`judge_evidence/2` requires the quoted contribution to be attributable to the requested entity, event or record. When competing attributions are explicitly unresolved and there is no independently attributable contribution, the expected result is `unknown`. A separate authored development probe assesses the same rule with an unassigned equipment reading. The revised qualification fingerprint is `08f3a44a620f8f9430b3b3298f956e56e98bd422bffe9fa2fb05295f8d2356ff`. The 32 qualification requests and gate thresholds are from the same frozen control manifest.
 
 ## M. Acceptance Criteria
 
 - [x] Semantic Judge registers four independent typed modes and runs without RAG dependencies or tools.
 - [x] Strict results include facts, constraints, useful spans, exact references and `unknown`. A positive grade requires a quoted contribution to a required fact.
 - [x] Reference derivation accepts original excerpts and declared scope. The other modes require a frozen reference. A complete-scope absence requires declared complete coverage.
-- [ ] Real source-backed calibration covers at least 24 controls, the three user regressions and all required negative/uncertain paths; predeclared criteria met or measured NO-GO.
-- [ ] Independent offline checks pass and real calibration records actual model/prompt/schema revisions, denominators, disagreements, usage and cost; no claim of semantic qualification from mocks.
+- [x] The initial real calibration covered 29 controls, the three original regressions and the declared repeats. The gates measured `NO_GO` for an ambiguity error.
+- [x] Offline checks passed. The live report captures actual model, prompt/schema revisions, disagreements and usage for the initial run.
 - [x] A generic caller invokes the judge through the standalone version 1 JSON CLI.
 
 ## N. Documentation / Migration / Compatibility / Rollback

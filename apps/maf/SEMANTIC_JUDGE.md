@@ -68,6 +68,8 @@ Review and freeze the reference before the three downstream modes. Supply `refer
 
 Passage grade measures the passage's contribution. Context sufficiency measures coverage of all required facts and applicable constraints across the selected pack. A directly supported fact can coexist with other missing facts, irrelevant spans, or conflicting evidence.
 
+Attribute a quoted value to the entity, event or record asked about before awarding credit. When the text leaves that attribution unresolved and establishes no separate required fact, the judge returns `unknown` with a null grade.
+
 ### Quote and scope validation
 
 Every excerpt contains `id`, `start`, `end`, `sha256`, and `text`. IDs are opaque and unique across the supplied excerpts. Ranges are half-open Unicode code-point offsets in the source. Hash the UTF-8 bytes of the exact excerpt text, preserving whitespace. Every quote includes `source_id`, `text`, `start`, and `end`. The validator checks supplied numeric offsets against the text. When both quote offsets are null, the validator can resolve a unique exact match to its source coordinates. A repeated quote requires explicit matching offsets or a longer exact quote that is unique. Positive candidate grades require a quote from the candidate linked to a required fact. [Evidence validators](src/agent_runtime/agents/semantic_judge/validation.py)

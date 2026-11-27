@@ -49,7 +49,7 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
             ),
         ),
         "judge_evidence": JudgeInstructions(
-            revision="judge_evidence/1",
+            revision="judge_evidence/2",
             text=_GROUNDING
             + _FROZEN_REFERENCE
             + (
@@ -62,7 +62,10 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
                 "Topic overlap, correct entities alone, and section proximity earn 0. Use topically_related for "
                 "topic overlap, irrelevant for unrelated text, and wrong_scope for wrong entity, event, version, "
                 "or units. Mark any corresponding constraint violated. A contradictory quote directly contests "
-                "the scoped fact. Use unknown and null grade for an unresolved assessment. An unanswered "
+                "the scoped fact. Before awarding a positive grade, establish which entity, event, or record the "
+                "quoted contribution belongs to. If the text explicitly leaves competing attributions unresolved "
+                "and establishes no independent contribution to a requested fact, use unknown and a null grade, "
+                "even if a value matches the frozen reference. An unanswered "
                 "question can still have a determinately unhelpful candidate. Keep "
                 "matched, partial, missing and conflicting facts distinct. Quote evidence spans from the candidate."
             ),

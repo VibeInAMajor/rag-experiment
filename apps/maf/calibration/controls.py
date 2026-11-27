@@ -741,6 +741,26 @@ DEVELOPMENT_CASES = (
         expected=_evidence_expected("direct", grade=3, facts={"floor": "supported"}),
     ),
     CalibrationCase(
+        case_id="dev-evidence-unassigned-sensor-reading",
+        classification="synthetic",
+        input={
+            "mode": "judge_evidence",
+            "question": "What pressure did sensor violet record during the noon test?",
+            "language": "en",
+            "reference": _reference(
+                ("pressure", "Sensor violet recorded 82 kPa at noon."),
+                constraints=(("sensor", "The measurement must belong to sensor violet."),),
+            ),
+            "candidate": _excerpt(
+                "torn-lab-card",
+                "Both sensors amber and violet ran during the noon test. The surviving card shows 82 kPa. "
+                "The sensor label is torn off, and the reading could belong to either sensor.",
+            ),
+            "sources": [],
+        },
+        expected=_evidence_expected("unknown", grade=None),
+    ),
+    CalibrationCase(
         case_id="dev-answer-wrong-temperature",
         classification="synthetic",
         input={

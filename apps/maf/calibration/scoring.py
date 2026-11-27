@@ -115,6 +115,7 @@ def summarize(scores: Sequence[CaseScore], *, development: bool) -> dict[str, ob
         status = "PASS" if passed else "NO_GO"
     return {
         "status": status,
+        "all_controls_matched": all(score.passed for score in scores),
         "grade_agreement": grade,
         "binary_support_agreement": support,
         "other_modes_agreement": other_modes,
