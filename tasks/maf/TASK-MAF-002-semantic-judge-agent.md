@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Implemented. Earlier revisions measured `NO_GO`. The revised answer prompt is in live qualification.
+**Status:** Implementation complete. Live calibration measured `NO_GO` under the frozen gates.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -162,13 +162,31 @@ The qualification returned 31 validated verdicts from 32 requests, with 16/16 gr
 
 `judge_answer/2` makes grounded completeness explicit. Every covered required fact must appear in a supported claim and have a supported fact assessment. A citation must use its supplied ID and quote only its cited excerpt. A separate development control uses an authored first-edition date and a citation that contradicts the answer. The development and qualification fingerprints are `28bbc82f8e7ba5ed74b7c7317c8e2c457dcd4046c3c80fe05e6cceb16372b3a8` and `3d69e0aa37d985681f28c1b9e918eed2f8b90e5cc30713f5c56299cabac986e2`. The qualification case manifest and gates remain fixed.
 
+The final candidate is implementation `1b22301`, runtime `0.2.0` and `semantic-review` with `gpt-6.1-sol` at medium reasoning. It uses `derive_reference/1`, `judge_evidence/3`, `judge_context/1`, and `judge_answer/2` prompts, each with schema revision 1. All five development probes passed. In the frozen qualification run, the previous ambiguous attribution returned `unknown` and the incorrect invoice answer returned `incorrect`, `incomplete`, and an `unsupported` citation.
+
+| Measure | Final qualification run |
+| --- | --- |
+| Validated verdicts and actual provider model | 31/32, `gpt-6.1-sol` |
+| Determinate grade agreement and binary support | 16/16 for each |
+| Non-evidence mode agreement | 11/12 |
+| Critical controls and expected `unknown` | 16/16 and 1/1 |
+| Repeatability | 2/3 exact category matches. All three repeat grades agreed. |
+| Fact and required-quote checks | 30/30 and 3/3. All 31 accepted verdicts passed local quote and ID verification. |
+| Coverage overclaims | 0 |
+| Provider usage | 38,802 input tokens, 11,759 output including 1,943 reasoning, 0 cached input |
+| Provider attempts and estimated Standard cost | 32 attempts, 0 retries, USD 0.23605450 before credits |
+
+Two gates failed. `azure-answer-abstains` returned `INVALID_OUTPUT` at `evidence_validation`. The report retains its phase and usage without retaining the rejected model text. The English `azure-no-invoice-in-redundancy` and Ukrainian repeat both returned grade 0, with categories `irrelevant` and `topically_related` respectively. Both categories were allowed for that control. The declared exact-repeat gate still failed. Replaying the 32 saved envelopes offline reproduced the full scoring summary and independently rechecked all 31 accepted verdicts.
+
+The per-control verdicts, expected outcomes, exact-source quotes, and reported usage are saved locally in `apps/maf/calibration/live-report-rag-v4.jsonl`. The qualification decision is `NO_GO`. Calibration on these controls leaves the DATASET-002 audit gate closed. [Evaluation order](../quality/IMPLEMENTATION_ORDER.md)
+
 ## M. Acceptance Criteria
 
 - [x] Semantic Judge registers four independent typed modes and runs without RAG dependencies or tools.
 - [x] Strict results include facts, constraints, useful spans, exact references and `unknown`. A positive grade requires a quoted contribution to a required fact.
 - [x] Reference derivation accepts original excerpts and declared scope. The other modes require a frozen reference. A complete-scope absence requires declared complete coverage.
-- [x] The initial real calibration covered 29 controls, the three original regressions and the declared repeats. The gates measured `NO_GO` for an ambiguity error.
-- [x] Offline checks passed. The live report captures actual model, prompt/schema revisions, disagreements and usage for the initial run.
+- [x] Real calibration covered 29 controls, the three original regression families and the declared repeats. The frozen gates measured `NO_GO` on the final revision.
+- [x] Offline checks passed. Live reports capture the actual model, prompt/schema revisions, denominators, disagreements, usage and cost.
 - [x] A generic caller invokes the judge through the standalone version 1 JSON CLI.
 
 ## N. Documentation / Migration / Compatibility / Rollback
@@ -179,6 +197,7 @@ Document modes, examples, rubric, failure semantics and judge-version lifecycle 
 
 - [x] Reinspect MAF-001, the released provider API and source fixtures.
 - [x] Implement typed source-grounded judge and deterministic validators.
-- [ ] Run independent offline tests and actual bounded calibration; record real evidence and limitations.
+- [x] Run independent offline tests and bounded live calibration. Record the measured result and limitations.
 - [x] Verify package isolation, default egress denial and distinct failure and `unknown` outcomes.
-- [ ] Publish documentation and calibrated judge handoff to DATASET-002; no promotion without evidence.
+- [x] Publish the contract, rubric, verification record and handoff conditions.
+- [ ] Qualify a judge revision for the DATASET-002 audit. The measured result is `NO_GO`.

@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Standalone runtime and Semantic Judge implemented. The evaluation integration is planned.
+**Status:** Standalone runtime and Semantic Judge implemented. The judge's frozen qualification run measured `NO_GO`. The evaluation integration is planned.
 
 **Repository base inspected:** `482c8d980db6a06ef88532f60bf97cae002cdb0e` plus the scoped MAF implementation. Live qualification is tracked in [MAF-001](TASK-MAF-001-standalone-agent-runtime.md).
 
@@ -90,6 +90,6 @@ A separate model call alone does not establish a valid benchmark. Source-derived
 ## Delivery
 
 - [MAF-001](TASK-MAF-001-standalone-agent-runtime.md): standalone runtime and live smoke.
-- [MAF-002](TASK-MAF-002-semantic-judge-agent.md): reusable judge with typed evaluations and controlled qualification.
+- [MAF-002](TASK-MAF-002-semantic-judge-agent.md): implemented reusable judge, typed evaluation contract and measured qualification result.
 - [DATASET-002](../quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md): re-audit saved OPEN source references and candidates via MAF, publish corrected version and metrics. Do not repeat full retrieval solely for relabeling.
 - [QUALITY-002](../quality/TASK-RAG-QUALITY-002-retrieval-release-gate-and-regression.md): require validated labels and useful-context measures for release qualification. Later [QUALITY-003](../quality/TASK-RAG-QUALITY-003-grounded-answer-correctness-evaluation.md) consumes answer-mode judgments.
