@@ -3,7 +3,7 @@
 **Created:** 2026-11-27  
 **Updated:** 2026-11-28
 
-**Status:** REOPENED for bounded output-cap and prompt-cache qualification. Runtime 0.3.1 passed v8; the 32,000-token candidate is checked in but not yet qualified. Prompt caching, cache-write accounting and measured cache reuse remain to be implemented and verified. Historical v8 evidence remains valid for 0.3.1.
+**Status:** REOPENED for shared Sol capacity policy, prompt caching and joint qualification. Runtime 0.3.1 passed v8; the 32,000-token candidate is checked in but not yet qualified. Prompt caching, cache-write accounting and measured cache reuse remain to be implemented and verified. Historical v8 evidence remains valid for 0.3.1.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -116,7 +116,7 @@ Cache amendment: inspect and extend the existing adapter, runtime admission, con
 
 ### Judge qualification clarification — 2026-11-27
 
-Retain the four named request modes in H. Split prompt-development examples from frozen qualification controls; the three reported families are mandatory regression controls, not a hidden independent test. Add unseen synthetic contrasts and public source cases to qualification. Record binary answer-support agreement separately from coarse grade/class agreement (proposed >=95% binary agreement on determinate qualification controls, >=90% grade agreement); count operational errors and UNKNOWN separately and disclose coverage, not selective denominator improvement. No positive grade without a validated exact quote and contribution to a requested fact; for multi-span claims distinguish individual partial support from sufficient union. Use caller-verified Unicode offsets, reject invented IDs and ambiguous ranges unless explicitly disambiguated. Reference derivation must not see old references, and caller compares saved source-first output afterward. Preserve uncertainty and independent source evidence when resolving old/new disagreements. Do not award usefulness solely for co-occurring entities or a passage being in the right chapter. Initial `gpt-6.1-sol` remains configurable; alternate models, including `gpt-6.2-sol`, require separate qualification. No hard-coded fixture answers in general instructions.
+Retain the four named request modes in H. Split prompt-development examples from frozen qualification controls; the three reported families are mandatory regression controls, not a hidden independent test. Add unseen synthetic contrasts and public source cases to qualification. Record binary answer-support agreement separately from coarse grade/class agreement (proposed >=95% binary agreement on determinate qualification controls, >=90% grade agreement); count operational errors and UNKNOWN separately and disclose coverage, not selective denominator improvement. No positive grade without a validated exact quote and contribution to a requested fact; for multi-span claims distinguish individual partial support from sufficient union. Use caller-verified Unicode offsets, reject invented IDs and ambiguous ranges unless explicitly disambiguated. Reference derivation must not see old references, and caller compares saved source-first output afterward. Preserve uncertainty and independent source evidence when resolving old/new disagreements. Do not award usefulness solely for co-occurring entities or a passage being in the right chapter. Initial `gpt-6.1-sol` remains the default. The 2026-11-28 shared Sol qualification amendment below supersedes the separate-procedure requirement for `gpt-6.2-sol` only; other models are outside this qualification scope. No hard-coded fixture answers in general instructions.
 
 ### Prompt caching and Enterprise reuse amendment — 2026-11-28
 
@@ -143,6 +143,28 @@ The following is a source inspection, not a claim that the Enterprise runtime or
 | [maf_diagnostics.py](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/observability/maf_diagnostics.py), [maf_langfuse.py](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/observability/maf_langfuse.py) | NOW: use safe correlation and one record per physical call in existing local metadata/JSONL. OPTIONAL LATER under observability owner: project sanitized events to Langfuse without double-counting SDK spans and journal exports. Do not enable full-payload telemetry, session persistence or an external tracing dependency for this task. |
 
 The immediate reusable scope is cache policy and wire verification, accounting, redacted component measurement and provenance fields already owned by the runtime. Caller pacing/checkpoint enhancements are recommendations for existing owners, not hidden prerequisites or new implementation tasks. No Enterprise runtime modules are imported.
+
+### Shared Sol runtime policy and joint qualification — 2026-11-28
+
+User decision: GPT-6.1 Sol and GPT-6.2 Sol must have equal application limits and use one qualification protocol. This amendment supersedes the earlier alternate-profile exclusion, lower alternate-profile limits and separate-qualification procedure. It does not retroactively qualify an untested model. The current source at `269ec5d3ddefebf5160805a1e97163653773bd54` still configures the alternate at 8,192 input admission units and 2,048 output tokens, and the judge registry permits only the default profile. These are implementation gaps to resolve in this task, not desired behavior.
+
+| Shared application setting | Both Sol profiles |
+| --- | --- |
+| Input admission ceiling | 16,384 estimated units including framing |
+| CLI request envelope | 16 KiB UTF-8 |
+| Generated output including reasoning | 32,000 tokens |
+| Response-body limit | 128 KiB |
+| Execution deadline | 45 seconds |
+| Default reasoning effort | medium |
+| Context-mode fragments / other excerpt lists | 12 / 8 |
+| External calls per invocation / retries | 1 / 0 |
+| Prompt caching | Same qualified explicit prefix policy, 30-minute TTL when enabled |
+
+- Centralize these settings in the existing MAF configuration owner and apply them to both `semantic-review` and `semantic-review-6.2`. Keep distinct model/profile IDs and default GPT-6.1 Sol. Share the four judge mode definitions, schemas, instructions, validators and rubric; update the profile allowlist to admit both configured profiles under the same qualification policy. No duplicate agents, model-specific rubric, or task-coded variables. Validate actual provider support for the common limits, caching and structured output; equal application limits are not an assertion of identical vendor entitlements or behavior.
+- Use model-specific verified tariffs and derive per-call and aggregate monetary reserves from actual rates. Equal token ceilings do not imply equal price. Preserve worst-case admission and the existing USD 1 per-invocation hard ceiling; if the current USD 0.40 default cannot cover a verified tariff, require an explicit bounded budget or document and approve a revised default before egress. Never reduce a token cap silently to make a model appear equivalent.
+- Execute **one joint qualification**, one versioned protocol and runner, one frozen set of 32 control definitions and unchanged gates, one parent manifest/report with GPT-6.1 Sol and GPT-6.2 Sol as model arms. Run the same controls on both arms (64 physical requests if all cases execute); retain per-model outcomes, quote checks, repeatability, usage, cache evidence and returned-model identity, then compute the joint result deterministically. Do not duplicate control definitions, tune a separate prompt, average away a failing arm or transfer a historical PASS to an untested model. Shared runtime/contract tests are executed once, with parameterized wire/admission checks for both profiles. Cache probes and the existing full-input pilot use the same shared procedure and exact inputs, with model-tagged records. Qualify cache compatibility and full-input replay for each model before claiming both are ready for the full audit. A model that fails or lacks evidence remains unavailable; the other may retain its own measured eligibility. Joint PASS means both pass all applicable gates.
+- Keep the predeclared probe allowance of at most eight calls per model and the existing 32 qualification / 46 full-input replay requests per model, with no extra warmups or retries. Freeze per-arm and aggregate request, cost and deadline ceilings before egress using verified tariffs; the previous USD 15.00 runner reserve was for one arm, not the joint run. Never silently double the approved spend; if authorization or capacity is missing, record the affected arm and joint qualification as pending/blocked. The shared report may contain separately checkpointed arm files; physical request IDs remain distinct. No paid execution is authorized solely by this specification.
+- Expose the shared policy, qualification identity, per-model evidence and tariff snapshots through the catalog consumed by [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md). Switching the default only affects future runs; active/resumed runs remain pinned. Reuse the joint qualification without rerunning it merely because the operator changes between the two admitted profiles. The existing versioned cache/result identity must still include the actual model.
 
 ## K. Security / Governance / Observability
 
@@ -301,8 +323,8 @@ The 0.3.2 candidate changes the existing `semantic-review` profile ceiling, the 
 - [ ] Legacy report/CLI compatibility, privacy, scope isolation and safe diagnostics verified. Reused Enterprise patterns and deliberate exclusions documented without introducing new services.
 
 
-- [ ] 32,000-token ceiling, updated bounded reserves and unchanged independent guards verified by offline tests; alternate profile unchanged.
-- [ ] New runtime fingerprint passes frozen live qualification and identical full-input pilot replay before adoption.
+- [ ] Both Sol profiles share the same 16,384 input and 32,000 output ceilings, other runtime guards and cache policy; profile-specific pricing/reserves and actual SDK admission are verified.
+- [ ] One joint qualification manifest/report covers both Sol model arms with unchanged frozen gates, model-specific evidence, full-input replay and independently checked cache compatibility; do not claim joint PASS if either arm is unverified.
 
 
 - [x] Semantic Judge registers four independent typed modes and runs without RAG dependencies or tools.
@@ -323,7 +345,7 @@ For this amendment version the runtime and cache layout/accounting policy indepe
 - [ ] Implement and verify the cache amendment, measured probe, accounting, wire/metadata compatibility, and final live qualification. Report cache adoption decision independently of semantic qualification.
 
 
-- [ ] Complete output-cap amendment tests, fresh qualification and pilot replay; retain historical v8 result.
+- [ ] Complete shared-capacity tests, joint qualification and pilot replay; retain historical v8 result.
 
 - [x] Reinspect MAF-001, the released provider API and source fixtures.
 - [x] Implement typed source-grounded judge and deterministic validators.

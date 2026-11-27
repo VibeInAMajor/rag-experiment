@@ -44,6 +44,8 @@ flowchart LR
 
 Arrows between modules are data exchange, not Python imports. The evaluation runner owns RAG-specific mapping, reading authorized originals/captures, exact evidence validation, metric calculation and report publication. MAF receives explicit text and opaque identifiers; it never queries the index, accesses the RAG database, loads a Workbench object, reads the source repository through tools or changes the gold dataset. Workbench must run normally when MAF is absent/offline.
 
+**Planned shared Sol policy (2026-11-28):** [MAF-002](TASK-MAF-002-semantic-judge-agent.md#shared-sol-runtime-policy-and-joint-qualification--2026-11-28) requires both profiles to use the same application input/output/transport/deadline/cache limits and one joint qualification report with model-tagged evidence. The current implementation described below has not yet been aligned. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) consumes that common policy and eligibility, with model-specific pricing and immutable run identity.
+
 ## Independent layout
 
 ```text
@@ -75,7 +77,7 @@ Runtime 0.3.2 preserves the 16 KiB CLI and 16,384 estimated-unit `semantic-revie
 ## Provider boundary
 
 - Neutral model profile requests structured output, adequate context and optionally reasoning controls.
-- Composition maps the profile (`semantic-review`) to the MAF Responses adapter. Initial configured OpenAI model: `gpt-6.1-sol` (GPT-6.1 Sol, as requested). `gpt-6.2-sol` is an optional alternative that requires its own qualification. Both are configurable and subject to actual API access. No hard-coded model inside judge policy.
+- Composition maps the profile (`semantic-review`) to the MAF Responses adapter. Initial configured OpenAI model: `gpt-6.1-sol` (GPT-6.1 Sol, as requested). `gpt-6.2-sol` is the second selectable Sol profile under the same shared policy and joint qualification specified in MAF-002. Each model arm retains actual verification evidence; a joint PASS covers both. Both are configurable and subject to actual API access. No hard-coded model inside judge policy.
 - Direct OpenAI API, not Azure OpenAI or ChatGPT/Codex plan. Official MAF [provider](https://learn.microsoft.com/en-us/agent-framework/integrations/by-component/model-providers/openai), [structured outputs](https://learn.microsoft.com/en-us/agent-framework/agents/structured-outputs), [model catalog](https://developers.openai.com/api/docs/models), [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol). Check released package API when implementing.
 - The runtime starts fresh for each invocation and validates the structured output locally. Its CLI exposes no tools, web search, RAG access, or automatic provider fallback. The planned judge owns deterministic quote and locator validation and returns concise evidence-based rationale.
 - Live calls explicitly enabled with approved non-sensitive data and a per-run spending cap; offline default. No credentials in prompts or artifacts, no raw payload telemetry. Verify `store=false`; provider retention may still apply (see [data controls](https://developers.openai.com/api/docs/guides/your-data)).

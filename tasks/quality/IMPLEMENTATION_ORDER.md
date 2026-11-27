@@ -36,6 +36,8 @@ Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calib
 
 Do not complete the runtime answerability policy before the independent labels on which it depends. Execute [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md) **Phase A** now: deterministic diagnostic classification and replay of the completed pilot. Then continue DATASET-002 full OPEN audit using an explicitly qualified MAF configuration and the new reporting projection. The proposed 32,000-output-token MAF-002 amendment must pass fresh offline/live qualification and full-input pilot replay before adoption. The historical v8 PASS remains valid only for its recorded runtime. Phase B of ANSWERABILITY-001 remains after corrected labels and EVIDENCE-002 and before QUALITY-002. Candidate capture can continue independently where already authorized.
 
+The shared Sol amendment in MAF-002 applies identical application limits to GPT-6.1 Sol and GPT-6.2 Sol and uses a single joint qualification protocol/report, with actual results per model. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) can proceed in parallel on the shared catalog and monitoring interface; model switching requires eligible evidence, not a new qualification per switch. No new paid execution is implied by the roadmap.
+
 ## Delivery order and ownership
 
 | Order | Task | Output / decision |
@@ -44,7 +46,7 @@ Do not complete the runtime answerability policy before the independent labels o
 | 1 | [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) | [Actual source-pinned seed](dataset/RETRIEVAL_EVALUATION_SEED_V1.md); agent-verified tuning + local holdout and original-source facets required |
 | 2 | [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) | COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK; preserve bounded source-fidelity and historical captures |
 | 2a.1 (P0) | [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) | COMPLETE: standalone runtime and opted-in OpenAI smoke passed |
-| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | REOPENED for output-cap amendment only; v8 passed 32/32 on 0.3.1; new configuration pending qualification. |
+| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | REOPENED for shared Sol limits, prompt caching and one joint qualification covering both model arms; historical v8 PASS preserved. |
 | 2a.2a (P0) | [ANSWERABILITY-001 Phase A](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md#two-phase-execution-and-diagnostic-classification--2026-11-28) | Deterministic diagnostic projection and saved-pilot replay; no runtime classifier prerequisite |
 | 2a.3 (P0) | [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) | REOPENED: source-first reference and full pooled-judgment audit, same saved predictions, new metric revision; no holdout tuning |
 | 2b | [LEXICAL-001](TASK-RAG-LEXICAL-001-natural-language-query-policy.md) | Qualify useful lexical natural-query policy on OPEN; preserve literal FTS baseline; GO/NO-GO |

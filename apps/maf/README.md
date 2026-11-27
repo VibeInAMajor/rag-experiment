@@ -36,9 +36,9 @@ This submits the built-in synthetic input `The synthetic marker is cobalt.` usin
 | Profile | Model | Qualification |
 | --- | --- | --- |
 | `semantic-review` | `gpt-6.1-sol` | Synthetic live smoke passed on 2026-11-27 |
-| `semantic-review-6.2` | `gpt-6.2-sol` | Requires separate live qualification |
+| `semantic-review-6.2` | `gpt-6.2-sol` | Pending shared Sol policy and joint qualification (see below) |
 
-Both profiles use direct OpenAI Responses. Set `MAF_OPENAI_REASONING_EFFORT` to `low`, `medium`, `high`, or `xhigh`. The default is `medium`. Model selection is explicit through `profile_id`. [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)
+The [planned shared Sol policy](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-runtime-policy-and-joint-qualification--2026-11-28) requires identical application limits (16,384 estimated input units and 32,000 output tokens) and one joint qualification protocol with evidence for both model arms. The current checked-in limits below are not yet aligned. Prices remain model-specific. Both profiles use direct OpenAI Responses. Set `MAF_OPENAI_REASONING_EFFORT` to `low`, `medium`, `high`, or `xhigh`. The default is `medium`. Model selection is explicit through `profile_id`. [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)
 
 ## JSON invocation contract v1
 
