@@ -6,7 +6,8 @@
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
 **Repository snapshot inspected:** `d31eb5ca283523f90584a61c80ca6a90d6fccfe9`  
-**First consumer:** [DATASET-002](../quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md)
+**First consumer:** [DATASET-002](../quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md)  
+**Architecture:** [MAF module boundary](MAF_ARCHITECTURE.md)
 
 ## A. Title
 
@@ -95,6 +96,10 @@ Extend only the standalone `apps/maf/` project: agent definition, judge-specific
 5. Freeze rubric, model/profile, prompt/schema, control manifest and scoring before the real calibration. Run actual MAF/OpenAI requests under the bounded budget; evaluate exact category or permitted grade set, fact recall/completeness, known hard-negative rejection, exact quote validity and abstention on ambiguous input. Repeat a declared subset in fresh stateless calls with changed opaque IDs/order and EN/RU/UK versions; report per-category outcomes and disagreement, not just aggregate. Proposed initial local qualification: >=90% exact/allowed grade agreement on determinate controls, 100% on explicit wrong-scope/no-answer critical negative controls and exact quote/ID validity, no false source-completeness claim, explicitly report unknowns/repeatability. If failed, revise on controls only, freeze a new version and repeat; never lower criteria to pass or tune on final holdout.
 6. No claim that this small control set establishes universal judge correctness. Any unresolved or contradictory real-source verdict is UNKNOWN/quarantined with explanation. Return concise rationale with supporting quote(s) and required fact IDs so the caller can perform deterministic checks and audit disagreements. No mandatory second live judge, review staff or new platform.
 7. Make the judge invocable independently with generic example inputs and a fake caller. Use the existing MAF-001 external-call policy, bounded payloads, request/usage/cost accounting and typed failures. Report model/provider/prompt/schema/run hashes and actual usage from real controls. If no credentials, local offline tests can pass but semantic calibration remains BLOCKED.
+
+### Judge qualification clarification — 2026-11-27
+
+Retain the four named request modes in H. Split prompt-development examples from frozen qualification controls; the three reported families are mandatory regression controls, not a hidden independent test. Add unseen synthetic contrasts and public source cases to qualification. Record binary answer-support agreement separately from coarse grade/class agreement (proposed >=95% binary agreement on determinate qualification controls, >=90% grade agreement); count operational errors and UNKNOWN separately and disclose coverage, not selective denominator improvement. No positive grade without a validated exact quote and contribution to a requested fact; for multi-span claims distinguish individual partial support from sufficient union. Use caller-verified Unicode offsets, reject invented IDs and ambiguous ranges unless explicitly disambiguated. Reference derivation must not see old references, and caller compares saved source-first output afterward. Preserve uncertainty and independent source evidence when resolving old/new disagreements. Do not award usefulness solely for co-occurring entities or a passage being in the right chapter. Initial `gpt-6.1-sol` remains configurable; alternate models, including `gpt-6.2-sol`, require separate qualification. No hard-coded fixture answers in general instructions.
 
 ## K. Security / Governance / Observability
 
