@@ -775,4 +775,27 @@ DEVELOPMENT_CASES = (
         },
         expected=_expected(correctness=["incorrect"], abstention=["not_abstained"]),
     ),
+    CalibrationCase(
+        case_id="dev-answer-citation-contradicts-edition-year",
+        classification="synthetic",
+        input={
+            "mode": "judge_answer",
+            "question": "In what year was the first edition of The Glass Orchard published?",
+            "language": "en",
+            "reference": _reference(("edition-year", "The first edition was published in 1912.")),
+            "answer": "The first edition of The Glass Orchard was published in 1921. [edition]",
+            "context": [
+                _excerpt("edition-card", "The Glass Orchard, first edition. Publication year: 1912."),
+                _excerpt("review-card", "The Glass Orchard was reviewed in the Garden Journal in 1921."),
+            ],
+            "sources": [],
+            "citations": [{"id": "edition", "source_id": "edition-card"}],
+        },
+        expected=_expected(
+            correctness=["incorrect"],
+            completeness=["incomplete"],
+            abstention=["not_abstained"],
+            facts={"edition-year": "contradicted"},
+        ),
+    ),
 )

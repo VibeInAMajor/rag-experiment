@@ -53,6 +53,8 @@ All modes take a question and language. Set `scope.complete` only if the caller 
 
 Review and freeze the reference before the three downstream modes. Supply `reference` with an opaque `revision`, the derived `answerability`, `constraints` containing `id` and `description`, and `facts` containing `id`, `statement`, and `required`. Keep the original quotations from the derivation in the caller's reference record. Downstream evidence and citations resolve against the excerpts supplied for that invocation. Provide an empty list for an allowed empty `sources` or `citations` field. Answer citations use `id` and the corresponding `source_id`.
 
+Answer completeness measures coverage of required facts by supported claims. A citation is assessed against the particular excerpt it points to. Exact quotations can demonstrate either support or contradiction.
+
 ### Evidence rubric
 
 | Category | Grade | Evidence requirement |

@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Implemented. The initial live calibration measured `NO_GO`. Evidence prompt revision 3 is in live qualification.
+**Status:** Implemented. Earlier revisions measured `NO_GO`. The revised answer prompt is in live qualification.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -155,6 +155,12 @@ The live development run matched 2 of 4 probes. `dev-reference-sensor-model` end
 `judge_evidence/3` specifies the structured representation for ambiguity. An unassignable fact uses `unknown` and an empty quote list. Spans may be empty when the candidate supplies no attributable evidence. The runner also records a bounded operational failure stage in the local report. The public invocation schema and qualification controls are unchanged.
 
 The revised development fingerprint is `69a127152bba4d67e383bd220c69bab613c0e98688d5672f881b170e39c5e9f4`. All four development probes passed with `gpt-6.1-sol`, four requests, zero retries and estimated usage cost of USD 0.01954975. The qualification fingerprint is `1e42c13277cbf8bdfb3570e300fe5a03365dbbc5f2578703bd4645049d77f83a`.
+
+The qualification returned 31 validated verdicts from 32 requests, with 16/16 grade and support agreements, 1/1 expected `unknown`, 3/3 repeats and zero coverage overclaims. `answer-unsupported-citation` returned `INVALID_OUTPUT` at `evidence_validation`. The failed request still reported usage. The run's total was 38,730 input tokens and 11,685 output tokens, including 1,831 reasoning tokens. Estimated cost was USD 0.23504250. The critical and error gates gave `NO_GO`.
+
+#### Answer prompt revision 2
+
+`judge_answer/2` makes grounded completeness explicit. Every covered required fact must appear in a supported claim and have a supported fact assessment. A citation must use its supplied ID and quote only its cited excerpt. A separate development control uses an authored first-edition date and a citation that contradicts the answer. The development and qualification fingerprints are `28bbc82f8e7ba5ed74b7c7317c8e2c457dcd4046c3c80fe05e6cceb16372b3a8` and `3d69e0aa37d985681f28c1b9e918eed2f8b90e5cc30713f5c56299cabac986e2`. The qualification case manifest and gates remain fixed.
 
 ## M. Acceptance Criteria
 

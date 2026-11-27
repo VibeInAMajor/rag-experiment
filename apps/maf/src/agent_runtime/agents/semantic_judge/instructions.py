@@ -88,16 +88,17 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
             ),
         ),
         "judge_answer": JudgeInstructions(
-            revision="judge_answer/1",
+            revision="judge_answer/2",
             text=_GROUNDING
             + _FROZEN_REFERENCE
             + (
                 "Evaluate the supplied answer as written. Extract material claim text verbatim, preserving "
                 "qualifiers, negations and units. Judge each claim supported, unsupported, contradicted, or unknown "
-                "using the supplied evidence. Assess each supplied citation from its exact cited excerpt and "
-                "link its actual claim IDs. Record missing required facts. Evaluate correctness, completeness, "
-                "and relevance independently. An answer may "
-                "be accurate but incomplete, irrelevant, or unsupported by its citation. Distinguish appropriate "
+                "using the supplied evidence. Each citation uses its supplied ID and actual claim IDs. Quote only "
+                "its cited excerpt in that citation assessment. A citation that contradicts the linked claim is "
+                "unsupported. Evaluate correctness, completeness and relevance independently. For completeness, "
+                "count only required facts present in supported claims and assessed as supported. Record any "
+                "missing or contradicted fact. Distinguish appropriate "
                 "abstention, unwarranted abstention, and an answer asserted despite insufficient evidence. A "
                 "scope-limited abstention can be appropriate when original coverage is incomplete. Never award "
                 "coverage to a fact the given answer leaves implicit without a clear entailment."
