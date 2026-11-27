@@ -35,7 +35,7 @@ This submits the built-in synthetic input `The synthetic marker is cobalt.` usin
 
 | Profile | Model | Qualification |
 | --- | --- | --- |
-| `semantic-review` | `gpt-6.1-sol` | Used by the live smoke. Account access is checked by that run |
+| `semantic-review` | `gpt-6.1-sol` | Synthetic live smoke passed on 2026-11-27 |
 | `semantic-review-6.2` | `gpt-6.2-sol` | Requires separate live qualification |
 
 Both profiles use direct OpenAI Responses. Set `MAF_OPENAI_REASONING_EFFORT` to `low`, `medium`, `high`, or `xhigh`. The default is `medium`. Model selection is explicit through `profile_id`. [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)

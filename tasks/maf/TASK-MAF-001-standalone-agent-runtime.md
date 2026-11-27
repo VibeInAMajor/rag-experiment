@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Implemented and verified offline. Live qualification is `BLOCKED_REAL_API`.
+**Status:** Complete. Offline checks and the `semantic-review` live smoke passed.
 
 **Priority:** P0  
 **Repository snapshot inspected:** `d31eb5ca283523f90584a61c80ca6a90d6fccfe9`  
@@ -112,9 +112,10 @@ Implementation was checked against repository base `482c8d9`. The [standalone RE
 | Installed CLI from an unrelated directory | Import and CLI subprocess tests passed. The isolation test denies provider imports and socket/DNS access on the neutral import path. |
 | Independent Linux container at `/opt/maf` with `--network none` | Hatch 1.18.2 on Python 3.12.15 passed lint, format, strict typing and all 56 tests. Only the MAF source and test directories were mounted. The opted-in CLI smoke returned `MISSING_CREDENTIALS` with zero requests. |
 | `hatch run run` with the README request and no opt-in | Exit 1, `EGRESS_DISABLED`, one JSON result and zero provider requests. |
-| `hatch run smoke --allow-external` | Exit 1, `MISSING_CREDENTIALS`, zero provider requests. This is `BLOCKED_REAL_API`. |
+| `hatch run smoke --allow-external` before credentials were supplied | Exit 1, `MISSING_CREDENTIALS`, zero provider requests. |
+| `hatch run smoke --allow-external` with a session-scoped key | The operator ran the command from `apps/maf/` in Windows PowerShell. One live OpenAI request returned `cobalt` with model `gpt-6.1-sol` in 6,433 ms. |
 
-The opted-in smoke on Windows produced the following result.
+The operator supplied the successful CLI result. The recorded envelope redacts the provider correlation ID.
 
 ```json
 {
@@ -122,37 +123,42 @@ The opted-in smoke on Windows produced the following result.
   "request_id": "synthetic-marker-smoke",
   "agent_id": "structured-smoke",
   "profile_id": "semantic-review",
-  "outcome": "error",
-  "output": null,
-  "error": {"code": "MISSING_CREDENTIALS"},
+  "outcome": "ok",
+  "output": {"marker": "cobalt"},
+  "error": null,
   "metadata": {
     "runtime_revision": "0.1.0",
-    "elapsed_ms": 3,
+    "elapsed_ms": 6433,
     "provider": "openai",
     "configured_model": "gpt-6.1-sol",
-    "model": null,
+    "model": "gpt-6.1-sol",
     "prompt_revision": "1",
     "output_schema_revision": "1",
-    "correlation_id": null,
-    "usage": null,
-    "requests": 0,
+    "correlation_id": "[redacted]",
+    "usage": {
+      "input_tokens": 101,
+      "output_tokens": 26,
+      "reasoning_tokens": 10,
+      "cached_input_tokens": 0
+    },
+    "requests": 1,
     "retries": 0,
     "pricing_version": "openai-standard-2026-11-27",
     "estimated_max_cost_usd": "0.045056",
-    "estimated_cost_usd": null
+    "estimated_cost_usd": "0.00056375"
   }
 }
 ```
 
-The remaining live qualification requires an invocation-scoped `OPENAI_API_KEY` with access to the configured model. Account entitlement, live output and provider-reported usage remain unverified for both profiles. The estimate uses published Standard rates with a regional allowance. Parallel runs in separate processes require a caller-owned aggregate budget. [Runtime contract and limits](../../apps/maf/README.md)
+This run confirms the account's access and structured output for `semantic-review` with the synthetic fixture. The optional `semantic-review-6.2` profile requires its own live qualification. The estimate uses published Standard rates with a regional allowance. Parallel runs in separate processes require a caller-owned aggregate budget. [Runtime contract and limits](../../apps/maf/README.md)
 
-Changed paths are `apps/maf/` for the standalone package, CLI, tests and runbook, `AGENTS.md` and `docs-website/PROJECT_MAP.md` for routing, `tasks/maf/` for architecture and verification, and one release note under `releasenotes/notes/`.
+Changed paths are `apps/maf/` for the standalone package, CLI, tests and runbook, `AGENTS.md` and `docs-website/PROJECT_MAP.md` for routing, `tasks/maf/` for architecture and verification, `tasks/quality/IMPLEMENTATION_ORDER.md` for delivery status, and one release note under `releasenotes/notes/`.
 
 ## M. Acceptance Criteria
 
 - [x] Independent package installs and runs in its own Hatch environment.
 - [x] Provider-neutral request/result and runtime contract are validated. Explicit profiles preserve model selection at the adapter boundary.
-- [ ] Live MAF structured-output invocation against direct OpenAI. The explicit smoke is `BLOCKED_REAL_API` due to missing credentials.
+- [x] The opted-in MAF invocation returned the expected structured marker, actual model and token usage from direct OpenAI.
 - [x] Offline tests cover errors, refusal, budget, cancellation, egress, secret redaction and import isolation.
 - [x] The standalone CLI works independently of Workbench and uses stdin/stdout.
 - [x] Resolved direct dependencies, checks, configured model and live limits are recorded.
@@ -165,6 +171,6 @@ Document separate setup, supported package versions, environment and profile set
 
 - [x] Reinspect repository, official APIs and compatible dependencies.
 - [x] Implement and verify independently runnable package, actual MAF adapter and neutral boundary.
-- [x] Run scoped offline checks and attempt the explicit smoke. Record the blocked outcome.
+- [x] Run scoped offline checks and the explicit live smoke. Record the initial credential failure and subsequent live success.
 - [x] Verify isolation, default egress denial and redaction. Check the diff for RAG code or configuration changes.
-- [x] Update module docs and the project map. Record changed paths and commit the implementation with its offline evidence.
+- [x] Update module docs and the project map. Record changed paths, offline evidence and the live smoke in Git.

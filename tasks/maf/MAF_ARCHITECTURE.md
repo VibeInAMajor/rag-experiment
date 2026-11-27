@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Standalone runtime implemented. Semantic Judge and evaluation integration planned.
+**Status:** Standalone runtime implemented and live-tested with `semantic-review`. Semantic Judge and evaluation integration are planned.
 
 **Repository base inspected:** `482c8d980db6a06ef88532f60bf97cae002cdb0e` plus the scoped MAF implementation. Live qualification is tracked in [MAF-001](TASK-MAF-001-standalone-agent-runtime.md).
 
