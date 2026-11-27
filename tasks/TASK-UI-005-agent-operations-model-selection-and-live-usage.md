@@ -4,7 +4,7 @@
 **Updated:** 2026-11-28  
 **Status:** PROPOSED — specification only; implementation and verification pending  
 **Priority:** P0 for visibility during the upcoming full Semantic Review  
-**Repository snapshot inspected:** `9dbc64ac90bc523873098e11b3d19e43de79f039`  
+**Repository snapshot inspected:** `397296440c196d8851b1c5f74106db20154a18f7` (file-level implementation map); initial baseline `9dbc64ac90bc523873098e11b3d19e43de79f039`  
 **Dependencies:** [MAF-001](maf/TASK-MAF-001-standalone-agent-runtime.md), [MAF-002](maf/TASK-MAF-002-semantic-judge-agent.md) for qualified model profiles, cache accounting and physical request evidence; existing Workbench API/UI and DATASET-002 caller.  
 **Related:** [DATASET-002](quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md), [ANSWERABILITY-001](quality/TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md), [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md).
 
@@ -20,7 +20,7 @@ This is an operational UI for the independent agent subsystem, not another RAG e
 
 ## C. Current Repository State
 
-Static source evidence at the inspected commit; no deployed service, local ignored journal, or new live API call was inspected.
+Static source evidence at the inspected commits; no deployed service, local ignored journal, or new live API call was inspected.
 
 - [App.tsx](../apps/workbench/web/src/App.tsx), [workbenchLocation.ts](../apps/workbench/web/src/domain/workbenchLocation.ts) and [AppNavigation.test.tsx](../apps/workbench/web/src/AppNavigation.test.tsx) currently implement Pipelines, Documents, Runs, Configuration and Settings. No Agents page is registered. Configuration follows Runs; preserve its existing navigation and unsaved-change behavior.
 - [RunsView](../apps/workbench/web/src/views/RunsView.tsx) displays search/preview session history, cleared on refresh. Reuse its table/detail/status patterns, [ServerDuration](../apps/workbench/web/src/components/ServerDuration.tsx), existing styles and accessible controls; do not mix paid agent calls with preview pipeline fixtures or make transient React state the authoritative agent history.
@@ -116,13 +116,94 @@ Lifecycle must distinguish queued, admitted, provider running, output/evidence v
 
 ## I. Repository Files / Components Impacted
 
-- UI: `apps/workbench/web/src/App.tsx`, `domain/workbenchLocation.ts`, existing `AppNavigation.test.tsx`, shared `api/client.ts`, `api/contracts.ts`, `api/decode.ts`; add a feature-owned Agents view/hook and focused tests under existing naming/style conventions. Reuse `views/views.css`, design tokens, table/status, confirmation and duration components; no new chart framework unless justified.
-- API: `apps/workbench/api/application.py`, `boundary.py`, shared `contracts/schemas.py`, `api/openapi.json`, capability and configuration owners, and focused route/contract tests. Add a minimal optional operations feature module only for distinct ownership; reuse current cursor/error/transport protections and safe log emitter.
-- MAF: reuse `configuration.py`, agent registry and runtime metadata from MAF-002. Extend the existing versioned CLI catalog exchange and profile qualification runner only where necessary for this task. Coordinate with MAF-002 before editing shared files; do not duplicate its cache/pricing work or modify frozen control expectations.
-- Existing local DATASET-002 caller and calibration runner: safe lifecycle emission, immutable selected-profile/tariff binding and resume-compatible operations records. Keep raw local evidence untouched and publish only sanitized acceptance artifacts.
-- Documentation: Workbench and MAF README, project map, applicable architecture/contract docs and release metadata per existing project conventions.
+The following file-level implementation map was checked against repository commit `397296440c196d8851b1c5f74106db20154a18f7` on 2026-11-28. Existing file links resolve relative to this task. **EDIT** means an expected modification; **ADD** means a proposed new file which does not exist in the inspected tree; **REUSE** means inspect/consume the existing owner rather than duplicating it (edit only if the integration requires it). Reinspect the tree and scoped instructions at implementation start. Update this section before materially expanding the file set or changing an ownership boundary.
 
-MUST NOT modify retrieval scoring, search/ingestion profiles, source documents, historical reports, golden labels, holdout partitions, provider secrets or existing default egress behavior. No task identifiers in code, CSS, telemetry or API names.
+### I.1. Frontend — existing files to edit
+
+| Operation | Repository file | Exact responsibility |
+| --- | --- | --- |
+| EDIT | [apps/workbench/web/src/App.tsx](../apps/workbench/web/src/App.tsx) | Register Agents after Configuration and before Settings, using the existing navigation/rendering and dirty-page guards. |
+| EDIT | [apps/workbench/web/src/domain/workbenchLocation.ts](../apps/workbench/web/src/domain/workbenchLocation.ts) | Add the agents page to the existing location model and preserve URL/remount behavior. |
+| EDIT | [apps/workbench/web/src/api/contracts.ts](../apps/workbench/web/src/api/contracts.ts) | Define the frontend representation of the server-owned agent catalog, model eligibility, tariff, run, usage and event DTOs; do not create a separate pricing contract. |
+| EDIT | [apps/workbench/web/src/api/client.ts](../apps/workbench/web/src/api/client.ts) | Extend the existing typed client with catalog, scoped run/detail/event and revision-checked profile selection operations, reusing cancellation and error handling. |
+| EDIT | [apps/workbench/web/src/api/decode.ts](../apps/workbench/web/src/api/decode.ts) | Strictly decode operations responses and the additive capability; preserve nullable counts, decimal-string money, scope and version checks. |
+| EDIT | [apps/workbench/web/src/AppNavigation.test.tsx](../apps/workbench/web/src/AppNavigation.test.tsx) | Assert navigation position, active page, URL reload and unchanged Configuration dirty guard. |
+| EDIT | [apps/workbench/web/src/api/client.test.ts](../apps/workbench/web/src/api/client.test.ts) | Extend request/cancellation/error and contract regression coverage for the shared client. |
+
+### I.2. Frontend — files to create
+
+All paths below are relative to repository root; no existing feature with these names was found.
+
+| Operation | Proposed path | Responsibility |
+| --- | --- | --- |
+| ADD | `apps/workbench/web/src/views/AgentsView.tsx` | Agent list, model selection, price panel, live summary, history and timeline; compose existing UI components. |
+| ADD | `apps/workbench/web/src/hooks/useAgentOperations.ts` | Single bounded cancellable polling/selection hook, authoritative snapshot and cursor reconciliation, visibility/backoff, stale and reconnect states. No monetary arithmetic. |
+| ADD | `apps/workbench/web/src/views/agents.css` | Only Agents-specific responsive layouts and visualization styles; reuse existing CSS variables and component classes. Omit if shared styles are sufficient. |
+| ADD | `apps/workbench/web/src/views/AgentsView.test.tsx` | Render verified pricing, shared limits, qualification-aware selection, pending/observed usage, error/empty states and accessibility. |
+| ADD | `apps/workbench/web/src/hooks/useAgentOperations.test.ts` | Polling, abort, no overlap, cursor gaps, duplicate events, reconnect, scope changes and stale response tests. |
+| ADD | `apps/workbench/web/src/api/agents.test.ts` | Feature-specific strict decoding and client request/response tests, including unknown prices and missing usage. Reuse the existing client test helpers. |
+| ADD | `apps/workbench/web/scripts/agents-smoke.js` | Browser acceptance: navigation, model selection, actual operations events, reload, offline behavior and measured event-to-render p95; follow the existing browser smoke conventions. |
+
+Keep the initial view cohesive. Extract additional feature components only for demonstrated reuse or complexity, and record their paths here before adding them. Do not introduce a second global state manager, HTTP client, design system or charting dependency by default.
+
+### I.3. Workbench API and optional operations owner
+
+| Operation | Repository file | Exact responsibility |
+| --- | --- | --- |
+| EDIT | [apps/workbench/api/application.py](../apps/workbench/api/application.py) | Extend create_app composition and feature capability projection; register optional agent operations routes without making MAF required for readiness. |
+| EDIT | [apps/workbench/api/boundary.py](../apps/workbench/api/boundary.py) | Apply existing same-origin/request-intent, request size, error and correlation policies to the new routes; do not add an independent security middleware. |
+| EDIT | [apps/workbench/contracts/schemas.py](../apps/workbench/contracts/schemas.py) | Define canonical HTTP DTOs and extend Features/CapabilitiesResponse with optional agent operations availability. |
+| EDIT | [apps/workbench/api/openapi.json](../apps/workbench/api/openapi.json) | Regenerate/check the published OpenAPI contract against actual registered routes. |
+| EDIT if required | [apps/workbench/configuration/config.py](../apps/workbench/configuration/config.py) | Extend ApiSettings for the optional operator-owned bridge location/availability if no equivalent setting exists; keep secrets out. |
+| EDIT if required | [apps/workbench/configuration/configuration.py](../apps/workbench/configuration/configuration.py) and [apps/workbench/api/configuration_http.py](../apps/workbench/api/configuration_http.py) | Reuse existing revision/atomic-write and configuration route patterns where compatible with the authorized model selection contract; do not duplicate settings ownership or add agent settings to retrieval profiles. |
+| ADD | `apps/workbench/api/agents_http.py` | Register typed, scoped catalog/run/events reads and profile-selection update; reuse application composition and boundary. |
+| ADD | `apps/workbench/agents/__init__.py` | Feature package marker, not a forwarding facade. |
+| ADD | `apps/workbench/agents/operations.py` | Optional provider-neutral operations projection: bind authoritative catalog, validate scope and selection, reconcile safe run/call records and expose snapshots. No MAF SDK, provider calls or scoring. |
+| ADD if existing caller storage cannot be reused directly | `apps/workbench/agents/journal.py` | Bounded metadata-only journal access, cursor/sequence validation, durable revisioned selection, idempotency and retention. Reuse an existing safe store if found; no raw report reader or new database by default. |
+| ADD | `apps/workbench/api/tests/test_agent_routes.py` | HTTP contract, unavailable bridge, scoped reads/pagination, invalid selection, no paid execution, origin/intent and security tests. |
+| ADD | `apps/workbench/agents/tests/test_operations.py` | Deterministic snapshot, immutable profile/tariff binding, Decimal totals projection, event reconciliation, unknown/error handling and scope tests. |
+| ADD if journal.py is introduced | `apps/workbench/agents/tests/test_journal.py` | Storage/cursor security, duplicates, partial record/restart, retention and conflicting selection revision tests. |
+| EDIT | [apps/workbench/api/tests/test_http_contract.py](../apps/workbench/api/tests/test_http_contract.py) | Verify additive capability/OpenAPI and existing HTTP contract behavior. |
+| EDIT if ApiSettings changes | [apps/workbench/configuration/tests/test_configuration.py](../apps/workbench/configuration/tests/test_configuration.py) | Verify bounded optional settings and unchanged defaults. |
+
+The new operations package owns metadata projection, not provider pricing, qualification, or the evaluation algorithm. Aggregate existing backend cost estimates without implementing a second tariff calculator. Use the existing local storage authority after inspection; conditional additions are not authorization to create an unnecessary parallel journal.
+
+### I.4. Standalone MAF and evaluator — coordinated integration points
+
+| Operation | Repository file | Exact responsibility / owner |
+| --- | --- | --- |
+| REUSE (MAF-002 owner) | [apps/maf/src/agent_runtime/configuration.py](../apps/maf/src/agent_runtime/configuration.py) | Canonical shared Sol runtime policy, model mappings, tariff snapshots and cost/reservation calculations. UI-005 consumes the resulting catalog; no duplicate limits or tariffs. |
+| REUSE (MAF-002 owner) | [apps/maf/src/agent_runtime/agents/semantic_judge/agent.py](../apps/maf/src/agent_runtime/agents/semantic_judge/agent.py), [apps/maf/src/agent_runtime/agents/registration.py](../apps/maf/src/agent_runtime/agents/registration.py) | Existing mode registry, capabilities and profile allowlist. Both profiles use the same judge and joint qualification; no second agent. |
+| REUSE / EDIT if needed | [apps/maf/src/agent_runtime/runtime.py](../apps/maf/src/agent_runtime/runtime.py) | Reuse the existing _AGENTS registry and AgentApplication lifecycle/observation boundary. Expose only allowlisted catalog and safe invocation events if required by the bridge. Coordinate shared code with MAF-002. |
+| REUSE / EDIT if needed | [apps/maf/src/agent_runtime/contracts.py](../apps/maf/src/agent_runtime/contracts.py) | Versioned neutral metadata contracts, usage, model/price identity and terminal result; add the minimum operations metadata contract only if MAF-002 does not already supply it. Preserve strict legacy decoding compatibility. |
+| EDIT if no equivalent catalog/event interface exists | [apps/maf/src/agent_runtime/cli.py](../apps/maf/src/agent_runtime/cli.py) | Optional versioned metadata-only catalog and event exchange. Preserve the existing single terminal JSON stdout contract; catalog reads must not initialize provider clients or trigger paid calls. |
+| REUSE (MAF-002 owner) | [apps/maf/src/agent_runtime/adapters/maf_openai.py](../apps/maf/src/agent_runtime/adapters/maf_openai.py) | Physical dispatch and reported usage evidence, cache accounting and strict transport validation. Do not change provider SDK, prompts, retry or streaming behavior for UI. |
+| EDIT, coordinated with MAF-002 | [apps/maf/calibration/run.py](../apps/maf/calibration/run.py) | Emit bounded safe lifecycle records from the existing joint runner, not a second calibration procedure; preserve frozen model arms, manifests, scoring and stdout/JSONL compatibility. |
+| EDIT if the associated interface changes | [apps/maf/tests/test_runtime.py](../apps/maf/tests/test_runtime.py), [apps/maf/tests/test_cli.py](../apps/maf/tests/test_cli.py), [apps/maf/tests/test_calibration.py](../apps/maf/tests/test_calibration.py) | Verify catalog/events, zero egress, safe identity, current usage and compatibility without repeating paid qualification. |
+| EDIT (local-only existing caller) | `.local/evaluation-holdout/quality-check/` | Locate the existing launch/resume, selected-profile and safe event publication owners; extend them to bind future run defaults and report actual calls. Exact files cannot be verified from Git because this directory is ignored. Inspect locally and record their actual paths in this section before editing; do not invent filenames, commit protected data or create a replacement evaluator. See [DATASET-002](quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md). |
+
+The MAF-002 shared-limit/cache/accounting/joint-qualification changes remain owned by MAF-002. UI-005 must not independently implement or reopen those changes. A model switch consumes eligible evidence from the common qualification report; it does not start new qualification.
+
+### I.5. Reuse references and documentation
+
+| Operation | Repository file | Responsibility |
+| --- | --- | --- |
+| REUSE | [apps/workbench/web/src/views/RunsView.tsx](../apps/workbench/web/src/views/RunsView.tsx), [apps/workbench/web/src/components/LiveRunDetails.tsx](../apps/workbench/web/src/components/LiveRunDetails.tsx), [apps/workbench/web/src/components/ServerDuration.tsx](../apps/workbench/web/src/components/ServerDuration.tsx) | Existing table/detail/status/duration patterns; do not merge paid agent history into preview/search session runs. |
+| REUSE | [apps/workbench/web/src/views/ConfigurationView.tsx](../apps/workbench/web/src/views/ConfigurationView.tsx), [apps/workbench/web/src/components/ConfirmationDialog.tsx](../apps/workbench/web/src/components/ConfirmationDialog.tsx) | Existing revision conflict, error and confirmation interaction patterns. |
+| REUSE | [apps/workbench/web/src/styles.css](../apps/workbench/web/src/styles.css), [apps/workbench/web/src/views/views.css](../apps/workbench/web/src/views/views.css) | Canonical design tokens, tables, layout and shared styles. Edit only if genuine shared behavior is required. |
+| REUSE / EDIT if required | [apps/workbench/web/src/hooks/useBackendDiscovery.ts](../apps/workbench/web/src/hooks/useBackendDiscovery.ts), [apps/workbench/web/src/domain/backendDiscovery.ts](../apps/workbench/web/src/domain/backendDiscovery.ts), [apps/workbench/web/src/hooks/useBackendDiscovery.test.ts](../apps/workbench/web/src/hooks/useBackendDiscovery.test.ts) | Existing capability discovery and request isolation; account for agent operations in either Preview or Live without coupling to search profile readiness. |
+| REUSE | [apps/workbench/observability/events.py](../apps/workbench/observability/events.py) | Existing sanitized operational logging. No new external telemetry backend. |
+| REUSE | [apps/workbench/web/scripts/browser-smoke.js](../apps/workbench/web/scripts/browser-smoke.js), [apps/workbench/web/scripts/profile-selector-smoke.js](../apps/workbench/web/scripts/profile-selector-smoke.js) | Browser smoke and actual profile-selection test patterns. |
+| EDIT | [apps/workbench/web/README.md](../apps/workbench/web/README.md), [apps/workbench/api/README.md](../apps/workbench/api/README.md) | Agents UI, optional bridge, model selection, routes, usage and operator workflow. |
+| EDIT | [apps/maf/README.md](../apps/maf/README.md), [MAF_ARCHITECTURE.md](maf/MAF_ARCHITECTURE.md) | Metadata exchange and unchanged independent MAF boundary; reference shared qualification. |
+| EDIT | [docs-website/PROJECT_MAP.md](../docs-website/PROJECT_MAP.md), [docs-website/docs/architecture/rag-runtime-contract.md](../docs-website/docs/architecture/rag-runtime-contract.md) | Navigate new feature ownership and document optional HTTP integration without coupling ordinary RAG operation to MAF. |
+| ADD | `tasks/evidence/agent-operations-qualification/report.md` | Sanitized acceptance evidence, exact commands, actual profile/usage parity, event-to-render latency, limitations and unrun gates. Store screenshots/metrics alongside according to existing evidence conventions. |
+
+Follow [AGENTS.md](../AGENTS.md), [Engineering conventions](../docs-website/ENGINEERING.md), [Project map](../docs-website/PROJECT_MAP.md), [MAF scoped instructions](../apps/maf/AGENTS.md), and applicable documentation/release-note scoped guidance. Any required release metadata follows existing conventions; identify the new file before creating it.
+
+### I.6. Explicitly protected components
+
+MUST NOT modify retrieval scoring, search/ingestion/embedding profiles, original sources, golden labels, holdout partitions, historical reports, secrets or default egress behavior. Specifically, existing [Semantic Judge instructions](../apps/maf/src/agent_runtime/agents/semantic_judge/instructions.py), [judge validators](../apps/maf/src/agent_runtime/agents/semantic_judge/validation.py), [calibration controls](../apps/maf/calibration/controls.py) and [calibration scoring](../apps/maf/calibration/scoring.py) are not UI-005 implementation targets. Do not modify ordinary RAG runtime startup or add a mandatory MAF dependency. No task identifiers in code, CSS, telemetry or API names.
 
 ## J. Implementation Requirements
 
@@ -173,7 +254,7 @@ Use a versioned additive operations interface and bounded metadata store. Preser
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Reinspect actual repository, scoped guidance, local caller and final MAF-002 contracts; record reused owners and any amended scope before implementation.
+- [ ] Reinspect actual repository, scoped guidance, local caller and final MAF-002 contracts; verify the EDIT/ADD/REUSE map in I, record exact local-only caller paths, and amend any material scope changes before implementation.
 - [ ] Implement registry/navigation, optional bridge, durable sanitized event projection, history and live usage/cost dashboard without cross-package SDK imports.
 - [ ] Verify equal shared limits, common qualification revision, model-specific tariffs and qualification-aware selection, including real caller propagation and immutable run binding.
 - [ ] Verify all applicable offline, security, integration, browser and approved live tests; document missing/unrun gates.
