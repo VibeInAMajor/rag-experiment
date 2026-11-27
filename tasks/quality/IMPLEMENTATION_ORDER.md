@@ -1,8 +1,8 @@
 # Retrieval and answer quality — implementation order
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-26  
-**Status:** Active local quality roadmap — dataset delivered locally; current-stack diagnostic NO-GO, source-fidelity assessment pending  
+**Updated:** 2026-11-27  
+**Status:** Active local quality roadmap — current-stack diagnostic NO-GO; DATASET-002 semantic audit reopened; independent MAF judge planned
 **Source inspected:** d6cba6580e308fbb37266b779dce5b6880309a44
 
 ## Decision
@@ -13,15 +13,23 @@ The immediate project goal is finding correct, sufficient, authorized evidence o
 
 ## Robustness and content understanding amendment — 2026-11-26
 
-The [quality, robustness and content-understanding plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) defines seven additional stage-specific metrics, their local experiment contracts, and reuse decisions from the Azure Content Understanding samples. The [actual DATASET-001 report](../evidence/dataset-2026-11-24/report.md) records the completed local delivery and OPEN V2 retrieval baseline. It reports zero natural-query FTS hits on 306 queries, while literal native controls passed 10/10. The QUALITY-001 matrix, failure analysis and matched Markdown UI experiment are complete with INSUFFICIENT_WITH_CURRENT_STACK. Finish the pending source-fidelity assessment from saved evidence; do not restart the matrix. Qualify a useful lexical query policy before claiming hybrid benefit; a dense-only reranker remains valid if lexical is NO-GO. If structural problems are demonstrated, run the narrow text-only CHUNK-004 experiment without making multimodal storage or vision a prerequisite.
+The [quality, robustness and content-understanding plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) defines seven additional stage-specific metrics, their local experiment contracts, and reuse decisions from the Azure Content Understanding samples. The [actual DATASET-001 report](../evidence/dataset-2026-11-24/report.md) records the completed local delivery and OPEN V2 retrieval baseline. It reports zero natural-query FTS hits on 306 queries, while literal native controls passed 10/10. The QUALITY-001 matrix, failure analysis and matched Markdown UI experiment are complete with INSUFFICIENT_WITH_CURRENT_STACK. The bounded source-fidelity assessment is complete; preserve its 18/219 semantic-facet scope and do not restart the matrix. Qualify a useful lexical query policy before claiming hybrid benefit; a dense-only reranker remains valid if lexical is NO-GO. If structural problems are demonstrated, run the narrow text-only CHUNK-004 experiment without making multimodal storage or vision a prerequisite.
 
 Keep local evaluation autonomous: no enterprise reviewers, separate accounts, vault, cloud model or mandatory telemetry platform. Preserve source integrity, local split isolation, existing immutable profiles and runtime budgets. The proposed new stress thresholds are project choices, frozen before their evaluation, not measurements or standards.
 
 ## Corrective execution after the diagnostic — 2026-11-26
 
-The [actual report](../evidence/quality-2026-11-25/report.md) shows eight historical arms and a separate matched cleaned Markdown pair. Use the latter generic 500/50 canonical-LF originals-only corpus as the next comparison baseline: any-complete-fact@1 194/261 (74.33%), @5 255/261 (97.70%), all-facts@5 237/261 (90.80%), all-facts@10 246/261 (94.25%), all-context at 2048 source-content tokens 240/261 (91.95%). The selected code-query on the old source-window corpus is not this baseline. Do not claim a combined policy was evaluated. Primary Evidence Hit and full graded recall/nDCG are NOT_EVALUABLE with the current sparse OPEN qrels; DATASET-002 fills the judgment gap without reopening DATASET-001 delivery or using holdout to tune.
+The [actual report](../evidence/quality-2026-11-25/report.md) shows eight historical arms and a separate matched cleaned Markdown pair. Use the latter generic 500/50 canonical-LF originals-only corpus as the next comparison baseline: any-complete-fact@1 194/261 (74.33%), @5 255/261 (97.70%), all-facts@5 237/261 (90.80%), all-facts@10 246/261 (94.25%), all-context at 2048 source-content tokens 240/261 (91.95%). The selected code-query on the old source-window corpus is not this baseline. Do not claim a combined policy was evaluated. The later DATASET-002 full OPEN pool reported provisional Primary Evidence Hit and pooled ranking metrics; exhaustive recall/nDCG remain NOT_EVALUABLE. Semantic validity of the prior reference/occurrence judgments is now under audit; preserve the prior scores as historical, not qualified gold.
 
-The next execution is LEXICAL-001; DATASET-002 and dense-only RERANK-001 can proceed on captured OPEN evidence without waiting for hybrid (serialize GPU-intensive runs under shared admission). Native FTS diagnosis is already complete, not another prerequisite experiment. Narrow CHUNK-004 is activated by observed structural gaps, but remeasure remaining losses on cleaned source before changing chunk policy. Use existing local UI/Workbench for new functional checks. Compare one factor at a time, then evaluate the combined winning policies on the same OPEN corpus, with fixed candidate/context budgets and cohort/negative regressions. Do not promote until QUALITY-002 frozen R2 GO. No new evaluation service or enterprise governance.
+The corrective retrieval experiments LEXICAL-001 and dense-only RERANK-001 can capture candidate rankings in parallel with the independent judge work, without waiting for hybrid (serialize GPU-intensive runs under shared admission). Do not finalize semantic qualification or tune against unverified reference grades. Native FTS diagnosis is already complete, not another prerequisite experiment. Narrow CHUNK-004 is activated by observed structural gaps, but remeasure remaining losses on cleaned source before changing chunk policy. Use existing local UI/Workbench for new functional checks. Compare one factor at a time, then evaluate the combined winning policies on the same OPEN corpus, with fixed candidate/context budgets and cohort/negative regressions. Do not promote until QUALITY-002 frozen R2 GO. No new evaluation service or enterprise governance.
+
+## Independent semantic assessment — 2026-11-27
+
+User-observed failures on EXT-LIT-001, EXT-NA-003 and EXT-ART-003 require revalidation of question constraints, reference completeness and actual evidence support. The [historical full OPEN report](../evidence/dataset-ranking-full-open-2026-11-26/report.md) records 102 families, 306 translated questions, 1241 pooled judgments and 409 checks. Those checks establish structural and arithmetic consistency, not semantic correctness; the previous metrics are provisional. [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) is reopened. Preserve old revisions and saved predictions; no new full retrieval matrix just to audit grades.
+
+The user explicitly chose a separate Microsoft Agent Framework application under planned `apps/maf/`. [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) establishes an independent Python/Hatch project, provider-neutral invocation/model profiles and direct OpenAI Responses adapter; [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) implements/calibrates the Semantic Judge (initial configured model gpt-6.1-sol). Neither MAF nor Workbench imports the other. The existing offline evaluation runner invokes the standalone MAF CLI through a versioned JSON contract using approved source excerpts and receives structured judgments. MAF cannot query RAG, mutate labels, or determine the final release decision. Existing deterministic scoring remains the metric owner; no external model, extra service or MAF dependency is required for ordinary ingestion/retrieval/generation.
+
+Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calibration → DATASET-002 three-family pilot and full OPEN audit → freeze new reference/qrel/judge revision → compare old/new grades and recompute saved baseline → qualify candidate experiments with the corrected labels. Reuse calibrated judge for QUALITY-002/003 with their own frozen holdouts. Candidate capture and deterministic diagnostics can continue in parallel; semantic GO cannot be claimed from disputed grades. No mandatory human reviewers or second provider. External evaluation is explicitly opt-in, bounded and limited to permitted text; prohibited egress or unavailable judge leaves affected metrics BLOCKED/NOT_EVALUABLE.
 
 ## Delivery order and ownership
 
@@ -29,8 +37,10 @@ The next execution is LEXICAL-001; DATASET-002 and dense-only RERANK-001 can pro
 | --- | --- | --- |
 | 0 | [DENSE-001](../../tasks/completed/TASK-RAG-DENSE-001-live-dense-retrieval-and-exact-cosine-baseline.md) | COMPLETE local exact SQL/HTTP reference |
 | 1 | [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) | [Actual source-pinned seed](dataset/RETRIEVAL_EVALUATION_SEED_V1.md); agent-verified tuning + local holdout and original-source facets required |
-| 2 | [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) | Diagnostic NO-GO; finish pending source-fidelity check only |
-| 2a (parallel offline) | [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) | Source-first primary/relevance judgments, metric eligibility; no holdout tuning |
+| 2 | [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) | COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK; preserve bounded source-fidelity and historical captures |
+| 2a.1 (P0) | [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) | Standalone agent runtime; actual opt-in OpenAI smoke |
+| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | Source-grounded Semantic Judge; calibrated controls |
+| 2a.3 (P0) | [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) | REOPENED: source-first reference and full pooled-judgment audit, same saved predictions, new metric revision; no holdout tuning |
 | 2b | [LEXICAL-001](TASK-RAG-LEXICAL-001-natural-language-query-policy.md) | Qualify useful lexical natural-query policy on OPEN; preserve literal FTS baseline; GO/NO-GO |
 | 3 (conditional on useful lexical GO) | [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) | Compare genuine lexical + exact dense RRF; explicit profile, no ANN dependency |
 | 4 (conditional) | [BM25-001](TASK-RAG-BM25-001-bm25-extension-feasibility-and-quality-gate.md) | Benchmark real BM25 only if lexical errors warrant; decision/licensing |
@@ -50,7 +60,10 @@ CHUNK-004 stays in the ingestion/chunking ownership area and is activated only w
 flowchart TD
     data[Agent-verified local dataset] --> baseline[QUALITY-001 current matrix and failure analysis]
     baseline --> lexical{LEXICAL-001 useful lexical GO?}
-    baseline --> judgments[DATASET-002 metric eligibility]
+    baseline --> audit[DATASET-002 reference and evidence audit]
+    maf[MAF-001 standalone runtime] --> judge[MAF-002 calibrated judge]
+    judge --> audit
+    audit --> judgments[Frozen corrected judgments]
     baseline --> rr[RERANK-001 dense-only qualification]
     lexical -->|Yes| hybrid[HYBRID-001 RRF]
     lexical -->|No| dense[Retain dense path]
@@ -66,6 +79,7 @@ flowchart TD
     context --> abstain[ANSWERABILITY-001 calibration]
     abstain --> gate{QUALITY-002 local adversarial and holdout GO?}
     judgments --> gate
+    judgments --> rr
     gate -->|No| fix[Fix owning component; fresh holdout if used for tuning]
     gate -->|Yes| generation[GENERATION-001]
     generation --> answers{QUALITY-003 claim chain and NAG GO?}
@@ -76,7 +90,7 @@ flowchart TD
 
 Use identical original source scope, query labels, candidate and final context budgets (report both), fixed model/parser/chunk/profile revisions and paired runs. Compare FTS, exact, RRF, exact+reranker, RRF+reranker; optional BM25 only if GO. Always include original synthetic regression, but do not treat it as independent gold. No-answer, conflicting, wrong-version and foreign-scope cases separate from answerable recall. Required facets are original evidence facts, not chunk IDs after rechunking. Track candidate ceiling and final-context coverage separately. User-facing answer completeness and claim grounding belong to QUALITY-003.
 
-Proposed retrieval targets: Primary Evidence Hit@1 >=0.95, Primary Evidence Hit@5 >=0.98, relevant evidence Recall@5 >=0.95, graded nDCG@5 >=0.95, All Required Facets@5 >=0.95; critical adequately sized cohorts Primary@5 >=0.95. Predeclared p95 <=1.20x identical baseline load unless an explicitly approved cost/latency trade-off is recorded. Zero observed unauthorized/stale/wrong-profile/source-hash/citation integrity violations. These are proposed point targets, not achieved results. False acceptance and false abstention each <=5% with actual reviewed denominators. Final local held-out quality gate requires agent source verification, per-cohort uncertainty and no tuning leakage. Enterprise certification is out of scope; no human reviewers, additional identities or special custody infrastructure are required. If thresholds fail, task may document a NO-GO but quality phase does not pass. Never infer quality from top-k size, cosine score or ANN agreement alone.
+Proposed retrieval targets: Primary Evidence Hit@1 >=0.95, Primary Evidence Hit@5 >=0.98, relevant evidence Recall@5 >=0.95, graded nDCG@5 >=0.95, All Required Facets@5 >=0.95; critical adequately sized cohorts Primary@5 >=0.95. Predeclared p95 <=1.20x identical baseline load unless an explicitly approved cost/latency trade-off is recorded. Zero observed unauthorized/stale/wrong-profile/source-hash/citation integrity violations. These are proposed point targets, not achieved results. False acceptance and false abstention each <=5% with actual reviewed denominators. Final local held-out quality gate requires source-first verification, calibrated independent MAF judge, deterministic scoring, per-cohort uncertainty and no tuning leakage. Proposed additional selected-context useful-chunk precision >=0.90 and irrelevant chunk rate <=0.10; freeze denominators/unknown treatment before evaluation. No reduction of existing gates. Enterprise certification is out of scope; no human reviewers, additional identities or special custody infrastructure are required. If thresholds fail, task may document a NO-GO but quality phase does not pass. Never infer quality from top-k size, cosine score or ANN agreement alone.
 
 ## Deferred scope
 
@@ -84,4 +98,4 @@ ANN-001–005 remain valid specifications in tasks/ and are deferred until retri
 
 ## Status
 
-DATASET-001 has a completed local handoff per its actual report. QUALITY-001 completed its diagnostic matrix and UI continuation with NO-GO; its source-fidelity amendment remains pending. No final quality GO is claimed. New/updated specifications remain unexecuted unless their own actual reports prove otherwise. This documentation amendment does not run model inference or PostgreSQL tests.
+DATASET-001 has a completed local handoff per its actual report. QUALITY-001 completed its diagnostic matrix, UI continuation and bounded source-fidelity assessment with NO-GO. DATASET-002 historical full pool assessment is reopened for semantic audit. MAF-001/002 remain PROPOSED; no actual API calls or calibration results are claimed. No final quality GO is claimed. New/updated specifications remain unexecuted unless their own actual reports prove otherwise. This documentation amendment does not run model inference or PostgreSQL tests.
