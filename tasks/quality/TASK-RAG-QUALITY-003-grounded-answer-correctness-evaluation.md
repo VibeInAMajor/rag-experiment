@@ -1,7 +1,7 @@
 # TASK-RAG-QUALITY-003 — Evaluate grounded answer correctness, completeness and citation support
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-26  
+**Updated:** 2026-11-27  
 **Status:** BLOCKED — grounded generation implementation required  
 **Priority:** P0  
 **Dependencies:** [GENERATION-001](TASK-RAG-GENERATION-001-grounded-answer-generation.md) internal implementation, [QUALITY-002](TASK-RAG-QUALITY-002-retrieval-release-gate-and-regression.md) GO, [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); source-verified answer rubric and local holdout.  
@@ -64,6 +64,10 @@ Keep the existing 10,000 active chunks / 50 MiB corpus envelope and per-file lim
 
 Execute [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md) sections 4.2/4.3/4.5/4.6. Score claim-to-context support separately from context-to-original source fidelity, complete claim-to-original evidence chains and required facts; distinguish unsupported, contradicted, unverified and omitted. Proposed >=95% valid supporting claim chains and existing >=98% valid supporting citations; zero fabricated/unauthorized locators. Run matched oracle-clean and actual-context generation at 0/10/20/30% noise by token share, fixed total budget; evidence-preserving and displacement arms separate, near-topic contradictions separate. Proposed 20% evidence-preserving noise tolerance <=10 pp fully-correct/complete accuracy drop, predeclare before evaluation. Report relative and pp changes, actual coverage and cost. If actual answer correctness probabilities exist, assess separate ID/OOD Brier/ECE and risk-coverage; no fake confidence. Agent verifies originals and deterministic values, local model judge optional diagnostic only. Keep ANSWER holdout out of tuning.
 
+### Independent semantic assessment of generated answers — 2026-11-27
+
+Use the calibrated standalone [MAF Semantic Judge](../maf/TASK-MAF-002-semantic-judge-agent.md) through its generic judge_answer and judge_context contracts. The existing evaluator, not MAF, owns source-first reference validation, actual retrieved/selected context, answer captures, deterministic calculations and final gate. Keep the candidate generator and judge separate; do not provide generator identity, prior verdict or desired score. Freeze the judge configuration and answer rubric before the final answer holdout. Check each material claim and exact supporting original quote, question constraints, completeness, contradiction, citation and abstention; semantic UNKNOWN remains separate. MAF cannot retrieve or repair missing evidence or generate replacement answers for a candidate. Apply approved-excerpt egress and budget limits; API failure is not a failed or passed semantic answer. The judge's own calibration, accuracy limits and disagreement report accompany results. No SDK dependency or online judge in the production generation path.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -85,6 +89,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Regression suite and rollback preserve retrieval independently.
 
 - [ ] Full source/claim metrics, broken links, NAG paired degradation and optional answer calibration reported separately; proposed stress thresholds frozen before final run, no unsupported pass.
+
+- [ ] Actual answer claims, context and references assessed through the pinned independent judge, deterministic evidence checks and existing scoring owner; no unsupported or invented gate pass.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
