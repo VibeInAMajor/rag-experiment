@@ -1,8 +1,9 @@
 # Retrieval and answer quality — implementation order
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-27  
-**Status:** Active local quality roadmap. The current-stack diagnostic measured `NO_GO`. The standalone judge passed its frozen calibration. The DATASET-002 semantic pilot is pending.
+**Updated:** 2026-11-28
+
+**Status:** Active local quality roadmap. The current-stack diagnostic measured `NO_GO`. The calibrated MAF 0.3.1 judge completed the DATASET-002 full-input pilot. The full OPEN audit remains pending. [Pilot report](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
 **Source inspected:** d6cba6580e308fbb37266b779dce5b6880309a44
 
 ## Decision
@@ -27,7 +28,7 @@ The corrective retrieval experiments LEXICAL-001 and dense-only RERANK-001 can c
 
 User-observed failures on EXT-LIT-001, EXT-NA-003 and EXT-ART-003 require revalidation of question constraints, reference completeness and actual evidence support. The [historical full OPEN report](../evidence/dataset-ranking-full-open-2026-11-26/report.md) records 102 families, 306 translated questions, 1241 pooled judgments and 409 checks. Those checks establish structural and arithmetic consistency, not semantic correctness; the previous metrics are provisional. [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) is reopened. Preserve old revisions and saved predictions; no new full retrieval matrix just to audit grades.
 
-The standalone `apps/maf/` application owns the provider-neutral invocation contract, model profiles and direct OpenAI Responses adapter. Its synthetic smoke passed with `gpt-6.1-sol`. MAF-002 owns Semantic Judge implementation and calibration. The planned evaluator integration will call the versioned CLI with approved source excerpts and receive structured judgments. The evaluator owns source selection, deterministic scoring, labels and release decisions. [MAF architecture](../maf/MAF_ARCHITECTURE.md) · [MAF-001 verification](../maf/TASK-MAF-001-standalone-agent-runtime.md) · [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md)
+The standalone `apps/maf/` application owns the provider-neutral invocation contract, model profiles and direct OpenAI Responses adapter. Its synthetic smoke passed with `gpt-6.1-sol`. MAF-002 owns Semantic Judge implementation and calibration. The local DATASET-002 pilot used the versioned CLI with approved public source excerpts and received structured judgments. The evaluator owns source selection, deterministic scoring, labels and release decisions. [MAF architecture](../maf/MAF_ARCHITECTURE.md) · [MAF-001 verification](../maf/TASK-MAF-001-standalone-agent-runtime.md) · [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md)
 
 Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calibration → DATASET-002 three-family pilot and full OPEN audit → freeze new reference/qrel/judge revision → compare old/new grades and recompute saved baseline → qualify candidate experiments with the corrected labels. Reuse calibrated judge for QUALITY-002/003 with their own frozen holdouts. Candidate capture and deterministic diagnostics can continue in parallel; semantic GO cannot be claimed from disputed grades. No mandatory human reviewers or second provider. External evaluation is explicitly opt-in, bounded and limited to permitted text; prohibited egress or unavailable judge leaves affected metrics BLOCKED/NOT_EVALUABLE.
 
@@ -98,4 +99,4 @@ ANN-001–005 remain valid specifications in tasks/ and are deferred until retri
 
 ## Status
 
-DATASET-001 has a completed local handoff per its report. QUALITY-001 completed its diagnostic matrix, UI continuation and bounded source-fidelity assessment with NO-GO. DATASET-002 historical full pool assessment is reopened for semantic audit. MAF-001 passed live runtime verification and MAF-002 passed its frozen v6 qualification. The qualified judge revision is ready for the DATASET-002 three-family pilot. [MAF-001 verification](../maf/TASK-MAF-001-standalone-agent-runtime.md) · [MAF-002 verification](../maf/TASK-MAF-002-semantic-judge-agent.md)
+DATASET-001 has a completed local handoff per its report. QUALITY-001 completed its diagnostic matrix, UI continuation and bounded source-fidelity assessment with NO-GO. MAF-001 passed live runtime verification and MAF-002 passed its frozen v8 qualification. The DATASET-002 pilot completed 37/37 whole passages and 9/9 full contexts on the saved baseline. Full OPEN review and the new metric revision are pending. [Pilot report](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)

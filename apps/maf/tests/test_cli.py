@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from agent_runtime import cli
-from agent_runtime.contracts import ErrorCode, InvocationResult
+from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationResult
 from agent_runtime.runtime import AgentRuntime
 
 _ENVELOPE = {
@@ -99,13 +99,16 @@ def test_cli_returns_one_sanitized_error_envelope_for_invalid_payload(tmp_path: 
 
 
 def test_cli_enforces_stdin_byte_limit(tmp_path: Path) -> None:
-    at_limit = _PAYLOAD.ljust(8192)
+    multilingual = {**_ENVELOPE, "input": {"text": "Привіт. The marker is cobalt."}}
+    payload = json.dumps(multilingual, ensure_ascii=False).encode("utf-8")
+    at_limit = payload.ljust(MAX_REQUEST_BYTES)
 
     admitted_payload = _run(tmp_path, at_limit)
     rejected_payload = _run(tmp_path, at_limit + b" ")
 
     assert admitted_payload.error is not None and admitted_payload.error.code == ErrorCode.EGRESS_DISABLED
     assert rejected_payload.error is not None and rejected_payload.error.code == ErrorCode.INVALID_INPUT
+    assert admitted_payload.metadata.requests == rejected_payload.metadata.requests == 0
 
 
 @pytest.mark.parametrize(

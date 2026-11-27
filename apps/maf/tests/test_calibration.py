@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from agent_runtime.configuration import load_profiles
+from agent_runtime.configuration import SEMANTIC_REVIEW_PROFILE, load_profiles
 from agent_runtime.runtime import AgentApplication, AgentRuntime
 from calibration.controls import DEVELOPMENT_CASES
 from calibration.run import _run_live
@@ -43,7 +43,21 @@ def test_frozen_controls_fit_runtime_with_no_credentials() -> None:
     assert manifest["configured_model"] == "gpt-6.1-sol"
     assert manifest["concurrency"] == 1
     assert manifest["retries"] == 0
+    assert manifest["case_count"] == 32
+    assert manifest["control_manifest_sha256"] == "caa72c9408c4ab4a2066671524be825824addebbc5491b94fead1597c4b606cf"
+    assert manifest["limits"]["cli_request_bytes"] == 16_384
+    assert manifest["limits"]["judge_context_fragments"] == 12
+    assert manifest["limits"]["estimated_input_tokens"] == 16_384
+    assert manifest["limits"]["output_tokens"] == 4_096
+    assert manifest["estimated_max_cost_usd"] == "2.883584"
     assert len(manifest["calibration_sha256"]) == 64
+
+
+def test_only_the_review_profile_increases_its_reserve() -> None:
+    profiles = load_profiles({})
+    assert str(profiles[SEMANTIC_REVIEW_PROFILE].estimated_max_cost_usd) == "0.090112"
+    assert profiles["semantic-review-6.2"].max_output_tokens == 2_048
+    assert str(profiles["semantic-review-6.2"].estimated_max_cost_usd) == "0.045056"
 
 
 def test_calibration_requires_explicit_mode() -> None:

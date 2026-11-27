@@ -714,6 +714,11 @@ CASES = (
     *_REPEATS,
 )
 
+_INVENTORY_NOTE = (
+    "The shelves were inspected, the delivery carts were cleaned, and the empty containers "
+    "were moved to the supply room. "
+)
+
 DEVELOPMENT_CASES = (
     CalibrationCase(
         case_id="dev-reference-sensor-model",
@@ -857,5 +862,28 @@ DEVELOPMENT_CASES = (
             ],
         },
         expected={**_expected(answerability=["answerable"]), "required_fact_contains": ["barcode", "3 mL", "seal"]},
+    ),
+    CalibrationCase(
+        case_id="dev-context-required-tail",
+        classification="synthetic",
+        input={
+            "mode": "judge_context",
+            "question": "What are the seal color and exact storage temperature for batch R-204?",
+            "language": "en",
+            "reference": _reference(
+                ("seal", "Batch R-204 uses a cobalt seal."),
+                ("temperature", "Batch R-204 is stored at 14 °C."),
+            ),
+            "context": [
+                *[_excerpt(f"log-{index}", f"Warehouse log {index}. " + _INVENTORY_NOTE * 7) for index in range(1, 11)],
+                _excerpt("seal-card", "Batch R-204 uses a cobalt seal."),
+                _excerpt("storage-card", "Batch R-204 is stored at 14 °C."),
+            ],
+        },
+        expected={
+            **_expected(sufficiency=["sufficient"], facts={"seal": "supported", "temperature": "supported"}),
+            "quote_contains": ["cobalt", "14 °C"],
+        },
+        provenance="Authored 12-fragment capacity control with required evidence only in the last two fragments.",
     ),
 )

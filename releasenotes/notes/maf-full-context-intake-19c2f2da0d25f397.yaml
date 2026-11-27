@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    Standalone MAF runtime 0.3.1 raises the per-call reserve for the
+    ``semantic-review`` profile from USD 0.045056 to USD 0.090112.
+    If your launcher passes a lower explicit ``--max-cost-usd``, use
+    the default or set a budget of at least USD 0.090112.
+enhancements:
+  - |
+    ``maf-agent`` accepts JSON requests up to 16 KiB and
+    ``judge_context`` accepts up to 12 excerpts. Evaluation callers
+    can submit larger saved context packs with the original text
+    and fragment order intact. The ``semantic-review`` profile allows
+    up to 4,096 generated tokens for quote-bearing judgments.

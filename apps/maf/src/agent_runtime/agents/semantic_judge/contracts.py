@@ -9,6 +9,7 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstra
 from agent_runtime.agents.registration import VerdictRejected
 from agent_runtime.agents.semantic_judge.violations import VerdictRule
 
+MAX_CONTEXT_FRAGMENTS = 12
 _SHORT_TEXT_LIMIT = 600
 
 
@@ -183,7 +184,7 @@ class JudgeEvidenceInput(_ReferenceInput):
 
 class JudgeContextInput(_ReferenceInput):
     mode: Literal["judge_context"]
-    context: _Fragments
+    context: Annotated[list[Excerpt], Field(max_length=MAX_CONTEXT_FRAGMENTS)]
 
     @model_validator(mode="after")
     def _validate_context(self) -> Self:

@@ -63,6 +63,41 @@ def test_rejected_judge_request_skips_adapter(overrides: dict[str, JsonValue], p
     assert result.metadata.requests == 0
 
 
+@pytest.mark.parametrize(("count", "code"), [(12, ErrorCode.EGRESS_DISABLED), (13, ErrorCode.INVALID_INPUT)])
+def test_context_fragment_limit_is_enforced_before_provider_access(count: int, code: ErrorCode) -> None:
+    def no_runtime() -> AgentRuntime:
+        pytest.fail("Offline request constructed a provider runtime")
+
+    fragments = [
+        {
+            "id": f"log-{index}",
+            "start": 0,
+            "end": len(_SOURCE),
+            "sha256": sha256(_SOURCE.encode()).hexdigest(),
+            "text": _SOURCE,
+        }
+        for index in range(count)
+    ]
+    request = InvocationRequest(
+        schema_version=1,
+        request_id="context-limit",
+        agent_id="semantic-judge",
+        profile_id=SEMANTIC_REVIEW_PROFILE,
+        input={
+            "mode": "judge_context",
+            "question": "Where does the ship dock?",
+            "language": "en",
+            "reference": {"revision": "fixture", "answerability": "unknown", "constraints": [], "facts": []},
+            "context": fragments,
+        },
+    )
+    app = AgentApplication(no_runtime, load_profiles({}))
+    result = asyncio.run(app.invoke(request, policy=RunPolicy(), environ={}))
+
+    assert result.error is not None and result.error.code == code
+    assert result.metadata.requests == 0
+
+
 @pytest.mark.parametrize(
     ("text", "end", "stage", "reason", "field"),
     [

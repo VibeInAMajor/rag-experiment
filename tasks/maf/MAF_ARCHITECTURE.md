@@ -1,14 +1,15 @@
 # MAF Agent Runtime — independent module architecture
 
 **Created:** 2026-11-27  
-**Updated:** 2026-11-27  
-**Status:** Standalone runtime and Semantic Judge implemented. The v6 judge passed the frozen live qualification. The evaluation integration is planned.
+**Updated:** 2026-11-28
+
+**Status:** Standalone runtime 0.3.1 implements wider Semantic Judge intake and output budgets and passed v8 live qualification on the frozen controls. [Qualification](TASK-MAF-002-semantic-judge-agent.md)
 
 **Repository base inspected:** `482c8d980db6a06ef88532f60bf97cae002cdb0e` plus the scoped MAF implementation. Live qualification is tracked in [MAF-001](TASK-MAF-001-standalone-agent-runtime.md).
 
 ## Decision
 
-The Microsoft Agent Framework module is an independent Python application. It ships a synthetic smoke agent and a Semantic Judge with four stateless modes. Both use the versioned CLI, agent registry and runtime. The diagram includes the planned evaluation integration.
+The Microsoft Agent Framework module is an independent Python application. It ships a synthetic smoke agent and a Semantic Judge with four stateless modes. Both use the versioned CLI, agent registry and runtime. The local evaluation runner exchanges requests and results through the CLI.
 
 ```mermaid
 flowchart LR
@@ -68,6 +69,8 @@ apps/
 ```
 
 The runtime ships its own Hatch project and a local CLI with a versioned JSON request/result envelope on stdin/stdout. Future agents get their own typed input, output and instruction revision. The evaluation caller owns the exchange and can use the existing evaluation UI. See the [standalone runbook](../../apps/maf/README.md).
+
+Runtime 0.3.1 bounds CLI requests at 16 KiB and `semantic-review` input admission at 16,384 estimated units. Its output cap is 4,096 tokens and its per-call reserve is USD 0.090112. `semantic-review-6.2` uses an 8,192-unit input ceiling, a 2,048-token output cap and a USD 0.045056 reserve. `judge_context` accepts up to 12 excerpts while the source and context lists for the other judge modes hold up to eight excerpts each. The runner carries the full saved fragment text, order, offsets, and hashes into each request. The repeat pilot uses the 37 saved passages and nine complete packs from DATASET-002, which measured up to 10,476 wire bytes and 10 excerpts per pack. [Runtime limits](../../apps/maf/README.md#execution-limits-and-estimated-spend) · [First pilot](../evidence/dataset-semantic-pilot-2026-11-27/report.md)
 
 ## Provider boundary
 

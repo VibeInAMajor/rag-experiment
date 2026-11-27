@@ -83,15 +83,17 @@ The CLI returns exit code `0` on success, `130` on cancellation, and `1` for oth
 
 | Limit | Per invocation |
 | --- | --- |
-| Stdin | 8,192 UTF-8 bytes |
-| Estimated input tokens | 8,192, including framing reserve |
-| Provider-generated tokens | 2,048, including reasoning |
+| Stdin | 16,384 UTF-8 bytes (16 KiB) |
+| Estimated input ceiling | 16,384 with `semantic-review` and 8,192 with `semantic-review-6.2`, including framing reserve |
+| Provider-generated tokens, including reasoning | 4,096 with `semantic-review` and 2,048 with `semantic-review-6.2` |
 | Provider response body | 128 KiB |
 | Provider execution deadline | 45 seconds after local admission |
 | Provider requests / concurrency / retries | 1 / 1 / 0 |
 | Estimated spend | USD 0.10 by default, configurable through `--max-cost-usd` up to USD 1 |
 
-Admission estimates input size from UTF-8 bytes plus a framing reserve. Maximum spend reserves the full profile input and output caps using the Standard short-context cache-write input rate and a regional allowance. The current profiles each reserve USD 0.045056. A usage-based estimate requires a matching returned model and reported input and output counts. Actual billing can differ. Callers running multiple processes own their combined budget and concurrency. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing) · [Prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)
+The standalone runtime reads the complete JSON envelope within the stdin limit. Profile admission separately adds the UTF-8 sizes of the validated input, instructions and output schema, and a 1,024-unit framing reserve. It checks this conservative estimate before external execution and checks reported usage after the call.
+
+Maximum spend uses the full profile input and output caps, the Standard short-context cache-write input rate and a regional allowance. The `semantic-review` profile reserves USD 0.090112 per call and `semantic-review-6.2` reserves USD 0.045056. Use the default budget or set `--max-cost-usd` at or above the reserve for the selected profile. A usage-based estimate requires a matching returned model and reported input and output counts. Actual billing can differ. Callers running multiple processes own their combined budget and concurrency. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing) · [Prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)
 
 ## Data handling
 

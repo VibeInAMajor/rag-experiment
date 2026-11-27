@@ -4,6 +4,7 @@ import asyncio
 import json
 from collections.abc import AsyncIterator, Callable
 from dataclasses import replace
+from hashlib import sha256
 from typing import Any
 
 import httpx2
@@ -12,9 +13,10 @@ from agent_framework import Agent
 from pydantic import BaseModel, ConfigDict, Field
 
 from agent_runtime.adapters.maf_openai import MafOpenAIRuntime
+from agent_runtime.agents.semantic_judge.contracts import JudgeContextResult
 from agent_runtime.agents.structured_smoke import SMOKE_REQUEST
-from agent_runtime.configuration import ModelProfile, RunPolicy
-from agent_runtime.contracts import ErrorCode, Usage
+from agent_runtime.configuration import SEMANTIC_REVIEW_PROFILE, ModelProfile, RunPolicy, load_profiles
+from agent_runtime.contracts import ErrorCode, InvocationRequest, Usage
 from agent_runtime.runtime import AgentApplication, ProviderObservation, RuntimeFailure
 
 _PROFILE = ModelProfile(profile_id="semantic-review", model="gpt-6.1-sol")
@@ -154,6 +156,74 @@ def test_missing_usage_and_unsafe_provider_metadata(caplog: pytest.LogCaptureFix
     assert observation.model is None
     assert observation.correlation_id is None
     assert _KEY not in caplog.text
+
+
+def test_large_ordered_context_reaches_provider_without_truncation() -> None:
+    tail = "The final excerpt says nothing about the requested dock."
+    fragments = []
+    for index in range(12):
+        text = f"Log {index}: " + "Щ" * 330 + (f" {tail}" if index == 11 else "")
+        fragments.append(
+            {
+                "id": f"log-{index}",
+                "start": 0,
+                "end": len(text),
+                "sha256": sha256(text.encode()).hexdigest(),
+                "text": text,
+            }
+        )
+    request = InvocationRequest(
+        schema_version=1,
+        request_id="full-context",
+        agent_id="semantic-judge",
+        profile_id=SEMANTIC_REVIEW_PROFILE,
+        input={
+            "mode": "judge_context",
+            "question": "Which dock does the ship berth at?",
+            "language": "en",
+            "reference": {"revision": "fixture", "answerability": "unknown", "facts": [], "constraints": []},
+            "context": fragments,
+        },
+    )
+    output = {
+        "mode": "judge_context",
+        "rationale": "No docking information found.",
+        "sufficiency": "insufficient",
+        "constraint_assessments": [],
+        "fact_assessments": [],
+        "spans": [{"kind": "irrelevant", "quote": {"source_id": "log-11", "start": None, "end": None, "text": tail}}],
+    }
+    sent = []
+
+    def capture(http_request: httpx2.Request) -> httpx2.Response:
+        sent.append(http_request.content)
+        record = _record(json.dumps(output))
+        record["usage"].update(output_tokens=2_250, total_tokens=2_326)
+        return httpx2.Response(200, json=record, headers={"x-request-id": _REQUEST_ID})
+
+    runtime = MafOpenAIRuntime(transport_factory=lambda: httpx2.MockTransport(capture))
+    app = AgentApplication(lambda: runtime, load_profiles({}))
+    result = asyncio.run(
+        app.invoke(
+            request,
+            policy=RunPolicy(allow_external=True, data_classification="synthetic"),
+            environ={"OPENAI_API_KEY": _KEY},
+        )
+    )
+
+    assert result.error is None, result
+    assert result.metadata.requests == 1
+    assert result.metadata.usage is not None
+    assert result.metadata.usage.output_tokens == 2_250
+    (raw,) = sent
+    assert len(request.model_dump_json().encode()) > 8_192
+    assert len(raw) > 8_192
+    body = json.loads(raw)
+    assert body["truncation"] == "disabled"
+    assert body["max_output_tokens"] == 4_096
+    assert json.loads(body["input"][0]["content"][0]["text"]) == request.input
+    (span,) = JudgeContextResult.model_validate(result.output).spans
+    assert span.quote.start == len(fragments[-1]["text"]) - len(tail)
 
 
 @pytest.mark.parametrize(

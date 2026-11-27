@@ -1,8 +1,9 @@
 # TASK-MAF-002 — Implement a source-grounded semantic judge agent
 
 **Created:** 2026-11-27  
-**Updated:** 2026-11-27  
-**Status:** Complete. The v6 live calibration passed all frozen gates on `semantic-review`.
+**Updated:** 2026-11-28
+
+**Status:** Complete. Runtime 0.3.1 passed v8 live calibration on `semantic-review` with the frozen controls.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -213,6 +214,24 @@ All nine development probes and all 32 frozen qualification requests passed with
 Ruff, strict mypy and all 106 offline tests passed on Windows and in a standalone Linux container with networking disabled. The `0.2.0` wheel built. Offline replay independently validated the 32 returned envelopes, checked the verifier output and reproduced the frozen scoring summary. The report with per-case results is saved locally as `apps/maf/calibration/live-report-rag-v6.jsonl`.
 
 The qualified prompt revisions for DATASET-002 are `derive_reference/2`, `judge_evidence/4`, `judge_context/1`, and `judge_answer/3`. The output schema revision is 2 for derivation and 1 for the other modes. Use `semantic-review`, `gpt-6.1-sol`, and medium reasoning. This result qualifies the standalone judge on the frozen controls. DATASET-002 owns the three-family pilot and the OPEN audit. [Evaluation order](../quality/IMPLEMENTATION_ORDER.md)
+
+### Bounded intake amendment — 2026-11-28
+
+The first DATASET-002 pilot established a conflict between exact saved-input review and the v6 executable intake. Its 37 whole passages and nine ordered contexts need at most 10,476 CLI bytes, 15,431 admission units, and 10 context fragments. The full saved Ukrainian Azure context is a positive case for the new bounded intake. A thirteenth fragment and a request one byte over the transport ceiling remain negative boundary cases. [First pilot](../evidence/dataset-semantic-pilot-2026-11-27/report.md)
+
+Runtime 0.3.0 widens the version 1 CLI ceiling to 16 KiB and the `semantic-review` input cap to 16,384. Only `judge_context` admits up to 12 fragments. The per-excerpt bounds, prompt and output schema revisions, semantic gates, validators, model, output caps, timeout, direct egress and zero retries are preserved. The explicit per-call budget must allow the new USD 0.067584 reserve. The calibration runner raises its reserve ceiling to USD 2.50, enough for all 36 allowed cases under the new input cap. The 32 frozen controls therefore reserve USD 2.162688. The historical v6 evidence is preserved.
+
+Requalify on the identical 32 frozen controls and verify admitted and rejected intake boundaries before live pilot review. The replay binds the nine previously admitted independent references and submits all 37 saved pooled passages and all nine full ordered contexts with the same bytes and membership. The replay has a separate manifest and results. Reusing these references isolates the intake change from another reference derivation.
+
+**Observed v7 qualification.** The frozen control hash remains `caa72c9408c4ab4a2066671524be825824addebbc5491b94fead1597c4b606cf`. The v7 calibration fingerprint is `f06974b1279c752f8c16f070ea1a6db2eb09ebf2240784e598d84e0ec58c5423`. All 10 development controls passed, including the full 12-fragment case that requires exact evidence from the final two entries. Qualification passed 32/32 validated cases, 16/16 critical controls, 3/3 exact repeats, and 30/30 fact checks. Both runs used `gpt-6.1-sol` with medium reasoning and recorded zero provider errors or retries. Estimated before-credit cost was USD 0.07311975 for development and USD 0.23895025 for qualification. The local reports are `apps/maf/calibration/development-report-rag-v7.jsonl` and `apps/maf/calibration/live-report-rag-v7.jsonl`.
+
+### Output-cap amendment — 2026-11-28
+
+The first full-input replay on v7 submitted the exact saved English Ruskin context and reached the provider. The provider returned `INCOMPLETE_OUTPUT` at exactly 2,048 reported output tokens. This exposes a second capacity boundary. The runtime accepted the entire input and lacked enough output allowance to finish the structured assessment. Preserve that attempt and its results.
+
+Runtime 0.3.1 gives `semantic-review` a 4,096-token output cap with a USD 0.090112 per-call reserve. The CLI and input limits introduced in 0.3.0, 12-fragment context schema, prompts, output format, quote validation, default maximum spend, alternate profile, provider and retry policy are preserved. The frozen 32-case requalification reserves USD 2.883584 under a USD 3.25 runner ceiling, which covers the existing maximum of 36 controls. Requalify on the same controls and rerun the whole pilot under the amended cap with a fresh manifest. The saved English Ruskin context must complete at the new cap. Above-cap output remains a local budget error.
+
+**Observed v8 qualification.** The v8 fingerprint is `eb6faa0198320869f3f6f8f73336ed653a78d9e5ef2fc84dea17ddb1cbd8dfe3`. The preserved 32-case manifest passed 32/32, with 16/16 critical controls, 3/3 exact repeats and 30/30 fact checks. Provider errors, retries and overclaims remained at zero. Estimated cost before credits was USD 0.24221725. The report is `apps/maf/calibration/live-report-rag-v8.jsonl`. [Full-input pilot](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
 
 ## M. Acceptance Criteria
 

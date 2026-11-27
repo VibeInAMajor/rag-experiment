@@ -1,8 +1,9 @@
 # TASK-RAG-DATASET-002 — Complete local ranking judgments and metric eligibility
 
 **Created:** 2026-11-26  
-**Updated:** 2026-11-27  
-**Status:** REOPENED. Historical full OPEN coverage and arithmetic verification are complete. Previous metrics are provisional pending semantic audit. The standalone MAF judge has passed v6 calibration. The three-family pilot and Semantic Review of the 306 source-checked candidate answers remain pending. [Judge qualification](../maf/TASK-MAF-002-semantic-judge-agent.md) · [Candidate golden set](dataset/golden_set/README.md)
+**Updated:** 2026-11-28
+
+**Status:** REOPENED. The three-family full-input pilot passed with MAF 0.3.1 and v8 qualification. All 37 saved passages and nine full ordered context packs received validated verdicts. Full OPEN Semantic Review remains pending and historical metrics remain provisional. [Full-input pilot](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md) · [Judge qualification](../maf/TASK-MAF-002-semantic-judge-agent.md) · [Candidate golden set](dataset/golden_set/README.md)
 **Priority:** P0  
 **Dependencies:** DATASET-001 local delivery; QUALITY-001 completed diagnostic evidence; [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) standalone runtime and [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) calibrated judge for the reopened semantic audit.
 **Repository snapshot inspected:** `472f550e8d91658228eb3ceeb1dfd2a79e2dbb47`
@@ -80,6 +81,14 @@ Execute after MAF-001 and MAF-002 pass real standalone smoke/calibration. Keep o
 
 Acceptance of the reopened revision requires actual qualified judge evidence, deterministic citation/constraint checks and transparent disagreement resolution. If semantic validity cannot be established for a case, keep it in the manifest as unknown/not evaluable; do not mark a false pass. The old completed arithmetic checks remain valid only for their frozen historical inputs.
 
+### Pilot execution — 2026-11-27
+
+The local evaluator invoked the calibrated judge through the versioned CLI. It froze and verified the nine references before judging any saved retrieval. It recorded two provisional whole-passage corrections from grade 1 to 0 and verified the same-event alternative at Austen chapter 4, the Azure invoice's scoped absence, and the tracing-paper step already present in Ruskin's latest local reference. All 47 submitted requests returned validated results, including nine authored controls, eight diagnostic source windows and seven context prefixes. Full-passage and full-context metrics require a separately qualified intake for the exact saved payloads. The diagnostic results describe only the submitted source windows and prefixes. [Pilot report](../evidence/dataset-semantic-pilot-2026-11-27/report.md)
+
+### Full-input pilot replay — 2026-11-28
+
+The calibrated 0.3.0 intake admitted all 46 whole payloads. The provider exhausted the 2,048-token response budget on the complete English Ruskin pack. The 0.3.1 output-cap amendment passed the frozen v8 qualification and then completed every identical passage and context request. The six answerable contexts covered all required facts. The three Azure contexts were insufficient, and all 12 Azure passages scored zero. Exact per-case results, usage, changes from historical labels and the prior attempt are recorded separately. [Full-input report](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
+
 ## K. Security / Governance / Observability
 
 Existing workspace/version/profile fences and local label exclusion apply. No credentials/raw vectors/source text in normal logs. Keep detailed judgments local; publish aggregate results and artifact pointers.
@@ -98,8 +107,8 @@ Known ranking fixtures: primary vs support, unknown vs explicit negative, duplic
 
 **Additional reopened audit criteria (mandatory before the new revision is marked complete):**
 
-- [ ] MAF-001 and MAF-002 real runtime/calibration evidence linked; RAG and MAF remain separate applications connected only by typed CLI/JSON.
-- [ ] Three user-observed families traced to original source, actual current local labels and saved candidate/context evidence; old/new discrepancies and corrected reference constraints recorded.
+- [x] MAF-001 and MAF-002 real runtime/calibration evidence linked. The local pilot bridges the independent applications through typed CLI/JSON.
+- [x] Three user-observed families traced to original source, actual current local labels and saved candidate/context evidence. Old/new discrepancies and corrected reference constraints are recorded.
 - [ ] All 102 OPEN families / 306 variants and the full existing 1241-occurrence pool plus actual selected context assessed under frozen judge revision; unknown/blocked/error cases remain explicit, no fabricated completion.
 - [ ] New versioned source references, evidence judgments, strict relevance/context metrics and old-vs-new grade change report exist; deterministic scorer recalculates from verified inputs with no new retrieval run required.
 - [ ] External payload classification, actual usage, checkpoint/resume and no holdout tuning verified; no production RAG dependency or service introduced.

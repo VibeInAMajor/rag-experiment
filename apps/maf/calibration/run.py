@@ -10,10 +10,12 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from decimal import Decimal
 from hashlib import sha256
+from importlib.metadata import version
 from pathlib import Path
 from typing import TextIO
 
 from agent_runtime.agents.semantic_judge.agent import AGENT_ID, JUDGE_MODES
+from agent_runtime.agents.semantic_judge.contracts import MAX_CONTEXT_FRAGMENTS
 from agent_runtime.agents.semantic_judge.instructions import INSTRUCTIONS
 from agent_runtime.composition import create_runtime
 from agent_runtime.configuration import PRICING_VERSION, SEMANTIC_REVIEW_PROFILE, ModelProfile, RunPolicy, load_profiles
@@ -24,7 +26,7 @@ from calibration.scoring import GRADE_PERCENT, OTHER_MODE_PERCENT, SUPPORT_PERCE
 
 _MAX_CASES = 36
 _MIN_QUALIFICATION_CASES = 24
-_MAX_RESERVED_COST = Decimal("2.00")
+_MAX_RESERVED_COST = Decimal("3.25")
 _DEADLINE_SECONDS = 420
 _STOP_ERRORS = frozenset(
     {ErrorCode.MISSING_CREDENTIALS, ErrorCode.CONFIGURATION_ERROR, ErrorCode.RATE_LIMITED, ErrorCode.CANCELLED}
@@ -112,6 +114,7 @@ async def _preflight(
         "provider": profile.provider,
         "configured_model": profile.model,
         "reasoning_effort": profile.reasoning_effort,
+        "runtime_revision": version("rag-maf-agent-runtime"),
         "pricing_version": PRICING_VERSION,
         "request_limit": len(cases),
         "concurrency": 1,
@@ -120,6 +123,8 @@ async def _preflight(
         "estimated_max_cost_usd": str(reserved),
         "budget_ceiling_usd": str(_MAX_RESERVED_COST),
         "limits": {
+            "cli_request_bytes": MAX_REQUEST_BYTES,
+            "judge_context_fragments": MAX_CONTEXT_FRAGMENTS,
             "estimated_input_tokens": profile.max_input_tokens,
             "output_tokens": profile.max_output_tokens,
             "provider_response_bytes": profile.max_response_bytes,

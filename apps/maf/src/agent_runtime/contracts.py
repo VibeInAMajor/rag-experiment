@@ -8,7 +8,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, StringConstraints, field_validator, model_validator
 
-MAX_REQUEST_BYTES = 8_192
+MAX_REQUEST_BYTES = 16_384
 
 type InvocationId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")]
 type TokenCount = Annotated[int, Field(ge=0, le=2**53 - 1)]
