@@ -89,6 +89,8 @@ The local evaluator invoked the calibrated judge through the versioned CLI. It f
 
 Before continuing the full OPEN audit, implement and verify Phase A of [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md) using the existing local scorer and saved nine pilot packs. Keep the raw `judge_context.sufficiency` field and add a separate deterministic diagnostic projection. The Azure variants must be displayed as expected no-answer in the verified corpus, not as retrieval misses; the underlying raw verdict remains `insufficient`. Missing scope proof or operational failure is not absence. Preserve frozen reports and grades. Do not require Phase B runtime policy or new retrieval/generation to complete DATASET-002. Use only an explicitly qualified MAF runtime configuration for subsequent live calls; the planned 32,000-output-token candidate requires fresh qualification under MAF-002 before adoption.
 
+Phase A passed on the nine recorded v8 packs with six supported answers and three expected no-answer variants. Apply `answerability-diagnostic/v1` in subsequent OPEN reporting after the live judge configuration is qualified. [Phase A report](../evidence/answerability-phase-a-2026-11-28/report.md)
+
 ### Full-input pilot replay — 2026-11-28
 
 The calibrated 0.3.0 intake admitted all 46 whole payloads. The provider exhausted the 2,048-token response budget on the complete English Ruskin pack. The 0.3.1 output-cap amendment passed the frozen v8 qualification and then completed every identical passage and context request. The six answerable contexts covered all required facts. The three Azure contexts were insufficient, and all 12 Azure passages scored zero. Exact per-case results, usage, changes from historical labels and the prior attempt are recorded separately. [Full-input report](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
@@ -103,7 +105,7 @@ Known ranking fixtures: primary vs support, unknown vs explicit negative, duplic
 
 ## M. Acceptance Criteria
 
-- [ ] ANSWERABILITY-001 Phase A diagnostic projection and pilot replay verified before full OPEN audit; preserve raw verdicts and separate expected absence, retrieval miss, partial/conflict/unknown/error and actual generation not evaluated.
+- [x] ANSWERABILITY-001 Phase A diagnostic projection and pilot replay verified before the full OPEN audit. Raw verdicts and separate diagnostic and operational states were preserved. [Phase A report](../evidence/answerability-phase-a-2026-11-28/report.md)
 
 - [x] Full OPEN revision and coverage manifest: all 87 answerable / 15 no-answer families, 306 queries, 209 primary units, 1241 assessed occurrences, 0 UNKNOWN; all baseline top-10 positions judged.
 - [x] Primary hit, primary recall, MRR and any-fact/all-facts metrics are explicitly separate; unknown is never silently grade zero.

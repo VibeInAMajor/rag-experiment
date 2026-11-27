@@ -158,7 +158,10 @@ def test_missing_usage_and_unsafe_provider_metadata(caplog: pytest.LogCaptureFix
     assert _KEY not in caplog.text
 
 
-def test_large_ordered_context_reaches_provider_without_truncation() -> None:
+@pytest.mark.parametrize(
+    ("profile_id", "model"), [(SEMANTIC_REVIEW_PROFILE, "gpt-6.1-sol"), ("semantic-review-6.2", "gpt-6.2-sol")]
+)
+def test_large_ordered_context_reaches_provider_without_truncation(profile_id: str, model: str) -> None:
     tail = "The final excerpt says nothing about the requested dock."
     fragments = []
     for index in range(12):
@@ -176,7 +179,7 @@ def test_large_ordered_context_reaches_provider_without_truncation() -> None:
         schema_version=1,
         request_id="full-context",
         agent_id="semantic-judge",
-        profile_id=SEMANTIC_REVIEW_PROFILE,
+        profile_id=profile_id,
         input={
             "mode": "judge_context",
             "question": "Which dock does the ship berth at?",
@@ -198,6 +201,7 @@ def test_large_ordered_context_reaches_provider_without_truncation() -> None:
     def capture(http_request: httpx2.Request) -> httpx2.Response:
         sent.append(http_request.content)
         record = _record(json.dumps(output))
+        record["model"] = model
         record["usage"].update(output_tokens=5_000, total_tokens=5_076)
         return httpx2.Response(200, json=record, headers={"x-request-id": _REQUEST_ID})
 
@@ -212,6 +216,7 @@ def test_large_ordered_context_reaches_provider_without_truncation() -> None:
     )
 
     assert result.error is None, result
+    assert result.metadata.model == model
     assert result.metadata.requests == 1
     assert result.metadata.usage is not None
     assert result.metadata.usage.output_tokens == 5_000
@@ -220,6 +225,7 @@ def test_large_ordered_context_reaches_provider_without_truncation() -> None:
     assert len(raw) > 8_192
     body = json.loads(raw)
     assert body["truncation"] == "disabled"
+    assert body["model"] == model
     assert body["max_output_tokens"] == 32_000
     assert json.loads(body["input"][0]["content"][0]["text"]) == request.input
     (span,) = JudgeContextResult.model_validate(result.output).spans

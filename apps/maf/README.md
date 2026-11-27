@@ -35,10 +35,10 @@ This submits the built-in synthetic input `The synthetic marker is cobalt.` usin
 
 | Profile | Model | Qualification |
 | --- | --- | --- |
-| `semantic-review` | `gpt-6.1-sol` | Synthetic live smoke passed on 2026-11-27 |
-| `semantic-review-6.2` | `gpt-6.2-sol` | Pending shared Sol policy and joint qualification (see below) |
+| `semantic-review` | `gpt-6.1-sol` | Default. Existing v8 live evidence. |
+| `semantic-review-6.2` | `gpt-6.2-sol` | Selectable. Verified offline for the shared limits. |
 
-The [planned shared Sol policy](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-runtime-policy-and-joint-qualification--2026-11-28) requires identical application limits (16,384 estimated input units and 32,000 output tokens) and one joint qualification protocol with evidence for both model arms. The current checked-in limits below are not yet aligned. Prices remain model-specific. Both profiles use direct OpenAI Responses. Set `MAF_OPENAI_REASONING_EFFORT` to `low`, `medium`, `high`, or `xhigh`. The default is `medium`. Model selection is explicit through `profile_id`. [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)
+Both Sol profiles use the same application limits and the same four Semantic Judge modes. Select a model explicitly through `profile_id`. Both profiles use direct OpenAI Responses. Set `MAF_OPENAI_REASONING_EFFORT` to `low`, `medium`, `high`, or `xhigh`. The default is `medium`. [Shared limits and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-limits-only--operator-decision) · [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)
 
 ## JSON invocation contract v1
 
@@ -84,8 +84,8 @@ The CLI returns exit code `0` on success, `130` on cancellation, and `1` for oth
 | Limit | Per invocation |
 | --- | --- |
 | Stdin | 16,384 UTF-8 bytes (16 KiB) |
-| Estimated input ceiling | 16,384 with `semantic-review` and 8,192 with `semantic-review-6.2`, including framing reserve |
-| Provider-generated tokens, including reasoning | 32,000 with `semantic-review` and 2,048 with `semantic-review-6.2` |
+| Estimated input ceiling | 16,384 including framing reserve for either Sol profile |
+| Provider-generated tokens, including reasoning | 32,000 for either Sol profile |
 | Provider response body | 128 KiB |
 | Provider execution deadline | 45 seconds after local admission |
 | Provider requests / concurrency / retries | 1 / 1 / 0 |
@@ -93,7 +93,7 @@ The CLI returns exit code `0` on success, `130` on cancellation, and `1` for oth
 
 The standalone runtime reads the complete JSON envelope within the stdin limit. Profile admission separately adds the UTF-8 sizes of the validated input, instructions and output schema, and a 1,024-unit framing reserve. It checks this conservative estimate before external execution and checks reported usage after the call.
 
-Maximum spend uses the full profile input and output caps, the Standard short-context cache-write input rate and a regional allowance. The `semantic-review` profile reserves USD 0.397056 per call and `semantic-review-6.2` reserves USD 0.045056. Use the default budget or set `--max-cost-usd` at or above the reserve for the selected profile. The 0.3.2 ceiling is a capacity candidate pending fresh qualification; the last measured v8 PASS used 0.3.1 at 4,096 output tokens. The independent 128 KiB response-body cap and 45-second execution deadline remain unchanged. A higher token ceiling does not guarantee completion or imply actual spend. A usage-based estimate requires a matching returned model and reported input and output counts. Actual billing can differ. Callers running multiple processes own their combined budget and concurrency. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing) · [Prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)
+Maximum spend uses the full profile input and output caps, the Standard short-context cache-write input rate and a regional allowance. Runtime 0.3.3 reserves USD 0.397056 per call for either configured Sol profile. Use the USD 0.40 default budget or set `--max-cost-usd` at or above the reserve. The independent response-body ceiling is 128 KiB and the execution deadline is 45 seconds. The reserve is a ceiling. A separate usage estimate requires a matching returned model and reported input and output counts. Actual billing can differ. Callers running multiple processes own their combined budget and concurrency. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing) · [Prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)
 
 ## Data handling
 

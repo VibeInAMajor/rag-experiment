@@ -15,7 +15,7 @@ from agent_runtime.agents.semantic_judge.contracts import (
 )
 from agent_runtime.agents.semantic_judge.instructions import INSTRUCTIONS
 from agent_runtime.agents.semantic_judge.validation import validate_verdict
-from agent_runtime.configuration import SEMANTIC_REVIEW_PROFILE
+from agent_runtime.configuration import SOL_PROFILE_IDS
 
 AGENT_ID = "semantic-judge"
 
@@ -33,7 +33,7 @@ JUDGE_MODES = {
         instructions=INSTRUCTIONS[mode].text,
         prompt_revision=INSTRUCTIONS[mode].revision,
         output_schema_revision=f"{mode}/{schema_revision}",
-        allowed_profiles=frozenset({SEMANTIC_REVIEW_PROFILE}),
+        allowed_profiles=SOL_PROFILE_IDS,
         validate_output=validate_verdict,
     )
     for mode, (input_schema, output_schema, schema_revision) in _MODE_SCHEMAS.items()

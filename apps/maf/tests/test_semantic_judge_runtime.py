@@ -47,7 +47,7 @@ def _request(*, profile: str = SEMANTIC_REVIEW_PROFILE, **overrides: JsonValue) 
         ({"mode": "review_old_labels"}, SEMANTIC_REVIEW_PROFILE, ErrorCode.INVALID_INPUT),
         ({"mode": ["derive_reference"]}, SEMANTIC_REVIEW_PROFILE, ErrorCode.INVALID_INPUT),
         ({"old_reference": "June"}, SEMANTIC_REVIEW_PROFILE, ErrorCode.INVALID_INPUT),
-        ({}, "semantic-review-6.2", ErrorCode.UNSUPPORTED_CAPABILITY),
+        ({}, "semantic-review-6.2", ErrorCode.EGRESS_DISABLED),
         ({}, SEMANTIC_REVIEW_PROFILE, ErrorCode.EGRESS_DISABLED),
     ],
 )

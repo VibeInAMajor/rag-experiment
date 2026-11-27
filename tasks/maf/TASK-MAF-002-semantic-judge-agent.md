@@ -3,7 +3,7 @@
 **Created:** 2026-11-27  
 **Updated:** 2026-11-28
 
-**Status:** REOPENED for shared Sol capacity policy, prompt caching and joint qualification. Runtime 0.3.1 passed v8; the 32,000-token candidate is checked in but not yet qualified. Prompt caching, cache-write accounting and measured cache reuse remain to be implemented and verified. Historical v8 evidence remains valid for 0.3.1.
+**Status:** Shared Sol runtime limits implemented in 0.3.3. The current scope uses the existing GPT-6.1 Sol v8 evidence. New live qualification, replay and prompt-cache work are deferred by operator decision. [Current scope](#shared-sol-limits-only--operator-decision)
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -166,6 +166,14 @@ User decision: GPT-6.1 Sol and GPT-6.2 Sol must have equal application limits an
 - Keep the predeclared probe allowance of at most eight calls per model and the existing 32 qualification / 46 full-input replay requests per model, with no extra warmups or retries. Freeze per-arm and aggregate request, cost and deadline ceilings before egress using verified tariffs; the previous USD 15.00 runner reserve was for one arm, not the joint run. Never silently double the approved spend; if authorization or capacity is missing, record the affected arm and joint qualification as pending/blocked. The shared report may contain separately checkpointed arm files; physical request IDs remain distinct. No paid execution is authorized solely by this specification.
 - Expose the shared policy, qualification identity, per-model evidence and tariff snapshots through the catalog consumed by [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md). Switching the default only affects future runs; active/resumed runs remain pinned. Reuse the joint qualification without rerunning it merely because the operator changes between the two admitted profiles. The existing versioned cache/result identity must still include the actual model.
 
+### Shared Sol limits only — operator decision
+
+After pulling `origin/ui` at `3972964`, the operator limited this delivery to selectable GPT-6.1 Sol and GPT-6.2 Sol with the common caps in the table above. This supersedes the planned new live qualification and pilot replay for this delivery. It also defers the separate cache work. The same configuration owner and allowlist apply the caps to both profiles in all four judge modes. The default stays GPT-6.1 Sol. The request/result envelope, judge prompts, schemas, rubric and quote validators are preserved.
+
+Retain the existing v8 evidence for GPT-6.1 Sol at its recorded runtime and limits. GPT-6.2 Sol is available by explicit profile ID and verified locally through the same SDK mock-wire path. This change records no live evidence for GPT-6.2 Sol and no joint PASS. Both configured Standard short-context Sol tariffs use the same rates at this date and give a USD 0.397056 admission reserve. Callers with a smaller explicit limit for the alternate profile must use the USD 0.40 default or update their bound. [OpenAI prices](https://developers.openai.com/api/docs/pricing)
+
+Verified runtime 0.3.3 offline with 115 tests, Ruff lint and format, strict mypy, and the standalone wheel build. The SDK mock transport exercised both selected models with the same 32,000-token setting and intact ordered context. No provider requests were made.
+
 ## K. Security / Governance / Observability
 
 Only source excerpts permitted for external evaluation can leave the caller; no whole workspace, credentials, private docs or sensitive identifiers by default. MAF must not fetch omitted evidence itself. The judge receives no provider keys in the prompt; MAF-001 owns secret resolution. Do not save model reasoning traces. Local evidence may retain input/output under explicit evaluation policy; ordinary logs carry only safe IDs, status, timing, usage and version metadata. Distinguish provider failures/refusals/invalid schema from semantic UNKNOWN; no invented zero or PASS. Source-controlled prompt and schema revisions, not source document instructions, determine behavior.
@@ -323,7 +331,7 @@ The 0.3.2 candidate changes the existing `semantic-review` profile ceiling, the 
 - [ ] Legacy report/CLI compatibility, privacy, scope isolation and safe diagnostics verified. Reused Enterprise patterns and deliberate exclusions documented without introducing new services.
 
 
-- [ ] Both Sol profiles share the same 16,384 input and 32,000 output ceilings, other runtime guards and cache policy; profile-specific pricing/reserves and actual SDK admission are verified.
+- [x] Both Sol profiles share the same 16,384 input and 32,000 output ceilings, runtime guards and existing cache policy. The configured reserves and both SDK mock-wire paths were verified offline.
 - [ ] One joint qualification manifest/report covers both Sol model arms with unchanged frozen gates, model-specific evidence, full-input replay and independently checked cache compatibility; do not claim joint PASS if either arm is unverified.
 
 

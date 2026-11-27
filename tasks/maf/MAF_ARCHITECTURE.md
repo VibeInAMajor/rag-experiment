@@ -3,7 +3,7 @@
 **Created:** 2026-11-27  
 **Updated:** 2026-11-28
 
-**Status:** Standalone runtime 0.3.1 passed v8 live qualification. The 0.3.2 capacity candidate raises the output ceiling to 32,000; fresh qualification is pending. [Qualification](TASK-MAF-002-semantic-judge-agent.md)
+**Status:** Runtime 0.3.3 gives both Sol profiles the same application limits and Semantic Judge modes. GPT-6.1 Sol has historical v8 live evidence from runtime 0.3.1. [Shared policy and evidence](TASK-MAF-002-semantic-judge-agent.md#shared-sol-limits-only--operator-decision)
 
 **Repository base inspected:** `482c8d980db6a06ef88532f60bf97cae002cdb0e` plus the scoped MAF implementation. Live qualification is tracked in [MAF-001](TASK-MAF-001-standalone-agent-runtime.md).
 
@@ -44,7 +44,7 @@ flowchart LR
 
 Arrows between modules are data exchange, not Python imports. The evaluation runner owns RAG-specific mapping, reading authorized originals/captures, exact evidence validation, metric calculation and report publication. MAF receives explicit text and opaque identifiers; it never queries the index, accesses the RAG database, loads a Workbench object, reads the source repository through tools or changes the gold dataset. Workbench must run normally when MAF is absent/offline.
 
-**Planned shared Sol policy (2026-11-28):** [MAF-002](TASK-MAF-002-semantic-judge-agent.md#shared-sol-runtime-policy-and-joint-qualification--2026-11-28) requires both profiles to use the same application input/output/transport/deadline/cache limits and one joint qualification report with model-tagged evidence. The current implementation described below has not yet been aligned. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) consumes that common policy and eligibility, with model-specific pricing and immutable run identity.
+**Shared Sol policy (2026-11-28).** Both profiles load the same application input, output, transport and deadline limits. The current delivery is the standalone runtime configuration and its offline checks. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) owns operator selection and use of eligibility evidence.
 
 ## Independent layout
 
@@ -72,12 +72,12 @@ apps/
 
 The runtime ships its own Hatch project and a local CLI with a versioned JSON request/result envelope on stdin/stdout. Future agents get their own typed input, output and instruction revision. The evaluation caller owns the exchange and can use the existing evaluation UI. See the [standalone runbook](../../apps/maf/README.md).
 
-Runtime 0.3.2 preserves the 16 KiB CLI and 16,384 estimated-unit `semantic-review` input limits. Its proposed output ceiling is 32,000 tokens and its per-call reserve is USD 0.397056; the measured v8 runtime 0.3.1 used 4,096 tokens and USD 0.090112. The 0.3.2 capacity candidate must be qualified before adoption. `semantic-review-6.2` uses an 8,192-unit input ceiling, a 2,048-token output cap and a USD 0.045056 reserve. `judge_context` accepts up to 12 excerpts while the source and context lists for the other judge modes hold up to eight excerpts each. The runner carries the full saved fragment text, order, offsets, and hashes into each request. The repeat pilot uses the 37 saved passages and nine complete packs from DATASET-002, which measured up to 10,476 wire bytes and 10 excerpts per pack. [Runtime limits](../../apps/maf/README.md#execution-limits-and-estimated-spend) · [First pilot](../evidence/dataset-semantic-pilot-2026-11-27/report.md)
+Runtime 0.3.3 imposes a 16 KiB CLI envelope, 16,384 estimated input units, 32,000 generated tokens, a 128 KiB response-body ceiling and a 45-second deadline on both Sol profiles. The configured rates give each a USD 0.397056 worst-case reserve. `judge_context` accepts up to 12 excerpts while the other judge modes hold up to eight excerpts per list. The runner preserves the full saved fragment text, order, offsets and hashes. The v8 pilot measured 37 saved passages and nine complete packs under runtime 0.3.1 with GPT-6.1 Sol. [Runtime limits](../../apps/maf/README.md#execution-limits-and-estimated-spend) · [Recorded v8 pilot](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
 
 ## Provider boundary
 
 - Neutral model profile requests structured output, adequate context and optionally reasoning controls.
-- Composition maps the profile (`semantic-review`) to the MAF Responses adapter. Initial configured OpenAI model: `gpt-6.1-sol` (GPT-6.1 Sol, as requested). `gpt-6.2-sol` is the second selectable Sol profile under the same shared policy and joint qualification specified in MAF-002. Each model arm retains actual verification evidence; a joint PASS covers both. Both are configurable and subject to actual API access. No hard-coded model inside judge policy.
+- Configuration maps `semantic-review` to `gpt-6.1-sol` and `semantic-review-6.2` to `gpt-6.2-sol`. Both use the same MAF Responses adapter and Semantic Judge definitions. The default profile remains `semantic-review` and model selection is explicit through the request profile ID.
 - Direct OpenAI API, not Azure OpenAI or ChatGPT/Codex plan. Official MAF [provider](https://learn.microsoft.com/en-us/agent-framework/integrations/by-component/model-providers/openai), [structured outputs](https://learn.microsoft.com/en-us/agent-framework/agents/structured-outputs), [model catalog](https://developers.openai.com/api/docs/models), [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol). Check released package API when implementing.
 - The runtime starts fresh for each invocation and validates the structured output locally. Its CLI exposes no tools, web search, RAG access, or automatic provider fallback. The planned judge owns deterministic quote and locator validation and returns concise evidence-based rationale.
 - Live calls explicitly enabled with approved non-sensitive data and a per-run spending cap; offline default. No credentials in prompts or artifacts, no raw payload telemetry. Verify `store=false`; provider retention may still apply (see [data controls](https://developers.openai.com/api/docs/guides/your-data)).

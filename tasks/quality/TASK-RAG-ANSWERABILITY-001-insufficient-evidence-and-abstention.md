@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-24  
 **Updated:** 2026-11-28  
-**Status:** PROPOSED — Phase A (offline diagnostic classification) is the immediate prerequisite for full OPEN audit reporting; Phase B (runtime policy qualification) remains gated by its existing dependencies. No implementation or runtime tests executed.  
+**Status:** Phase A passed on the preserved three-family pilot. The local diagnostic revision classifies six answerable variants as supported and three Azure variants as expected no-answer in the verified corpus. Phase B remains gated by corrected labels, EVIDENCE-002 and a qualified retrieval profile. [Phase A report](../evidence/answerability-phase-a-2026-11-28/report.md)
 **Priority:** P0  
 **Dependencies:** Phase A: existing DATASET-002 three-family pilot and caller-side scorer; no runtime policy or new retrieval prerequisite. Phase B: [EVIDENCE-002](TASK-RAG-EVIDENCE-002-bounded-context-and-required-facet-coverage.md), [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md), [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md); qualified selected exact/Hybrid/reranked path; no generation dependency.  
 **Repository snapshot inspected:** `64087f2c63791d542016428a2592cb0c828909a4` (2026-11-28); earlier baseline `d6cba6580e308fbb37266b779dce5b6880309a44`  
@@ -90,7 +90,11 @@ Preserve raw `reference.answerability` and `sufficiency` and distinguish corpus 
 
 A missing/invalid verdict MUST NOT become expected absence; check operational state first. A verified no-answer reference has no required answer facts; the existing validator rejects a sufficient verdict for that state. Do not assume that `judge_context` can positively validate a novel fact absent from such a reference. Independent source-first verification is required for `UNEXPECTED_ANSWER_SUPPORT`; a conflicting/unknown verdict alone is not proof. Missing source proof, unresolved disagreement, and partial coverage remain visible. Grade-zero topical neighbors alone do not imply corpus absence. No-answer in the verified corpus is expected success for absence-of-support evaluation, not proof of a good general ranking, runtime abstention, or generated-answer quality.
 
+The Phase A replay freezes the table as `answerability-diagnostic/v1`. Apply its rows in this order where conditions overlap. First check the operational state and require an admitted, valid context verdict. Next quarantine independently verified answer support against a verified absence reference, even if the valid raw verdict records a conflict or uncertainty. Then preserve any remaining conflict and any raw unknown. A partial reference applies only to a known nonconflicting verdict. Unsupported combinations remain unknown. The scope proof for corpus absence binds the eligible source set, the exact original snapshot and the identifier check. Record the independent excerpt-level derivation separately from the caller's corpus-scope reference.
+
 Render the Azure regression as **No answer in the verified corpus / Expected no answer**, with scope and raw `insufficient` visible as technical detail. Render the six answerable pilot contexts as Answer supported. Preserve historical reports; produce an additive projected report with separate answerable/no-answer denominators and explicit UNKNOWN/error counts. Do not count translated variants as independent families. Do not publish a general release PASS from this pilot.
+
+**Observed Phase A result.** The offline replay on the recorded MAF 0.3.1 v8 artifacts passed with `answerability-diagnostic/v1`. All nine language variants were evaluable, with zero unknowns or errors. The Azure diagnostic binds verification of all 31 eligible source originals and preserves the raw excerpt-level derivation and context verdict. The historical pilot and its grades are preserved. [Phase A report](../evidence/answerability-phase-a-2026-11-28/report.md)
 
 **Phase B — actual runtime answerability policy.** Retain existing EVIDENCE-002, corrected reference/context labels, selected retrieval profile and tuning/holdout dependencies. Runtime receives only authorized selected evidence, query, provenance and qualified local decision policy, never gold reference or expected label. It can return support/partial/no answer in supplied evidence/conflict/unknown, with abstention recommendation and separate typed failures; it cannot claim corpus-wide absence unless a distinct caller-owned complete-scope verification proves it. No external MAF dependency and no hard-coded similarity threshold. Preserve existing 5% gates, separate false acceptance of an unsupported answer-admission decision from actual generation hallucinations, and defer actual generated-answer abstention measurement to QUALITY-003.
 
@@ -110,9 +114,9 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 
 ## M. Acceptance Criteria
 
-- [ ] Phase A projection has an explicit revision and exhaustive table-driven tests, including operational error, incomplete scope, partial reference, conflict, unexpected verified support and all three Azure language variants.
-- [ ] Additive pilot replay reports 6/6 answerable contexts as ANSWER_SUPPORTED and 3/3 verified Azure variants as EXPECTED_NO_ANSWER (one family); raw judge results and historical evidence remain unchanged.
-- [ ] Full OPEN reporting is not started until Phase A passes; Phase B remains gated by corrected labels and EVIDENCE-002. Do not mark the overall task COMPLETE at Phase A alone.
+- [x] Phase A projection has an explicit revision and exhaustive table-driven tests, including operational error, incomplete scope, partial reference, conflict, unexpected verified support and all three Azure language variants.
+- [x] Additive pilot replay reports 6/6 answerable contexts as ANSWER_SUPPORTED and 3/3 verified Azure variants as EXPECTED_NO_ANSWER (one family). Raw judge results and historical evidence are preserved.
+- [x] Phase A finished before full OPEN reporting. Phase B remains gated by corrected labels and EVIDENCE-002.
 
 - [ ] Real reviewed tuning evidence and fixed thresholds with error trade-off.
 - [ ] Explicit insufficient/conflicting vs transport failure outcome and safe provenance.

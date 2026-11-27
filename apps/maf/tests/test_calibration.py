@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+from dataclasses import replace
 from io import StringIO
 from pathlib import Path
 from unittest.mock import AsyncMock
@@ -54,12 +55,15 @@ def test_frozen_controls_fit_runtime_with_no_credentials() -> None:
     assert len(manifest["calibration_sha256"]) == 64
 
 
-def test_only_the_review_profile_increases_its_reserve() -> None:
+def test_sol_profiles_share_runtime_limits_with_distinct_model_ids() -> None:
     profiles = load_profiles({})
-    assert profiles[SEMANTIC_REVIEW_PROFILE].max_output_tokens == 32_000
-    assert str(profiles[SEMANTIC_REVIEW_PROFILE].estimated_max_cost_usd) == "0.397056"
-    assert profiles["semantic-review-6.2"].max_output_tokens == 2_048
-    assert str(profiles["semantic-review-6.2"].estimated_max_cost_usd) == "0.045056"
+    primary = profiles[SEMANTIC_REVIEW_PROFILE]
+    alternate = profiles["semantic-review-6.2"]
+    assert (primary.model, alternate.model) == ("gpt-6.1-sol", "gpt-6.2-sol")
+    assert replace(alternate, profile_id=primary.profile_id, model=primary.model) == primary
+    assert primary.max_input_tokens == 16_384
+    assert primary.max_output_tokens == 32_000
+    assert str(primary.estimated_max_cost_usd) == str(alternate.estimated_max_cost_usd) == "0.397056"
 
 
 def test_calibration_requires_explicit_mode() -> None:

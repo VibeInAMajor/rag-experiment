@@ -1,7 +1,7 @@
 """Trusted model mappings, run policy and versioned cost estimates."""
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal, get_args
 
@@ -19,9 +19,10 @@ _INPUT_CACHE_WRITE_RATE = Decimal("2.50")
 _CACHED_INPUT_RATE = Decimal("0.10")
 _OUTPUT_RATE = Decimal("10")
 _REGIONAL_ALLOWANCE = Decimal("1.10")
-_REVIEW_MAX_INPUT_TOKENS = 16_384
-_REVIEW_MAX_OUTPUT_TOKENS = 32_000
+_SOL_MAX_INPUT_TOKENS = 16_384
+_SOL_MAX_OUTPUT_TOKENS = 32_000
 _MODEL_MAPPING = {SEMANTIC_REVIEW_PROFILE: "gpt-6.1-sol", "semantic-review-6.2": "gpt-6.2-sol"}
+SOL_PROFILE_IDS = frozenset(_MODEL_MAPPING)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -55,16 +56,16 @@ def load_profiles(environ: Mapping[str, str]) -> dict[str, ModelProfile]:
     efforts: dict[str, ReasoningEffort] = {level: level for level in get_args(ReasoningEffort)}
     if effort not in efforts:
         raise ValueError("Unsupported reasoning effort")
-    profiles = {
-        profile_id: ModelProfile(profile_id=profile_id, model=model, reasoning_effort=efforts[effort])
+    return {
+        profile_id: ModelProfile(
+            profile_id=profile_id,
+            model=model,
+            reasoning_effort=efforts[effort],
+            max_input_tokens=_SOL_MAX_INPUT_TOKENS,
+            max_output_tokens=_SOL_MAX_OUTPUT_TOKENS,
+        )
         for profile_id, model in _MODEL_MAPPING.items()
     }
-    profiles[SEMANTIC_REVIEW_PROFILE] = replace(
-        profiles[SEMANTIC_REVIEW_PROFILE],
-        max_input_tokens=_REVIEW_MAX_INPUT_TOKENS,
-        max_output_tokens=_REVIEW_MAX_OUTPUT_TOKENS,
-    )
-    return profiles
 
 
 def estimate_usage_cost(profile: ModelProfile, model: str | None, usage: Usage | None) -> Decimal | None:

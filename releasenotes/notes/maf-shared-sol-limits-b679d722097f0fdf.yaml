@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    The ``semantic-review-6.2`` profile now reserves USD 0.397056 per
+    invocation. Callers with a lower explicit ``--max-cost-usd`` must
+    use the USD 0.40 default or set a sufficient bound.
+enhancements:
+  - |
+    Both standalone Semantic Judge Sol profiles use the same limits of
+    16,384 estimated input units and 32,000 output tokens. Select the
+    desired OpenAI model through the existing ``profile_id`` field.
