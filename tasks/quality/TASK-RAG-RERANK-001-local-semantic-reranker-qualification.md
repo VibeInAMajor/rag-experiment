@@ -1,7 +1,7 @@
 # TASK-RAG-RERANK-001 — Qualify a bounded local semantic reranker against exact and hybrid candidates
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-26  
+**Updated:** 2026-11-27  
 **Status:** PROPOSED — conditional quality experiment; no model qualified  
 **Priority:** P0  
 **Dependencies:** [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md), [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) for hybrid arm; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); valid [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) admission for embedding queries.  
@@ -62,6 +62,10 @@ Use QUALITY-001 failure handoff and compare raw candidate ceiling vs reordered t
 
 The historical selected code-query had 63 cases with a complete singleton fact below rank one within top ten; 15 had no complete singleton in the known indexed representation and 3 had one outside top ten. Targeted top-50 replay recovered 44/50 missing facet observations, 25 by rank 20; these are historical, not the cleaned corpus. Use [latest matched Markdown baseline](../evidence/quality-2026-11-25/report.md) and preserved current top-50 captures; run a dense-only reranker experiment now without waiting for lexical GO. Start with one compatible small local cross-encoder (Qwen3-Reranker-0.6B candidate if qualified); compare raw Dense vs reranked top-10/20/50, same candidate pool and final budget, source singleton feasibility and oracle ceiling. Proposed component GO: >=5 pp paired any-complete-fact@1 gain on OPEN and no reduction in all-facts@5 or fixed-budget all-facts, disclose clustered uncertainty, domain/language regressions, actual shared GPU/latency cost; freeze criterion before running. If ceiling below final targets, route to CHUNK-004 or candidate retrieval; never inflate ranks by gold. DATASET-002 provides distinct primary/relevance labels; do not misname any-fact scores. Use existing UI/local quality evidence path for new functional acceptance; no production integration until qualified RERANK-002.
 
+### Judge-separated ranking qualification — 2026-11-27
+
+The [standalone reranker](../../apps/workbench/reranking/README.md) deployment at commit d31eb5ca283523f90584a61c80ca6a90d6fccfe9 does not itself qualify ranking. The prior full OPEN grade revision is provisional pending reopened [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md). Reuse [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) only through the external evaluation runner to judge previously unseen candidate occurrences and audit direct/partial/support/related/wrong-scope/contradictory results. The judge never sees candidate score/rank/arm or old grade during assessment; use the same frozen rubric/profile and common eligible pool for comparisons. In addition to rank gain and required facts, report strict precision@1/5/10, irrelevant and wrong-scope rates, and paired regressions on EXT-LIT-001, EXT-NA-003 and EXT-ART-003 plus multilingual cohorts. A reranker must not grade its own output; no automatic promotion from its similarity scores. Capturing experimental rankings may proceed before audit completion, but final semantic GO requires eligible revised judgments. Existing exact-source metrics remain separately diagnostic. No MAF imports or external API calls in the reranking application.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -83,6 +87,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Paired hard-negative and cohort results, candidate ceiling, cost and material gain/no-go are reported; unavailable hybrid arm explicitly not evaluated.
 
 - [ ] Dense-only candidate qualification executed or measured NO-GO, with equal-budget ceiling and paired gains against cleaned baseline; hybrid arm added only if qualified.
+
+- [ ] Paired ranking evaluation uses eligible independent judge judgments and reports strict precision/irrelevance and three regression families; deployment/readiness not confused with qualified ranking.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
