@@ -85,6 +85,10 @@ Acceptance of the reopened revision requires actual qualified judge evidence, de
 
 The local evaluator invoked the calibrated judge through the versioned CLI. It froze and verified the nine references before judging any saved retrieval. It recorded two provisional whole-passage corrections from grade 1 to 0 and verified the same-event alternative at Austen chapter 4, the Azure invoice's scoped absence, and the tracing-paper step already present in Ruskin's latest local reference. All 47 submitted requests returned validated results, including nine authored controls, eight diagnostic source windows and seven context prefixes. Full-passage and full-context metrics require a separately qualified intake for the exact saved payloads. The diagnostic results describe only the submitted source windows and prefixes. [Pilot report](../evidence/dataset-semantic-pilot-2026-11-27/report.md)
 
+### Diagnostic classification prerequisite — 2026-11-28
+
+Before continuing the full OPEN audit, implement and verify Phase A of [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md) using the existing local scorer and saved nine pilot packs. Keep the raw `judge_context.sufficiency` field and add a separate deterministic diagnostic projection. The Azure variants must be displayed as expected no-answer in the verified corpus, not as retrieval misses; the underlying raw verdict remains `insufficient`. Missing scope proof or operational failure is not absence. Preserve frozen reports and grades. Do not require Phase B runtime policy or new retrieval/generation to complete DATASET-002. Use only an explicitly qualified MAF runtime configuration for subsequent live calls; the planned 32,000-output-token candidate requires fresh qualification under MAF-002 before adoption.
+
 ### Full-input pilot replay — 2026-11-28
 
 The calibrated 0.3.0 intake admitted all 46 whole payloads. The provider exhausted the 2,048-token response budget on the complete English Ruskin pack. The 0.3.1 output-cap amendment passed the frozen v8 qualification and then completed every identical passage and context request. The six answerable contexts covered all required facts. The three Azure contexts were insufficient, and all 12 Azure passages scored zero. Exact per-case results, usage, changes from historical labels and the prior attempt are recorded separately. [Full-input report](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
@@ -98,6 +102,8 @@ Existing workspace/version/profile fences and local label exclusion apply. No cr
 Known ranking fixtures: primary vs support, unknown vs explicit negative, duplicate/alternative, multi-span, missing primary, no-answer, stale version, insufficient pool, cutoff and denominator. Independently verify arithmetic and unchanged legacy score. Run configured Hatch checks after hatch --version; reuse existing local UI evidence path for any new functional ingestion/retrieval if needed, do not repeat historical matrix. Record exact checks and outcomes.
 
 ## M. Acceptance Criteria
+
+- [ ] ANSWERABILITY-001 Phase A diagnostic projection and pilot replay verified before full OPEN audit; preserve raw verdicts and separate expected absence, retrieval miss, partial/conflict/unknown/error and actual generation not evaluated.
 
 - [x] Full OPEN revision and coverage manifest: all 87 answerable / 15 no-answer families, 306 queries, 209 primary units, 1241 assessed occurrences, 0 UNKNOWN; all baseline top-10 positions judged.
 - [x] Primary hit, primary recall, MRR and any-fact/all-facts metrics are explicitly separate; unknown is never silently grade zero.

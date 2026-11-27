@@ -30,7 +30,11 @@ User-observed failures on EXT-LIT-001, EXT-NA-003 and EXT-ART-003 require revali
 
 The standalone `apps/maf/` application owns the provider-neutral invocation contract, model profiles and direct OpenAI Responses adapter. Its synthetic smoke passed with `gpt-6.1-sol`. MAF-002 owns Semantic Judge implementation and calibration. The local DATASET-002 pilot used the versioned CLI with approved public source excerpts and received structured judgments. The evaluator owns source selection, deterministic scoring, labels and release decisions. [MAF architecture](../maf/MAF_ARCHITECTURE.md) · [MAF-001 verification](../maf/TASK-MAF-001-standalone-agent-runtime.md) · [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md)
 
-Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calibration → DATASET-002 three-family pilot and full OPEN audit → freeze new reference/qrel/judge revision → compare old/new grades and recompute saved baseline → qualify candidate experiments with the corrected labels. Reuse calibrated judge for QUALITY-002/003 with their own frozen holdouts. Candidate capture and deterministic diagnostics can continue in parallel; semantic GO cannot be claimed from disputed grades. No mandatory human reviewers or second provider. External evaluation is explicitly opt-in, bounded and limited to permitted text; prohibited egress or unavailable judge leaves affected metrics BLOCKED/NOT_EVALUABLE.
+Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calibration → DATASET-002 three-family pilot → ANSWERABILITY-001 Phase A diagnostic projection and pilot replay → DATASET-002 full OPEN audit → freeze new reference/qrel/judge revision → compare old/new grades and recompute saved baseline → qualify candidate experiments with the corrected labels. Use the newly amended MAF runtime only after fresh qualification. Reuse calibrated judge for QUALITY-002/003 with their own frozen holdouts. Candidate capture and deterministic diagnostics can continue in parallel; semantic GO cannot be claimed from disputed grades. No mandatory human reviewers or second provider. External evaluation is explicitly opt-in, bounded and limited to permitted text; prohibited egress or unavailable judge leaves affected metrics BLOCKED/NOT_EVALUABLE.
+
+## Immediate prerequisite amendment — 2026-11-28
+
+Do not complete the runtime answerability policy before the independent labels on which it depends. Execute [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md) **Phase A** now: deterministic diagnostic classification and replay of the completed pilot. Then continue DATASET-002 full OPEN audit using an explicitly qualified MAF configuration and the new reporting projection. The proposed 32,000-output-token MAF-002 amendment must pass fresh offline/live qualification and full-input pilot replay before adoption. The historical v8 PASS remains valid only for its recorded runtime. Phase B of ANSWERABILITY-001 remains after corrected labels and EVIDENCE-002 and before QUALITY-002. Candidate capture can continue independently where already authorized.
 
 ## Delivery order and ownership
 
@@ -40,7 +44,8 @@ Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calib
 | 1 | [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) | [Actual source-pinned seed](dataset/RETRIEVAL_EVALUATION_SEED_V1.md); agent-verified tuning + local holdout and original-source facets required |
 | 2 | [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) | COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK; preserve bounded source-fidelity and historical captures |
 | 2a.1 (P0) | [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) | COMPLETE: standalone runtime and opted-in OpenAI smoke passed |
-| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | COMPLETE. The v6 judge passed 32/32 qualification requests. |
+| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | REOPENED for output-cap amendment only; v8 passed 32/32 on 0.3.1; new configuration pending qualification. |
+| 2a.2a (P0) | [ANSWERABILITY-001 Phase A](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md#two-phase-execution-and-diagnostic-classification--2026-11-28) | Deterministic diagnostic projection and saved-pilot replay; no runtime classifier prerequisite |
 | 2a.3 (P0) | [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) | REOPENED: source-first reference and full pooled-judgment audit, same saved predictions, new metric revision; no holdout tuning |
 | 2b | [LEXICAL-001](TASK-RAG-LEXICAL-001-natural-language-query-policy.md) | Qualify useful lexical natural-query policy on OPEN; preserve literal FTS baseline; GO/NO-GO |
 | 3 (conditional on useful lexical GO) | [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) | Compare genuine lexical + exact dense RRF; explicit profile, no ANN dependency |
@@ -50,7 +55,7 @@ Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calib
 | 5a (conditional) | [RERANK-002](TASK-RAG-RERANK-002-qualified-reranking-integration.md) | Only after GO; approved reranking path |
 | 5b (narrow, evidence-backed) | [CHUNK-004](../TASK-RAG-CHUNK-004-policy-benchmark-and-tiered-enrichment.md) | Residual structural diagnosis and bounded context variants |
 | 6 | [EVIDENCE-002](TASK-RAG-EVIDENCE-002-bounded-context-and-required-facet-coverage.md) | Bounded selected context, provenance, required-facet coverage |
-| 7 | [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md) | Measured insufficient-evidence / no-answer decision |
+| 7 | [ANSWERABILITY-001](TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md) | Phase B: measured local evidence-support and abstention policy; Phase A already precedes full audit |
 | 8 | [QUALITY-002](TASK-RAG-QUALITY-002-retrieval-release-gate-and-regression.md) | Freeze candidate; local holdout, paired adversarial stress, source-chain integrity and OOD sufficiency GO/NO-GO |
 | 9 | [GENERATION-001](TASK-RAG-GENERATION-001-grounded-answer-generation.md) | Only after retrieval GO: grounded answer composition, local model qualification |
 | 10 | [QUALITY-003](TASK-RAG-QUALITY-003-grounded-answer-correctness-evaluation.md) | Local held-out answer correctness, Faithfulness-Plus, claim chains, noise robustness and optional answer calibration |
@@ -63,7 +68,8 @@ flowchart TD
     baseline --> lexical{LEXICAL-001 useful lexical GO?}
     baseline --> audit[DATASET-002 reference and evidence audit]
     maf[MAF-001 standalone runtime] --> judge[MAF-002 calibrated judge]
-    judge --> audit
+    judge --> projection[ANSWERABILITY-001 Phase A diagnostic projection]
+    projection --> audit
     audit --> judgments[Frozen corrected judgments]
     baseline --> rr[RERANK-001 dense-only qualification]
     lexical -->|Yes| hybrid[HYBRID-001 RRF]
@@ -79,6 +85,7 @@ flowchart TD
     chunk --> context
     context --> abstain[ANSWERABILITY-001 calibration]
     abstain --> gate{QUALITY-002 local adversarial and holdout GO?}
+    judgments --> abstain
     judgments --> gate
     judgments --> rr
     gate -->|No| fix[Fix owning component; fresh holdout if used for tuning]

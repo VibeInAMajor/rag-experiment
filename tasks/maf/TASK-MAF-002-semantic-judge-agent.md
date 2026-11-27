@@ -3,7 +3,7 @@
 **Created:** 2026-11-27  
 **Updated:** 2026-11-28
 
-**Status:** Complete. Runtime 0.3.1 passed v8 live calibration on `semantic-review` with the frozen controls.
+**Status:** REOPENED for bounded output-cap amendment only. Runtime 0.3.1 passed v8; the new 32,000-token configuration requires fresh qualification. Historical v8 evidence remains valid for 0.3.1.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -233,7 +233,21 @@ Runtime 0.3.1 gives `semantic-review` a 4,096-token output cap with a USD 0.0901
 
 **Observed v8 qualification.** The v8 fingerprint is `eb6faa0198320869f3f6f8f73336ed653a78d9e5ef2fc84dea17ddb1cbd8dfe3`. The preserved 32-case manifest passed 32/32, with 16/16 critical controls, 3/3 exact repeats and 30/30 fact checks. Provider errors, retries and overclaims remained at zero. Estimated cost before credits was USD 0.24221725. The report is `apps/maf/calibration/live-report-rag-v8.jsonl`. [Full-input pilot](../evidence/dataset-semantic-pilot-full-2026-11-28/report.md)
 
+### Output-cap alignment with Lead Engineer — 2026-11-28
+
+User requests alignment with the working Lead Engineer ceiling in the earlier Enterprise AI Development Pipeline. The checked-in [workspace defaults at 955fd04](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/configuration/workspace.defaults.json#L25-L27) set `production_agent_output_tokens: 32000`. [Runtime execution selection](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/configuration/runtime_execution_selection.py#L64-L78) exposes that ceiling for cloud production execution. [NativeModelComposition](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/runtime/maf_model_composition.py) takes this value into the role options as `max_tokens`. The separate 16,000-token constraint is for Ollama local execution, not the cloud production setting; the non-production cloud default is 2,000. Its [native output budget](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/observability/native_output_budget.py) further constrains actual allowance by remaining ledger and tariff. Reuse the cloud numeric upper bound and admission principle, not that project's Azure client, role machinery or ledger. Operator-local overrides and actual long-output usage were not inspected.
+
+Current runtime at `64087f2c63791d542016428a2592cb0c828909a4` uses `_REVIEW_MAX_OUTPUT_TOKENS = 4_096` in `apps/maf/src/agent_runtime/configuration.py`, `RunPolicy.max_cost_usd = 0.10`, calibration aggregate reserve ceiling 3.25, and existing wire/usage guards. v7 hit INCOMPLETE_OUTPUT at 2,048; v8 passed at 4,096. A 32,000 cap is preventive capacity, not evidence that v8 is broken.
+
+Scope: change only the existing semantic-review profile to 32,000 output tokens including reasoning; keep alternate profile, 16,384 input admission units, CLI envelope, 128 KiB response limit, 45-second deadline, egress, retry and prompt/schema/rubric controls unchanged. Recalculate reserve using existing pricing: USD 0.397056 per call, USD 12.705792 for 32 controls, USD 14.294016 for the maximum 36. Amend the default per-invocation budget to USD 0.40 and runner ceiling to USD 15.00 (explicit live opt-in remains required; hard USD 1 per invocation unchanged). These are reservation ceilings, not expected actual spend; callers passing old explicit budgets must update or fail closed. Bump runtime package to 0.3.2. Keep bounded byte/time errors independent; do not promise arbitrary long responses or raise other limits without evidence. Preserve all historical reports.
+
+Update existing configuration, calibration runner, package metadata, README, judge document, architecture notes, focused tests and release-note metadata. Test wire propagation and reported usage above 4,096, at 32,000 and above 32,000; reject insufficient reserve before egress and confirm frozen manifest/gates. Execute Hatch offline checks, new bounded live qualification on unchanged controls and replay identical full pilot with fresh manifests before adopting. No claim of PASS without actual evidence. If credentials/runner are unavailable, record qualification pending. The report projection belongs to ANSWERABILITY-001 Phase A; no change to MAF semantic states.
+
 ## M. Acceptance Criteria
+
+- [ ] 32,000-token ceiling, updated bounded reserves and unchanged independent guards verified by offline tests; alternate profile unchanged.
+- [ ] New runtime fingerprint passes frozen live qualification and identical full-input pilot replay before adoption.
+
 
 - [x] Semantic Judge registers four independent typed modes and runs without RAG dependencies or tools.
 - [x] Strict results include facts, constraints, useful spans, exact references and `unknown`. A positive grade requires a quoted contribution to a required fact.
@@ -247,6 +261,8 @@ Runtime 0.3.1 gives `semantic-review` a 4,096-token output cap with a USD 0.0901
 Document modes, examples, rubric, failure semantics and judge-version lifecycle inside the MAF app. No migration. Prior dataset scores are untouched by this implementation; DATASET-002 consumes a specific qualified judge revision to create a new local assessment. Disable the judge profile or switch to a separately qualified revision to roll back; never silently relabel old metrics or switch providers during a comparison.
 
 ## O. Mandatory Completion Checklist
+
+- [ ] Complete output-cap amendment tests, fresh qualification and pilot replay; retain historical v8 result.
 
 - [x] Reinspect MAF-001, the released provider API and source fixtures.
 - [x] Implement typed source-grounded judge and deterministic validators.
