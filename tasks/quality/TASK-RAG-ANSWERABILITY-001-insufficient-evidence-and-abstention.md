@@ -1,7 +1,7 @@
 # TASK-RAG-ANSWERABILITY-001 — Qualify insufficient-evidence detection and explicit abstention
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-26  
+**Updated:** 2026-11-27  
 **Status:** PROPOSED — specification only; no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** [EVIDENCE-002](TASK-RAG-EVIDENCE-002-bounded-context-and-required-facet-coverage.md), [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md), [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md); qualified selected exact/Hybrid/reranked path; no generation dependency.  
@@ -62,6 +62,10 @@ Follow [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11
 
 The [completed QUALITY-001 report](../evidence/quality-2026-11-25/report.md) confirms all 45 OPEN no-answer queries return dense neighbors, including after cleanup; no sufficiency classifier or generator was evaluated. Reuse local absence judgments, near-matches and captured ranks/distances to compare empty-result and score/margin baselines, then source-evidence sufficiency only if needed using a qualified local model. Separate corpus answerability from retrieved-context sufficiency and partial/conflicting/error outcomes. At 45 no-answer localized rows, <=5% observed false acceptance permits at most 2; at 261 answerable rows <=5% observed false abstention permits at most 13, provided all rows are evaluable and denominators match those definitions. Report family counts and uncertainty; no automatic calibration claim from correlated translations. Use final R2 only once candidate/policy frozen. No new functional runtime service or human reviewer required; use existing local UI/Workbench checks.
 
+### Independent sufficiency labels and runtime boundary — 2026-11-27
+
+Use the reopened [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) and [MAF Semantic Judge](../maf/TASK-MAF-002-semantic-judge-agent.md) for offline source-scope and actual context sufficiency assessments. EXT-NA-003 is a mandatory regression: redundancy descriptions do not establish the exact EUR monthly invoice of invoice-birch-902. Distinguish corpus-level absence, candidate-level irrelevance, missing required fact, partial/conflicting evidence and operational error. No-answer gold requires independently checked original corpus scope, not a failure of retrieval to find evidence. External judge can supply evaluated labels, but may not stand in for the runtime answerability decision or be the only evidence of its correctness; calibrate and test the actual selected local decision policy, keeping existing false-acceptance/abstention gates and eligible denominators. No online MAF dependency, no threshold inferred from raw similarity, no grading transport failures as unanswerable.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -81,6 +85,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Target <=5% false acceptance/abstention demonstrated on tuning or blocked; final independent gate belongs QUALITY-002.
 
 - [ ] Calibration and OOD outcomes reported with exact denominators, fixed policy, uncertainty and probability availability; existing <=5% false acceptance/abstention targets retained.
+
+- [ ] Actual local answerability policy evaluated against eligible source-first and semantic sufficiency labels; invoice regression and unknown/error distinction verified; judge not a runtime dependency.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
