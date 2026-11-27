@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-26  
 **Updated:** 2026-11-27  
-**Status:** REOPENED — historical full OPEN coverage and arithmetic verification completed; semantic correctness of the reference/occurrence judgments is under audit after user-observed failures. Previous metrics are provisional, not qualified gold. New independent MAF semantic judge and audit pending. Candidate source-first golden-set delivery precedes judge execution.
+**Status:** REOPENED — historical full OPEN coverage and arithmetic verification completed; semantic correctness of the reference/occurrence judgments is under audit after user-observed failures. Previous metrics are provisional, not qualified gold. New independent MAF semantic judge and audit pending. [Candidate golden set delivered](dataset/golden_set/README.md): 306 source-checked answers; Semantic Review pending.
 **Priority:** P0  
 **Dependencies:** DATASET-001 local delivery; QUALITY-001 completed diagnostic evidence; [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) standalone runtime and [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) calibrated judge for the reopened semantic audit.
 **Repository snapshot inspected:** `472f550e8d91658228eb3ceeb1dfd2a79e2dbb47`
@@ -104,7 +104,8 @@ Known ranking fixtures: primary vs support, unknown vs explicit negative, duplic
 - [ ] New versioned source references, evidence judgments, strict relevance/context metrics and old-vs-new grade change report exist; deterministic scorer recalculates from verified inputs with no new retrieval run required.
 - [ ] External payload classification, actual usage, checkpoint/resume and no holdout tuning verified; no production RAG dependency or service introduced.
 
-- [ ] Candidate OPEN golden set is delivered before judge execution; all 306 existing query IDs map to source-backed answerable/absence references; semantic admission occurs only after independent source-first MAF review.
+- [x] [Candidate OPEN golden set](dataset/golden_set/README.md) delivered before judge execution: 306/306 unique query IDs, 261 answerable and 45 no-answer references, 31 pinned originals. Answer files were fetched back and checked for one-to-one ID coverage, original locator syntax and absence scope. No retrieval outputs were used to author them.
+- [ ] Admit a new reference revision only after independent source-first MAF Semantic Review; compare against the authored candidate, resolve discrepancies from originals, retain unknowns.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
