@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Register ``semantic-judge`` in the standalone ``maf-agent`` CLI to derive
+    references and assess candidate passages, context, and answers. Each mode
+    validates source quotes and reports uncertainty so evaluation callers can
+    review a verdict alongside its evidence.

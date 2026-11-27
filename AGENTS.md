@@ -7,7 +7,7 @@
 - **Naming, reuse, testing and integration rules:** [Engineering conventions](docs-website/ENGINEERING.md).
 - **UI:** [Workbench README](apps/workbench/web/README.md). In `apps/workbench/web`, run `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` (after `npm ci` if needed).
 - **Haystack Python:** [Engineering conventions](docs-website/ENGINEERING.md#haystack-python) and [CONTRIBUTING.md](CONTRIBUTING.md). Use Hatch; run targeted tests and configured quality checks.
-- **Standalone agent subsystem:** [MAF runtime README](apps/maf/README.md), [architecture](tasks/maf/MAF_ARCHITECTURE.md), and [planned Semantic Judge](tasks/maf/TASK-MAF-002-semantic-judge-agent.md). Keep `apps/maf/` and Workbench/Haystack independent. Use the versioned invocation contract. RAG evaluation remains caller-owned, and ordinary RAG execution must work without MAF or external API access.
+- **Standalone agent subsystem:** [MAF runtime README](apps/maf/README.md), [architecture](tasks/maf/MAF_ARCHITECTURE.md), and [Semantic Judge contract](apps/maf/SEMANTIC_JUDGE.md). Keep `apps/maf/` and Workbench/Haystack independent. Use the versioned invocation contract. RAG evaluation remains caller-owned, and ordinary RAG execution must work without MAF or external API access.
 - **RAG architecture:** [Project map: implemented vs planned](docs-website/PROJECT_MAP.md#5-planned-rag-capabilities-vs-checked-in-implementation). The dated [RAG MVP plan](docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md) is a reference, not an implemented contract.
 
 ## Scoped guidance

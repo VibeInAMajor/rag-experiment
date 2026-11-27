@@ -1,6 +1,6 @@
 # Standalone MAF agent runtime
 
-`apps/maf` runs registered Python agents through Microsoft Agent Framework and OpenAI Responses. The built-in synthetic agent exercises structured output. The application runs from this directory or an independent copy with its own Hatch environment. It needs no Workbench server, Haystack installation, database, corpus, or local inference service. The Semantic Judge is planned separately. [Semantic Judge task](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md)
+`apps/maf` is an independent Hatch application that runs registered Python agents through Microsoft Agent Framework and OpenAI Responses. It ships a synthetic smoke agent and a Semantic Judge with four typed modes. The judge evaluates only text supplied by the caller. [Semantic Judge contract and calibration](SEMANTIC_JUDGE.md)
 
 ## Setup and offline checks
 

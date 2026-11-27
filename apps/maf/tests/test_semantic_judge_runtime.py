@@ -1,0 +1,104 @@
+import asyncio
+import json
+from hashlib import sha256
+from unittest.mock import AsyncMock
+
+import pytest
+from pydantic import JsonValue
+
+from agent_runtime.agents.semantic_judge.contracts import DeriveReferenceResult
+from agent_runtime.configuration import SEMANTIC_REVIEW_PROFILE, RunPolicy, load_profiles
+from agent_runtime.contracts import ErrorCode, InvocationRequest
+from agent_runtime.runtime import AgentApplication, AgentRuntime
+
+_KEY = "test-only-credential"
+_SOURCE = "Ship launches in July."
+_QUOTE = "in July"
+_INPUT: dict[str, JsonValue] = {
+    "mode": "derive_reference",
+    "question": "When does the ship launch?",
+    "language": "en",
+    "scope": {"description": "Authorized log excerpt", "complete": False},
+    "sources": [
+        {
+            "id": "log",
+            "start": 140,
+            "end": 140 + len(_SOURCE),
+            "sha256": sha256(_SOURCE.encode()).hexdigest(),
+            "text": _SOURCE,
+        }
+    ],
+}
+
+
+def _request(*, profile: str = SEMANTIC_REVIEW_PROFILE, **overrides: JsonValue) -> InvocationRequest:
+    return InvocationRequest(
+        schema_version=1,
+        request_id="derived",
+        agent_id="semantic-judge",
+        profile_id=profile,
+        input={**_INPUT, **overrides},
+    )
+
+
+@pytest.mark.parametrize(
+    ("overrides", "profile", "code"),
+    [
+        ({"mode": "review_old_labels"}, SEMANTIC_REVIEW_PROFILE, ErrorCode.INVALID_INPUT),
+        ({"mode": ["derive_reference"]}, SEMANTIC_REVIEW_PROFILE, ErrorCode.INVALID_INPUT),
+        ({"old_reference": "June"}, SEMANTIC_REVIEW_PROFILE, ErrorCode.INVALID_INPUT),
+        ({}, "semantic-review-6.2", ErrorCode.UNSUPPORTED_CAPABILITY),
+        ({}, SEMANTIC_REVIEW_PROFILE, ErrorCode.EGRESS_DISABLED),
+    ],
+)
+def test_rejected_judge_request_skips_adapter(overrides: dict[str, JsonValue], profile: str, code: ErrorCode) -> None:
+    def no_runtime() -> AgentRuntime:
+        pytest.fail("Rejected request constructed a provider runtime")
+
+    app = AgentApplication(no_runtime, load_profiles({}))
+    result = asyncio.run(app.invoke(_request(profile=profile, **overrides), policy=RunPolicy(), environ={}))
+
+    assert result.error is not None
+    assert result.error.code == code
+    assert result.metadata.requests == 0
+
+
+@pytest.mark.parametrize("verbatim", [True, False])
+def test_application_validates_and_locates_returned_quote(verbatim: bool) -> None:
+    reply = {
+        "mode": "derive_reference",
+        "rationale": "The log gives the launch month.",
+        "answerability": "answerable",
+        "reference_answer": "July",
+        "constraints": [],
+        "facts": [
+            {
+                "id": "month",
+                "statement": "Launches in July",
+                "required": True,
+                "quotes": [{"source_id": "log", "start": None, "end": None, "text": _QUOTE if verbatim else "in June"}],
+            }
+        ],
+        "coverage_gaps": [],
+    }
+    port = AsyncMock(spec=AgentRuntime)
+    port.invoke.return_value = json.dumps(reply)
+    app = AgentApplication(lambda: port, load_profiles({}))
+    result = asyncio.run(
+        app.invoke(
+            _request(),
+            policy=RunPolicy(allow_external=True, data_classification="synthetic"),
+            environ={"OPENAI_API_KEY": _KEY},
+        )
+    )
+
+    assert port.invoke.call_args.kwargs["output_schema"] is DeriveReferenceResult
+    assert json.loads(port.invoke.call_args.kwargs["input_json"]) == _INPUT
+    assert result.metadata.prompt_revision == "derive_reference/1"
+    if verbatim:
+        verdict = DeriveReferenceResult.model_validate(result.output)
+        assert verdict.facts[0].quotes[0].start == 140 + _SOURCE.index(_QUOTE)
+    else:
+        assert result.error is not None
+        assert result.error.code == ErrorCode.INVALID_OUTPUT
+        assert result.output is None

@@ -125,7 +125,7 @@ def test_cli_serializes_valid_output_and_checks_builtin_smoke_marker(
 ) -> None:
     port = AsyncMock(spec=AgentRuntime)
     port.invoke.return_value = json.dumps({"marker": marker})
-    monkeypatch.setattr(cli, "_create_runtime", lambda: port)
+    monkeypatch.setattr(cli, "create_runtime", lambda: port)
     monkeypatch.setenv("OPENAI_API_KEY", "offline-provider-key-sentinel")
     monkeypatch.delenv("MAF_OPENAI_REASONING_EFFORT", raising=False)
     with TextIOWrapper(BytesIO(_PAYLOAD), encoding="utf-8") as stdin:

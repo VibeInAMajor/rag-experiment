@@ -2,13 +2,13 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Standalone runtime implemented and live-tested with `semantic-review`. Semantic Judge and evaluation integration are planned.
+**Status:** Standalone runtime and Semantic Judge implemented. The evaluation integration is planned.
 
 **Repository base inspected:** `482c8d980db6a06ef88532f60bf97cae002cdb0e` plus the scoped MAF implementation. Live qualification is tracked in [MAF-001](TASK-MAF-001-standalone-agent-runtime.md).
 
 ## Decision
 
-The Microsoft Agent Framework module is an independent Python application in this repository. It ships a synthetic runtime smoke agent. The Semantic Judge will reuse the same CLI, registry and runtime without depending on Workbench, PostgreSQL, Haystack or the embedding stack. The diagram includes the planned evaluation integration.
+The Microsoft Agent Framework module is an independent Python application. It ships a synthetic smoke agent and a Semantic Judge with four stateless modes. Both use the versioned CLI, agent registry and runtime. The diagram includes the planned evaluation integration.
 
 ```mermaid
 flowchart LR
@@ -28,12 +28,12 @@ flowchart LR
         CLI[Versioned JSON interface]
         Registry[Agent registry]
         Smoke[Synthetic smoke agent]
-        Judge[Semantic Judge planned]
+        Judge[Semantic Judge]
         Runtime[Neutral runtime port]
         Adapter[MAF OpenAI adapter]
         CLI --> Registry --> Runtime
         Smoke --> Registry
-        Judge -.-> Registry
+        Judge --> Registry
         Runtime --> Adapter
     end
     Export -.-> CLI
@@ -62,6 +62,8 @@ apps/
         maf_openai.py        # all provider SDK coupling here
       agents/
         structured_smoke.py  # synthetic fixture and typed input/output
+        semantic_judge/      # mode registration, schemas, prompts, evidence validation
+    calibration/            # frozen controls, bounded runner and agreement metrics
     tests/
 ```
 

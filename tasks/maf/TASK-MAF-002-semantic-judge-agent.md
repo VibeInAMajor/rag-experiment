@@ -2,7 +2,8 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** PROPOSED — implementation and calibration pending  
+**Status:** Implemented. Live qualification is tracked in the verification record.
+
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
 **Repository snapshot inspected:** `d31eb5ca283523f90584a61c80ca6a90d6fccfe9`  
@@ -109,14 +110,31 @@ Only source excerpts permitted for external evaluation can leave the caller; no 
 
 Run independent Hatch checks under `apps/maf/`. Unit/contract tests for modes, input caps, required IDs, exact quote/range validation, unknown handling, role constraints, partial vs direct, missing references, no-answer scope, wrong version, injection, contradictory evidence, refusal/timeout and unknown usage. Fake runtime tests prove no RAG dependency and no outbound default. Perform real opt-in calibration with actual GPT-6.1 Sol via MAF, preserving per-control verdicts, expected values, mismatches and usage. Use original-source controls, not score agreement with the old agent alone. Validate the future answer-mode schema/controls with supplied fixture answers only, not a production generator. No real provider call in default CI.
 
+### Verification record — 2026-11-27
+
+The standalone `semantic-judge` reuses the MAF-001 admission path, OpenAI Responses adapter and version 1 JSON envelope. Each mode has its own input, strict output and versioned prompt. Deterministic validators check excerpt digests, Unicode intervals, source roles, exact IDs, coverage claims, quoted support and rubric consistency. Semantic assessments still need qualification. [Judge contract](../../apps/maf/SEMANTIC_JUDGE.md)
+
+| Verification | Result |
+| --- | --- |
+| Hatch 1.18.2 on Windows with Python 3.12.1 | `hatch run check`, `hatch run types` and `hatch run test` passed. 101 tests passed, including 34 focused validation tests. |
+| Standalone Linux container with `--network none` and Python 3.12.15 | Ruff, strict mypy and all 101 tests passed in a copy of the MAF project. |
+| Standalone CLI and module | Subprocess tests verify import isolation, explicit egress opt-in, a bounded JSON result, quote normalization and the distinct `UNKNOWN` and invalid-output paths. |
+| `hatch build --target wheel` | Built `rag_maf_agent_runtime-0.2.0-py3-none-any.whl`. |
+| `hatch run calibrate --check` | Passed for 29 distinct controls and 3 stateless repeats. The separate development set contains three cases. |
+| Public-source provenance | Verified 13 excerpt occurrences against the exact Unicode slices of the LF-normalized Austen, Ruskin and Azure originals. SHA-256 checks passed for all supplied snippets. |
+
+The frozen qualification manifest SHA-256 is `caa72c9408c4ab4a2066671524be825824addebbc5491b94fead1597c4b606cf`. The calibration SHA-256 is `e0d6b1bab9798b40e116f8e45ac6688aa217a7fc54340536a8fd38f0de87be9b`. It fixes the model profile `semantic-review` (`gpt-6.1-sol`, `medium`), prompt/schema revisions and digests, scoring thresholds, concurrency of one, a 420-second deadline, zero retries and a maximum estimated run cost of USD 1.441792. Determinate controls remain in their denominators when a result is missing, ambiguous or operationally invalid. [Controls](../../apps/maf/calibration/controls.py) · [Runner](../../apps/maf/calibration/run.py) · [Scoring](../../apps/maf/calibration/scoring.py)
+
+The built-in controls use Austen's beginning-of-novel rental and income report, Azure storage redundancy with no invoice data, and Ruskin's tracing-paper step. They include separate reference, evidence, context and answer cases, plus EN/RU/UK repeats. The source shards and distractors are local to the MAF control manifest. The dataset audit remains caller-owned.
+
 ## M. Acceptance Criteria
 
-- [ ] Semantic Judge exists as registered independent MAF agent with four explicit typed modes and no RAG import/tool access.
-- [ ] Strict validated outputs include facts, constraint judgments, useful spans, precise references and UNKNOWN; topic overlap cannot be graded as support without evidence.
-- [ ] Reference pass excludes previous answers/ranks/grades; candidate/answer modes require supplied frozen references; absence claim requires complete declared scope.
+- [x] Semantic Judge registers four independent typed modes and runs without RAG dependencies or tools.
+- [x] Strict results include facts, constraints, useful spans, exact references and `unknown`. A positive grade requires a quoted contribution to a required fact.
+- [x] Reference derivation accepts original excerpts and declared scope. The other modes require a frozen reference. A complete-scope absence requires declared complete coverage.
 - [ ] Real source-backed calibration covers at least 24 controls, the three user regressions and all required negative/uncertain paths; predeclared criteria met or measured NO-GO.
 - [ ] Independent offline checks pass and real calibration records actual model/prompt/schema revisions, denominators, disagreements, usage and cost; no claim of semantic qualification from mocks.
-- [ ] Generic caller can invoke judge without Workbench, DB, Haystack or RAG model process; the runtime integration remains optional.
+- [x] A generic caller invokes the judge through the standalone version 1 JSON CLI.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -124,8 +142,8 @@ Document modes, examples, rubric, failure semantics and judge-version lifecycle 
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Reinspect MAF-001, current provider API and existing source fixtures.
-- [ ] Implement typed source-grounded judge and deterministic validators.
+- [x] Reinspect MAF-001, the released provider API and source fixtures.
+- [x] Implement typed source-grounded judge and deterministic validators.
 - [ ] Run independent offline tests and actual bounded calibration; record real evidence and limitations.
-- [ ] Demonstrate module isolation, no uncontrolled egress and correct failure/unknown outcomes.
+- [x] Verify package isolation, default egress denial and distinct failure and `unknown` outcomes.
 - [ ] Publish documentation and calibrated judge handoff to DATASET-002; no promotion without evidence.

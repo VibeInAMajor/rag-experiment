@@ -11,6 +11,7 @@ type DataClassification = Literal["synthetic", "public"]
 ReasoningEffort = Literal["low", "medium", "high", "xhigh"]
 
 PRICING_VERSION = "openai-standard-2026-11-27"
+SEMANTIC_REVIEW_PROFILE = "semantic-review"
 MAX_RUN_COST_USD = Decimal("1.00")
 INPUT_FRAMING_TOKENS = 1_024
 _PER_MILLION = Decimal(1_000_000)
@@ -18,7 +19,7 @@ _INPUT_CACHE_WRITE_RATE = Decimal("2.50")
 _CACHED_INPUT_RATE = Decimal("0.10")
 _OUTPUT_RATE = Decimal("10")
 _REGIONAL_ALLOWANCE = Decimal("1.10")
-_MODEL_MAPPING = {"semantic-review": "gpt-6.1-sol", "semantic-review-6.2": "gpt-6.2-sol"}
+_MODEL_MAPPING = {SEMANTIC_REVIEW_PROFILE: "gpt-6.1-sol", "semantic-review-6.2": "gpt-6.2-sol"}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

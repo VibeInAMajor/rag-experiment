@@ -8,9 +8,10 @@ from collections.abc import Sequence
 from decimal import Decimal, InvalidOperation
 
 from agent_runtime.agents.structured_smoke import SMOKE_EXPECTED_OUTPUT, SMOKE_REQUEST
+from agent_runtime.composition import create_runtime
 from agent_runtime.configuration import RunPolicy, load_profiles
 from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationError, InvocationRequest, decode_json
-from agent_runtime.runtime import AgentApplication, AgentRuntime, local_error
+from agent_runtime.runtime import AgentApplication, local_error
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -36,7 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 data_classification="synthetic" if args.smoke else args.data_classification,
                 max_cost_usd=args.max_cost_usd,
             )
-            application = AgentApplication(_create_runtime, profiles)
+            application = AgentApplication(create_runtime, profiles)
             result = asyncio.run(application.invoke(request, policy=policy, environ=os.environ))
         except ValueError:
             result = local_error(ErrorCode.CONFIGURATION_ERROR, request)
@@ -58,12 +59,6 @@ def _read_request() -> InvocationRequest:
     if len(payload) > MAX_REQUEST_BYTES:
         raise ValueError("Request exceeds byte limit")
     return InvocationRequest.model_validate(decode_json(payload.decode("utf-8")))
-
-
-def _create_runtime() -> AgentRuntime:
-    from agent_runtime.adapters.maf_openai import MafOpenAIRuntime
-
-    return MafOpenAIRuntime()
 
 
 def _decimal(value: str) -> Decimal:

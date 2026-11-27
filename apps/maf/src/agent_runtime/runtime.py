@@ -10,7 +10,9 @@ from typing import Protocol
 
 from pydantic import BaseModel, JsonValue
 
-from agent_runtime.agents.structured_smoke import SMOKE_INSTRUCTIONS, SmokeInput, SmokeOutput
+from agent_runtime.agents.registration import AgentDefinition
+from agent_runtime.agents.semantic_judge.agent import AGENT_ID, JUDGE_MODES
+from agent_runtime.agents.structured_smoke import SMOKE_INSTRUCTIONS, SMOKE_REQUEST, SmokeInput, SmokeOutput
 from agent_runtime.configuration import (
     INPUT_FRAMING_TOKENS,
     MAX_RUN_COST_USD,
@@ -63,25 +65,15 @@ class AgentRuntime(Protocol):
         ...
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class _AgentDefinition:
-    input_schema: type[BaseModel]
-    output_schema: type[BaseModel]
-    instructions: str
-    prompt_revision: str
-    output_schema_revision: str
-    required_capabilities: frozenset[str]
-
-
-_AGENTS = {
-    "structured-smoke": _AgentDefinition(
+_AGENTS: dict[str, AgentDefinition | Mapping[str, AgentDefinition]] = {
+    SMOKE_REQUEST.agent_id: AgentDefinition(
         input_schema=SmokeInput,
         output_schema=SmokeOutput,
         instructions=SMOKE_INSTRUCTIONS,
         prompt_revision="1",
         output_schema_revision="1",
-        required_capabilities=frozenset({"structured_output", "reasoning"}),
     ),
+    AGENT_ID: JUDGE_MODES,
 }
 
 
@@ -96,17 +88,16 @@ class AgentApplication:
         self, request: InvocationRequest, *, policy: RunPolicy, environ: Mapping[str, str]
     ) -> InvocationResult:
         start = perf_counter()
-        agent = _AGENTS.get(request.agent_id)
+        agent = None
         profile = self._profiles.get(request.profile_id)
         observation = ProviderObservation()
         output: dict[str, JsonValue] | None = None
         error = None
         try:
-            if agent is None:
-                raise RuntimeFailure(ErrorCode.UNKNOWN_AGENT)
+            agent = _select_agent(request)
             if profile is None:
                 raise RuntimeFailure(ErrorCode.UNKNOWN_PROFILE)
-            input_json = _admit_input(request, agent=agent, profile=profile, policy=policy)
+            validated_input, input_json = _admit_input(request, agent=agent, profile=profile, policy=policy)
             api_key = _resolve_key(environ, profile=profile, input_json=input_json)
             async with asyncio.timeout(profile.timeout_seconds):
                 raw_output = await self._runtime_factory().invoke(
@@ -117,7 +108,9 @@ class AgentApplication:
                     api_key=api_key,
                     observation=observation,
                 )
-            output = _validate_output(raw_output, schema=agent.output_schema, profile=profile, usage=observation.usage)
+            output = _validate_output(
+                raw_output, agent=agent, validated_input=validated_input, profile=profile, usage=observation.usage
+            )
         except RuntimeFailure as exc:
             error = exc.code
         except TimeoutError:
@@ -166,17 +159,32 @@ def local_error(code: ErrorCode, request: InvocationRequest | None = None) -> In
     )
 
 
+def _select_agent(request: InvocationRequest) -> AgentDefinition:
+    registration = _AGENTS.get(request.agent_id)
+    if registration is None:
+        raise RuntimeFailure(ErrorCode.UNKNOWN_AGENT)
+    if isinstance(registration, AgentDefinition):
+        return registration
+    mode = request.input.get("mode")
+    if not isinstance(mode, str) or mode not in registration:
+        raise RuntimeFailure(ErrorCode.INVALID_INPUT)
+    return registration[mode]
+
+
 def _admit_input(
-    request: InvocationRequest, *, agent: _AgentDefinition, profile: ModelProfile, policy: RunPolicy
-) -> str:
-    if not agent.required_capabilities <= profile.capabilities:
+    request: InvocationRequest, *, agent: AgentDefinition, profile: ModelProfile, policy: RunPolicy
+) -> tuple[BaseModel, str]:
+    if not agent.required_capabilities <= profile.capabilities or (
+        agent.allowed_profiles is not None and profile.profile_id not in agent.allowed_profiles
+    ):
         raise RuntimeFailure(ErrorCode.UNSUPPORTED_CAPABILITY)
     try:
-        input_json = agent.input_schema.model_validate(request.input).model_dump_json()
+        validated_input = agent.input_schema.model_validate(request.input)
+        input_json = validated_input.model_dump_json()
         input_bytes = len(input_json.encode("utf-8"))
     except ValueError:
         raise RuntimeFailure(ErrorCode.INVALID_INPUT) from None
-    schema_bytes = len(json.dumps(agent.output_schema.model_json_schema()).encode("utf-8"))
+    schema_bytes = len(json.dumps(agent.output_schema.model_json_schema(), separators=(",", ":")).encode("utf-8"))
     estimated_input = input_bytes + len(agent.instructions.encode("utf-8")) + schema_bytes + INPUT_FRAMING_TOKENS
     if estimated_input > profile.max_input_tokens:
         raise RuntimeFailure(ErrorCode.INVALID_INPUT)
@@ -186,7 +194,7 @@ def _admit_input(
         raise RuntimeFailure(ErrorCode.CONFIGURATION_ERROR)
     if profile.estimated_max_cost_usd > policy.max_cost_usd:
         raise RuntimeFailure(ErrorCode.BUDGET_EXCEEDED)
-    return input_json
+    return validated_input, input_json
 
 
 def _resolve_key(environ: Mapping[str, str], *, profile: ModelProfile, input_json: str) -> str:
@@ -199,7 +207,7 @@ def _resolve_key(environ: Mapping[str, str], *, profile: ModelProfile, input_jso
 
 
 def _validate_output(
-    output: str, *, schema: type[BaseModel], profile: ModelProfile, usage: Usage | None
+    output: str, *, agent: AgentDefinition, validated_input: BaseModel, profile: ModelProfile, usage: Usage | None
 ) -> dict[str, JsonValue]:
     if usage and (
         (usage.input_tokens is not None and usage.input_tokens > profile.max_input_tokens)
@@ -209,6 +217,9 @@ def _validate_output(
     try:
         if len(output.encode("utf-8")) > profile.max_response_bytes:
             raise RuntimeFailure(ErrorCode.RESPONSE_TOO_LARGE)
-        return schema.model_validate(decode_json(output)).model_dump(mode="json")
+        validated_output = agent.output_schema.model_validate(decode_json(output))
+        if agent.validate_output is not None:
+            validated_output = agent.validate_output(validated_input, validated_output)
+        return validated_output.model_dump(mode="json")
     except (ValueError, RecursionError):
         raise RuntimeFailure(ErrorCode.INVALID_OUTPUT) from None
