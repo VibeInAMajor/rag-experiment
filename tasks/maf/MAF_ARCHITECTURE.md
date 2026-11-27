@@ -2,12 +2,13 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Proposed architecture; not an implemented capability  
-**Repository snapshot inspected:** `d31eb5ca283523f90584a61c80ca6a90d6fccfe9`
+**Status:** Standalone runtime implemented. Semantic Judge and evaluation integration planned.
+
+**Repository base inspected:** `482c8d980db6a06ef88532f60bf97cae002cdb0e` plus the scoped MAF implementation. Live qualification is tracked in [MAF-001](TASK-MAF-001-standalone-agent-runtime.md).
 
 ## Decision
 
-The Microsoft Agent Framework module is an independent Python application in the same repository, not a submodule of RAG Workbench. Its first agent is the semantic judge. Future agents can use its execution boundary without adopting RAG, PostgreSQL, Haystack or embedding infrastructure.
+The Microsoft Agent Framework module is an independent Python application in this repository. It ships a synthetic runtime smoke agent. The Semantic Judge will reuse the same CLI, registry and runtime without depending on Workbench, PostgreSQL, Haystack or the embedding stack. The diagram includes the planned evaluation integration.
 
 ```mermaid
 flowchart LR
@@ -25,21 +26,24 @@ flowchart LR
     end
     subgraph MAF["Independent apps/maf"]
         CLI[Versioned JSON interface]
-        Judge[Semantic Judge Agent]
+        Registry[Agent registry]
+        Smoke[Synthetic smoke agent]
+        Judge[Semantic Judge planned]
         Runtime[Neutral runtime port]
         Adapter[MAF OpenAI adapter]
-        CLI --> Judge --> Runtime
+        CLI --> Registry --> Runtime
+        Smoke --> Registry
+        Judge -.-> Registry
         Runtime --> Adapter
-        Future[Future agents] --> Runtime
     end
-    Export --> CLI
+    Export -.-> CLI
     Adapter --> OpenAI[OpenAI Responses API]
-    CLI --> Score
+    CLI -.-> Score
 ```
 
 Arrows between modules are data exchange, not Python imports. The evaluation runner owns RAG-specific mapping, reading authorized originals/captures, exact evidence validation, metric calculation and report publication. MAF receives explicit text and opaque identifiers; it never queries the index, accesses the RAG database, loads a Workbench object, reads the source repository through tools or changes the gold dataset. Workbench must run normally when MAF is absent/offline.
 
-## Independent layout (proposed)
+## Independent layout
 
 ```text
 apps/
@@ -47,7 +51,6 @@ apps/
   maf/
     pyproject.toml            # own package/dependencies/Hatch
     README.md
-    AGENTS.md
     .env.example             # names and harmless defaults only
     src/agent_runtime/
       contracts.py
@@ -58,21 +61,18 @@ apps/
       adapters/
         maf_openai.py        # all provider SDK coupling here
       agents/
-        semantic_judge/
-          contracts.py
-          instructions.py
-          agent.py
+        structured_smoke.py  # synthetic fixture and typed input/output
     tests/
 ```
 
-No empty placeholder agents or speculative workflow engine. Future agents get their own typed input/output and instruction revision inside `agents/`; they reuse runtime, configuration and lifecycle. No root Haystack distribution dependency on MAF and no Workbench dependency on MAF. Initial integration: local CLI with versioned JSON request/result envelope, caller-owned file exchange or stdin/stdout. A local HTTP service is optional future work and not a requirement for the judge. Use the existing evaluation UI as the caller, not a second UI platform.
+The runtime ships its own Hatch project and a local CLI with a versioned JSON request/result envelope on stdin/stdout. Future agents get their own typed input, output and instruction revision. The evaluation caller owns the exchange and can use the existing evaluation UI. See the [standalone runbook](../../apps/maf/README.md).
 
 ## Provider boundary
 
 - Neutral model profile requests structured output, adequate context and optionally reasoning controls.
 - Composition maps the profile (`semantic-review`) to the MAF Responses adapter. Initial configured OpenAI model: `gpt-6.1-sol` (GPT-6.1 Sol, as requested). `gpt-6.2-sol` is an optional alternative that requires its own qualification. Both are configurable and subject to actual API access. No hard-coded model inside judge policy.
 - Direct OpenAI API, not Azure OpenAI or ChatGPT/Codex plan. Official MAF [provider](https://learn.microsoft.com/en-us/agent-framework/integrations/by-component/model-providers/openai), [structured outputs](https://learn.microsoft.com/en-us/agent-framework/agents/structured-outputs), [model catalog](https://developers.openai.com/api/docs/models), [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol). Check released package API when implementing.
-- Fresh stateless context for each decision, no tools/web search/RAG access, no automatic fallback. Local strict schema validation and deterministic quote/locator checks. No exposing internal reasoning; only concise evidence-based rationale.
+- The runtime starts fresh for each invocation and validates the structured output locally. Its CLI exposes no tools, web search, RAG access, or automatic provider fallback. The planned judge owns deterministic quote and locator validation and returns concise evidence-based rationale.
 - Live calls explicitly enabled with approved non-sensitive data and a per-run spending cap; offline default. No credentials in prompts or artifacts, no raw payload telemetry. Verify `store=false`; provider retention may still apply (see [data controls](https://developers.openai.com/api/docs/guides/your-data)).
 
 ## Evaluation roles and order
@@ -91,5 +91,3 @@ A separate model call alone does not establish a valid benchmark. Source-derived
 - [MAF-002](TASK-MAF-002-semantic-judge-agent.md): reusable judge with typed evaluations and controlled qualification.
 - [DATASET-002](../quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md): re-audit saved OPEN source references and candidates via MAF, publish corrected version and metrics. Do not repeat full retrieval solely for relabeling.
 - [QUALITY-002](../quality/TASK-RAG-QUALITY-002-retrieval-release-gate-and-regression.md): require validated labels and useful-context measures for release qualification. Later [QUALITY-003](../quality/TASK-RAG-QUALITY-003-grounded-answer-correctness-evaluation.md) consumes answer-mode judgments.
-
-No MAF implementation or API requests were performed by this architecture document.

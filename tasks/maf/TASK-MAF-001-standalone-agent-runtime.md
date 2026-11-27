@@ -2,7 +2,8 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** PROPOSED — implementation and real API smoke pending  
+**Status:** Implemented and verified offline. Live qualification is `BLOCKED_REAL_API`.
+
 **Priority:** P0  
 **Repository snapshot inspected:** `d31eb5ca283523f90584a61c80ca6a90d6fccfe9`  
 **Consumer:** [MAF-002](TASK-MAF-002-semantic-judge-agent.md)  
@@ -98,14 +99,63 @@ The user has requested an external provider for evaluation, not unrestricted dat
 
 From `apps/maf/`, verify `hatch --version`, then run the new configured Hatch check/test/types targets. Test invalid schema, unknown agent/profile, no SDK imports in neutral package, missing key, disabled egress, unsupported model capability, timeout, 429, cancellation, refusal, incomplete output, bad JSON, budget and input limits, secret redaction, usage-null behavior and CLI stdout contract. Use fake runtime and transport tests (capture actual request settings such as no tools, storage and output format). Verify forbidden imports and clean independent environment without Workbench/Haystack/DB dependencies. Prove startup/import/test does not call provider. Run one opt-in real non-sensitive OpenAI smoke via MAF and record actual response envelope, provider model, elapsed time and usage safely. A mocked smoke is not a live pass. Keep original Workbench behavior unchanged; run relevant static boundary/regression checks if shared documentation/config is touched.
 
+### Verification record — 2026-11-27
+
+Implementation was checked against repository base `482c8d9`. The [standalone README](../../apps/maf/README.md#setup-and-offline-checks) lists installed SDK versions and licenses. The adapter uses the released MAF `Agent.run()` and `OpenAIChatClient` APIs. The package follows the detached Workbench Hatch environment pattern with its own manifest and wheel. [Microsoft OpenAI provider documentation](https://learn.microsoft.com/en-us/agent-framework/integrations/by-component/model-providers/openai)
+
+| Verification | Observed result |
+| --- | --- |
+| `hatch --version` and `hatch env create` | Hatch 1.18.2 installed the independent environment on Windows with Python 3.12.1. |
+| `hatch run check` and `hatch run types` | Ruff lint and format checks passed. Strict mypy checked 10 source files. |
+| `hatch run test` | 56 passed. 19 adapter cases use the installed MAF and OpenAI SDKs with a mocked HTTP transport. Other cases use the neutral runtime port or installed CLI. |
+| `hatch build --target wheel` | Built `rag_maf_agent_runtime-0.1.0-py3-none-any.whl` and inspected its package and console entry point. |
+| Installed CLI from an unrelated directory | Import and CLI subprocess tests passed. The isolation test denies provider imports and socket/DNS access on the neutral import path. |
+| Independent Linux container at `/opt/maf` with `--network none` | Hatch 1.18.2 on Python 3.12.15 passed lint, format, strict typing and all 56 tests. Only the MAF source and test directories were mounted. The opted-in CLI smoke returned `MISSING_CREDENTIALS` with zero requests. |
+| `hatch run run` with the README request and no opt-in | Exit 1, `EGRESS_DISABLED`, one JSON result and zero provider requests. |
+| `hatch run smoke --allow-external` | Exit 1, `MISSING_CREDENTIALS`, zero provider requests. This is `BLOCKED_REAL_API`. |
+
+The opted-in smoke on Windows produced the following result.
+
+```json
+{
+  "schema_version": 1,
+  "request_id": "synthetic-marker-smoke",
+  "agent_id": "structured-smoke",
+  "profile_id": "semantic-review",
+  "outcome": "error",
+  "output": null,
+  "error": {"code": "MISSING_CREDENTIALS"},
+  "metadata": {
+    "runtime_revision": "0.1.0",
+    "elapsed_ms": 3,
+    "provider": "openai",
+    "configured_model": "gpt-6.1-sol",
+    "model": null,
+    "prompt_revision": "1",
+    "output_schema_revision": "1",
+    "correlation_id": null,
+    "usage": null,
+    "requests": 0,
+    "retries": 0,
+    "pricing_version": "openai-standard-2026-11-27",
+    "estimated_max_cost_usd": "0.045056",
+    "estimated_cost_usd": null
+  }
+}
+```
+
+The remaining live qualification requires an invocation-scoped `OPENAI_API_KEY` with access to the configured model. Account entitlement, live output and provider-reported usage remain unverified for both profiles. The estimate uses published Standard rates with a regional allowance. Parallel runs in separate processes require a caller-owned aggregate budget. [Runtime contract and limits](../../apps/maf/README.md)
+
+Changed paths are `apps/maf/` for the standalone package, CLI, tests and runbook, `AGENTS.md` and `docs-website/PROJECT_MAP.md` for routing, `tasks/maf/` for architecture and verification, and one release note under `releasenotes/notes/`.
+
 ## M. Acceptance Criteria
 
-- [ ] Independent package installs/runs in its own Hatch environment; no Haystack, Workbench, retrieval, DB or local GPU dependency and no circular imports.
-- [ ] Provider-neutral request/result, model profile and runtime contract validated; vendor SDK confined to adapter/composition; configured model replaceable.
-- [ ] Actual MAF structured-output call succeeds against direct OpenAI using explicit opt-in and valid credentials, or real smoke is explicitly BLOCKED and task not falsely qualified.
-- [ ] Offline tests prove refusal/error/budget/cancellation/egress and secret-redaction paths; no network on import or default tests.
-- [ ] Standalone CLI/documented invocation works with no Workbench server; no port, UI or root startup changes.
-- [ ] Actual dependencies, commands, test counts, model identity and remaining limitations recorded.
+- [x] Independent package installs and runs in its own Hatch environment.
+- [x] Provider-neutral request/result and runtime contract are validated. Explicit profiles preserve model selection at the adapter boundary.
+- [ ] Live MAF structured-output invocation against direct OpenAI. The explicit smoke is `BLOCKED_REAL_API` due to missing credentials.
+- [x] Offline tests cover errors, refusal, budget, cancellation, egress, secret redaction and import isolation.
+- [x] The standalone CLI works independently of Workbench and uses stdin/stdout.
+- [x] Resolved direct dependencies, checks, configured model and live limits are recorded.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
@@ -113,8 +163,8 @@ Document separate setup, supported package versions, environment and profile set
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Reinspect repository, official APIs and compatible dependencies.
-- [ ] Implement and verify independently runnable package, actual MAF adapter and neutral boundary.
-- [ ] Run scoped offline checks and explicit live smoke; record failures and blocked states honestly.
-- [ ] Verify isolation, no egress by default, no secret leakage and no RAG modifications.
-- [ ] Update module docs/project map, record changed paths and commit; qualify only with real evidence.
+- [x] Reinspect repository, official APIs and compatible dependencies.
+- [x] Implement and verify independently runnable package, actual MAF adapter and neutral boundary.
+- [x] Run scoped offline checks and attempt the explicit smoke. Record the blocked outcome.
+- [x] Verify isolation, default egress denial and redaction. Check the diff for RAG code or configuration changes.
+- [x] Update module docs and the project map. Record changed paths and commit the implementation with its offline evidence.

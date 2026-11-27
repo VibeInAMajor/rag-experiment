@@ -19,7 +19,7 @@
 
 ## 1. Repository shape (verified)
 
-**Planned standalone agent subsystem (2026-11-27; not implemented):** `apps/maf/` is reserved for the separate Microsoft Agent Framework application. Repository inspection at d31eb5ca283523f90584a61c80ca6a90d6fccfe9 found no such package. See [MAF architecture](../tasks/maf/MAF_ARCHITECTURE.md) and [MAF-001](../tasks/maf/TASK-MAF-001-standalone-agent-runtime.md) for the independent Python/Hatch project, runtime contract and provider adapter, and [MAF-002](../tasks/maf/TASK-MAF-002-semantic-judge-agent.md) for the first Semantic Judge. Keep Workbench/Haystack and MAF independent: neither imports the other, and MAF never reads the RAG database, corpus or internal APIs. Existing offline evaluation orchestration owns the optional versioned JSON/CLI integration, source preparation, metric arithmetic and evaluation artifacts. No MAF/provider dependency in RAG, no automatic OpenAI calls on RAG startup, no new server requirement. Other agents will belong to the standalone application. The verified tree below intentionally excludes planned paths.
+**Standalone agent runtime (2026-11-27):** `apps/maf/` owns the independent Microsoft Agent Framework package, Hatch environment, versioned JSON CLI and direct OpenAI Responses adapter. Its first registered agent is a synthetic runtime smoke fixture. The Semantic Judge and caller integration remain future work. Workbench and Haystack have no MAF dependency. The evaluation caller owns source preparation, metric computation and artifacts. The map reflects the scoped MAF changes on base commit `482c8d980db6a06ef88532f60bf97cae002cdb0e`. See the [standalone runbook](../apps/maf/README.md), [MAF-001 verification record](../tasks/maf/TASK-MAF-001-standalone-agent-runtime.md) and [MAF-002 Semantic Judge task](../tasks/maf/TASK-MAF-002-semantic-judge-agent.md).
 
 **Standalone reranker deployment (2026-11-26):** `apps/workbench/reranking/compose.yaml`, `start.ps1` and `README.md` own the local Qwen3-Reranker-0.6B vLLM service on loopback 8083. Root `start.ps1` starts stopped/missing containers and reuses running processes. See [deployment scope and checks](../tasks/TASK-OPS-002-local-reranker-container.md). No application adapter, database migration, executable reranking profile or quality qualification follows from starting this service.
 
@@ -47,6 +47,7 @@ rag-experiment/
 ├── .pre-commit-config.yaml
 ├── .github/                        # CI workflows, review templates, utilities
 ├── apps/
+│   ├── maf/                        # Independent Python agent runtime and JSON CLI
 │   └── workbench/
 │       ├── api/                     # HTTP composition, routes, boundaries and response projection
 │       ├── embedding/               # Embedding domain, TEI adapter, admission, worker and deployment
@@ -230,6 +231,7 @@ Separate: useValidation → /api/pipelines/validate.
 | Frontend overview, commands and limitations | `apps/workbench/web/README.md` | Run `npm ci` (if needed), then `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` |
 | Frontend smoke | `apps/workbench/web/scripts/browser-smoke.js` | Use README's documented Playwright CLI scenario |
 | Python tooling and dependencies | `pyproject.toml` | Use Hatch for Python tests/tooling, following root instructions |
+| Standalone agent runtime and tests | [MAF runbook](../apps/maf/README.md) | Run `hatch run check`, `hatch run test`, and `hatch run types` from `apps/maf/`. Live smoke requires explicit opt-in |
 | Python tests | `test/` and `e2e/` | Prefer focused suite before complete execution |
 | CI and checks | `.github/workflows/`, `.pre-commit-config.yaml` | Inspect actual configured checks |
 | Backend planning reference | `docs-website/docs/tasks/RAG_MVP_Architecture_Implementation_Plan_EN_2026-11-19.md` | Plan, **not evidence of implementation** |
@@ -267,7 +269,7 @@ The [canonical RAG runtime contract](docs/architecture/rag-runtime-contract.md) 
 1. **Find the owner** using the table above; search usages and tests. Reuse before creating classes, helpers or services. Keep ticket/milestone identifiers in planning metadata, **not** code symbols, API fields or CSS names.
 2. **Graph behavior:** extend the domain's catalog, types and graph functions; add focused `graph.test.ts` cases. Keep React and simulated preview separate.
 3. **Real integration:** first define provider-neutral API contracts, workspace policy and model/store capabilities; then implement adapters at boundaries. Do not import provider SDKs into domain/application policy. Place new files only after agreeing on actual directory ownership.
-4. **Agent execution:** implement general agents in the planned standalone MAF application, not in Workbench retrieval or Haystack core. Use the independent contracts linked above; keep provider/model dependencies and credentials inside MAF. A RAG-specific evaluator owns its own external-call adapter, not the judge internals.
+4. **Agent execution:** register agents in the standalone MAF application and use its versioned invocation contract. MAF owns provider configuration and credentials. A RAG evaluator owns its transport adapter and evaluation policy.
 5. **UI:** extend existing components/views/hooks; preserve validation, accessibility and semantic styling. A global theme/font migration requires its own explicit scope.
 6. **Documentation-only updates:** keep changes in Markdown and update this map when source paths change.
 7. **Repository-changing work:** first create/update a complete A–O task specification per the project's task instructions; document observed source evidence, contracts, tests, security and acceptance criteria. Include **Created** and **Updated** in each task. Do not embed Git branch names in task specifications.

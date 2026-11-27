@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Add ``maf-agent`` in the standalone ``apps/maf`` project. Its versioned JSON
+    command-line interface supports bounded, explicitly enabled OpenAI Responses
+    calls through Microsoft Agent Framework. It includes a synthetic structured
+    output smoke and installs in its own Hatch environment.
