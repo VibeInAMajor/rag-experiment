@@ -1,7 +1,7 @@
 # Project Map — RAG Experiment
 
 **Created:** 2026-11-20  
-**Updated:** 2026-11-26
+**Updated:** 2026-11-27
 **Status:** Repository-verified navigation document; not a runtime architecture specification.  
 **Evidence:** GitHub recursive tree `5e7086364f62d4f15b7370e55767a8f84ed4dc14` (12,946 files; complete tree), plus relevant source and README files, inspected on 2026-11-20.
 
@@ -18,6 +18,8 @@
 **Configuration update:** [CONFIG-001](../tasks/completed/TASK-CONFIG-001-document-splitting-and-default-language.md) owns strict external document-processing settings and their mapping to the existing splitter/native-counter seams. See the [operator reference](docs/architecture/document-processing-configuration.md). Implementation, offline/native-counter and local live/restart gates passed; 854 backend tests passed with zero skips. Prior metrics remain historical, with the [overwritten stability artifact limitation](docs/architecture/document-processing-configuration.md#test-artifact-isolation-and-historical-limitation) explicitly recorded.
 
 ## 1. Repository shape (verified)
+
+**Planned standalone agent subsystem (2026-11-27; not implemented):** `apps/maf/` is reserved for the separate Microsoft Agent Framework application. Repository inspection at d31eb5ca283523f90584a61c80ca6a90d6fccfe9 found no such package. See [MAF-001](../tasks/maf/TASK-MAF-001-standalone-agent-runtime.md) for the independent Python/Hatch project, runtime contract and provider adapter, and [MAF-002](../tasks/maf/TASK-MAF-002-semantic-judge-agent.md) for the first Semantic Judge. Keep Workbench/Haystack and MAF independent: neither imports the other, and MAF never reads the RAG database, corpus or internal APIs. Existing offline evaluation orchestration owns the optional versioned JSON/CLI integration, source preparation, metric arithmetic and evaluation artifacts. No MAF/provider dependency in RAG, no automatic OpenAI calls on RAG startup, no new server requirement. Other agents will belong to the standalone application. The verified tree below intentionally excludes planned paths.
 
 **Standalone reranker deployment (2026-11-26):** `apps/workbench/reranking/compose.yaml`, `start.ps1` and `README.md` own the local Qwen3-Reranker-0.6B vLLM service on loopback 8083. Root `start.ps1` starts stopped/missing containers and reuses running processes. See [deployment scope and checks](../tasks/TASK-OPS-002-local-reranker-container.md). No application adapter, database migration, executable reranking profile or quality qualification follows from starting this service.
 
@@ -265,10 +267,11 @@ The [canonical RAG runtime contract](docs/architecture/rag-runtime-contract.md) 
 1. **Find the owner** using the table above; search usages and tests. Reuse before creating classes, helpers or services. Keep ticket/milestone identifiers in planning metadata, **not** code symbols, API fields or CSS names.
 2. **Graph behavior:** extend the domain's catalog, types and graph functions; add focused `graph.test.ts` cases. Keep React and simulated preview separate.
 3. **Real integration:** first define provider-neutral API contracts, workspace policy and model/store capabilities; then implement adapters at boundaries. Do not import provider SDKs into domain/application policy. Place new files only after agreeing on actual directory ownership.
-4. **UI:** extend existing components/views/hooks; preserve validation, accessibility and semantic styling. A global theme/font migration requires its own explicit scope.
-5. **Documentation-only updates:** keep changes in Markdown and update this map when source paths change.
-6. **Repository-changing work:** first create/update a complete A–O task specification per the project's task instructions; document observed source evidence, contracts, tests, security and acceptance criteria. Include **Created** and **Updated** in each task. Do not embed Git branch names in task specifications.
-7. **Before completion:** run focused checks and report the actual commands and results; never infer passing tests from code inspection.
+4. **Agent execution:** implement general agents in the planned standalone MAF application, not in Workbench retrieval or Haystack core. Use the independent contracts linked above; keep provider/model dependencies and credentials inside MAF. A RAG-specific evaluator owns its own external-call adapter, not the judge internals.
+5. **UI:** extend existing components/views/hooks; preserve validation, accessibility and semantic styling. A global theme/font migration requires its own explicit scope.
+6. **Documentation-only updates:** keep changes in Markdown and update this map when source paths change.
+7. **Repository-changing work:** first create/update a complete A–O task specification per the project's task instructions; document observed source evidence, contracts, tests, security and acceptance criteria. Include **Created** and **Updated** in each task. Do not embed Git branch names in task specifications.
+8. **Before completion:** run focused checks and report the actual commands and results; never infer passing tests from code inspection.
 
 ## 7. Maintainability rules for this map
 
