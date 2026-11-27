@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-24  
 **Updated:** 2026-11-27  
-**Status:** Active local quality roadmap. The current-stack diagnostic and MAF judge qualification measured `NO_GO`. The DATASET-002 semantic audit is reopened.
+**Status:** Active local quality roadmap. The current-stack diagnostic measured `NO_GO`. The standalone judge passed its frozen calibration. The DATASET-002 semantic pilot is pending.
 **Source inspected:** d6cba6580e308fbb37266b779dce5b6880309a44
 
 ## Decision
@@ -39,7 +39,7 @@ Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calib
 | 1 | [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md) | [Actual source-pinned seed](dataset/RETRIEVAL_EVALUATION_SEED_V1.md); agent-verified tuning + local holdout and original-source facets required |
 | 2 | [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md) | COMPLETE_DIAGNOSTIC / INSUFFICIENT_WITH_CURRENT_STACK; preserve bounded source-fidelity and historical captures |
 | 2a.1 (P0) | [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) | COMPLETE: standalone runtime and opted-in OpenAI smoke passed |
-| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | Implemented. Frozen live qualification measured `NO_GO`. |
+| 2a.2 (P0) | [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) | COMPLETE. The v6 judge passed 32/32 qualification requests. |
 | 2a.3 (P0) | [DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) | REOPENED: source-first reference and full pooled-judgment audit, same saved predictions, new metric revision; no holdout tuning |
 | 2b | [LEXICAL-001](TASK-RAG-LEXICAL-001-natural-language-query-policy.md) | Qualify useful lexical natural-query policy on OPEN; preserve literal FTS baseline; GO/NO-GO |
 | 3 (conditional on useful lexical GO) | [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) | Compare genuine lexical + exact dense RRF; explicit profile, no ANN dependency |
@@ -98,4 +98,4 @@ ANN-001–005 remain valid specifications in tasks/ and are deferred until retri
 
 ## Status
 
-DATASET-001 has a completed local handoff per its report. QUALITY-001 completed its diagnostic matrix, UI continuation and bounded source-fidelity assessment with NO-GO. DATASET-002 historical full pool assessment is reopened for semantic audit. MAF-001 passed live runtime verification. MAF-002 is implemented, and its frozen live qualification measured `NO_GO`. The DATASET-002 semantic audit still requires a qualified judge revision. [MAF-001 verification](../maf/TASK-MAF-001-standalone-agent-runtime.md) · [MAF-002 verification](../maf/TASK-MAF-002-semantic-judge-agent.md)
+DATASET-001 has a completed local handoff per its report. QUALITY-001 completed its diagnostic matrix, UI continuation and bounded source-fidelity assessment with NO-GO. DATASET-002 historical full pool assessment is reopened for semantic audit. MAF-001 passed live runtime verification and MAF-002 passed its frozen v6 qualification. The qualified judge revision is ready for the DATASET-002 three-family pilot. [MAF-001 verification](../maf/TASK-MAF-001-standalone-agent-runtime.md) · [MAF-002 verification](../maf/TASK-MAF-002-semantic-judge-agent.md)

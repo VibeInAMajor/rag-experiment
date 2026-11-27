@@ -63,8 +63,17 @@ def test_rejected_judge_request_skips_adapter(overrides: dict[str, JsonValue], p
     assert result.metadata.requests == 0
 
 
-@pytest.mark.parametrize("verbatim", [True, False])
-def test_application_validates_and_locates_returned_quote(verbatim: bool) -> None:
+@pytest.mark.parametrize(
+    ("text", "end", "stage", "reason", "field"),
+    [
+        (_QUOTE, None, None, None, None),
+        ("in June", None, "evidence_validation", "quote_not_found", None),
+        (_QUOTE, 99, "output_schema", "quote_offsets_unpaired", "facts"),
+    ],
+)
+def test_application_validates_and_locates_returned_quote(
+    text: str, end: int | None, stage: str | None, reason: str | None, field: str | None
+) -> None:
     reply = {
         "mode": "derive_reference",
         "rationale": "The log gives the launch month.",
@@ -76,7 +85,7 @@ def test_application_validates_and_locates_returned_quote(verbatim: bool) -> Non
                 "id": "month",
                 "statement": "Launches in July",
                 "required": True,
-                "quotes": [{"source_id": "log", "start": None, "end": None, "text": _QUOTE if verbatim else "in June"}],
+                "quotes": [{"source_id": "log", "start": None, "end": end, "text": text}],
             }
         ],
         "coverage_gaps": [],
@@ -96,13 +105,16 @@ def test_application_validates_and_locates_returned_quote(verbatim: bool) -> Non
 
     assert port.invoke.call_args.kwargs["output_schema"] is DeriveReferenceResult
     assert json.loads(port.invoke.call_args.kwargs["input_json"]) == _INPUT
-    assert result.metadata.prompt_revision == "derive_reference/1"
-    if verbatim:
-        assert observation.failure_stage is None
+    assert result.metadata.prompt_revision == "derive_reference/2"
+    assert result.metadata.output_schema_revision == "derive_reference/2"
+    assert observation.failure_stage == stage
+    assert observation.failure_reason == reason
+    assert observation.failure_field == field
+    if stage is None:
         verdict = DeriveReferenceResult.model_validate(result.output)
         assert verdict.facts[0].quotes[0].start == 140 + _SOURCE.index(_QUOTE)
     else:
         assert result.error is not None
         assert result.error.code == ErrorCode.INVALID_OUTPUT
-        assert observation.failure_stage == "evidence_validation"
+        assert text not in result.model_dump_json()
         assert result.output is None

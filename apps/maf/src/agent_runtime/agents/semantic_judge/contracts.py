@@ -4,29 +4,42 @@ from collections.abc import Iterable
 from hashlib import sha256
 from typing import Annotated, Literal, Self
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints, WithJsonSchema, model_validator
+
+from agent_runtime.agents.registration import VerdictRejected
+from agent_runtime.agents.semantic_judge.violations import VerdictRule
+
+_SHORT_TEXT_LIMIT = 600
 
 
 def _opaque_id(value: str) -> str:
     if value.lower().startswith(("sk-", "bearer")):
-        raise ValueError("Use an opaque identifier")
+        raise VerdictRejected(VerdictRule.SECRET_LIKE_IDENTIFIER, message="Use an opaque identifier")
     return value
 
 
 def _text(value: str) -> str:
-    if not value.strip() or len(value) > 600:
-        raise ValueError("Text must be nonblank and at most 600 characters")
+    if not value.strip():
+        raise VerdictRejected(VerdictRule.TEXT_EMPTY, message="Text must be nonblank")
+    if len(value) > _SHORT_TEXT_LIMIT:
+        raise VerdictRejected(VerdictRule.TEXT_TOO_LONG, message=f"Text must be at most {_SHORT_TEXT_LIMIT} characters")
     return value
 
 
 def _quote_text(value: str) -> str:
-    if not value.strip() or len(value) > 1_024:
-        raise ValueError("A quote must be nonblank and at most 1024 characters")
+    if not value.strip():
+        raise VerdictRejected(VerdictRule.QUOTE_TEXT_EMPTY, message="A quote must be nonblank")
+    if len(value) > 1_024:
+        raise VerdictRejected(VerdictRule.QUOTE_TEXT_TOO_LONG, message="A quote must be at most 1024 characters")
     return value
 
 
 type _Id = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$"), AfterValidator(_opaque_id)]
 type _ShortText = Annotated[str, AfterValidator(_text)]
+type _ReferenceAnswer = Annotated[
+    _ShortText,
+    WithJsonSchema({"type": "string", "pattern": rf"^[\s\S]{{1,{_SHORT_TEXT_LIMIT}}}$"}),
+]
 type _Offset = Annotated[int, Field(ge=0, le=2**53 - 1)]
 type _IdList = Annotated[list[_Id], Field(max_length=16)]
 type _Language = Literal["en", "ru", "uk"]
@@ -50,7 +63,7 @@ def require_unique(values: Iterable[str]) -> None:
     """Reject repeated identifiers within one locator or assessment namespace."""
     identifiers = list(values)
     if len(set(identifiers)) != len(identifiers):
-        raise ValueError("Duplicate identifiers")
+        raise VerdictRejected(VerdictRule.DUPLICATE_IDENTIFIER, message="Duplicate identifiers")
 
 
 class _JudgeModel(BaseModel):
@@ -86,9 +99,9 @@ class Quote(_JudgeModel):
     @model_validator(mode="after")
     def _check_interval(self) -> Self:
         if (self.start is None) != (self.end is None):
-            raise ValueError("Supply both quote offsets or neither")
+            raise VerdictRejected(VerdictRule.QUOTE_OFFSETS_UNPAIRED, message="Supply both quote offsets or neither")
         if self.start is not None and self.end is not None and self.end - self.start != len(self.text):
-            raise ValueError("Invalid quote interval")
+            raise VerdictRejected(VerdictRule.QUOTE_OFFSET_LENGTH_MISMATCH, message="Invalid quote interval length")
         return self
 
 
@@ -209,7 +222,7 @@ class DeriveReferenceResult(_JudgeModel):
     mode: Literal["derive_reference"]
     rationale: _ShortText
     answerability: _Answerability
-    reference_answer: _ShortText | None
+    reference_answer: _ReferenceAnswer | None
     constraints: Annotated[list[DerivedConstraint], Field(max_length=12)]
     facts: Annotated[list[DerivedFact], Field(max_length=16)]
     coverage_gaps: Annotated[list[_ShortText], Field(max_length=8)]

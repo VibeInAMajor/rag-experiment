@@ -798,4 +798,64 @@ DEVELOPMENT_CASES = (
             facts={"edition-year": "contradicted"},
         ),
     ),
+    CalibrationCase(
+        case_id="dev-answer-scope-limited-abstention",
+        classification="synthetic",
+        input={
+            "mode": "judge_answer",
+            "question": "When did the old observatory last open to visitors?",
+            "language": "en",
+            "reference": _reference(answerability="not_found_in_supplied_excerpt"),
+            "answer": "The excerpt describes telescope repairs and does not give the last public opening date.",
+            "context": [_excerpt("maintenance-card", "The observatory's telescope needs a replacement motor.")],
+            "sources": [],
+            "citations": [],
+        },
+        expected=_expected(abstention=["appropriate"], correctness=["not_applicable"], completeness=["not_applicable"]),
+    ),
+    CalibrationCase(
+        case_id="dev-shared-domain-no-fare-en",
+        classification="synthetic",
+        input={
+            "mode": "judge_evidence",
+            "question": "How much is a Cedar Transit monthly pass?",
+            "language": "en",
+            "reference": _reference(answerability="not_found_in_supplied_excerpt"),
+            "candidate": _excerpt("cedar-access-en", "Cedar Transit buses have step-free entrances."),
+            "sources": [],
+        },
+        expected=_evidence_expected("topically_related", grade=0),
+    ),
+    CalibrationCase(
+        case_id="dev-shared-domain-no-fare-uk",
+        classification="synthetic",
+        repeat_of="dev-shared-domain-no-fare-en",
+        input={
+            "mode": "judge_evidence",
+            "question": "Скільки коштує місячний проїзний Cedar Transit?",
+            "language": "uk",
+            "reference": _reference(answerability="not_found_in_supplied_excerpt"),
+            "candidate": _excerpt("cedar-access-uk", "Cedar Transit buses have step-free entrances."),
+            "sources": [],
+        },
+        expected=_evidence_expected("topically_related", grade=0),
+    ),
+    CalibrationCase(
+        case_id="dev-reference-sample-procedure",
+        classification="synthetic",
+        input={
+            "mode": "derive_reference",
+            "question": "In what order should the technician prepare the water sample for storage?",
+            "language": "en",
+            "scope": {"description": "Complete sample preparation card.", "complete": True},
+            "sources": [
+                _excerpt(
+                    "sample-preparation-card",
+                    "First scan the vial barcode. Rinse the vial with 3 mL of sample water, then discard the rinse. "
+                    "Fill the vial to the line. Seal the vial before placing it in the cold rack.",
+                )
+            ],
+        },
+        expected={**_expected(answerability=["answerable"]), "required_fact_contains": ["barcode", "3 mL", "seal"]},
+    ),
 )

@@ -19,11 +19,11 @@ from agent_runtime.configuration import SEMANTIC_REVIEW_PROFILE
 
 AGENT_ID = "semantic-judge"
 
-_MODE_SCHEMAS: dict[str, tuple[type[BaseModel], type[BaseModel]]] = {
-    "derive_reference": (DeriveReferenceInput, DeriveReferenceResult),
-    "judge_evidence": (JudgeEvidenceInput, JudgeEvidenceResult),
-    "judge_context": (JudgeContextInput, JudgeContextResult),
-    "judge_answer": (JudgeAnswerInput, JudgeAnswerResult),
+_MODE_SCHEMAS: dict[str, tuple[type[BaseModel], type[BaseModel], int]] = {
+    "derive_reference": (DeriveReferenceInput, DeriveReferenceResult, 2),
+    "judge_evidence": (JudgeEvidenceInput, JudgeEvidenceResult, 1),
+    "judge_context": (JudgeContextInput, JudgeContextResult, 1),
+    "judge_answer": (JudgeAnswerInput, JudgeAnswerResult, 1),
 }
 
 JUDGE_MODES = {
@@ -32,9 +32,9 @@ JUDGE_MODES = {
         output_schema=output_schema,
         instructions=INSTRUCTIONS[mode].text,
         prompt_revision=INSTRUCTIONS[mode].revision,
-        output_schema_revision=f"{mode}/1",
+        output_schema_revision=f"{mode}/{schema_revision}",
         allowed_profiles=frozenset({SEMANTIC_REVIEW_PROFILE}),
         validate_output=validate_verdict,
     )
-    for mode, (input_schema, output_schema) in _MODE_SCHEMAS.items()
+    for mode, (input_schema, output_schema, schema_revision) in _MODE_SCHEMAS.items()
 }

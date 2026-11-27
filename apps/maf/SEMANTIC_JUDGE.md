@@ -51,9 +51,11 @@ A successful response has `outcome: "ok"` and a typed `output` containing `mode`
 
 All modes take a question and language. Set `scope.complete` only if the caller can establish completeness of the declared eligible scope. Derivation accepts original sources and question constraints inferred from the question. The caller can compare the resulting reference with prior labels after the invocation.
 
+`derive_reference` returns a concise `reference_answer` of at most 600 characters. The provider schema and local validator enforce the same bound. The ordered facts retain the supporting quotations and procedural detail.
+
 Review and freeze the reference before the three downstream modes. Supply `reference` with an opaque `revision`, the derived `answerability`, `constraints` containing `id` and `description`, and `facts` containing `id`, `statement`, and `required`. Keep the original quotations from the derivation in the caller's reference record. Downstream evidence and citations resolve against the excerpts supplied for that invocation. Provide an empty list for an allowed empty `sources` or `citations` field. Answer citations use `id` and the corresponding `source_id`.
 
-Answer completeness measures coverage of required facts by supported claims. A citation is assessed against the particular excerpt it points to. Exact quotations can demonstrate either support or contradiction.
+Answer completeness measures coverage of required facts by supported claims. When an answer solely declines to provide the requested answer, use `not_applicable` for factual correctness and completeness, an empty `claims` list, and a separate abstention verdict. A citation is assessed against the particular excerpt it points to. Exact quotations can demonstrate either support or contradiction.
 
 ### Evidence rubric
 
@@ -62,8 +64,8 @@ Answer completeness measures coverage of required facts by supported claims. A c
 | `direct` | 3 | Candidate text establishes at least one complete required fact within the requested scope. |
 | `partial` | 1 | Candidate text gives concrete, incomplete support for a required fact. |
 | `supporting` | 1 | Candidate text contributes materially useful context for a required fact. The rationale identifies the contribution. |
-| `topically_related` | 0 | Shared terms, entities or subject with no answer support. |
-| `irrelevant` | 0 | Candidate lacks useful evidence for the question. |
+| `topically_related` | 0 | The candidate discusses the same product, service, entity or subject but supplies no answer support. |
+| `irrelevant` | 0 | The candidate discusses a different subject with no meaningful overlap. |
 | `wrong_scope` | 0 | Candidate pertains to a different entity, event, time, edition, unit or other question constraint. |
 | `contradictory` | 0 | Candidate directly conflicts with a scoped reference fact. |
 | `unknown` | `null` | The available evidence leaves the assessment ambiguous. |
@@ -94,6 +96,6 @@ hatch run calibrate --allow-external --report calibration/live-report.jsonl
 
 The runner submits authored cases and public original-source excerpts through `semantic-review`. It checks predeclared outcomes and repeats a subset across languages or opaque IDs. Use `--development` and a separate report path to run authored development probes. Check the qualification report and its gate results before using a revision to audit a dataset. An inconclusive or disputed case remains unresolved for that dataset's caller. [Calibration task and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md)
 
-On a failure, the local calibration checkpoint can include a bounded `failure_stage` such as `transport`, `output_schema`, or `evidence_validation`. The public JSON envelope continues to carry the same error codes.
+On a failure, the local calibration checkpoint can include a bounded `failure_stage` such as `transport`, `output_schema`, or `evidence_validation`. Verdict rejections also record a fixed `failure_reason` such as `complete_without_required_facts`, `quote_not_found`, or `quote_offsets_unpaired`. For schema failures, `failure_field` may identify a declared top-level field. The public JSON envelope carries the same error codes. The report omits rejected response text, unrecognized field names and exception messages.
 
 Bump the corresponding mode revision when its prompt, output contract, or rubric changes. Preserve the exact prompt and schema fingerprints together with the model/profile, control manifest digest, per-case verdicts, and observed usage. Qualify any changed revision with the same gates before adopting it. [Versioned prompts](src/agent_runtime/agents/semantic_judge/instructions.py)

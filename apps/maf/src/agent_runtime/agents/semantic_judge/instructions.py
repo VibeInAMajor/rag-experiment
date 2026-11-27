@@ -32,14 +32,16 @@ _FROZEN_REFERENCE = (
 INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
     {
         "derive_reference": JudgeInstructions(
-            revision="derive_reference/1",
+            revision="derive_reference/2",
             text=_GROUNDING
             + (
                 "Derive an independent reference from the supplied authoritative excerpts. Extract explicit "
                 "constraints on entity, event, date, edition, relation, polarity, units, and language. Separate "
                 "required facts from optional context, use one fact per answer unit, and include each necessary "
-                "procedural action in order. Quote the supporting source for each fact. A passage may describe a "
-                "different time from its publication or position. Connect each fact to the event asked about. "
+                "procedural action in order. Quote the supporting source for each fact. Keep reference_answer "
+                "under 450 characters as a concise summary. Put procedural detail in the ordered facts. "
+                "A passage may describe a different time from its publication or position. Connect each fact to "
+                "the event asked about. "
                 "Use partially_answerable when only some required facts are established. Retain the supported facts "
                 "and record a coverage gap. Use not_found_in_complete_eligible_scope only when scope.complete "
                 "is true and nothing in that scope "
@@ -49,7 +51,7 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
             ),
         ),
         "judge_evidence": JudgeInstructions(
-            revision="judge_evidence/3",
+            revision="judge_evidence/4",
             text=_GROUNDING
             + _FROZEN_REFERENCE
             + (
@@ -59,9 +61,11 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
                 "A later or differently worded mention can qualify if it explicitly establishes the same requested "
                 "event. Grade partial 1 for concrete incomplete support for a required fact. Grade supporting 1 "
                 "when the quote contributes necessary context to a required fact and identify the contribution. "
-                "Topic overlap, correct entities alone, and section proximity earn 0. Use topically_related for "
-                "topic overlap, irrelevant for unrelated text, and wrong_scope for wrong entity, event, version, "
-                "or units. Mark any corresponding constraint violated. A contradictory quote directly contests "
+                "Grade topic overlap 0. Apply the same category across languages. A passage about the same named "
+                "product, service, entity or subject that discusses a different aspect, such as its features "
+                "when asked for its price, is topically_related. Reserve irrelevant for a different subject with "
+                "no meaningful overlap. Use wrong_scope for an explicit incompatible entity, event, version or "
+                "unit. Mark any violated constraint. A contradictory quote directly contests "
                 "the scoped fact. Before awarding a positive grade, establish which entity, event, or record the "
                 "quoted contribution belongs to. If the text explicitly leaves competing attributions unresolved "
                 "and establishes no independent contribution to a requested fact, use unknown and a null grade, "
@@ -88,7 +92,7 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
             ),
         ),
         "judge_answer": JudgeInstructions(
-            revision="judge_answer/2",
+            revision="judge_answer/3",
             text=_GROUNDING
             + _FROZEN_REFERENCE
             + (
@@ -97,11 +101,13 @@ INSTRUCTIONS: Mapping[str, JudgeInstructions] = MappingProxyType(
                 "using the supplied evidence. Each citation uses its supplied ID and actual claim IDs. Quote only "
                 "its cited excerpt in that citation assessment. A citation that contradicts the linked claim is "
                 "unsupported. Evaluate correctness, completeness and relevance independently. For completeness, "
-                "count only required facts present in supported claims and assessed as supported. Record any "
-                "missing or contradicted fact. Distinguish appropriate "
-                "abstention, unwarranted abstention, and an answer asserted despite insufficient evidence. A "
-                "scope-limited abstention can be appropriate when original coverage is incomplete. Never award "
-                "coverage to a fact the given answer leaves implicit without a clear entailment."
+                "count required facts present in supported claims and assessed as supported. Use complete only "
+                "when such required facts exist and all are covered. If the answer only declines to provide the "
+                "requested answer, set correctness and completeness to not_applicable and claims to an empty list. "
+                "Explaining what the provided excerpts cover is part of that abstention. Return appropriate when "
+                "the supplied evidence cannot establish the answer, or inappropriate when it can. Still assess "
+                "relevance and every supplied constraint and fact. For an asserted answer, assess its actual "
+                "claims and record missing or contradicted facts."
             ),
         ),
     }

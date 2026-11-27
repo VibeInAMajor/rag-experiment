@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Record safe Semantic Judge rejection reasons in local calibration reports.
+    Clarify how pure abstentions and unsupported passages on the same subject are
+    assessed, and enforce the reference summary limit in structured generation.

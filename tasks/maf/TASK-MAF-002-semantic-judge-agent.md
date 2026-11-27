@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-27  
 **Updated:** 2026-11-27  
-**Status:** Implementation complete. Live calibration measured `NO_GO` under the frozen gates.
+**Status:** Complete. The v6 live calibration passed all frozen gates on `semantic-review`.
 
 **Priority:** P0  
 **Dependencies:** [MAF-001](TASK-MAF-001-standalone-agent-runtime.md)  
@@ -178,14 +178,48 @@ The final candidate is implementation `1b22301`, runtime `0.2.0` and `semantic-r
 
 Two gates failed. `azure-answer-abstains` returned `INVALID_OUTPUT` at `evidence_validation`. The report retains its phase and usage without retaining the rejected model text. The English `azure-no-invoice-in-redundancy` and Ukrainian repeat both returned grade 0, with categories `irrelevant` and `topically_related` respectively. Both categories were allowed for that control. The declared exact-repeat gate still failed. Replaying the 32 saved envelopes offline reproduced the full scoring summary and independently rechecked all 31 accepted verdicts.
 
-The per-control verdicts, expected outcomes, exact-source quotes, and reported usage are saved locally in `apps/maf/calibration/live-report-rag-v4.jsonl`. The qualification decision is `NO_GO`. Calibration on these controls leaves the DATASET-002 audit gate closed. [Evaluation order](../quality/IMPLEMENTATION_ORDER.md)
+The v4 per-control verdicts, expected outcomes, exact-source quotes, and reported usage are saved locally in `apps/maf/calibration/live-report-rag-v4.jsonl`. That qualification decision was `NO_GO`. [Evaluation order](../quality/IMPLEMENTATION_ORDER.md)
+
+#### Follow-up calibration for abstention and category repeatability
+
+The local calibration report records a fixed `failure_reason` when an evidence validation rule rejects a verdict. The original v4 rejected JSON remains unavailable. A diagnostic replay on `judge_answer/2` reproduced the abstention failure in two of three calls with `complete_without_required_facts`. The rejected verdict claimed complete coverage even though the reference had no required facts. Its report records the code and usage with `output: null`. The EN and UK cases both returned `topically_related`, grade 0 in the old-prompt replay, so the earlier category difference did not recur on every call. The diagnostic replay is saved locally as `apps/maf/calibration/diagnostic-report-abstention-category.jsonl`.
+
+`judge_answer/3` represents a pure abstention with `not_applicable` correctness and completeness, plus a separate abstention verdict. `judge_evidence/4` applies the same zero-grade rubric across languages. A candidate on the same subject with no answer support earns `topically_related`. An unrelated subject earns `irrelevant`. The separate development set includes an authored abstention and an EN/UK pair. The 32-case qualification manifest and gates remain fixed. The development fingerprint is `2e37b05854fba4e6bdbbc5f93da280a3fe3f14ebd058bd4eebb04b3d0152d85a`. The v5 qualification fingerprint is `915611533dcf56e5ed54d2f47356d56e0991a9a4d22d8fd63e60b7b8c6941cbe`.
+
+All eight development probes passed. The live v5 run gave `azure-answer-abstains` an `appropriate` abstention with `not_applicable` factual completeness and correctness. The English and Ukrainian Azure controls both returned `topically_related`, grade 0. Exact repeatability was 3/3. One other control, `ruskin-reference-tracing-paper`, returned `INVALID_OUTPUT` at `output_schema`, which left the run at `NO_GO`. The v5 checkpoint recorded only the stage for schema errors. The local report is `apps/maf/calibration/live-report-rag-v5.jsonl`.
+
+The v5 run accepted 31/32 verdicts, matched 15/16 critical controls and matched 16/16 determinate grades and support judgments. It made 32 requests with zero retries and recorded 39,531 input tokens and 11,611 output tokens, including 1,932 reasoning tokens. The estimated cost was USD 0.23643125 before credits.
+
+Schema rejections now record a fixed reason and the declared top-level output field when available. A three-request diagnostic replay of the Ruskin control reproduced the failure once with `text_too_long` on `reference_answer`. The replay is saved locally as `apps/maf/calibration/diagnostic-report-ruskin-schema.jsonl`. The new derivation prompt keeps the reference summary concise and puts ordered procedural detail in the facts. Its new provider schema exposes the existing 600-character local bound through a supported string pattern. [Structured Outputs schema constraints](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas)
+
+The v6 development fingerprint is `1cb6f8a2d79037042d4aba927920d130777a98e9f68a3d9ad77305e8705256e7`. The v6 qualification fingerprint is `5cb5d0fb484c68117fbc290b3ad39dc806d7a31c363d567af892326e38613f4c`. The new derivation prompt and output schema are `derive_reference/2`.
+
+#### v6 result and handoff
+
+All nine development probes and all 32 frozen qualification requests passed with `gpt-6.1-sol`. The EN/UK pair matched on `topically_related`, grade 0. The scope-limited Azure refusal returned `appropriate`, `not_applicable` correctness and `not_applicable` completeness. The Ruskin reference summary used 348 characters and retained the tracing-paper and correction steps in its required facts.
+
+| Measure | v6 qualification |
+| --- | --- |
+| Validated verdicts and all expected checks | 32/32 |
+| Determinate grade and binary support agreement | 16/16 for each |
+| Non-evidence mode agreement | 12/12 |
+| Critical controls and expected `unknown` | 16/16 and 1/1 |
+| Exact repeatability and complete-scope overclaims | 3/3 and 0 |
+| Fact checks and required quote checks | 30/30 and 3/3 |
+| Provider attempts and operational errors | 32 requests, 0 retries, 0 errors |
+| Provider usage | 39,647 input tokens, 11,861 output including 2,519 reasoning, 0 cached input |
+| Estimated cost | USD 0.23950025 before credits |
+
+Ruff, strict mypy and all 106 offline tests passed on Windows and in a standalone Linux container with networking disabled. The `0.2.0` wheel built. Offline replay independently validated the 32 returned envelopes, checked the verifier output and reproduced the frozen scoring summary. The report with per-case results is saved locally as `apps/maf/calibration/live-report-rag-v6.jsonl`.
+
+The qualified prompt revisions for DATASET-002 are `derive_reference/2`, `judge_evidence/4`, `judge_context/1`, and `judge_answer/3`. The output schema revision is 2 for derivation and 1 for the other modes. Use `semantic-review`, `gpt-6.1-sol`, and medium reasoning. This result qualifies the standalone judge on the frozen controls. DATASET-002 owns the three-family pilot and the OPEN audit. [Evaluation order](../quality/IMPLEMENTATION_ORDER.md)
 
 ## M. Acceptance Criteria
 
 - [x] Semantic Judge registers four independent typed modes and runs without RAG dependencies or tools.
 - [x] Strict results include facts, constraints, useful spans, exact references and `unknown`. A positive grade requires a quoted contribution to a required fact.
 - [x] Reference derivation accepts original excerpts and declared scope. The other modes require a frozen reference. A complete-scope absence requires declared complete coverage.
-- [x] Real calibration covered 29 controls, the three original regression families and the declared repeats. The frozen gates measured `NO_GO` on the final revision.
+- [x] The final revision passed the frozen calibration on 29 distinct controls and three declared repeats, including the three original regression families.
 - [x] Offline checks passed. Live reports capture the actual model, prompt/schema revisions, denominators, disagreements, usage and cost.
 - [x] A generic caller invokes the judge through the standalone version 1 JSON CLI.
 
@@ -200,4 +234,4 @@ Document modes, examples, rubric, failure semantics and judge-version lifecycle 
 - [x] Run independent offline tests and bounded live calibration. Record the measured result and limitations.
 - [x] Verify package isolation, default egress denial and distinct failure and `unknown` outcomes.
 - [x] Publish the contract, rubric, verification record and handoff conditions.
-- [ ] Qualify a judge revision for the DATASET-002 audit. The measured result is `NO_GO`.
+- [x] Qualify and record the judge revision for the DATASET-002 pilot.

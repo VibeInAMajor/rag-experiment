@@ -8,9 +8,9 @@ from importlib.metadata import version
 from time import perf_counter
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, JsonValue
+from pydantic import BaseModel, JsonValue, ValidationError
 
-from agent_runtime.agents.registration import AgentDefinition
+from agent_runtime.agents.registration import AgentDefinition, VerdictRejected
 from agent_runtime.agents.semantic_judge.agent import AGENT_ID, JUDGE_MODES
 from agent_runtime.agents.structured_smoke import SMOKE_INSTRUCTIONS, SMOKE_REQUEST, SmokeInput, SmokeOutput
 from agent_runtime.configuration import (
@@ -32,6 +32,25 @@ from agent_runtime.contracts import (
 )
 
 _RUNTIME_REVISION = version("rag-maf-agent-runtime")
+_SCHEMA_ERRORS = frozenset(
+    {
+        "bool_type",
+        "extra_forbidden",
+        "greater_than_equal",
+        "int_type",
+        "less_than_equal",
+        "list_type",
+        "literal_error",
+        "missing",
+        "model_type",
+        "string_pattern_mismatch",
+        "string_too_long",
+        "string_too_short",
+        "string_type",
+        "too_long",
+        "too_short",
+    }
+)
 
 type FailureStage = Literal["request_guard", "transport", "provider_response", "output_schema", "evidence_validation"]
 
@@ -45,6 +64,8 @@ class ProviderObservation:
     correlation_id: str | None = None
     requests: int = 0
     failure_stage: FailureStage | None = None
+    failure_reason: str | None = None
+    failure_field: str | None = None
 
 
 class RuntimeFailure(Exception):
@@ -232,13 +253,32 @@ def _validate_output(
         if len(output.encode("utf-8")) > profile.max_response_bytes:
             raise RuntimeFailure(ErrorCode.RESPONSE_TOO_LARGE)
         validated_output = agent.output_schema.model_validate(decode_json(output))
+    except ValidationError as exc:
+        observation.failure_stage = "output_schema"
+        observation.failure_reason, observation.failure_field = _schema_failure(exc, agent.output_schema)
+        raise RuntimeFailure(ErrorCode.INVALID_OUTPUT) from None
     except (ValueError, RecursionError):
         observation.failure_stage = "output_schema"
+        observation.failure_reason = "invalid_output_json"
         raise RuntimeFailure(ErrorCode.INVALID_OUTPUT) from None
     if agent.validate_output is not None:
         try:
             validated_output = agent.validate_output(validated_input, validated_output)
-        except (ValueError, RecursionError):
+        except (ValueError, RecursionError) as exc:
             observation.failure_stage = "evidence_validation"
+            if isinstance(exc, VerdictRejected):
+                observation.failure_reason = exc.rule.value
             raise RuntimeFailure(ErrorCode.INVALID_OUTPUT) from None
     return validated_output.model_dump(mode="json")
+
+
+def _schema_failure(error: ValidationError, schema: type[BaseModel]) -> tuple[str, str | None]:
+    detail = error.errors(include_input=False, include_url=False)[0]
+    location = detail["loc"]
+    root = location[0] if location and isinstance(location[0], str) else None
+    field = root if root in schema.model_fields else None
+    cause = detail.get("ctx", {}).get("error")
+    if isinstance(cause, VerdictRejected):
+        return cause.rule.value, field
+    kind = detail["type"]
+    return f"schema_{kind}" if kind in _SCHEMA_ERRORS else "schema_validation_failed", field

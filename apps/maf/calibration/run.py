@@ -187,6 +187,8 @@ async def _run_live(
                 "mode": case.input["mode"],
                 "language": case.input["language"],
                 "failure_stage": observation.failure_stage,
+                "failure_reason": observation.failure_reason,
+                "failure_field": observation.failure_field,
                 "expected": case.expected,
                 "checks": {
                     "passed": score.passed,

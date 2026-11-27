@@ -1,8 +1,18 @@
+import asyncio
 import json
 import os
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
+from unittest.mock import AsyncMock
+
+import pytest
+
+from agent_runtime.configuration import load_profiles
+from agent_runtime.runtime import AgentApplication, AgentRuntime
+from calibration.controls import DEVELOPMENT_CASES
+from calibration.run import _run_live
 
 _APP = Path(__file__).resolve().parents[1]
 
@@ -65,3 +75,47 @@ def test_existing_report_is_preserved(tmp_path: Path) -> None:
     assert process.returncode == 1, process.stderr
     assert json.loads(process.stdout) == {"status": "REPORT_EXISTS"}
     assert report.read_text(encoding="utf-8") == "saved results"
+
+
+@pytest.mark.parametrize(
+    ("unexpected_field", "stage", "reason"),
+    [(False, "evidence_validation", "quote_not_found"), (True, "output_schema", "schema_extra_forbidden")],
+)
+def test_rejected_verdict_checkpoint_records_rule_without_response_text(
+    monkeypatch: pytest.MonkeyPatch, unexpected_field: bool, stage: str, reason: str
+) -> None:
+    case = next(case for case in DEVELOPMENT_CASES if case.case_id == "dev-reference-sensor-model")
+    rejected_text = "injected rejected content"
+    port = AsyncMock(spec=AgentRuntime)
+    reply = {
+        "mode": "derive_reference",
+        "rationale": rejected_text,
+        "answerability": "answerable",
+        "reference_answer": "P-37",
+        "constraints": [],
+        "facts": [
+            {
+                "id": "model",
+                "statement": "Model P-37",
+                "required": True,
+                "quotes": [{"source_id": "equipment-card", "start": None, "end": None, "text": rejected_text}],
+            }
+        ],
+        "coverage_gaps": [],
+    }
+    if unexpected_field:
+        reply[rejected_text] = "extra value"
+    port.invoke.return_value = json.dumps(reply)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-only-key")
+    application = AgentApplication(lambda: port, load_profiles({}))
+    stream = StringIO()
+
+    asyncio.run(_run_live([case], application=application, report=stream, development=True))
+
+    row = json.loads(stream.getvalue().splitlines()[0])
+    assert row["failure_stage"] == stage
+    assert row["failure_reason"] == reason
+    assert row["failure_field"] is None
+    assert row["result"]["error"]["code"] == "INVALID_OUTPUT"
+    assert row["result"]["output"] is None
+    assert rejected_text not in stream.getvalue()

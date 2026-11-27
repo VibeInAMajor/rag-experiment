@@ -3,6 +3,7 @@ from hashlib import sha256
 import pytest
 from pydantic import ValidationError
 
+from agent_runtime.agents.registration import VerdictRejected
 from agent_runtime.agents.semantic_judge.contracts import (
     DeriveReferenceInput,
     DeriveReferenceResult,
@@ -15,6 +16,7 @@ from agent_runtime.agents.semantic_judge.contracts import (
     JudgeEvidenceResult,
 )
 from agent_runtime.agents.semantic_judge.validation import validate_verdict
+from agent_runtime.agents.semantic_judge.violations import VerdictRule
 
 _FACT = {"id": "price", "statement": "The rider fare was €12 in 1912.", "required": True}
 _REFERENCE = {
@@ -33,6 +35,12 @@ def _excerpt(identifier: str, text: str, *, start: int = 0) -> dict[str, object]
         "sha256": sha256(text.encode("utf-8")).hexdigest(),
         "text": text,
     }
+
+
+def test_reference_summary_limit_is_exposed_to_structured_generation() -> None:
+    schema = DeriveReferenceResult.model_json_schema()
+    reference = schema["properties"]["reference_answer"]["anyOf"][0]["$ref"].removeprefix("#/$defs/")
+    assert schema["$defs"][reference]["pattern"] == r"^[\s\S]{1,600}$"
 
 
 def _quote(source_id: str = "candidate", text: str = "€12", **offsets: int | None) -> dict[str, object]:
@@ -159,24 +167,26 @@ def test_candidate_offsets_are_absolute_unicode_code_points() -> None:
 
 
 @pytest.mark.parametrize(
-    ("quote", "message"),
+    ("quote", "rule"),
     [
-        (_quote("invented"), "unknown or ineligible"),
-        (_quote("candidate", "$12"), "occur exactly once"),
-        (_quote("candidate", "€12", start=0, end=3), "supplied interval"),
-        (_quote("register"), "must quote the candidate"),
+        (_quote("invented"), VerdictRule.QUOTE_EXCERPT_UNKNOWN_OR_INELIGIBLE),
+        (_quote("candidate", "$12"), VerdictRule.QUOTE_NOT_FOUND),
+        (_quote("candidate", "€12", start=0, end=3), VerdictRule.QUOTE_INTERVAL_MISMATCH),
+        (_quote("register"), VerdictRule.CANDIDATE_QUOTE_REQUIRED),
     ],
 )
-def test_invented_altered_or_out_of_role_quotes_fail(quote: dict[str, object], message: str) -> None:
+def test_invented_altered_or_out_of_role_quotes_fail(quote: dict[str, object], rule: VerdictRule) -> None:
     verdict = _evidence_verdict(facts=[{"fact_id": "price", "status": "supported", "quotes": [quote]}])
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(VerdictRejected) as rejected:
         validate_verdict(_evidence(), verdict)
+    assert rejected.value.rule == rule
 
 
 def test_repeated_quote_needs_exact_disambiguation() -> None:
     request = _evidence(text="€12 then €12 again.")
-    with pytest.raises(ValueError, match="occur exactly once"):
+    with pytest.raises(VerdictRejected) as rejected:
         validate_verdict(request, _evidence_verdict())
+    assert rejected.value.rule == VerdictRule.QUOTE_AMBIGUOUS
 
     quote = _quote(start=76, end=79)
     explicit = _evidence_verdict(facts=[{"fact_id": "price", "status": "supported", "quotes": [quote]}])
@@ -317,6 +327,28 @@ def test_answer_validates_support_and_citations_independently() -> None:
     result = validate_verdict(_answer_request(), _answer_verdict())
     assert isinstance(result, JudgeAnswerResult)
     assert result.claims[0].quotes[0].start == result.citations[0].quotes[0].start == 12
+
+
+def test_pure_abstention_has_no_factual_completeness() -> None:
+    request = _answer_request(
+        reference={**_REFERENCE, "answerability": "not_found_in_supplied_excerpt", "facts": []},
+        answer="There is no fare in the supplied excerpt.",
+        context=[_excerpt("schedule", "Trams ran every hour.")],
+        sources=[],
+        citations=[],
+    )
+    verdict = _answer_verdict(
+        abstention="appropriate",
+        correctness="not_applicable",
+        completeness="not_applicable",
+        claims=[],
+        fact_assessments=[],
+        citations=[],
+    )
+    assert validate_verdict(request, verdict) == verdict
+    with pytest.raises(VerdictRejected) as rejected:
+        validate_verdict(request, verdict.model_copy(update={"completeness": "complete"}))
+    assert rejected.value.rule == VerdictRule.COMPLETE_WITHOUT_REQUIRED_FACTS
 
 
 def test_complete_answer_must_link_required_facts_to_exact_answer_claims() -> None:

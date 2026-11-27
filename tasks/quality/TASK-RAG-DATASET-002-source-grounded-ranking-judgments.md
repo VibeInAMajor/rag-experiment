@@ -2,7 +2,7 @@
 
 **Created:** 2026-11-26  
 **Updated:** 2026-11-27  
-**Status:** REOPENED — historical full OPEN coverage and arithmetic verification completed; semantic correctness of the reference/occurrence judgments is under audit after user-observed failures. Previous metrics are provisional, not qualified gold. New independent MAF semantic judge and audit pending. [Candidate golden set delivered](dataset/golden_set/README.md): 306 source-checked answers; Semantic Review pending.
+**Status:** REOPENED. Historical full OPEN coverage and arithmetic verification are complete. Previous metrics are provisional pending semantic audit. The standalone MAF judge has passed v6 calibration. The three-family pilot and Semantic Review of the 306 source-checked candidate answers remain pending. [Judge qualification](../maf/TASK-MAF-002-semantic-judge-agent.md) · [Candidate golden set](dataset/golden_set/README.md)
 **Priority:** P0  
 **Dependencies:** DATASET-001 local delivery; QUALITY-001 completed diagnostic evidence; [MAF-001](../maf/TASK-MAF-001-standalone-agent-runtime.md) standalone runtime and [MAF-002](../maf/TASK-MAF-002-semantic-judge-agent.md) calibrated judge for the reopened semantic audit.
 **Repository snapshot inspected:** `472f550e8d91658228eb3ceeb1dfd2a79e2dbb47`
