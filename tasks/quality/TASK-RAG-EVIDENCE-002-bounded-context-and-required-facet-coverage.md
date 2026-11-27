@@ -1,7 +1,7 @@
 # TASK-RAG-EVIDENCE-002 — Select sufficient, provenance-preserving evidence within a fixed context budget
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-26  
+**Updated:** 2026-11-27  
 **Status:** PROPOSED — specification only; no runtime tests executed  
 **Priority:** P0  
 **Dependencies:** [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md), [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) or qualified exact baseline; [RERANK-002](TASK-RAG-RERANK-002-qualified-reranking-integration.md) only if GO; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); coordinate [CHUNK-004](../../tasks/TASK-RAG-CHUNK-004-policy-benchmark-and-tiered-enrichment.md) and CONTENT-005 for richer evidence later.  
@@ -62,6 +62,10 @@ Implement context-to-original chain validation using existing source/version/loc
 
 Use the [matched cleaned baseline](../evidence/quality-2026-11-25/report.md): 246/261 all-facts@10, 240/261 all-facts in fixed 2048 source-content tokens. These aggregate differences are not a disjoint six-case loss count; inspect actual raw candidates and pack membership. Compare the existing stop-at-first-overflow ranked prefix against bounded skip-oversized/deduplication/coverage-diversity policy and source-preserving neighboring evidence when supported, without gold labels in selection. Count actual serialized context separately from the historical source-content-only budget; compare at matched budgets and report missing facets, duplication, selected/dropped IDs and source fidelity. Target >=95% all-facts in fixed context where feasible; if candidate ceiling is below target route upstream instead of hiding losses by raising budget. Preserve current source mapping and use existing local UI functional acceptance.
 
+### Strict useful-context evaluation — 2026-11-27
+
+Use [reopened DATASET-002](TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md) and external [MAF Semantic Judge](../maf/TASK-MAF-002-semantic-judge-agent.md) for offline assessment of actual selected packs, not runtime selection. Distinguish useful direct/partial/support evidence from topical-only/wrong-scope/contradictory fragments and duplicate or irrelevant spans inside a partly relevant chunk. Judge exact question constraints and required facts; validate useful spans against supplied text; measure useful chunk precision and source-content token usefulness only with justified mapped spans and an explicit tokenizer, with unknown coverage separate. Proposed local useful-chunk precision >=0.90, irrelevant rate <=0.10, all-facet coverage >=0.95 at matched budget; freeze proposed thresholds before experiments, report trade-offs/unknowns without lowering existing gates. Compare minimal sufficient pack against raw candidates and include the three reported regression families. Do not fill a fixed K/budget with unrelated results just because capacity remains. Gold and judge outputs may only be used for offline scoring, not leaked into runtime selector. Existing local policy must execute with MAF disconnected.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext, FORCE RLS, immutable source/version/profile/generation fences, disposable owned test DB and approved local model resources. Treat query and retrieved content as untrusted; no executable document instructions, cross-tenant data, secrets, raw vectors, private content or model payloads in ordinary logs. Restricted fixtures/labels and artifacts have explicit access, license, retention and safe identifiers. Reuse [OPS-001](../../tasks/TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) telemetry; no new telemetry platform.
@@ -83,6 +87,8 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 - [ ] Selected-pack source chain and assessed noise share are measured; context artifacts permit reproducible later NAG experiments; no gold-aware runtime selection.
 
 - [ ] Residual candidate vs selector losses measured; fixed-budget gain, provenance and cost reported without runtime gold or silent budget expansion.
+
+- [ ] Selected-context strict precision, redundancy/irrelevance and constraint/fact coverage measured separately from raw retrieval using calibrated judge; context budget and source links preserved; no new runtime judge dependency.
 
 ## N. Documentation / Migration / Compatibility / Rollback
 
