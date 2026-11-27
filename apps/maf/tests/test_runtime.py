@@ -36,6 +36,12 @@ def _request(
             {"OPENAI_API_KEY": _KEY},
             ErrorCode.BUDGET_EXCEEDED,
         ),
+        (
+            _request(),
+            replace(_APPROVED, max_cost_usd=Decimal("0.10")),
+            {"OPENAI_API_KEY": _KEY},
+            ErrorCode.BUDGET_EXCEEDED,
+        ),
         (_request(text="a" * 8192), _APPROVED, {"OPENAI_API_KEY": _KEY}, ErrorCode.INVALID_INPUT),
     ],
 )
@@ -107,6 +113,33 @@ def test_success_reports_provider_observation_and_configured_profile() -> None:
     port.invoke.assert_awaited_once()
     assert port.invoke.call_args.kwargs["profile"].reasoning_effort == "low"
     assert _KEY not in port.invoke.call_args.kwargs["input_json"]
+
+
+@pytest.mark.parametrize(("output_tokens", "accepted"), [(4_097, True), (32_000, True), (32_001, False)])
+def test_review_output_usage_is_bounded_by_profile(output_tokens: int, accepted: bool) -> None:
+    async def respond(*, observation: ProviderObservation, **_kwargs: object) -> str:
+        observation.model = "gpt-6.1-sol"
+        observation.usage = Usage(input_tokens=76, output_tokens=output_tokens, reasoning_tokens=17)
+        observation.requests = 1
+        return '{"marker":"cobalt"}'
+
+    port = AsyncMock(spec=AgentRuntime)
+    port.invoke.side_effect = respond
+    app = AgentApplication(lambda: port, load_profiles({}))
+
+    result = asyncio.run(app.invoke(_request(), policy=_APPROVED, environ={"OPENAI_API_KEY": _KEY}))
+
+    if accepted:
+        assert result.outcome == "ok"
+        assert result.error is None
+        assert result.output == {"marker": "cobalt"}
+    else:
+        assert result.error is not None and result.error.code == ErrorCode.BUDGET_EXCEEDED
+        assert result.output is None
+    assert result.metadata.requests == 1
+    assert result.metadata.usage is not None
+    assert result.metadata.usage.output_tokens == output_tokens
+    port.invoke.assert_awaited_once()
 
 
 def test_success_keeps_missing_usage_and_actual_model_unknown() -> None:

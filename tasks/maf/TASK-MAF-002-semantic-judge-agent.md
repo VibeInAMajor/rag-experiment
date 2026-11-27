@@ -243,6 +243,10 @@ Scope: change only the existing semantic-review profile to 32,000 output tokens 
 
 Update existing configuration, calibration runner, package metadata, README, judge document, architecture notes, focused tests and release-note metadata. Test wire propagation and reported usage above 4,096, at 32,000 and above 32,000; reject insufficient reserve before egress and confirm frozen manifest/gates. Execute Hatch offline checks, new bounded live qualification on unchanged controls and replay identical full pilot with fresh manifests before adopting. No claim of PASS without actual evidence. If credentials/runner are unavailable, record qualification pending. The report projection belongs to ANSWERABILITY-001 Phase A; no change to MAF semantic states.
 
+### Implementation record — 2026-11-28
+
+The 0.3.2 candidate changes the existing `semantic-review` profile ceiling, the default invocation reserve and aggregate calibration reserve; the alternate profile, prompt/schema, existing frozen manifest controls and acceptance thresholds are unchanged. Tests now cover a full ordered wire request above the previous 4,096 output-token limit, usage at/over the new cap and pre-egress rejection at the old explicit spend ceiling. Offline and live checks, provider acceptance and a fresh full-input pilot remain pending; no new qualification is claimed. The caller must not adopt this configuration for full OPEN until it passes. Phase A diagnostic reporting remains assigned to ANSWERABILITY-001.
+
 ## M. Acceptance Criteria
 
 - [ ] 32,000-token ceiling, updated bounded reserves and unchanged independent guards verified by offline tests; alternate profile unchanged.

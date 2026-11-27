@@ -20,7 +20,7 @@ _CACHED_INPUT_RATE = Decimal("0.10")
 _OUTPUT_RATE = Decimal("10")
 _REGIONAL_ALLOWANCE = Decimal("1.10")
 _REVIEW_MAX_INPUT_TOKENS = 16_384
-_REVIEW_MAX_OUTPUT_TOKENS = 4_096
+_REVIEW_MAX_OUTPUT_TOKENS = 32_000
 _MODEL_MAPPING = {SEMANTIC_REVIEW_PROFILE: "gpt-6.1-sol", "semantic-review-6.2": "gpt-6.2-sol"}
 
 
@@ -46,7 +46,7 @@ class ModelProfile:
 class RunPolicy:
     allow_external: bool = False
     data_classification: DataClassification | None = None
-    max_cost_usd: Decimal = Decimal("0.10")
+    max_cost_usd: Decimal = Decimal("0.40")
 
 
 def load_profiles(environ: Mapping[str, str]) -> dict[str, ModelProfile]:

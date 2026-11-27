@@ -198,7 +198,7 @@ def test_large_ordered_context_reaches_provider_without_truncation() -> None:
     def capture(http_request: httpx2.Request) -> httpx2.Response:
         sent.append(http_request.content)
         record = _record(json.dumps(output))
-        record["usage"].update(output_tokens=2_250, total_tokens=2_326)
+        record["usage"].update(output_tokens=5_000, total_tokens=5_076)
         return httpx2.Response(200, json=record, headers={"x-request-id": _REQUEST_ID})
 
     runtime = MafOpenAIRuntime(transport_factory=lambda: httpx2.MockTransport(capture))
@@ -214,13 +214,13 @@ def test_large_ordered_context_reaches_provider_without_truncation() -> None:
     assert result.error is None, result
     assert result.metadata.requests == 1
     assert result.metadata.usage is not None
-    assert result.metadata.usage.output_tokens == 2_250
+    assert result.metadata.usage.output_tokens == 5_000
     (raw,) = sent
     assert len(request.model_dump_json().encode()) > 8_192
     assert len(raw) > 8_192
     body = json.loads(raw)
     assert body["truncation"] == "disabled"
-    assert body["max_output_tokens"] == 4_096
+    assert body["max_output_tokens"] == 32_000
     assert json.loads(body["input"][0]["content"][0]["text"]) == request.input
     (span,) = JudgeContextResult.model_validate(result.output).spans
     assert span.quote.start == len(fragments[-1]["text"]) - len(tail)

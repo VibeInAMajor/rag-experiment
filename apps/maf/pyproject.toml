@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rag-maf-agent-runtime"
-version = "0.3.1"
+version = "0.3.2"
 description = "Standalone Microsoft Agent Framework invocation runtime"
 license = "Apache-2.0"
 requires-python = ">=3.12"

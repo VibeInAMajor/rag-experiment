@@ -1,0 +1,13 @@
+---
+upgrade:
+  - |
+    Standalone MAF 0.3.2 raises the default per-invocation spend ceiling
+    from USD 0.10 to USD 0.40. An explicit ``--max-cost-usd`` for the
+    ``semantic-review`` profile must now cover USD 0.397056. External
+    calls still require explicit opt-in.
+enhancements:
+  - |
+    The ``semantic-review`` profile allows up to 32,000 generated tokens
+    including reasoning. This capacity candidate requires new live
+    qualification before full dataset evaluation. Input, response byte,
+    execution deadline and retry limits remain unchanged.
