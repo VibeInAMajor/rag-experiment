@@ -8,12 +8,14 @@ import stat
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from threading import Lock
 from typing import BinaryIO
 from uuid import uuid4
 
 OPERATIONS_DIR_ENV = "WORKBENCH_AGENT_OPERATIONS_DIR"
 OPERATIONS_SCOPE = "local-operator"
+_CHECKOUT_JOURNAL = Path(".local/workbench-agent-operations")
 _RUN_FILENAME = re.compile(r"[a-f0-9]{32}\.jsonl")
 _MAX_RECORD_BYTES = 16_384
 _MAX_RUN_BYTES = 8 * 1024 * 1024
@@ -50,6 +52,57 @@ def read_operations_file(path: Path, *, limit: int = 65_536) -> bytes:
     if len(raw) > limit:
         raise ValueError("Agent operations metadata exceeds its limit")
     return raw
+
+
+def operations_directory(environ: Mapping[str, str]) -> str | None:
+    """Use an explicit override or discover the journal initialized by the checkout launcher."""
+    configured = environ.get(OPERATIONS_DIR_ENV)
+    if configured is not None:
+        return configured or None
+    source = Path(__file__).resolve()
+    checkout = next(
+        (parent for parent in source.parents if parent / "apps/maf/src/agent_runtime" == source.parent), None
+    )
+    if checkout is None:
+        return None
+    directory = checkout / _CHECKOUT_JOURNAL
+    try:
+        local_directory(directory / "runs")
+        read_operations_file(directory / "catalog.json")
+    except (OSError, ValueError):
+        return None
+    return str(directory)
+
+
+def _ensure_local_directory(path: Path) -> None:
+    try:
+        local_directory(path)
+    except FileNotFoundError:
+        _ensure_local_directory(path.parent)
+        path.mkdir(mode=0o700, exist_ok=True)
+        local_directory(path)
+
+
+def publish_operations_catalog(directory: Path, catalog: bytes) -> None:
+    """Initialize the journal and atomically publish the runtime's metadata-only catalog."""
+    _ensure_local_directory(directory / "runs")
+    target = directory / "catalog.json"
+    try:
+        if read_operations_file(target) == catalog:
+            return
+    except FileNotFoundError:
+        pass
+    pending = None
+    try:
+        with NamedTemporaryFile(dir=directory, prefix=".catalog-", delete=False) as output:
+            pending = Path(output.name)
+            output.write(catalog)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(pending, target)
+    finally:
+        if pending is not None:
+            pending.unlink(missing_ok=True)
 
 
 def _terminal_time(path: Path) -> datetime | None:

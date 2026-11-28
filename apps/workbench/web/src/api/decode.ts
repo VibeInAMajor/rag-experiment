@@ -572,7 +572,7 @@ function agentProfile(value: unknown): AgentProfile {
     provider: agentIdentity(item.provider),
     model: agentIdentity(item.model),
     modes: uniqueIds(item.modes, 16),
-    reasoning_effort: agentIdentity(item.reasoning_effort),
+    reasoning_effort: nullable(item.reasoning_effort, agentIdentity),
     max_estimated_input_tokens: positiveInteger(
       item.max_estimated_input_tokens,
     ),

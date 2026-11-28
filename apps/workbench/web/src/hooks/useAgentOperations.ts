@@ -100,13 +100,18 @@ export function useAgentOperations(
           delay = 5000;
           return;
         }
-        const head = await client.listAgentRuns({ agentId, limit: 20, signal });
+        const effectiveAgentId = agentId ?? catalog.agents[0]?.agent_id;
+        const head = await client.listAgentRuns({
+          agentId: effectiveAgentId,
+          limit: 20,
+          signal,
+        });
         const currentRun =
           head.runs.find(isAgentRunActive) ?? head.runs[0] ?? null;
         const history =
           model || status || cursor
             ? await client.listAgentRuns({
-                agentId,
+                agentId: effectiveAgentId,
                 model,
                 status,
                 cursor,

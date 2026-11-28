@@ -4,12 +4,15 @@
 Starts the local Workbench, API, validator, PostgreSQL, embedding and reranker containers.
 .DESCRIPTION
 Run .\start.ps1 from the repository root. Existing healthy services are reused.
+Use -Rebuild to rebuild and restart the UI, or -RebuildAll to also restart the API and validator.
 Database setup, migrations and seeding remain explicit operations.
 #>
 [CmdletBinding()]
 param(
     [ValidateSet('', 'api', 'web', 'validator')]
-    [string]$Worker = ''
+    [string]$Worker = '',
+    [switch]$Rebuild,
+    [switch]$RebuildAll
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,6 +35,7 @@ function Test-ServiceResponse([string]$Kind, [string]$Url) {
         $body = $response.Content | ConvertFrom-Json
         switch ($Kind) {
             'api' { return $body.status -eq 'alive' -and $body.contract_revision -eq 'rag-api-v1.0' }
+            'agents' { return $body.history_available -eq $true -and $body.agents.Count -gt 0 }
             'ready' { return $body.status -eq 'ready' -and $body.ready_profile_ids.Count -gt 0 }
             'validator' { return $body.status -eq 'ok' -and $body.validator -eq 'haystack' }
         }
@@ -47,6 +51,23 @@ function Wait-ServiceResponse([string]$Kind, [string]$Url, [int]$Seconds = 60) {
         Start-Sleep -Milliseconds 500
     } while ([DateTime]::UtcNow -lt $deadline)
     return $false
+}
+
+function Get-WorkbenchOperationsDirectory {
+    if ($env:WORKBENCH_AGENT_OPERATIONS_DIR) { return $env:WORKBENCH_AGENT_OPERATIONS_DIR }
+    return Join-Path $projectRoot '.local/workbench-agent-operations'
+}
+
+function Initialize-WorkbenchAgentOperations([string]$HatchExecutable) {
+    if ($env:WORKBENCH_AGENT_OPERATIONS_DIR) {
+        return (Test-Path -LiteralPath (Join-Path $env:WORKBENCH_AGENT_OPERATIONS_DIR 'catalog.json') -PathType Leaf)
+    }
+    Push-Location (Join-Path $projectRoot 'apps/maf')
+    try {
+        & $HatchExecutable run run --operations-catalog-to (Get-WorkbenchOperationsDirectory) | Out-Host
+        return $LASTEXITCODE -eq 0
+    }
+    finally { Pop-Location }
 }
 
 function Test-DockerEngine([string]$Executable) {
@@ -90,7 +111,88 @@ function Start-LocalPostgres([string]$Executable) {
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL did not become healthy. Its existing data volume was preserved.' }
 }
 
-function Start-WorkbenchService([hashtable]$Service) {
+function Get-WorkbenchWorker([hashtable]$Service) {
+    $listeners = @(Get-NetTCPConnection -LocalPort $Service.Port -State Listen -ErrorAction SilentlyContinue)
+    if (-not $listeners) { return }
+    $processes = @(Get-CimInstance Win32_Process)
+    $worker = $null
+    $commandPattern = '(?i)\s-File\s+"?' + [regex]::Escape($scriptPath) + '"?\s+-Worker\s+' + $Service.Kind + '\s*$'
+    foreach ($listener in $listeners) {
+        $current = $processes | Where-Object { $_.ProcessId -eq $listener.OwningProcess } | Select-Object -First 1
+        $owner = $null
+        $visited = @{}
+        while ($current -and -not $visited.ContainsKey($current.ProcessId)) {
+            $visited[$current.ProcessId] = $true
+            if ($current.Name -in @('powershell.exe', 'pwsh.exe') -and $current.CommandLine -match $commandPattern) {
+                $owner = $current
+                break
+            }
+            $parent = $processes | Where-Object { $_.ProcessId -eq $current.ParentProcessId } | Select-Object -First 1
+            if ($parent -and $parent.CreationDate -gt $current.CreationDate) { break }
+            $current = $parent
+        }
+        if (-not $owner -or ($worker -and $worker.ProcessId -ne $owner.ProcessId)) {
+            throw "Port $($Service.Port) is not owned by this project's $($Service.Name) worker. Stop the service manually before rebuilding. No process was stopped."
+        }
+        $worker = $owner
+    }
+    return $worker
+}
+
+function Stop-WorkbenchWorker([object]$Process) {
+    $current = Get-CimInstance Win32_Process -Filter "ProcessId = $($Process.ProcessId)"
+    if (-not $current) { return }
+    if ($current.CreationDate -ne $Process.CreationDate -or $current.CommandLine -ne $Process.CommandLine) {
+        throw 'Workbench worker identity changed during rebuild. No process was stopped.'
+    }
+    & (Get-RequiredCommand -Name 'taskkill.exe') /PID $Process.ProcessId /T /F | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Unable to stop Workbench worker $($Process.ProcessId)." }
+}
+
+function Build-WorkbenchFrontend {
+    Push-Location $webRoot
+    $buildDirectory = Join-Path $logRoot ('web-build-' + [guid]::NewGuid().ToString('N'))
+    $backupDirectory = Join-Path $logRoot ('web-backup-' + [guid]::NewGuid().ToString('N'))
+    $distDirectory = Join-Path $webRoot 'dist'
+    $published = $false
+    try {
+        $npm = Get-RequiredCommand -Name 'npm.cmd'
+        if (-not (Test-Path -LiteralPath 'node_modules/vite/bin/vite.js')) {
+            Write-Host 'Installing locked frontend dependencies...'
+            & $npm ci
+            if ($LASTEXITCODE -ne 0) { throw 'Frontend dependency installation failed.' }
+        }
+        Write-Host 'Building the frontend...'
+        & $npm run build -- --outDir $buildDirectory --emptyOutDir
+        if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed; the previous site build was preserved.' }
+        if (Test-Path -LiteralPath $distDirectory) { Move-Item -LiteralPath $distDirectory -Destination $backupDirectory }
+        try {
+            Move-Item -LiteralPath $buildDirectory -Destination $distDirectory
+            $published = $true
+        }
+        catch {
+            if (Test-Path -LiteralPath $backupDirectory) { Move-Item -LiteralPath $backupDirectory -Destination $distDirectory }
+            throw
+        }
+    }
+    finally {
+        try {
+            $cleanupDirectories = @($buildDirectory)
+            if ($published) { $cleanupDirectories += $backupDirectory }
+            foreach ($directory in $cleanupDirectories) {
+                $absoluteDirectory = [IO.Path]::GetFullPath($directory)
+                $allowedRoot = [IO.Path]::GetFullPath($logRoot).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+                if (-not $absoluteDirectory.StartsWith($allowedRoot, [StringComparison]::OrdinalIgnoreCase)) {
+                    throw 'Refusing to remove a build directory outside the Workbench log directory.'
+                }
+                if (Test-Path -LiteralPath $absoluteDirectory) { Remove-Item -LiteralPath $absoluteDirectory -Recurse -Force }
+            }
+        }
+        finally { Pop-Location }
+    }
+}
+
+function Start-WorkbenchService([hashtable]$Service, [switch]$FrontendBuilt) {
     if (Test-ServiceResponse -Kind $Service.Kind -Url $Service.Url) {
         Write-Host "$($Service.Name): already running."
         return
@@ -103,21 +205,7 @@ function Start-WorkbenchService([hashtable]$Service) {
         }
         throw "Port $($Service.Port) is occupied but does not serve a healthy $($Service.Name). No process was stopped."
     }
-    if ($Service.Kind -eq 'web') {
-        Push-Location $webRoot
-        try {
-            $npm = Get-RequiredCommand -Name 'npm.cmd'
-            if (-not (Test-Path -LiteralPath 'node_modules/vite/bin/vite.js')) {
-                Write-Host 'Installing locked frontend dependencies...'
-                & $npm ci
-                if ($LASTEXITCODE -ne 0) { throw 'Frontend dependency installation failed.' }
-            }
-            Write-Host 'Building the frontend...'
-            & $npm run build
-            if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed; the site was not started.' }
-        }
-        finally { Pop-Location }
-    }
+    if ($Service.Kind -eq 'web' -and -not $FrontendBuilt) { Build-WorkbenchFrontend }
     $shell = (Get-Process -Id $PID).Path
     $arguments = @('-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $scriptPath), '-Worker', $Service.Kind)
     $process = Start-Process -FilePath $shell -ArgumentList $arguments -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru `
@@ -131,6 +219,7 @@ function Start-WorkbenchService([hashtable]$Service) {
 }
 
 if ($Worker) {
+    if ($Rebuild -or $RebuildAll) { throw '-Worker cannot be combined with rebuild flags.' }
     Push-Location $projectRoot
     try {
         foreach ($secretName in @('WORKBENCH_DB_ADMIN_DSN', 'WORKBENCH_DB_ADMIN_PASSWORD', 'WORKBENCH_DB_APP_PASSWORD', 'WORKBENCH_DB_DSN')) {
@@ -148,6 +237,7 @@ if ($Worker) {
                 . (Join-Path $projectRoot 'apps/workbench/postgres/use-dev-env.ps1')
                 $env:WORKBENCH_API_HOST = '127.0.0.1'
                 $env:WORKBENCH_API_PORT = '8011'
+                $env:WORKBENCH_AGENT_OPERATIONS_DIR = Get-WorkbenchOperationsDirectory
                 & $hatch run workbench-api:serve
             }
             else { & $hatch -e test run python -m apps.workbench.validator }
@@ -174,16 +264,38 @@ try {
     $nodeVersion = & (Get-RequiredCommand -Name 'node.exe') --version
     if ($LASTEXITCODE -ne 0 -or [version]$nodeVersion.TrimStart('v') -lt [version]'22.12.0') { throw 'Node.js 22.12.0 or later is required.' }
     New-Item -ItemType Directory -Path $logRoot -Force | Out-Null
-    Start-LocalPostgres -Executable (Get-RequiredCommand -Name 'docker.exe')
-    & (Join-Path $projectRoot 'apps/workbench/embedding/start.ps1') -StartOnly
-    & (Join-Path $projectRoot 'apps/workbench/reranking/start.ps1') -StartOnly
-    foreach ($service in @(
+    $services = @(
         @{ Name = 'API'; Kind = 'api'; Port = 8011; Url = 'http://127.0.0.1:8011/api/v1/health/live' },
         @{ Name = 'Validator'; Kind = 'validator'; Port = 8010; Url = 'http://127.0.0.1:8010/health' },
         @{ Name = 'Site'; Kind = 'web'; Port = 4173; Url = 'http://127.0.0.1:4173/' }
-    )) { Start-WorkbenchService -Service $service }
+    )
+    $operationsPrepared = Initialize-WorkbenchAgentOperations -HatchExecutable $hatch
+    $apiService = $services[0]
+    $refreshApiForAgents = $operationsPrepared -and -not $RebuildAll -and
+        (Test-ServiceResponse -Kind 'api' -Url $apiService.Url) -and
+        -not (Test-ServiceResponse -Kind 'agents' -Url 'http://127.0.0.1:8011/api/v1/agents')
+    $frontendBuilt = $Rebuild -or $RebuildAll
+    if ($frontendBuilt -or $refreshApiForAgents) {
+        # Check all selected owners before building or stopping any service.
+        $workers = @(foreach ($service in $services) {
+            if ($RebuildAll -or ($Rebuild -and $service.Kind -eq 'web') -or
+                ($refreshApiForAgents -and $service.Kind -eq 'api')) {
+                Get-WorkbenchWorker -Service $service
+            }
+        })
+        if ($frontendBuilt) { Build-WorkbenchFrontend }
+        foreach ($workerProcess in $workers) { Stop-WorkbenchWorker -Process $workerProcess }
+    }
+    Start-LocalPostgres -Executable (Get-RequiredCommand -Name 'docker.exe')
+    & (Join-Path $projectRoot 'apps/workbench/embedding/start.ps1') -StartOnly
+    & (Join-Path $projectRoot 'apps/workbench/reranking/start.ps1') -StartOnly
+    foreach ($service in $services) { Start-WorkbenchService -Service $service -FrontendBuilt:$frontendBuilt }
     if (-not (Wait-ServiceResponse -Kind 'ready' -Url 'http://127.0.0.1:4173/api/v1/health/ready' -Seconds 15)) {
         throw "The site and API are running, but Live readiness is unavailable. Check explicit database setup and logs in $logRoot."
+    }
+    if (-not $operationsPrepared -or
+        -not (Wait-ServiceResponse -Kind 'agents' -Url 'http://127.0.0.1:4173/api/v1/agents' -Seconds 10)) {
+        Write-Warning 'Agents is unavailable. Check the MAF catalog output and the Workbench API logs.'
     }
     Write-Host ''
     Write-Host 'Workbench: http://127.0.0.1:4173/'

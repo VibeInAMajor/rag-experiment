@@ -55,7 +55,16 @@ If Windows blocks script execution, allow this invocation only:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
-This does not change persistent execution policy. Services run in hidden background processes after the command returns. Logs are written to `output/workbench-services/{api,validator,web}.{stdout,stderr}.log`. Re-running the launcher does not rebuild or restart healthy services; after source changes, stop the relevant service before starting again. Preserve the ignored database `.env` and volume. Optional `WORKBENCH_LOCAL_SOURCE_ROOT` is inherited; the launcher does not invent a source directory.
+This does not change persistent execution policy. Services run in hidden background processes after the command returns. Logs are written to `output/workbench-services/{api,validator,web}.{stdout,stderr}.log`. Re-running the launcher without flags reuses healthy services. After source changes, choose an explicit rebuild:
+
+```powershell
+.\start.ps1 -Rebuild     # Build current UI sources and restart only the site.
+.\start.ps1 -RebuildAll  # Also restart the API and constructor validator to load backend/config changes.
+```
+
+Both flags preserve running PostgreSQL, embedding and reranker containers and their data; stopped/missing services follow normal startup. They do not rebuild model images, migrate the database or reinstall Python environments. Rebuilds are explicit, without automatic backend change detection. Existing frontend dependencies are reused; after changing `package-lock.json`, stop the site and run `npm ci` from `apps/workbench/web` first (Windows locks Vite's loaded native modules). Missing frontend dependencies are installed on cold startup as before. The frontend is built in a staging directory before any worker is stopped; build failures preserve the previous `dist`. Only workers started by this checkout's `start.ps1` can be restarted automatically, including workers launched before these flags were added. A manually started service or foreign listener on a selected port must be stopped manually first; ownership checks run before the build. Restarting an application worker interrupts its in-flight requests. Preserve the ignored database `.env` and volume. Optional `WORKBENCH_LOCAL_SOURCE_ROOT` is inherited; the launcher does not invent a source directory.
+
+Launcher regression checks (Windows PowerShell, bundled Pester): `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Pester ./scripts/tests/start.Tests.ps1 -EnableExit"`.
 
 To start only the API manually, run from the repository root with Hatch:
 
@@ -187,34 +196,19 @@ Settings are parsed before startup; malformed or nonlocal configuration fails in
 | `WORKBENCH_DOCUMENT_PROCESSING_CONFIG` | `apps/workbench/document_processing.yaml` | Alternate bounded local document-processing YAML; relative to repository root |
 | `WORKBENCH_DEFAULT_LANGUAGE` | YAML value (`en` shipped) | Explicit `en` or `ru`; synchronizes default and sentence language |
 | `WORKBENCH_LOCAL_SOURCE_ROOT` | Unset (local originals unavailable) | Explicit absolute local directory; same-machine interactive Windows for native selection |
-| `WORKBENCH_AGENT_OPERATIONS_DIR` | Unset (agent operations unavailable) | An absolute local directory shared with the standalone MAF caller. Use a regular directory under the operator's account. |
+| `WORKBENCH_AGENT_OPERATIONS_DIR` | `.local/workbench-agent-operations` with `start.ps1`; unset for a manually launched API | An optional absolute local override shared with the standalone MAF caller. Use a regular directory under the operator's account. |
 
 Administrator-only commands use `WORKBENCH_DB_ADMIN_DSN` and `WORKBENCH_DB_APP_PASSWORD`, loaded with `-IncludeAdmin`. Keep those out of the API terminal. Live search requires qualified storage, corpus and pipeline binding.
 
 ### Local agent operations
 
-The optional Agents view uses the API in Preview and Live and works without the search database. From the repository root in PowerShell, generate the standalone catalog and start Workbench from the same terminal.
+Run `.\start.ps1` from the repository root, then open [Agents](http://127.0.0.1:4173/?page=agents&mode=preview). The launcher initializes the default local journal, exports the MAF catalog and starts the main API with that directory. It refreshes an older API worker owned by this checkout if the worker lacks Agents. Once Agents is available, subsequent launches reuse the worker. Catalog updates preserve recorded runs and the saved profile selection. The view works in Preview and Live and needs no provider credentials.
 
-```powershell
-$ops = New-Item -ItemType Directory -Force -Path .local/workbench-agent-operations
-$env:WORKBENCH_AGENT_OPERATIONS_DIR = $ops.FullName
-New-Item -ItemType Directory -Force -Path (Join-Path $ops.FullName 'runs') | Out-Null
-Push-Location apps/maf
-try {
-    $catalog = hatch run run --operations-catalog
-    if ($LASTEXITCODE -ne 0) { throw 'The MAF catalog could not be read.' }
-    $catalog | Set-Content -LiteralPath (Join-Path $ops.FullName 'catalog.json') -Encoding utf8
-} finally {
-    Pop-Location
-}
-hatch run workbench-api:serve
-```
-
-Start the web UI with its existing same-origin proxy. Restart an existing API process after setting the directory. Export the same directory variable in the terminal that launches the evaluator or MAF calibration. See the [MAF invocation and discovery commands](../../maf/README.md#agent-operations).
+An operator can point a custom or manually launched API at an existing journal by setting `WORKBENCH_AGENT_OPERATIONS_DIR` before startup. Set that same override in the caller's terminal when using a custom directory. Use `hatch run run --operations-catalog-to <absolute directory>` from `apps/maf` to initialize a custom journal. The ordinary launcher leaves custom catalogs under operator control. [MAF invocation and discovery commands](../../maf/README.md#agent-operations)
 
 The server exposes `GET /api/v1/agents`, `GET /api/v1/agents/runs` and `GET /api/v1/agents/runs/{run_id}`. The list supports scoped cursor pagination and agent, model and status filters. A detail cursor advances through committed activity. `PUT /api/v1/agents/{agent_id}/selection` requires an allowed Origin, `X-Workbench-Request: agent-operations`, `profile_id` and the observed `expected_revision`. A mismatch requires refreshing the catalog. These routes make zero provider requests.
 
-Only the local operator can access the bridge. The history keeps up to 100 terminal metadata records from the last 30 days. A record is limited to 8 MiB per run and 16 KiB per event. The writer prunes old terminal records when a run starts. A run with no new activity for five minutes and no terminal event is shown as interrupted. A later observation can resolve its status. Raw reports and checkpoints stay with their original owners. Removing the environment variable and restarting the API disables the bridge.
+Only the local operator can access the bridge. The history keeps up to 100 terminal metadata records from the last 30 days. A record is limited to 8 MiB per run and 16 KiB per event. The writer prunes old terminal records when a run starts. A run with no new activity for five minutes and no terminal event is shown as interrupted. A later observation can resolve its status. Raw reports and checkpoints stay with their original owners. For a manual API launch, leaving the environment variable unset disables the bridge.
 
 The default pool uses one to four connections, at most 16 waiters, and three-second acquisition/statement/lock timeouts. Each search reads its persisted workspace generation and active-version hits in one read-only REPEATABLE READ transaction, through a fresh Haystack pipeline with genuine async SQL. Search snapshot qualification no longer enumerates and hashes every active chunk. Cancellation reaches transaction cleanup before its admission slot is released. Synchronous component execution explicitly refuses this loop-bound pool. The [generation operations guide](../../../docs-website/docs/architecture/persisted-index-generations.md) covers migration, reconciliation, benchmark boundaries and recovery.
 

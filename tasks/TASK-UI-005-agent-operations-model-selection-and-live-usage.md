@@ -39,6 +39,25 @@ Reinspect current files, scoped instructions and the actual caller before implem
 
 ## D. Goal
 
+### Operator refinement (2026-11-28)
+
+Inspected against revision `0b42bdd15c07ad2c5e52a28b001ccfd2a7ce42d1` and the existing working tree. The user's presentation finding is open at inspection; the suspected frontend fixture fallback is not present in the implementation. The actual API and durable caller journal supply the checkpoint-only run described below.
+
+The operator requested a compact Agents view with model/reasoning dropdowns sourced only from the server catalog, collapsed model limits/rates, aggregate run usage/cost, and an event-focused Activity table. Remove runtime/profile/tariff/qualification identifiers, repeated identity, mode counts, retention captions, opaque call/case IDs and per-request accounting from this view. This supersedes the earlier requirement to display tariff provenance and qualification revisions on the page; the backend contracts and qualification gates remain authoritative and unchanged. Current inspection confirms that the visible latest run records 46 checkpoint reuses and zero provider requests, rather than fresh inference. Present checkpoint-only runs explicitly and group contiguous checkpoint events without fabricating provider usage. No synthetic events, models, reasoning levels or fallback totals may enter the UI.
+
+Reused owners: `AgentsView.tsx`, `agents.css`, `useAgentOperations.ts` and the existing typed operations API. Add `src/domain/agentActivity.ts` for tested event descriptions/grouping and adjacent tests, plus `views/AgentsView.test.tsx` and `hooks/useAgentOperations.test.tsx` for real-client response/error/selection regression coverage. Model and reasoning options remain limited to registered profiles; unsupported or unqualified choices are never activated. No paid verification run is authorized or necessary for this refinement.
+
+The HTTP profile contract already permits null `reasoning_effort`; align the existing TypeScript DTO/decoder with that contract instead of rejecting a valid catalog. The default run-list request must use the displayed catalog agent, and the view must withhold another agent's cached run during selection changes. Shared test-only metadata fixtures belong in `src/test/agentOperations.ts`. No backend schema or selection qualification policy changes are needed.
+
+Refinement verification:
+
+- [x] Removed the requested metadata strings and per-request columns; kept model/rates details collapsed and run totals separate from Activity. Updated the existing browser smoke selectors, Workbench README and scoped release note.
+- [x] Backend catalog remains the sole model/reasoning authority. Revision-checked selection uses the existing API; unavailable combinations cannot be saved. Existing historical and in-flight run identities remain unchanged.
+- [x] The real primary API still returns the preserved checkpoint-only run: 46 reused results, zero model requests and unreported cost. The live page explicitly labels that run and groups its 46 checkpoint events into one entry. No synthetic records were written to the operator journal.
+- [x] Added 18 tests for real-client catalog/selection/error responses, null reasoning, empty/offline/stale data, agent scope, request cancellation, observed versus missing totals, and event grouping that preserves distinct failure outcomes. All **417 frontend tests** passed. `npm run typecheck`, `npm run format:check`, the production build through `start.ps1 -Rebuild`, `node --check scripts/agents-smoke.js`, and the scoped design detector passed.
+- [x] Inspected the actual page in Live: compact dropdowns, disabled alternate activation, expandable details, original model in the latest run, three Activity columns, compact 11px time, no identifiers, four visible activity rows. Checked a 390px viewport: document width 390px, Activity width 273px, no page overflow. Restored the normal viewport and the primary model without saving a selection.
+- [ ] The full isolated 30-event browser replay was not rerun; only its updated script syntax was checked. Python suites and paid provider calls were not run for this frontend refinement. Earlier joint-qualification and real-provider accounting gates remain open; this refinement does not claim to close them.
+
 Provide a usable Agents screen in the existing Workbench that:
 
 - shows registered agents, availability and selected/qualified model profiles;
@@ -195,6 +214,20 @@ The replay keeps its explicitly pinned qualification and writes a separate opera
 enabled. The current rollout reuses the operator-approved v8 GPT-6.1 Sol evidence (runtime 0.3.1).
 GPT-6.2 Sol is configured with the shared limits and remains unavailable for selection until a live
 qualification arm is available. Live qualification is outside the authorized UI-005 verification.
+
+#### Main Workbench launcher follow-up
+
+At `cce197a`, the regular site on port 4173 rendered Agents while its API returned
+`AGENT_OPERATIONS_UNAVAILABLE`. The standalone catalog was valid and the main launcher
+had no initialization or startup binding for it. The default local installation now belongs
+to `start.ps1`: generate the metadata-only MAF catalog in the checkout's ignored
+`.local/workbench-agent-operations` directory, use that directory in the API worker, and
+refresh any older API worker owned by this checkout when Agents is unavailable. The launcher
+continues to support an explicit operator directory override and protects foreign listeners.
+The API still reads the versioned files independently, and the MAF checkout callers discover
+the initialized default journal across terminals. The standalone API and installed CLI retain
+their independent operation. Regression coverage belongs to `scripts/tests/start.Tests.ps1`
+and the existing MAF CLI tests. Workbench and MAF runbooks document the default and manual modes.
 
 ### I.5. Reuse references and documentation
 

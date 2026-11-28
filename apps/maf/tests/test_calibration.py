@@ -21,6 +21,7 @@ _APP = Path(__file__).resolve().parents[1]
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
     environment = dict(os.environ)
     environment.pop("OPENAI_API_KEY", None)
+    environment["WORKBENCH_AGENT_OPERATIONS_DIR"] = ""
     return subprocess.run(
         [sys.executable, "-m", "calibration", *args],
         cwd=_APP,

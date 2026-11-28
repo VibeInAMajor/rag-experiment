@@ -20,9 +20,9 @@ The selected YAML is the only persisted source. Save reports whether settings al
 
 ## Agent operations
 
-Open **Agents** between Configuration and Settings to inspect Semantic Judge, model eligibility, limits and Standard rates. The page works in Preview and Live. An eligible selection becomes the default for the next unpinned run when a caller opts into Workbench selection. Calibration and resumed runs preserve their pinned profile.
+Open **Agents** between Configuration and Settings. Model and reasoning dropdowns contain only combinations supplied by the backend catalog. Save an eligible selection for the next unpinned run when a caller opts into Workbench selection; unavailable combinations cannot be activated. Calibration and resumed runs preserve their pinned profile. **Model details** reveals limits and token rates when needed.
 
-The live panel shows the most recent run, observed token coverage, estimated cost and pending reserve. During a non-streaming invocation, usage appears after the invocation returns. The history separates physical requests from reused checkpoints, and missing usage or cache fields display as unavailable. Selecting a model, opening the page and refreshing the history incur zero provider calls. Follow the [local operator setup](../api/README.md#local-agent-operations) to enable the bridge.
+The latest run shows aggregate observed input/output tokens and estimated cost, with optional run details. Missing totals stay unreported; partial coverage is disclosed. During a non-streaming invocation, usage appears after the invocation returns. Checkpoint-only runs explicitly report saved results reused and no model requests. Activity emphasizes human-readable events, compact time (full date on hover) and outcome, grouping consecutive checkpoint reuse without per-call identifiers or accounting. All data comes from the operations API in both Preview and Live, with empty/unavailable states and a disconnected label on retained observations. Selecting a model, opening the page and refreshing history incur zero provider calls. The ordinary `.\start.ps1` command supplies the catalog and history on port 4173. [Local agent operations](../api/README.md#local-agent-operations)
 
 The [browser smoke](scripts/agents-smoke.js) uses a dedicated loopback API, an isolated journal marked by `.ui005-smoke`, a real CLI catalog and controlled events. Set `AGENTS_SMOKE_URL`, `AGENTS_SMOKE_JOURNAL_DIR` and `AGENTS_SMOKE_PLAYWRIGHT` (the installed Playwright `index.mjs`), then run `node scripts/agents-smoke.js`. Never use the operator's actual history directory for this smoke.
 
@@ -35,6 +35,8 @@ For the complete local application after the [one-time database setup](../api/RE
 ```
 
 Open <http://127.0.0.1:4173/>. The launcher starts PostgreSQL, the API and constructor validator, builds the site when starting it, and reuses healthy services. Background services continue after the command returns; logs are in `output/workbench-services/`. It never migrates or seeds the database. For launcher prerequisites and restricted PowerShell execution policies, see [the API startup guide](../api/README.md#start).
+
+After changing UI files, run `.\start.ps1 -Rebuild` from the repository root to rebuild and restart the site. Use `.\start.ps1 -RebuildAll` to also restart the API and validator after backend/configuration changes. Running database and model containers are reused in both modes. Only application workers launched by this checkout's script are stopped automatically; manually started services must be stopped first. A failed frontend build preserves the previous site build. Without flags, healthy services continue unchanged. Frontend dependencies are reused; after changing `package-lock.json`, stop the site and run `npm ci` in this directory before rebuilding.
 
 For frontend development only:
 

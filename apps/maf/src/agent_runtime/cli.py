@@ -7,6 +7,7 @@ import os
 import sys
 from collections.abc import Sequence
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 from agent_runtime.agents.semantic_judge.agent import AGENT_ID, JUDGE_MODES
 from agent_runtime.agents.structured_smoke import SMOKE_EXPECTED_OUTPUT, SMOKE_REQUEST
@@ -21,7 +22,7 @@ from agent_runtime.operations import (
     resolve_operations_selection,
     run_identity,
 )
-from agent_runtime.operations_journal import OPERATIONS_DIR_ENV, OperationsJournal
+from agent_runtime.operations_journal import OperationsJournal, operations_directory, publish_operations_catalog
 from agent_runtime.runtime import AgentApplication, ProviderObservation, local_error
 
 
@@ -33,17 +34,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--max-cost-usd", type=_decimal, default=RunPolicy().max_cost_usd)
     parser.add_argument("--smoke", action="store_true", help="Run the built-in synthetic marker fixture")
     parser.add_argument("--operations-catalog", action="store_true", help="Print the local operator metadata catalog")
+    parser.add_argument("--operations-catalog-to", type=Path, help="Publish the catalog to a local journal")
     parser.add_argument("--use-operations-selection", action="store_true", help="Bind a profile-less Judge request")
     parser.add_argument("--record-operations", action="store_true", help="Record this standalone Judge invocation")
     args = parser.parse_args(argv)
-    if args.operations_catalog:
+    if args.operations_catalog or args.operations_catalog_to is not None:
         if args.allow_external or args.smoke or args.use_operations_selection or args.record_operations:
             parser.error("--operations-catalog must be used on its own")
         try:
             catalog = operations_catalog(load_profiles(os.environ))
-        except ValueError:
+            payload = json.dumps(catalog, separators=(",", ":")).encode("utf-8") + b"\n"
+            if args.operations_catalog_to is not None:
+                publish_operations_catalog(args.operations_catalog_to, payload)
+        except (OSError, ValueError):
             parser.error("Cannot resolve the agent operations catalog")
-        sys.stdout.buffer.write(json.dumps(catalog, separators=(",", ":")).encode("utf-8") + b"\n")
+        if args.operations_catalog:
+            sys.stdout.buffer.write(payload)
         return 0
     if args.smoke and (args.use_operations_selection or args.record_operations):
         parser.error("The marker smoke is independent of Semantic Judge operations")
@@ -58,7 +64,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             profiles = None
             if args.use_operations_selection:
                 profiles = load_profiles(os.environ)
-                profile_id, selection = resolve_operations_selection(os.environ.get(OPERATIONS_DIR_ENV), profiles)
+                profile_id, selection = resolve_operations_selection(operations_directory(os.environ), profiles)
         except (ValueError, OSError, RecursionError):
             result = local_error(ErrorCode.CONFIGURATION_ERROR)
         else:
@@ -86,7 +92,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     and policy.max_cost_usd >= 0
                 ):
                     journal = OperationsJournal.start(
-                        os.environ.get(OPERATIONS_DIR_ENV),
+                        operations_directory(os.environ),
                         run_identity(
                             profile,
                             origin="evaluation",

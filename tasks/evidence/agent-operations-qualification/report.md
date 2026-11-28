@@ -33,6 +33,12 @@ The cost fixture uses one physical request per completed call, with 100 input to
 
 Across 30 completed-call observations, event commit to matching activity row took **1,036 ms p95** using the nearest-rank calculation (635–1,037 ms sample range). The terminal display matched the fixture's 30 physical requests, one reused checkpoint, 3,300 total tokens and USD 0.0099660. The check timed a healthy local connection and recorded browser DOM updates, without provider latency.
 
+## Main launcher follow-up
+
+The primary Workbench on port 4173 initially returned HTTP 503 with `AGENT_OPERATIONS_UNAVAILABLE`. An ordinary `.\start.ps1` run with the directory variable unset initialized the local catalog, replaced the checkout's API worker, and reused the running site and validator. The primary same-origin endpoints then returned both Sol profiles and the preserved run with 46 reused checkpoints. The open Agents tab showed Connected. A second plain startup retained the API process and the journal.
+
+All 27 launcher tests, 117 offline MAF tests, six targeted API route tests and 399 web tests passed. MAF Ruff and mypy, the web type and formatting checks, and the web build passed. The bootstrap exported metadata with zero OpenAI requests.
+
 ## Scope and open gates
 
 - MAF terminal metadata currently reports cache-read counts. Ordinary input and cache-write counts remain unavailable unless a provider measurement explicitly supplies them. The browser does not derive either from the remaining input count.

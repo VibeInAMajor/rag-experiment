@@ -83,12 +83,17 @@ try {
   await page.getByRole("button", { name: "Agents", exact: true }).click();
   await visible("Semantic Judge");
   assert.match(page.url(), /page=agents/);
-  await page.getByRole("button", { name: /GPT-6.2 Sol/ }).click();
+  await page
+    .getByRole("combobox", { name: "Model", exact: true })
+    .selectOption(alternate.model);
   assert.equal(
-    await page.getByRole("button", { name: "Use for next run" }).isDisabled(),
+    await page.getByRole("button", { name: "Save selection" }).isDisabled(),
     true,
   );
-  await visible("Offline checks only");
+  await visible(
+    "This model and reasoning combination is not enabled for runs.",
+  );
+  await page.getByText("Model details", { exact: true }).click();
   await visible("32,000");
   await visible("$2.50");
 
@@ -120,8 +125,7 @@ try {
     stage: "admission",
     call: { ...firstCall, reserve_usd: "0.397056" },
   });
-  await visible("Awaiting invocation result · Usage pending");
-  await visible("$0.397056");
+  await visible("Waiting for the model. Usage will appear when it responds.");
   const latencies = [];
   for (let index = 1; index <= 30; index += 1) {
     const call = {
@@ -178,20 +182,26 @@ try {
     case_id: "synthetic-reuse",
   });
   emit("run_finished", { status: "completed", stage: "finalizing" });
-  await visible("31 / 31");
+  await visible("31 / 31 results");
   await visible("$0.0099660");
-  await visible("3,300");
-  await visible("Checkpoint reused");
+  await visible("3,000");
+  await visible("1 saved result reused");
   if (process.env.AGENTS_SMOKE_SCREENSHOT) {
     await page.screenshot({ path: process.env.AGENTS_SMOKE_SCREENSHOT });
   }
   assert.equal(
-    await page.getByTestId("agent-served-model").textContent(),
+    await page
+      .getByRole("region", { name: "Latest run" })
+      .getByText("GPT-6.1 Sol", { exact: true })
+      .first()
+      .textContent(),
     "GPT-6.1 Sol",
   );
   assert.equal(
     await page
-      .getByText("Awaiting invocation result · Usage pending", { exact: true })
+      .getByText("Waiting for the model. Usage will appear when it responds.", {
+        exact: true,
+      })
       .count(),
     0,
   );
@@ -200,7 +210,7 @@ try {
     .selectOption(alternate.model);
   await visible("No matching runs.");
   await page.reload();
-  await visible("Checkpoint reused");
+  await visible("1 saved result reused");
   await page.setViewportSize({ width: 1024, height: 800 });
   assert.equal(
     await page.evaluate(
@@ -209,7 +219,7 @@ try {
     true,
   );
   await page.goto(new URL("?page=agents&mode=live", baseUrl).href);
-  await visible("31 / 31");
+  await visible("31 / 31 results");
 
   const qualified = {
     state: "qualified",
@@ -221,19 +231,33 @@ try {
   alternate.qualification = qualified;
   writeFileSync(catalogPath, JSON.stringify(catalog));
   await page.getByRole("button", { name: "Refresh agent operations" }).click();
-  await page.getByRole("button", { name: /GPT-6.2 Sol/ }).click();
-  await page.getByRole("button", { name: "Use for next run" }).click();
+  await page
+    .getByRole("combobox", { name: "Model", exact: true })
+    .selectOption(alternate.model);
+  await page.getByRole("button", { name: "Save selection" }).click();
   await visible("Saved for the next eligible run.");
   await page.reload();
-  await page.getByRole("button", { name: /GPT-6.2 Sol.*Selected/ }).waitFor();
+  await page.waitForFunction(
+    () => document.querySelector('select[aria-label="Run model"]') !== null,
+  );
   assert.equal(
-    await page.getByTestId("agent-served-model").textContent(),
+    await page
+      .getByRole("combobox", { name: "Model", exact: true })
+      .inputValue(),
+    alternate.model,
+  );
+  assert.equal(
+    await page
+      .getByRole("region", { name: "Latest run" })
+      .getByText("GPT-6.1 Sol", { exact: true })
+      .first()
+      .textContent(),
     "GPT-6.1 Sol",
   );
 
   await page.route("**/api/v1/agents**", (route) => route.abort());
   await page.getByRole("button", { name: "Refresh agent operations" }).click();
-  await visible("Stale · disconnected");
+  await visible("Disconnected · showing last update");
   await page.unroute("**/api/v1/agents**");
   await page.getByRole("button", { name: "Refresh agent operations" }).click();
   await visible("Connected");

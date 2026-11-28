@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from agent_runtime import cli
+from agent_runtime import cli, operations_journal
 from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationResult
 from agent_runtime.runtime import AgentRuntime
 from calibration.controls import DEVELOPMENT_CASES
@@ -76,12 +76,18 @@ def test_builtin_smoke_is_offline_by_default(tmp_path: Path) -> None:
 
 
 def test_operations_catalog_and_persisted_selection_use_same_offline_cli(tmp_path: Path) -> None:
-    environment = {**os.environ, "WORKBENCH_AGENT_OPERATIONS_DIR": str(tmp_path)}
+    directory = tmp_path / "checkout journal" / "local"
+    environment = {**os.environ, "WORKBENCH_AGENT_OPERATIONS_DIR": str(directory)}
     environment.pop("OPENAI_API_KEY", None)
     environment.pop("MAF_OPENAI_REASONING_EFFORT", None)
     command = [sys.executable, "-I", "-m", "agent_runtime"]
     catalog_run = subprocess.run(
-        [*command, "--operations-catalog"], cwd=tmp_path, env=environment, capture_output=True, check=True, timeout=10
+        [*command, "--operations-catalog", "--operations-catalog-to", str(directory)],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        check=True,
+        timeout=10,
     )
     catalog = json.loads(catalog_run.stdout)
     assert catalog_run.stderr == b""
@@ -92,9 +98,10 @@ def test_operations_catalog_and_persisted_selection_use_same_offline_cli(tmp_pat
     assert primary["max_estimated_input_tokens"] == alternate["max_estimated_input_tokens"] == 16_384
     assert primary["max_output_tokens"] == alternate["max_output_tokens"] == 32_000
     assert primary["tariff"]["cached_write"] == "2.50"
-    (tmp_path / "catalog.json").write_bytes(catalog_run.stdout)
+    assert (directory / "catalog.json").read_bytes() == catalog_run.stdout
+    assert (directory / "runs").is_dir()
     revision = "selection-" + "b" * 32
-    (tmp_path / "selection.json").write_text(
+    (directory / "selection.json").write_text(
         json.dumps(
             {
                 "schema_version": 1,
@@ -126,7 +133,7 @@ def test_operations_catalog_and_persisted_selection_use_same_offline_cli(tmp_pat
     assert terminal.profile_id == primary["profile_id"]
     assert terminal.error is not None and terminal.error.code is ErrorCode.EGRESS_DISABLED
     assert terminal.metadata.requests == 0
-    (journal,) = (tmp_path / "runs").glob("*.jsonl")
+    (journal,) = (directory / "runs").glob("*.jsonl")
     events = [json.loads(line) for line in journal.read_text(encoding="utf-8").splitlines()]
     assert [item["kind"] for item in events] == [
         "run_queued",
@@ -141,6 +148,35 @@ def test_operations_catalog_and_persisted_selection_use_same_offline_cli(tmp_pat
     assert events[3]["call"]["usage"] is None
     assert events[-1]["status"] == "blocked"
     assert b"operation-cli-test" not in journal.read_bytes()
+
+    state = {file: file.read_bytes() for file in (journal, directory / "selection.json")}
+    (directory / "catalog.json").write_text("stale catalog", encoding="utf-8")
+    refresh = subprocess.run(
+        [*command, "--operations-catalog-to", str(directory)],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        check=True,
+        timeout=10,
+    )
+    assert refresh.stdout == b""
+    assert (directory / "catalog.json").read_bytes() == catalog_run.stdout
+    assert {file: file.read_bytes() for file in state} == state
+
+
+def test_journal_lookup_respects_checkout_availability_and_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "apps" / "maf" / "src" / "agent_runtime" / "operations_journal.py"
+    monkeypatch.setattr(operations_journal, "__file__", str(source))
+    directory = tmp_path / ".local" / "workbench-agent-operations"
+    assert operations_journal.operations_directory({}) is None
+    operations_journal.publish_operations_catalog(directory, b"{}\n")
+    assert operations_journal.operations_directory({}) == str(directory)
+    assert operations_journal.operations_directory({"WORKBENCH_AGENT_OPERATIONS_DIR": ""}) is None
+    assert operations_journal.operations_directory({"WORKBENCH_AGENT_OPERATIONS_DIR": str(tmp_path)}) == str(tmp_path)
+    monkeypatch.setattr(operations_journal, "__file__", str(tmp_path / "site-packages" / "agent_runtime.py"))
+    assert operations_journal.operations_directory({}) is None
 
 
 @pytest.mark.parametrize(

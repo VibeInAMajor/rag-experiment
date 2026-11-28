@@ -1,0 +1,9 @@
+upgrade:
+  - |
+    The Workbench Agents page now uses compact model and reasoning dropdowns
+    from the backend catalog. Model limits and rates are available under
+    Model details. Activity focuses on events and outcomes, with compact times
+    and grouped checkpoint reuse. Input/output usage and estimated cost appear
+    at run level; checkpoint-only runs are explicitly identified without
+    implying new model requests. Runtime, qualification and tariff identifiers
+    are removed from the page. Model eligibility and API contracts are preserved.

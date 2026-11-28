@@ -1,0 +1,8 @@
+upgrade:
+  - |
+    Local Workbench users can now run ``.\start.ps1 -Rebuild`` to rebuild
+    and restart the UI without manually
+    stopping it. Use ``-RebuildAll`` to also restart the API and constructor
+    validator after backend or configuration changes. Running PostgreSQL and
+    model containers are reused. Workers started manually must still be stopped
+    manually before rebuilding; unflagged startup continues reusing healthy services.

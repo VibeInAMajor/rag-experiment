@@ -21,7 +21,7 @@ from agent_runtime.composition import create_runtime
 from agent_runtime.configuration import PRICING_VERSION, SEMANTIC_REVIEW_PROFILE, ModelProfile, RunPolicy, load_profiles
 from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationRequest, InvocationResult
 from agent_runtime.operations import begin_call, call_status, finish_call, run_identity
-from agent_runtime.operations_journal import OPERATIONS_DIR_ENV, OperationsJournal
+from agent_runtime.operations_journal import OperationsJournal, operations_directory
 from agent_runtime.runtime import AgentApplication, ProviderObservation
 from calibration.controls import CASES, DEVELOPMENT_CASES, CalibrationCase
 from calibration.scoring import GRADE_PERCENT, OTHER_MODE_PERCENT, SUPPORT_PERCENT, score_case, summarize
@@ -65,7 +65,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         with args.report.open("x", encoding="utf-8", newline="\n") as report:
             _write({"event": "manifest", **manifest}, stream=report)
             journal = OperationsJournal.start(
-                os.environ.get(OPERATIONS_DIR_ENV),
+                operations_directory(os.environ),
                 run_identity(
                     profile, origin="calibration", mode="batch", planned_cases=len(cases), budget=_MAX_RESERVED_COST
                 ),

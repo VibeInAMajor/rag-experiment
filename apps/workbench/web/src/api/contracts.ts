@@ -111,7 +111,7 @@ export type AgentProfile = {
   provider: string;
   model: string;
   modes: string[];
-  reasoning_effort: string;
+  reasoning_effort: string | null;
   max_estimated_input_tokens: number;
   max_output_tokens: number;
   max_request_bytes: number | null;
