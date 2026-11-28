@@ -72,6 +72,45 @@ The overlap runner matched all nine variants by original query digest, candidate
 
 At K10, the irrelevant counts at ranks 1/5/10 remained 0/0/2. Wrong-scope counts moved from 0/8/19 to 1/6/19. At K50, the irrelevant count bounds were 0–1/9, 0–12/45 and 0–33/90. Wrong-scope bounds were 1–2/9, 4–16/45 and 10–43/90. In EXT-ART-003, the Russian variant lost its complete fact at rank one across all three depths. EXT-LIT-001 retained a useful first result in all three variants. In EXT-NA-003, the K50 top five had no useful result among all 15 reviewed positions and one fewer wrong-scope result. No new judgment requests were sent. Full OPEN strict precision, recall, graded nDCG and semantic GO remain open.
 
+## Context budget sensitivity
+
+An offline follow-up reconstructed all 15,300 query-document pairs with the mounted Qwen template and tokenizer, matching the asset digests above. Pair input was 429 tokens at p50, 610 at p95 and 707 at maximum. Zero pairs exceeded the deployment's 4,096-token limit. The original run sent whole pairs with truncation disabled.
+
+The follow-up repacked the saved orders using the same top-ten whole-chunk prefix and context token counter. It counted queries for which the selected context contained all required facts. The 2,048-token row reproduces the original experiment.
+
+| Context budget | Exact Dense | Reranked K10 | Reranked K20 | Reranked K50 | Mean context tokens used by exact Dense |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2,048 | 240/261 | 235/261 | 238/261 | 237/261 | 1,811 |
+| 3,072 | 244/261 | 243/261 | 243/261 | 242/261 | 2,571 |
+| 4,096 | 246/261 | 246/261 | 244/261 | 244/261 | 2,902 |
+| 6,144 | 246/261 | 246/261 | 246/261 | 244/261 | 2,960 |
+| 8,192 | 246/261 | 246/261 | 246/261 | 244/261 | 2,960 |
+
+For exact Dense, 3,072 recovered four complete contexts at 42% more context tokens on average. At 4,096, the total gain was six contexts at 60% more tokens. Higher budgets had the same fact coverage with the ten-chunk cutoff. Equal-budget reranking never exceeded exact Dense on this measure. The fixed rank-one and top-five results remain the original observations. This analysis made zero inference requests and measured evidence coverage only.
+
+### Exact Dense 4,096 confirmation
+
+The repeat uses 4,096 source-content tokens for exact Dense and the original 2,048-token control. It repacks the same frozen original-only top-ten orders using the existing whole-chunk prefix. The 306-query OPEN V2 replay has 261 answerable variants and 45 no-answer variants. The exact capture SHA-256 remained `70dee6855eeae7fe6ac929333551141315a44d779c4318194733d00770c373e9`. The dataset digest is `38ad2c628a7a578445998f14d05277d22e0f7ea79ec79839764e2ecd59a7ce9d`.
+
+| Measure | 2,048 control | 4,096 exact Dense |
+| --- | ---: | ---: |
+| Answerable queries with all required facts in context | 240/261 (91.95%) | 246/261 (94.25%) |
+| Mean source-content tokens per answerable query | 1,811.2 | 2,901.6 |
+| Mean selected whole chunks | 6.697 | 9.866 |
+
+Six queries across three families improved, 255 had the same all-facts outcome and zero worsened. Literature accounted for four gains and mathematics for two. Gains by language were EN +2, RU +1 and UK +3. The paired gain was +2.30 percentage points, with a family-clustered 95% interval of [0.00, +5.36] over 87 answerable families. For the 221 answerable queries with added chunks, the larger packs extended their original prefixes. All packs respected the cap, with an observed maximum of 4,086 tokens. Coverage reached the original top-ten ceiling of 246/261, two cases below the 95% target. Ranked positions and source identities stayed fixed. This was a repeat on the original data and measured source-fact coverage.
+
+The main Workbench search contract returns ranked hits. The 4,096 budget belongs to the local evidence replay. The existing reranker advertised `max_model_len=4096`, remained healthy on the original container ID and had zero restarts. This repeat used zero inference requests.
+
+From the checkout root in PowerShell, using the protected OPEN evaluator:
+
+```powershell
+$env:PYTHONPATH = (Get-Location).Path + [IO.Path]::PathSeparator + (Resolve-Path '.local/evaluation-holdout/quality-check').Path
+hatch -e workbench-api run python -m rag_quality.ranking.exact_dense_context_replay --run exact-dense-context-4096-v1
+```
+
+The exclusive run directory has an aggregate `summary.json` (SHA-256 `95354e8988cf0be5b468ee49f30c58e95ca28e27679a8b091b7dc86aaf2a411f`) and protected paired records in `paired-contexts.json` (SHA-256 `2107314200d4fd41adaac27c6a10690e77974fb98703e5f34987d7091a1d5159`). A repeated invocation uses a new run name. All 35 targeted retrieval and reranker tests and seven local replay tests passed. An independent read-only calculation reproduced the same counts and family interval.
+
 ## Synthetic runtime and shared resources
 
 Each depth used four isolated controls in English, Russian, Ukrainian and code, repeated three times. The authored primary passage ranked first in all 12 executions at each depth.
