@@ -38,6 +38,10 @@ Execution order for semantic qualification: MAF-001 real smoke → MAF-002 calib
 
 The [current MAF-002 scope](../maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-limits-only--operator-decision) applies identical application limits to GPT-6.1 Sol and GPT-6.2 Sol. Local verification covers both profiles. The operator deferred new live qualification and pilot replay. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) retains ownership of the operations interface and future use of eligibility evidence.
 
+## Reranker diagnostic and pre-audit decision — 2026-11-28
+
+[RERANK-001 report](../evidence/reranker-2026-11-28/report.md): Dense diagnostic NO-GO at K10/K20/K50; retain Exact Dense, RERANK-002 blocked. No further reranker run before DATASET-002. Freeze exact top-10 ranks; retain 2,048 historical context and separately preflight the 4,096 top-10 replay (246/261 vs 240/261 known-fact coverage; top 20 gave no complete-context gain at the same budget). Before paid full audit, follow DATASET-002 zero-egress manifest/admission checks and explicit model/runtime/budget decision; 4,096 source tokens do not guarantee MAF transport admission. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) Activity diagnostic correction can run in parallel with offline preflight; verify coherent safe run telemetry before a long paid batch. MAF-002 cache and new qualification remain explicitly deferred unless operator reopens them. Reassess saved rerank arms on corrected labels later, with an additive judgment pool where needed.
+
 ## Delivery order and ownership
 
 | Order | Task | Output / decision |
