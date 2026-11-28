@@ -194,6 +194,32 @@ def test_agent_selection_rechecks_scope_revision_qualification_and_tariff(tmp_pa
         assert client.get(_ROOT).json()["agents"][0]["selection"] == saved
 
 
+def test_max_reasoning_is_discoverable_without_copying_medium_qualification(tmp_path: Path) -> None:
+    """Expose model-supported Max while keeping unqualified activation refused."""
+    agent = _write_catalog(tmp_path)
+    variant = _profile("semantic-review-max", "gpt-6.1-sol", qualified=False)
+    variant["reasoning_effort"] = "max"
+    agent["profiles"].append(variant)
+    (tmp_path / "catalog.json").write_text(
+        json.dumps({"schema_version": 1, "scope": _SCOPE, "agents": [agent]}), encoding="utf-8"
+    )
+    with _api(tmp_path) as client:
+        response = client.get(_ROOT)
+        assert response.status_code == 200
+        exported = response.json()["agents"][0]
+        maximum = next(profile for profile in exported["profiles"] if profile["profile_id"] == variant["profile_id"])
+        assert maximum["reasoning_effort"] == "max"
+        assert maximum["selectable"] is False
+        rejected = client.put(
+            _SELECTION,
+            json={"profile_id": variant["profile_id"], "expected_revision": exported["selection"]["revision"]},
+            headers=_INTENT,
+        )
+        assert rejected.status_code == 409
+        assert rejected.json()["error"]["code"] == "AGENT_PROFILE_INELIGIBLE"
+        assert not (tmp_path / "selection.json").exists()
+
+
 def test_pending_per_call_progress_and_completed_counts_survive_reload(tmp_path: Path) -> None:
     """Only physical and terminal call metadata contribute usage; costs sum as exact decimals."""
     _write_catalog(tmp_path)

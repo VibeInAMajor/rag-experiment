@@ -1,0 +1,10 @@
+upgrade:
+  - |
+    Agents now lists all supported Sol reasoning levels: low, medium, high,
+    xhigh and max. The standalone runtime exports effort-specific profiles
+    for both configured models and accepts max in MAF_OPENAI_REASONING_EFFORT.
+    Existing base profile IDs and the Medium default remain compatible.
+    Model support is displayed separately from Semantic Judge qualification;
+    newly exposed levels do not inherit historical qualification or activation.
+    The duplicate Latest run panel is removed. Select a Run history row to
+    expand its observed totals and details inline.

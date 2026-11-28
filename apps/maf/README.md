@@ -38,7 +38,9 @@ This submits the built-in synthetic input `The synthetic marker is cobalt.` usin
 | `semantic-review` | `gpt-6.1-sol` | Default. Existing v8 live evidence. |
 | `semantic-review-6.2` | `gpt-6.2-sol` | Selectable. Verified offline for the shared limits. |
 
-Both Sol profiles use the same application limits and the same four Semantic Judge modes. Select a model explicitly through `profile_id`. Both profiles use direct OpenAI Responses. Set `MAF_OPENAI_REASONING_EFFORT` to `low`, `medium`, `high`, or `xhigh`. The default is `medium`. [Shared limits and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-limits-only--operator-decision) · [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)
+Both Sol models use the same application limits and the same four Semantic Judge modes through direct OpenAI Responses. Supported reasoning levels are `low`, `medium`, `high`, `xhigh` and `max`. The base profile IDs above use `MAF_OPENAI_REASONING_EFFORT` (default `medium`). The loader also registers effort-specific variants for the other levels, such as `semantic-review-high`, `semantic-review-max` and `semantic-review-6.2-low`. These are real runtime profiles with the same resource caps, not frontend-only options. The operations catalog exports all five levels per model. [Shared limits and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-limits-only--operator-decision) · [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [Model capabilities](https://developers.openai.com/api/docs/models)
+
+Provider support and agent qualification are separate. Historical v8 evidence applies only to the original GPT-6.1 Sol Medium default. Additional levels are discoverable but cannot be activated through qualified Workbench selection until their qualification is recorded; they do not inherit the Medium evidence. Explicit CLI invocations still require the existing caller-owned egress, classification, budget and evaluation checks.
 
 ## JSON invocation contract v1
 

@@ -92,7 +92,21 @@ def test_operations_catalog_and_persisted_selection_use_same_offline_cli(tmp_pat
     catalog = json.loads(catalog_run.stdout)
     assert catalog_run.stderr == b""
     (agent,) = catalog["agents"]
-    primary, alternate = agent["profiles"]
+    primary, alternate = (
+        item for item in agent["profiles"] if item["profile_id"] in {"semantic-review", "semantic-review-6.2"}
+    )
+    assert len(agent["profiles"]) == 10
+    for model in ("gpt-6.1-sol", "gpt-6.2-sol"):
+        assert {item["reasoning_effort"] for item in agent["profiles"] if item["model"] == model} == {
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+        }
+    assert {item["profile_id"] for item in agent["profiles"] if item["qualification"]["state"] == "qualified"} == {
+        "semantic-review"
+    }
     assert alternate["profile_id"] == "semantic-review-6.2"
     assert alternate["qualification"]["state"] == "unqualified"
     assert primary["max_estimated_input_tokens"] == alternate["max_estimated_input_tokens"] == 16_384

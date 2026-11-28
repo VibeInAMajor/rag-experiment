@@ -9,22 +9,29 @@
   gap: 12px;
 }
 
-.agents-connection time,
-.agents-run-context time {
+.agents-connection time {
   color: var(--text-secondary);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
-.agents-overview {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.4fr);
-  gap: 20px;
-  align-items: start;
-}
-
 .agents-panel {
   padding: 20px;
+}
+
+.agents-model-panel {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.6fr) minmax(0, 1.4fr);
+  align-items: center;
+  column-gap: 24px;
+}
+
+.agents-model-panel .agents-model-fields {
+  margin-top: 0;
+}
+
+.agents-model-panel > :is(.agents-details, .agents-caption, .agents-actions) {
+  grid-column: 1 / -1;
 }
 
 .agents-panel-heading,
@@ -132,16 +139,6 @@
   margin: 12px 0 0;
 }
 
-.agents-run-context,
-.agents-run-progress {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 12px 0 0;
-  font-size: 13px;
-}
-
 .agents-run-totals {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -160,21 +157,6 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
-}
-
-.agents-run-progress {
-  margin-top: 18px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.agents-progress {
-  display: block;
-  width: 100%;
-  height: 5px;
-  margin-top: 8px;
-  accent-color: var(--accent-blue);
 }
 
 .agents-empty {
@@ -257,15 +239,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+.agents-history-detail-row > td {
+  padding: 16px 24px;
+}
+
+.agents-history-details .agents-run-totals,
+.agents-history-details .agents-restored {
+  margin-top: 0;
+}
+
 .agents-actions {
   justify-content: flex-end;
   margin-top: 14px;
-}
-
-@media (max-width: 1050px) {
-  .agents-overview {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 670px) {
@@ -288,8 +273,13 @@
   }
 
   .agents-facts,
+  .agents-model-panel,
   .agents-model-fields {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .agents-model-panel .agents-model-fields {
+    margin-top: 16px;
   }
 
   .agents-run-totals {

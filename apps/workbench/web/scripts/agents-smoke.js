@@ -40,7 +40,14 @@ const catalog = JSON.parse(realCatalog.replace(/^\uFEFF/, ""));
 const agent = catalog.agents.find(
   (entry) => entry.agent_id === "semantic-judge",
 );
-const [primary, alternate] = agent.profiles;
+const primary = agent.profiles.find(
+  (profile) => profile.profile_id === agent.default_profile_id,
+);
+const alternate = agent.profiles.find(
+  (profile) =>
+    profile.model !== primary.model &&
+    profile.reasoning_effort === primary.reasoning_effort,
+);
 const runId = randomUUID().replaceAll("-", "");
 const runs = join(directory, "runs");
 mkdirSync(runs, { recursive: true });
@@ -91,7 +98,7 @@ try {
     true,
   );
   await visible(
-    "This model and reasoning combination is not enabled for runs.",
+    "This reasoning level is supported by the model; agent qualification is pending.",
   );
   await page.getByText("Model details", { exact: true }).click();
   await visible("32,000");
@@ -125,6 +132,11 @@ try {
     stage: "admission",
     call: { ...firstCall, reserve_usd: "0.397056" },
   });
+  await page
+    .getByRole("table", { name: "Agent run history" })
+    .getByRole("button")
+    .first()
+    .click();
   await visible("Waiting for the model. Usage will appear when it responds.");
   const latencies = [];
   for (let index = 1; index <= 30; index += 1) {
@@ -182,7 +194,7 @@ try {
     case_id: "synthetic-reuse",
   });
   emit("run_finished", { status: "completed", stage: "finalizing" });
-  await visible("31 / 31 results");
+  await visible("31 / 31");
   await visible("$0.0099660");
   await visible("3,000");
   await visible("1 saved result reused");
@@ -191,7 +203,7 @@ try {
   }
   assert.equal(
     await page
-      .getByRole("region", { name: "Latest run" })
+      .getByRole("region", { name: "Run details" })
       .getByText("GPT-6.1 Sol", { exact: true })
       .first()
       .textContent(),
@@ -219,7 +231,7 @@ try {
     true,
   );
   await page.goto(new URL("?page=agents&mode=live", baseUrl).href);
-  await visible("31 / 31 results");
+  await visible("1 saved result reused");
 
   const qualified = {
     state: "qualified",
@@ -246,9 +258,14 @@ try {
       .inputValue(),
     alternate.model,
   );
+  await page
+    .getByRole("table", { name: "Agent run history" })
+    .getByRole("button")
+    .first()
+    .click();
   assert.equal(
     await page
-      .getByRole("region", { name: "Latest run" })
+      .getByRole("region", { name: "Run details" })
       .getByText("GPT-6.1 Sol", { exact: true })
       .first()
       .textContent(),

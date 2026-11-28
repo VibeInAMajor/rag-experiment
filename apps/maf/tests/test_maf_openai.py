@@ -143,6 +143,25 @@ def test_real_sdk_wire_applies_stateless_responses_policy(monkeypatch: pytest.Mo
     assert observation.usage == Usage(input_tokens=76, output_tokens=29, reasoning_tokens=17, cached_input_tokens=0)
 
 
+@pytest.mark.parametrize("model", ["gpt-6.1-sol", "gpt-6.2-sol"])
+def test_max_reasoning_reaches_the_real_sdk_request_without_live_egress(model: str) -> None:
+    profile = next(
+        profile
+        for profile in load_profiles({}).values()
+        if profile.model == model and profile.reasoning_effort == "max"
+    )
+    captured = []
+
+    def capture(request: httpx2.Request) -> httpx2.Response:
+        captured.append(json.loads(request.content))
+        return httpx2.Response(200, json={**_record(), "model": model})
+
+    assert _call(capture, ProviderObservation(), profile=profile) == _OUTPUT
+    assert len(captured) == 1
+    assert captured[0]["model"] == model
+    assert captured[0]["reasoning"] == {"effort": "max"}
+
+
 def test_missing_usage_and_unsafe_provider_metadata(caplog: pytest.LogCaptureFixture) -> None:
     observation = ProviderObservation()
     with caplog.at_level("DEBUG"):

@@ -304,7 +304,7 @@ class AgentProfileDefinition(ContractModel):
     provider: AgentKey
     model: AgentKey
     modes: list[AgentKey] = Field(min_length=1, max_length=24)
-    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh"] | None = None
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"] | None = None
     max_estimated_input_tokens: AgentCount = Field(gt=0)
     max_output_tokens: AgentCount = Field(gt=0)
     max_request_bytes: AgentCount | None = None

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { CircleAlert, Radio, RefreshCw } from "lucide-react";
 import {
   agentRunStatuses,
@@ -40,6 +40,11 @@ const time = (value: string | number) =>
   });
 const modelLabel = (model: string) =>
   model.replace(/^gpt-(.+)-sol$/, "GPT-$1 Sol");
+const reasoningOrder = new Map(
+  ["none", "minimal", "low", "medium", "high", "xhigh", "max"].map(
+    (effort, index) => [effort, index],
+  ),
+);
 
 function RunStatus({ status }: { status: AgentRunStatus }) {
   const tone = {
@@ -72,9 +77,15 @@ function ModelPanel({
   message: string;
 }) {
   const models = [...new Set(agent.profiles.map((option) => option.model))];
-  const reasoning = agent.profiles.filter(
-    (option) => option.model === profile.model,
-  );
+  const reasoning = agent.profiles
+    .filter((option) => option.model === profile.model)
+    .sort(
+      (left, right) =>
+        (reasoningOrder.get(left.reasoning_effort ?? "") ??
+          Number.MAX_SAFE_INTEGER) -
+        (reasoningOrder.get(right.reasoning_effort ?? "") ??
+          Number.MAX_SAFE_INTEGER),
+    );
   const rates = [
     ["Input", profile.tariff?.ordinary_input],
     ["Cached input", profile.tariff?.cached_read],
@@ -83,7 +94,7 @@ function ModelPanel({
   ] as const;
   return (
     <section
-      className="data-panel agents-panel"
+      className="data-panel agents-panel agents-model-panel"
       aria-labelledby="agent-model-title"
     >
       <header className="agents-panel-heading">
@@ -135,7 +146,9 @@ function ModelPanel({
       </div>
       {!profile.selectable && (
         <p className="agents-caption" role="status">
-          This model and reasoning combination is not enabled for runs.
+          {profile.qualification.state === "unqualified"
+            ? "This reasoning level is supported by the model; agent qualification is pending."
+            : "This model and reasoning combination is not enabled for runs."}
         </p>
       )}
       {profile.profile_id !== agent.selection.profile_id && (
@@ -196,178 +209,119 @@ function ModelPanel({
   );
 }
 
-function RunSummary({
-  run,
-  current,
-}: {
-  run: AgentRun | null;
-  current: boolean;
-}) {
-  const active = run ? isAgentRunActive(run) : false;
+function RunDetails({ run }: { run: AgentRun }) {
   const restored =
-    !!run &&
     run.physical_requests === 0 &&
     run.pending_calls === 0 &&
     run.reused_cases > 0;
-  const elapsed =
-    run?.started_at && (active || run.finished_at)
-      ? Math.max(
-          0,
-          Math.floor(
-            ((run.finished_at ? Date.parse(run.finished_at) : Date.now()) -
-              Date.parse(run.started_at)) /
-              1000,
-          ),
-        )
-      : null;
   return (
-    <section
-      className="data-panel agents-panel"
-      aria-labelledby="agent-run-title"
+    <div
+      className="agents-history-details"
+      role="region"
+      aria-label="Run details"
     >
-      <header className="agents-panel-heading">
-        <h2 id="agent-run-title">
-          {active ? "Active run" : current ? "Latest run" : "Run details"}
-        </h2>
-        {run && <RunStatus status={run.status} />}
-      </header>
-      {!run ? (
-        <p className="agents-empty">No runs recorded yet.</p>
+      {restored ? (
+        <p className="agents-restored">
+          {number(run.reused_cases)} saved results reused. No model requests
+          were recorded.
+        </p>
       ) : (
         <>
-          <p className="agents-run-context">
-            <span>{modelLabel(run.model)}</span>
-            <time
-              dateTime={run.started_at ?? run.queued_at}
-              title={date(run.started_at ?? run.queued_at)}
-            >
-              {shortDate(run.started_at ?? run.queued_at)}
-            </time>
-          </p>
-          {restored ? (
-            <p className="agents-restored">
-              {number(run.reused_cases)} saved results reused. No model requests
-              were recorded.
-            </p>
-          ) : (
-            <>
-              <dl className="agents-run-totals" aria-label="Run totals">
-                <div>
-                  <dt>Estimated cost</dt>
-                  <dd>{money(run.estimated_cost_usd)}</dd>
-                </div>
-                <div>
-                  <dt>Tokens in</dt>
-                  <dd>{number(run.usage?.input_tokens)}</dd>
-                </div>
-                <div>
-                  <dt>Tokens out</dt>
-                  <dd>{number(run.usage?.output_tokens)}</dd>
-                </div>
-              </dl>
-              {run.physical_requests > 0 &&
-                (run.usage_coverage.known_calls <
-                  run.usage_coverage.total_calls ||
-                  run.cost_coverage.known_calls <
-                    run.cost_coverage.total_calls) && (
-                  <p className="agents-caption">
-                    Usage or cost is missing for some requests; totals include
-                    reported values only.
-                  </p>
-                )}
-            </>
-          )}
-          {!restored && (
-            <div className="agents-run-progress">
-              <span>
-                {number(run.completed_cases)}
-                {run.planned_cases !== null
-                  ? ` / ${number(run.planned_cases)}`
-                  : ""}{" "}
-                results
-              </span>
-              {elapsed !== null && <span>{elapsed} s</span>}
+          <dl className="agents-run-totals" aria-label="Run totals">
+            <div>
+              <dt>Estimated cost</dt>
+              <dd>{money(run.estimated_cost_usd)}</dd>
             </div>
-          )}
-          {!restored && run.planned_cases !== null && run.planned_cases > 0 && (
-            <progress
-              className="agents-progress"
-              aria-label="Results finished"
-              max={run.planned_cases}
-              value={run.completed_cases}
-            />
-          )}
-          {run.pending_calls > 0 && (
-            <p className="agents-pending">
-              <Radio size={15} />
-              {active
-                ? "Waiting for the model. Usage will appear when it responds."
-                : "Request outcome has not been reported."}
-            </p>
-          )}
-          {run.actual_models.some((model) => model !== run.model) && (
-            <p className="agents-alert" role="status">
-              <CircleAlert size={16} />
-              The responding model differs from the selected model.
-            </p>
-          )}
-          {!restored && (
-            <details className="agents-details">
-              <summary>Run details</summary>
-              <dl className="agents-facts">
-                <div>
-                  <dt>Model requests</dt>
-                  <dd>{number(run.physical_requests)}</dd>
-                </div>
-                <div>
-                  <dt>Saved results reused</dt>
-                  <dd>{number(run.reused_cases)}</dd>
-                </div>
-                <div>
-                  <dt>Failed / blocked</dt>
-                  <dd>
-                    {run.failed_cases} / {run.blocked_cases}
-                  </dd>
-                </div>
-                {run.actual_models.length > 0 && (
-                  <div>
-                    <dt>Responding model</dt>
-                    <dd>{run.actual_models.map(modelLabel).join(", ")}</dd>
-                  </div>
-                )}
-                {run.pending_reserve_usd !== null && run.pending_calls > 0 && (
-                  <div>
-                    <dt>Pending reserve</dt>
-                    <dd>{money(run.pending_reserve_usd)}</dd>
-                  </div>
-                )}
-                {run.budget_usd !== null && (
-                  <div>
-                    <dt>Budget</dt>
-                    <dd>{money(run.budget_usd)}</dd>
-                  </div>
-                )}
-                {run.usage?.cached_read_tokens != null && (
-                  <div>
-                    <dt>Cached input tokens</dt>
-                    <dd>{number(run.usage.cached_read_tokens)}</dd>
-                  </div>
-                )}
-                {run.usage?.reasoning_tokens != null && (
-                  <div>
-                    <dt>Reasoning tokens</dt>
-                    <dd>{number(run.usage.reasoning_tokens)}</dd>
-                  </div>
-                )}
-              </dl>
-            </details>
-          )}
+            <div>
+              <dt>Tokens in</dt>
+              <dd>{number(run.usage?.input_tokens)}</dd>
+            </div>
+            <div>
+              <dt>Tokens out</dt>
+              <dd>{number(run.usage?.output_tokens)}</dd>
+            </div>
+          </dl>
+          {run.physical_requests > 0 &&
+            (run.usage_coverage.known_calls < run.usage_coverage.total_calls ||
+              run.cost_coverage.known_calls <
+                run.cost_coverage.total_calls) && (
+              <p className="agents-caption">
+                Usage or cost is missing for some requests; totals include
+                reported values only.
+              </p>
+            )}
         </>
       )}
-    </section>
+      {run.pending_calls > 0 && (
+        <p className="agents-pending">
+          <Radio size={15} />
+          {isAgentRunActive(run)
+            ? "Waiting for the model. Usage will appear when it responds."
+            : "Request outcome has not been reported."}
+        </p>
+      )}
+      {run.actual_models.some((model) => model !== run.model) && (
+        <p className="agents-alert" role="status">
+          <CircleAlert size={16} />
+          The responding model differs from the selected model.
+        </p>
+      )}
+      <dl className="agents-facts">
+        <div>
+          <dt>Model requests</dt>
+          <dd>{number(run.physical_requests)}</dd>
+        </div>
+        <div>
+          <dt>Results</dt>
+          <dd>
+            {number(run.completed_cases)}
+            {run.planned_cases !== null
+              ? ` / ${number(run.planned_cases)}`
+              : ""}
+          </dd>
+        </div>
+        {run.failed_cases + run.blocked_cases > 0 && (
+          <div>
+            <dt>Failed / blocked</dt>
+            <dd>
+              {run.failed_cases} / {run.blocked_cases}
+            </dd>
+          </div>
+        )}
+        {run.actual_models.length > 0 && (
+          <div>
+            <dt>Responding model</dt>
+            <dd>{run.actual_models.map(modelLabel).join(", ")}</dd>
+          </div>
+        )}
+        {run.pending_reserve_usd !== null && run.pending_calls > 0 && (
+          <div>
+            <dt>Pending reserve</dt>
+            <dd>{money(run.pending_reserve_usd)}</dd>
+          </div>
+        )}
+        {run.budget_usd !== null && (
+          <div>
+            <dt>Budget</dt>
+            <dd>{money(run.budget_usd)}</dd>
+          </div>
+        )}
+        {run.usage?.cached_read_tokens != null && (
+          <div>
+            <dt>Cached input tokens</dt>
+            <dd>{number(run.usage.cached_read_tokens)}</dd>
+          </div>
+        )}
+        {run.usage?.reasoning_tokens != null && (
+          <div>
+            <dt>Reasoning tokens</dt>
+            <dd>{number(run.usage.reasoning_tokens)}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
   );
 }
-
 function Timeline({ events }: { events: AgentEvent[] }) {
   const entries = agentActivity(events);
   return (
@@ -516,29 +470,21 @@ export function AgentsView() {
             ops.connection === "unavailable") && (
             <p className="agents-alert">Run history is unavailable.</p>
           )}
-          <div className="agents-overview">
-            <ModelPanel
-              agent={agent}
-              profile={profile}
-              onInspect={setInspected}
-              onSave={() =>
-                void ops.selectProfile(
-                  agent.agent_id,
-                  profile.profile_id,
-                  agent.selection,
-                )
-              }
-              online={ops.connection === "connected"}
-              saving={ops.saving}
-              message={ops.selectionMessage}
-            />
-            <RunSummary
-              run={run}
-              current={
-                !selectedRunId || (run !== null && isAgentRunActive(run))
-              }
-            />
-          </div>
+          <ModelPanel
+            agent={agent}
+            profile={profile}
+            onInspect={setInspected}
+            onSave={() =>
+              void ops.selectProfile(
+                agent.agent_id,
+                profile.profile_id,
+                agent.selection,
+              )
+            }
+            online={ops.connection === "connected"}
+            saving={ops.saving}
+            message={ops.selectionMessage}
+          />
           <section
             className="agents-section"
             aria-labelledby="agent-activity-title"
@@ -632,39 +578,58 @@ export function AgentsView() {
                   </thead>
                   <tbody>
                     {history.map((item) => (
-                      <tr
-                        key={item.run_id}
-                        className={
-                          item.run_id === run?.run_id ? "data-selected" : ""
-                        }
-                      >
-                        <td>
-                          <button
-                            type="button"
-                            className="data-name"
-                            aria-label={`View run from ${date(item.started_at ?? item.queued_at)}`}
-                            aria-pressed={item.run_id === run?.run_id}
-                            onClick={() => setSelectedRunId(item.run_id)}
-                          >
-                            <time dateTime={item.started_at ?? item.queued_at}>
-                              {shortDate(item.started_at ?? item.queued_at)}
-                            </time>
-                          </button>
-                        </td>
-                        <td>{modelLabel(item.model)}</td>
-                        <td>
-                          <RunStatus status={item.status} />
-                        </td>
-                        <td>
-                          {number(item.completed_cases)}
-                          {item.reused_cases > 0 && (
-                            <small>{number(item.reused_cases)} reused</small>
-                          )}
-                        </td>
-                        <td className="agents-numeric">
-                          {money(item.estimated_cost_usd)}
-                        </td>
-                      </tr>
+                      <Fragment key={item.run_id}>
+                        <tr
+                          className={
+                            item.run_id === run?.run_id ? "data-selected" : ""
+                          }
+                        >
+                          <td>
+                            <button
+                              type="button"
+                              className="data-name"
+                              aria-label={`View run from ${date(item.started_at ?? item.queued_at)}`}
+                              aria-pressed={item.run_id === run?.run_id}
+                              aria-expanded={selectedRunId === item.run_id}
+                              onClick={() =>
+                                setSelectedRunId(
+                                  selectedRunId === item.run_id
+                                    ? null
+                                    : item.run_id,
+                                )
+                              }
+                            >
+                              <time
+                                dateTime={item.started_at ?? item.queued_at}
+                              >
+                                {shortDate(item.started_at ?? item.queued_at)}
+                              </time>
+                            </button>
+                          </td>
+                          <td>{modelLabel(item.model)}</td>
+                          <td>
+                            <RunStatus status={item.status} />
+                          </td>
+                          <td>
+                            {number(item.completed_cases)}
+                            {item.reused_cases > 0 && (
+                              <small>{number(item.reused_cases)} reused</small>
+                            )}
+                          </td>
+                          <td className="agents-numeric">
+                            {money(item.estimated_cost_usd)}
+                          </td>
+                        </tr>
+                        {selectedRunId === item.run_id && (
+                          <tr className="agents-history-detail-row">
+                            <td colSpan={5}>
+                              <RunDetails
+                                run={run?.run_id === item.run_id ? run : item}
+                              />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>

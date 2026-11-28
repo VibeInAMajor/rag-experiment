@@ -5,12 +5,32 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from agent_runtime.configuration import RunPolicy, load_profiles
+from agent_runtime.configuration import SOL_PROFILE_IDS, RunPolicy, load_profiles
 from agent_runtime.contracts import ErrorCode, InvocationRequest, Usage
 from agent_runtime.runtime import AgentApplication, AgentRuntime, ProviderObservation
 
 _KEY = "offline-provider-key-sentinel"
 _APPROVED = RunPolicy(allow_external=True, data_classification="synthetic")
+
+
+@pytest.mark.parametrize("configured_effort", ["low", "medium", "high", "xhigh", "max"])
+def test_profiles_cover_all_model_efforts_and_preserve_the_environment_override(configured_effort: str) -> None:
+    profiles = load_profiles({"MAF_OPENAI_REASONING_EFFORT": configured_effort})
+    assert len(profiles) == 10
+    assert profiles.keys() <= SOL_PROFILE_IDS
+    for profile_id, model in (("semantic-review", "gpt-6.1-sol"), ("semantic-review-6.2", "gpt-6.2-sol")):
+        baseline = profiles[profile_id]
+        assert baseline.reasoning_effort == configured_effort
+        variants = [profile for profile in profiles.values() if profile.model == model]
+        assert {profile.reasoning_effort for profile in variants} == {"low", "medium", "high", "xhigh", "max"}
+        assert all(profile.max_input_tokens == baseline.max_input_tokens for profile in variants)
+        assert all(profile.max_output_tokens == baseline.max_output_tokens for profile in variants)
+
+
+@pytest.mark.parametrize("effort", ["none", "minimal", "ultra", "invented"])
+def test_unsupported_sol_efforts_are_rejected(effort: str) -> None:
+    with pytest.raises(ValueError, match="Unsupported reasoning effort"):
+        load_profiles({"MAF_OPENAI_REASONING_EFFORT": effort})
 
 
 def _request(

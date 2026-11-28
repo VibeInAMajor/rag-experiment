@@ -1,14 +1,14 @@
 """Trusted model mappings, run policy and versioned cost estimates."""
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Final, Literal, get_args
 
 from agent_runtime.contracts import Usage
 
 type DataClassification = Literal["synthetic", "public"]
-ReasoningEffort = Literal["low", "medium", "high", "xhigh"]
+ReasoningEffort = Literal["low", "medium", "high", "xhigh", "max"]
 
 PRICING_VERSION = "openai-standard-2026-11-27"
 CACHE_MODE: Final = "explicit"
@@ -26,7 +26,9 @@ _REGIONAL_ALLOWANCE = Decimal("1.10")
 _SOL_MAX_INPUT_TOKENS = 16_384
 _SOL_MAX_OUTPUT_TOKENS = 32_000
 _MODEL_MAPPING = {SEMANTIC_REVIEW_PROFILE: "gpt-6.1-sol", "semantic-review-6.2": "gpt-6.2-sol"}
-SOL_PROFILE_IDS = frozenset(_MODEL_MAPPING)
+SOL_PROFILE_IDS = frozenset(_MODEL_MAPPING) | frozenset(
+    f"{profile_id}-{effort}" for profile_id in _MODEL_MAPPING for effort in get_args(ReasoningEffort)
+)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -60,7 +62,7 @@ def load_profiles(environ: Mapping[str, str]) -> dict[str, ModelProfile]:
     efforts: dict[str, ReasoningEffort] = {level: level for level in get_args(ReasoningEffort)}
     if effort not in efforts:
         raise ValueError("Unsupported reasoning effort")
-    return {
+    profiles = {
         profile_id: ModelProfile(
             profile_id=profile_id,
             model=model,
@@ -70,6 +72,12 @@ def load_profiles(environ: Mapping[str, str]) -> dict[str, ModelProfile]:
         )
         for profile_id, model in _MODEL_MAPPING.items()
     }
+    for profile in tuple(profiles.values()):
+        for level in efforts.values():
+            if level != profile.reasoning_effort:
+                profile_id = f"{profile.profile_id}-{level}"
+                profiles[profile_id] = replace(profile, profile_id=profile_id, reasoning_effort=level)
+    return profiles
 
 
 def estimate_usage_cost(profile: ModelProfile, model: str | None, usage: Usage | None) -> Decimal | None:

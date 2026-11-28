@@ -2,6 +2,8 @@
 
 `semantic-judge` is a standalone MAF agent for evaluating supplied evidence. Select the `semantic-review` profile and one of four modes. Each invocation starts fresh and returns its prompt and output schema revisions. The caller supplies authorized text and owns reference approval, corpus coverage, and downstream scoring. [Runtime transport and limits](README.md)
 
+The runtime also registers effort-specific Sol profiles for `low`, `medium`, `high`, `xhigh` and `max`, as described in the runtime README. Model support does not qualify a judge setting: the existing Medium calibration remains pinned, and other efforts do not inherit its evidence or Workbench activation eligibility.
+
 ## Invoke the judge
 
 Save this authored example as `judge-request.json` in `apps/maf`.

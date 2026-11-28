@@ -30,6 +30,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+async function openRunDetails() {
+  fireEvent.click(
+    await screen.findByRole("button", { name: /^View run from/ }),
+  );
+}
+
 it("shows only catalog models/reasoning, collapses details, and removes service metadata", async () => {
   const { container } = render(<AgentsView />);
   const model = await screen.findByRole("combobox", {
@@ -52,6 +58,8 @@ it("shows only catalog models/reasoning, collapses details, and removes service 
   expect(
     screen.getAllByRole("heading", { name: "Semantic Judge" }),
   ).toHaveLength(1);
+  expect(screen.queryByRole("heading", { name: "Latest run" })).toBeNull();
+  expect(screen.queryByRole("region", { name: "Run details" })).toBeNull();
   expect(
     fetchMock.mock.calls.every(
       ([, init]) => !init?.method || init.method === "GET",
@@ -61,6 +69,7 @@ it("shows only catalog models/reasoning, collapses details, and removes service 
 
 it("identifies checkpoint-only history and groups activity without pretending new model requests occurred", async () => {
   render(<AgentsView />);
+  await openRunDetails();
   expect(
     await screen.findByText(
       "2 saved results reused. No model requests were recorded.",
@@ -77,6 +86,8 @@ it("identifies checkpoint-only history and groups activity without pretending ne
   expect(activity.textContent).not.toMatch(/saved-case|Tokens|cost|\d{4}/);
   expect(screen.queryByText(fixture.run.run_id)).toBeNull();
   expect(screen.queryByLabelText("Run totals")).toBeNull();
+  await openRunDetails();
+  expect(screen.queryByRole("region", { name: "Run details" })).toBeNull();
 });
 
 it("shows observed run totals once and no per-request accounting in Activity", async () => {
@@ -98,6 +109,7 @@ it("shows observed run totals once and no per-request accounting in Activity", a
     cost_coverage: { known_calls: 1, total_calls: 1 },
   };
   render(<AgentsView />);
+  await openRunDetails();
   const totals = await screen.findByLabelText("Run totals");
   expect(totals.textContent).toContain("$0.010400");
   expect(totals.textContent).toContain((1200).toLocaleString());
@@ -116,6 +128,7 @@ it("does not turn missing usage or cost into zero or an estimate", async () => {
     cost_coverage: { known_calls: 0, total_calls: 1 },
   };
   render(<AgentsView />);
+  await openRunDetails();
   const totals = await screen.findByLabelText("Run totals");
   expect(totals.textContent).toContain("Not reported");
   expect(totals.textContent).not.toContain("$0");
@@ -137,7 +150,7 @@ it("keeps an unqualified combination read-only and persists an eligible choice t
       }) as HTMLButtonElement
     ).disabled,
   ).toBe(true);
-  expect(screen.getByText(/not enabled for runs/)).toBeTruthy();
+  expect(screen.getByText(/agent qualification is pending/)).toBeTruthy();
   fixture.catalog.agents[0].profiles[1].selectable = true;
   fireEvent.click(
     screen.getByRole("button", { name: "Refresh agent operations" }),
@@ -162,7 +175,7 @@ it("keeps an unqualified combination read-only and persists an eligible choice t
     expected_revision: "selection-test",
   });
   expect(
-    screen.getByRole("region", { name: "Latest run" }).textContent,
+    screen.getByRole("table", { name: "Agent run history" }).textContent,
   ).toContain("GPT-6.1 Sol");
 });
 
@@ -198,15 +211,58 @@ it("offers only the reasoning profiles registered for the chosen model, includin
 it("renders an empty history from an empty backend without demonstration activity", async () => {
   fixture.runsAvailable = false;
   render(<AgentsView />);
-  await screen.findByText("No runs recorded yet.");
+  await screen.findByText("No matching runs.");
   expect(screen.queryByRole("table", { name: "Run activity" })).toBeNull();
   expect(screen.queryByLabelText("Run totals")).toBeNull();
+});
+
+it("lists all backend reasoning levels for both models and preserves the inspected effort across model changes", async () => {
+  const agent = fixture.catalog.agents[0];
+  const base = agent.profiles[0];
+  const other = agent.profiles[1];
+  for (const profile of [base, other]) {
+    for (const effort of ["low", "high", "xhigh", "max"]) {
+      agent.profiles.push({
+        ...profile,
+        profile_id: `${profile.profile_id}-${effort}`,
+        reasoning_effort: effort,
+        selectable: false,
+        qualification: {
+          state: "unqualified",
+          revision: null,
+          verified_at: null,
+          reason: "offline_only",
+        },
+      });
+    }
+  }
+  render(<AgentsView />);
+  const reasoning = await screen.findByRole("combobox", { name: "Reasoning" });
+  expect(
+    within(reasoning)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["Low", "Medium", "High", "Xhigh", "Max"]);
+  fireEvent.change(reasoning, { target: { value: "semantic-review-max" } });
+  expect((reasoning as HTMLSelectElement).value).toBe("semantic-review-max");
+  fireEvent.change(screen.getByRole("combobox", { name: "Model" }), {
+    target: { value: other.model },
+  });
+  expect((reasoning as HTMLSelectElement).value).toBe(
+    "semantic-review-6.2-max",
+  );
+  expect(
+    within(reasoning)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["Low", "Medium", "High", "Xhigh", "Max"]);
+  expect(screen.getByText(/agent qualification is pending/)).toBeTruthy();
 });
 
 it("withholds a run and activity belonging to a different agent", async () => {
   fixture.run.agent_id = "another-agent";
   render(<AgentsView />);
-  await screen.findByText("No runs recorded yet.");
+  await screen.findByText("No matching runs.");
   expect(screen.queryByRole("table", { name: "Run activity" })).toBeNull();
   expect(screen.queryByText(/saved results reused\. No model/)).toBeNull();
 });
@@ -221,6 +277,7 @@ it("reports an unavailable API without inventing an agent, run or event", async 
 
 it("marks retained observations as disconnected and disables model selection", async () => {
   render(<AgentsView />);
+  await openRunDetails();
   await screen.findByText(
     "2 saved results reused. No model requests were recorded.",
   );
