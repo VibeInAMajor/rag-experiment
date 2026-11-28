@@ -2,11 +2,14 @@
 
 **Created:** 2026-11-28  
 **Updated:** 2026-11-28  
-**Status:** PROPOSED — specification only; implementation and verification pending  
+**Status:** IMPLEMENTED — local and offline verified. Joint model and live provider gates are deferred.
+
 **Priority:** P0 for visibility during the upcoming full Semantic Review  
 **Repository snapshot inspected:** `397296440c196d8851b1c5f74106db20154a18f7` (file-level implementation map); initial baseline `9dbc64ac90bc523873098e11b3d19e43de79f039`  
 **Dependencies:** [MAF-001](maf/TASK-MAF-001-standalone-agent-runtime.md), [MAF-002](maf/TASK-MAF-002-semantic-judge-agent.md) for qualified model profiles, cache accounting and physical request evidence; existing Workbench API/UI and DATASET-002 caller.  
 **Related:** [DATASET-002](quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md), [ANSWERABILITY-001](quality/TASK-RAG-ANSWERABILITY-001-insufficient-evidence-and-abstention.md), [OPS-001](TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md).
+
+[Verification evidence](evidence/agent-operations-qualification/report.md) · [Operator setup](../apps/workbench/api/README.md#local-agent-operations)
 
 ## A. Title
 
@@ -184,6 +187,15 @@ The new operations package owns metadata projection, not provider pricing, quali
 
 The MAF-002 shared-limit/cache/accounting/joint-qualification changes remain owned by MAF-002. UI-005 must not independently implement or reopen those changes. A model switch consumes eligible evidence from the common qualification report; it does not start new qualification.
 
+Implementation uses the metadata-only modules `apps/maf/src/agent_runtime/operations.py` and
+`apps/maf/src/agent_runtime/operations_journal.py`. The local DATASET-002 entry points are
+`.local/evaluation-holdout/quality-check/rag_quality/semantic_judge_cli.py` and
+`.local/evaluation-holdout/quality-check/runs/semantic-judge-pilot-full-v8-2026-11-28/replay.py`.
+The replay keeps its explicitly pinned qualification and writes a separate operator journal when
+enabled. The current rollout reuses the operator-approved v8 GPT-6.1 Sol evidence (runtime 0.3.1).
+GPT-6.2 Sol is configured with the shared limits and remains unavailable for selection until a live
+qualification arm is available. Live qualification is outside the authorized UI-005 verification.
+
 ### I.5. Reuse references and documentation
 
 | Operation | Repository file | Responsibility |
@@ -236,14 +248,14 @@ No API keys, provider credentials, raw payloads, source excerpts, personal/priva
 
 ## M. Acceptance Criteria
 
-- [ ] Agents menu and URL remount work using the existing visual/navigation system; Configuration adjacency, dirty guard and other views pass regression tests.
-- [ ] The real backend catalog shows Semantic Judge, default GPT-6.1 Sol and alternate GPT-6.2 Sol, actual profile limits, eligibility and selected/served identity, with verified model-specific rates or explicit unknown/unavailable state.
+- [x] Agents menu and URL remount work using the existing visual/navigation system; Configuration adjacency, dirty guard and other views pass regression tests.
+- [x] The real backend catalog shows Semantic Judge, default GPT-6.1 Sol and alternate GPT-6.2 Sol, actual profile limits, eligibility and selected/served identity, with verified model-specific rates or explicit unknown/unavailable state.
 - [ ] Both models advertise equal shared limits and one joint qualification revision; an eligible model can be persisted and used by the next eligible caller run without a new qualification. Unqualified or incompatible models are rejected server-side. Historical/in-flight/resumed and explicitly pinned qualification identities remain unchanged.
-- [ ] Each displayed rate has currency, per-million unit, source, tariff version and applicable cache TTL; price snapshots and actual usage are tied to runs, not the current UI selection.
+- [x] Each displayed rate has currency, per-million unit, source, tariff version and applicable cache TTL; price snapshots and actual usage are tied to runs, not the current UI selection.
 - [ ] Usage/cost projection matches independently calculated fixtures and actual observed provider records, including cache read/write, reasoning subset, charged failures and unknowns, with zero double-counting on replay.
-- [ ] During active work, show truthful stage, pending reserve and latest observed totals; completed-call updates arrive within 2 seconds p95 on the documented healthy-local test (at least 30 events), with no fabricated intra-call token/cost updates.
-- [ ] Scoped run history and safe chronological logs survive reload, handle reconnect/interruption and support bounded pagination and retention. No unauthorized cross-scope access, raw payload, credential or reasoning-text exposure.
-- [ ] With MAF/bridge unavailable, Workbench search, ingestion, Preview and configuration continue unchanged; no monitoring or selection action sends provider traffic.
+- [x] During active work, show truthful stage, pending reserve and latest observed totals; completed-call updates arrive within 2 seconds p95 on the documented healthy-local test (at least 30 events), with no fabricated intra-call token/cost updates.
+- [x] Scoped run history and safe chronological logs survive reload, handle reconnect/interruption and support bounded pagination and retention. No unauthorized cross-scope access, raw payload, credential or reasoning-text exposure.
+- [x] With MAF/bridge unavailable, Workbench search, ingestion, Preview and configuration continue unchanged; no monitoring or selection action sends provider traffic.
 - [ ] Existing MAF cache/qualification and Answerability/DATASET-002 ownership preserved; relevant offline, integration, browser and authorized live evidence linked. If a required live gate is blocked, the task is not COMPLETE.
 
 ## N. Documentation / Migration / Compatibility / Rollback
@@ -254,10 +266,10 @@ Use a versioned additive operations interface and bounded metadata store. Preser
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Reinspect actual repository, scoped guidance, local caller and final MAF-002 contracts; verify the EDIT/ADD/REUSE map in I, record exact local-only caller paths, and amend any material scope changes before implementation.
-- [ ] Implement registry/navigation, optional bridge, durable sanitized event projection, history and live usage/cost dashboard without cross-package SDK imports.
+- [x] Reinspect actual repository, scoped guidance, local caller and final MAF-002 contracts; verify the EDIT/ADD/REUSE map in I, record exact local-only caller paths, and amend any material scope changes before implementation.
+- [x] Implement registry/navigation, optional bridge, durable sanitized event projection, history and live usage/cost dashboard without cross-package SDK imports.
 - [ ] Verify equal shared limits, common qualification revision, model-specific tariffs and qualification-aware selection, including real caller propagation and immutable run binding.
 - [ ] Verify all applicable offline, security, integration, browser and approved live tests; document missing/unrun gates.
-- [ ] Publish sanitized verification evidence and measured latency/usage parity; preserve historical artifacts and no-answer semantics.
-- [ ] Update documentation, compatibility and rollback instructions; list changed paths and implementation commit.
+- [x] Publish sanitized verification evidence and measured local latency/fixture usage parity; preserve historical artifacts and no-answer semantics.
+- [x] Update documentation, compatibility and rollback instructions; list changed areas and record the local implementation commit.
 - [ ] Mark COMPLETE only after applicable criteria pass with actual evidence; do not treat the specification or a synthetic UI as implementation.

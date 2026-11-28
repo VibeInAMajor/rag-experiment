@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal, get_args
+from typing import Final, Literal, get_args
 
 from agent_runtime.contracts import Usage
 
@@ -11,10 +11,14 @@ type DataClassification = Literal["synthetic", "public"]
 ReasoningEffort = Literal["low", "medium", "high", "xhigh"]
 
 PRICING_VERSION = "openai-standard-2026-11-27"
+CACHE_MODE: Final = "explicit"
+CACHE_TTL: Final = "30m"
+CACHE_TTL_SECONDS = 30 * 60
 SEMANTIC_REVIEW_PROFILE = "semantic-review"
 MAX_RUN_COST_USD = Decimal("1.00")
 INPUT_FRAMING_TOKENS = 1_024
 _PER_MILLION = Decimal(1_000_000)
+_INPUT_RATE = Decimal("2.00")
 _INPUT_CACHE_WRITE_RATE = Decimal("2.50")
 _CACHED_INPUT_RATE = Decimal("0.10")
 _OUTPUT_RATE = Decimal("10")
@@ -73,6 +77,16 @@ def estimate_usage_cost(profile: ModelProfile, model: str | None, usage: Usage |
     if model != profile.model or usage is None or usage.input_tokens is None or usage.output_tokens is None:
         return None
     return _cost(usage.input_tokens, usage.output_tokens, usage.cached_input_tokens or 0)
+
+
+def standard_tariff_rates() -> dict[str, str]:
+    """Return the four public short-context Sol rates as exact decimal strings."""
+    return {
+        "ordinary_input": str(_INPUT_RATE),
+        "cached_read": str(_CACHED_INPUT_RATE),
+        "cached_write": str(_INPUT_CACHE_WRITE_RATE),
+        "output": str(_OUTPUT_RATE),
+    }
 
 
 def _cost(input_tokens: int, output_tokens: int, cached_tokens: int) -> Decimal:

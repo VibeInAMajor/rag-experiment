@@ -66,6 +66,14 @@ Use opaque IDs of up to 64 ASCII characters and select an agent and profile from
 
 The result contains `schema_version`, `request_id`, `agent_id`, `profile_id`, `outcome`, `output`, `error`, and `metadata`. An `ok` outcome carries the typed `output`. An `error` outcome carries an `error.code` and a null `output`. IDs may be null when a request cannot be decoded. Metadata contains the provider, requested and returned model IDs, runtime/prompt/output schema revisions, timing, correlation ID, usage, request and retry counts, and versioned cost estimates. Cost estimates use decimal strings. Unavailable provider model or usage information is `null`. Input, output, reasoning, and cached input token counts reflect provider reports when present.
 
+## Agent operations
+
+`hatch run run --operations-catalog` returns only the versioned local catalog. It reports the shared Semantic Judge limits and the published OpenAI Standard rates. GPT-6.1 Sol is the default with operator-approved historical v8 evidence. GPT-6.2 Sol has matching offline-tested limits and requires its own qualifying evidence for selection. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing)
+
+After the [Workbench operator setup](../workbench/api/README.md#local-agent-operations), use `hatch run run --use-operations-selection` with a version 1 Semantic Judge request that omits `profile_id`. The CLI reads the persisted selection at admission, binds its revision and emits the usual single terminal invocation result. Use `--record-operations` for an invocation with an explicitly pinned profile. Both modes retain the normal external-access and classification gates.
+
+The existing calibration runner publishes metadata automatically when `WORKBENCH_AGENT_OPERATIONS_DIR` is set. It retains its pinned profile and report format. A recorded operation includes lifecycle, measured usage, estimated cost, safe failure codes and opaque IDs. Prompt text, evidence, verdict payloads and credentials stay outside the journal.
+
 The CLI returns exit code `0` on success, `130` on cancellation, and `1` for other error envelopes. CLI option errors use argparse's exit code `2` and stderr. For a credential-free transport check, pipe the sample through `hatch run run` with no options. It emits `EGRESS_DISABLED` and reports zero provider requests.
 
 | Error code | Condition |

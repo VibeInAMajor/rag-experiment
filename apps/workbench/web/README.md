@@ -18,6 +18,14 @@ The lazy CodeMirror editor supports multiline paste, indentation, syntax highlig
 
 The selected YAML is the only persisted source. Save reports whether settings already match the active process or require an **API restart**. Existing documents adopt a changed profile only through explicit guarded re-ingestion. The local API checks request intent and trusted origins without accounts/cookies. See the [operator reference](../../../docs-website/docs/architecture/document-processing-configuration.md#edit-configuration-in-workbench) for limits, persistence and recovery.
 
+## Agent operations
+
+Open **Agents** between Configuration and Settings to inspect Semantic Judge, model eligibility, limits and Standard rates. The page works in Preview and Live. An eligible selection becomes the default for the next unpinned run when a caller opts into Workbench selection. Calibration and resumed runs preserve their pinned profile.
+
+The live panel shows the most recent run, observed token coverage, estimated cost and pending reserve. During a non-streaming invocation, usage appears after the invocation returns. The history separates physical requests from reused checkpoints, and missing usage or cache fields display as unavailable. Selecting a model, opening the page and refreshing the history incur zero provider calls. Follow the [local operator setup](../api/README.md#local-agent-operations) to enable the bridge.
+
+The [browser smoke](scripts/agents-smoke.js) uses a dedicated loopback API, an isolated journal marked by `.ui005-smoke`, a real CLI catalog and controlled events. Set `AGENTS_SMOKE_URL`, `AGENTS_SMOKE_JOURNAL_DIR` and `AGENTS_SMOKE_PLAYWRIGHT` (the installed Playwright `index.mjs`), then run `node scripts/agents-smoke.js`. Never use the operator's actual history directory for this smoke.
+
 ## Start
 
 For the complete local application after the [one-time database setup](../api/README.md#optional-persistent-development-database), run from the repository root:

@@ -11,6 +11,7 @@ import pytest
 from agent_runtime import cli
 from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationResult
 from agent_runtime.runtime import AgentRuntime
+from calibration.controls import DEVELOPMENT_CASES
 
 _ENVELOPE = {
     "schema_version": 1,
@@ -72,6 +73,74 @@ def test_builtin_smoke_is_offline_by_default(tmp_path: Path) -> None:
 
     assert result.error is not None and result.error.code == ErrorCode.EGRESS_DISABLED
     assert result.metadata.requests == 0
+
+
+def test_operations_catalog_and_persisted_selection_use_same_offline_cli(tmp_path: Path) -> None:
+    environment = {**os.environ, "WORKBENCH_AGENT_OPERATIONS_DIR": str(tmp_path)}
+    environment.pop("OPENAI_API_KEY", None)
+    environment.pop("MAF_OPENAI_REASONING_EFFORT", None)
+    command = [sys.executable, "-I", "-m", "agent_runtime"]
+    catalog_run = subprocess.run(
+        [*command, "--operations-catalog"], cwd=tmp_path, env=environment, capture_output=True, check=True, timeout=10
+    )
+    catalog = json.loads(catalog_run.stdout)
+    assert catalog_run.stderr == b""
+    (agent,) = catalog["agents"]
+    primary, alternate = agent["profiles"]
+    assert alternate["profile_id"] == "semantic-review-6.2"
+    assert alternate["qualification"]["state"] == "unqualified"
+    assert primary["max_estimated_input_tokens"] == alternate["max_estimated_input_tokens"] == 16_384
+    assert primary["max_output_tokens"] == alternate["max_output_tokens"] == 32_000
+    assert primary["tariff"]["cached_write"] == "2.50"
+    (tmp_path / "catalog.json").write_bytes(catalog_run.stdout)
+    revision = "selection-" + "b" * 32
+    (tmp_path / "selection.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "scope": "local-operator",
+                "selections": {"semantic-judge": {"profile_id": primary["profile_id"], "revision": revision}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    payload = json.dumps(
+        {
+            "schema_version": 1,
+            "request_id": "operation-cli-test",
+            "agent_id": "semantic-judge",
+            "input": DEVELOPMENT_CASES[0].input,
+        }
+    ).encode()
+    invocation = subprocess.run(
+        [*command, "--use-operations-selection"],
+        input=payload,
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        check=False,
+        timeout=10,
+    )
+    assert invocation.returncode == 1
+    terminal = InvocationResult.model_validate_json(invocation.stdout)
+    assert terminal.profile_id == primary["profile_id"]
+    assert terminal.error is not None and terminal.error.code is ErrorCode.EGRESS_DISABLED
+    assert terminal.metadata.requests == 0
+    (journal,) = (tmp_path / "runs").glob("*.jsonl")
+    events = [json.loads(line) for line in journal.read_text(encoding="utf-8").splitlines()]
+    assert [item["kind"] for item in events] == [
+        "run_queued",
+        "run_started",
+        "call_pending",
+        "call_completed",
+        "case_completed",
+        "run_finished",
+    ]
+    assert events[0]["run"]["selection_revision"] == revision
+    assert events[3]["call"]["requests"] == 0
+    assert events[3]["call"]["usage"] is None
+    assert events[-1]["status"] == "blocked"
+    assert b"operation-cli-test" not in journal.read_bytes()
 
 
 @pytest.mark.parametrize(

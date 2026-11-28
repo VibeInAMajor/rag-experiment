@@ -299,6 +299,7 @@ tasks/evidence/dense-2026-11-24/*
 
 # Local RAG quality experiments: code, datasets, traces and temporary tests.
 .local/evaluation-holdout/
+.local/workbench-agent-operations*/
 !tasks/evidence/dataset-2026-11-24/
 tasks/evidence/dataset-2026-11-24/*
 !tasks/evidence/dataset-2026-11-24/report.md
@@ -320,3 +321,6 @@ tasks/evidence/dataset-semantic-pilot-full-2026-11-28/*
 !tasks/evidence/answerability-phase-a-2026-11-28/
 tasks/evidence/answerability-phase-a-2026-11-28/*
 !tasks/evidence/answerability-phase-a-2026-11-28/report.md
+!tasks/evidence/agent-operations-qualification/
+tasks/evidence/agent-operations-qualification/*
+!tasks/evidence/agent-operations-qualification/report.md

@@ -1,5 +1,17 @@
 import {
   contractRevision,
+  agentRunStatuses,
+  type AgentCatalog,
+  type AgentEvent,
+  type AgentMoney,
+  type AgentProfile,
+  type AgentRun,
+  type AgentRunDetail,
+  type AgentRunPage,
+  type AgentSelection,
+  type AgentSelectionResult,
+  type AgentTariff,
+  type AgentUsage,
   type ConfigurationDocument,
   type ConfigurationValidation,
   type ApiFailure,
@@ -452,6 +464,9 @@ export function decodeCapabilities(value: unknown): BackendCapabilities {
         : { upload_folders: boolean(features.upload_folders) }),
       document_details: boolean(features.document_details),
       jobs: boolean(features.jobs),
+      ...(features.agent_operations === undefined
+        ? {}
+        : { agent_operations: boolean(features.agent_operations) }),
     },
     pdf_ingestion: decodePdfCapabilities(item.pdf_ingestion),
     dependencies: {
@@ -476,6 +491,317 @@ export function validateCursor(value: unknown): string {
   if (typeof value !== "string" || !/^[A-Za-z0-9_.-]{1,512}$/.test(value))
     invalidResponse();
   return value;
+}
+
+function nullable<T>(value: unknown, decode: (input: unknown) => T): T | null {
+  return value == null ? null : decode(value);
+}
+
+function agentCount(value: unknown): number {
+  const count = finiteNumber(value);
+  if (!Number.isSafeInteger(count)) invalidResponse();
+  return count;
+}
+
+function agentPercent(value: unknown): number {
+  const percent = finiteNumber(value);
+  if (percent > 100) invalidResponse();
+  return percent;
+}
+
+function agentMoney(value: unknown): AgentMoney {
+  return nullable(value, (value) => {
+    const amount = text(value, 40);
+    if (
+      !/^\d+(?:\.\d+)?(?:[eE][+-]?\d{1,3})?$/.test(amount) ||
+      !Number.isFinite(Number(amount))
+    )
+      invalidResponse();
+    return amount;
+  });
+}
+
+export function validateAgentProfileId(value: unknown): string {
+  const profile = text(value, 128);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(profile)) invalidResponse();
+  return profile;
+}
+
+function agentIdentity(value: unknown): string {
+  const result = text(value, 160);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:/-]*$/.test(result)) invalidResponse();
+  return result;
+}
+
+function agentTariff(value: unknown): AgentTariff {
+  const item = object(value);
+  const source_url = nullable(item.source_url, (value) => {
+    const href = text(value, 512);
+    if (
+      !/^https:\/\/developers\.openai\.com\/api\/docs\/pricing(?:\.md)?$/.test(
+        href,
+      )
+    )
+      invalidResponse();
+    return href;
+  });
+  return {
+    version: agentIdentity(item.version),
+    provider: agentIdentity(item.provider),
+    model: agentIdentity(item.model),
+    service_tier: agentIdentity(item.service_tier),
+    currency: literal(item.currency, "USD"),
+    unit: literal(item.unit, "per_million_tokens"),
+    ordinary_input: agentMoney(item.ordinary_input),
+    cached_read: agentMoney(item.cached_read),
+    cached_write: agentMoney(item.cached_write),
+    output: agentMoney(item.output),
+    source_url,
+    effective_at: nullable(item.effective_at, timestamp),
+    verified_at: nullable(item.verified_at, timestamp),
+    cache_ttl_seconds: nullable(item.cache_ttl_seconds, positiveInteger),
+    status: choice(item.status, ["verified", "stale", "unknown"]),
+  };
+}
+
+function agentProfile(value: unknown): AgentProfile {
+  const item = object(value);
+  const qualification = object(item.qualification);
+  return {
+    profile_id: validateAgentProfileId(item.profile_id),
+    provider: agentIdentity(item.provider),
+    model: agentIdentity(item.model),
+    modes: uniqueIds(item.modes, 16),
+    reasoning_effort: agentIdentity(item.reasoning_effort),
+    max_estimated_input_tokens: positiveInteger(
+      item.max_estimated_input_tokens,
+    ),
+    max_output_tokens: positiveInteger(item.max_output_tokens),
+    max_request_bytes: nullable(item.max_request_bytes, positiveInteger),
+    max_response_bytes: nullable(item.max_response_bytes, positiveInteger),
+    timeout_seconds: nullable(item.timeout_seconds, finiteNumber),
+    reserve_usd: agentMoney(item.reserve_usd),
+    cache_mode: agentIdentity(item.cache_mode),
+    cache_ttl_seconds: nullable(item.cache_ttl_seconds, positiveInteger),
+    qualification: {
+      state: choice(qualification.state, [
+        "qualified",
+        "unqualified",
+        "blocked",
+        "stale",
+      ]),
+      revision: nullable(qualification.revision, agentIdentity),
+      verified_at: nullable(qualification.verified_at, timestamp),
+      reason: nullable(qualification.reason, agentIdentity),
+    },
+    tariff: nullable(item.tariff, agentTariff),
+    selectable: boolean(item.selectable),
+  };
+}
+
+function agentSelection(value: unknown): AgentSelection {
+  const item = object(value);
+  return {
+    profile_id: validateAgentProfileId(item.profile_id),
+    revision: agentIdentity(item.revision),
+  };
+}
+
+export function decodeAgentCatalog(value: unknown): AgentCatalog {
+  const item = object(value);
+  const agents = array(item.agents, 16).map((value) => {
+    const agent = object(value);
+    const profiles = array(agent.profiles, 16).map(agentProfile);
+    const default_profile_id = validateAgentProfileId(agent.default_profile_id);
+    const selection = agentSelection(agent.selection);
+    if (
+      new Set(profiles.map((profile) => profile.profile_id)).size !==
+        profiles.length ||
+      !profiles.some((profile) => profile.profile_id === default_profile_id) ||
+      !profiles.some((profile) => profile.profile_id === selection.profile_id)
+    )
+      invalidResponse();
+    return {
+      agent_id: identifier(agent.agent_id),
+      display_name: text(agent.display_name, 100),
+      runtime_revision: agentIdentity(agent.runtime_revision),
+      modes: uniqueIds(agent.modes, 16),
+      default_profile_id,
+      selection,
+      profiles,
+    };
+  });
+  if (new Set(agents.map((agent) => agent.agent_id)).size !== agents.length)
+    invalidResponse();
+  return {
+    ...meta(item),
+    scope: literal(item.scope, "local-operator"),
+    history_available: boolean(item.history_available),
+    agents,
+  };
+}
+
+export function decodeAgentSelection(
+  value: unknown,
+  expectedAgent: string,
+  expectedProfile: string,
+): AgentSelectionResult {
+  const item = object(value);
+  const selection = agentSelection(item.selection);
+  if (selection.profile_id !== expectedProfile) invalidResponse();
+  return {
+    ...meta(item),
+    scope: literal(item.scope, "local-operator"),
+    agent_id: literal(item.agent_id, expectedAgent),
+    selection,
+  };
+}
+
+function agentUsage(value: unknown): AgentUsage {
+  const item = object(value);
+  return {
+    input_tokens: nullable(item.input_tokens, agentCount),
+    ordinary_input_tokens: nullable(item.ordinary_input_tokens, agentCount),
+    cached_read_tokens: nullable(item.cached_read_tokens, agentCount),
+    cached_write_tokens: nullable(item.cached_write_tokens, agentCount),
+    output_tokens: nullable(item.output_tokens, agentCount),
+    reasoning_tokens: nullable(item.reasoning_tokens, agentCount),
+    total_tokens: nullable(item.total_tokens, agentCount),
+  };
+}
+
+function agentCoverage(value: unknown) {
+  const item = object(value);
+  const known_calls = agentCount(item.known_calls);
+  const total_calls = agentCount(item.total_calls);
+  if (known_calls > total_calls) invalidResponse();
+  return { known_calls, total_calls };
+}
+
+function agentRun(value: unknown): AgentRun {
+  const item = object(value);
+  return {
+    run_id: identifier(item.run_id),
+    agent_id: identifier(item.agent_id),
+    mode: agentIdentity(item.mode),
+    origin: choice(item.origin, ["evaluation", "calibration"]),
+    profile_id: validateAgentProfileId(item.profile_id),
+    model: agentIdentity(item.model),
+    provider: agentIdentity(item.provider),
+    runtime_revision: agentIdentity(item.runtime_revision),
+    prompt_revision: nullable(item.prompt_revision, agentIdentity),
+    schema_revision: nullable(item.schema_revision, agentIdentity),
+    cache_mode: agentIdentity(item.cache_mode),
+    tariff: nullable(item.tariff, agentTariff),
+    planned_cases: nullable(item.planned_cases, positiveInteger),
+    budget_usd: agentMoney(item.budget_usd),
+    queued_at: timestamp(item.queued_at),
+    started_at: nullable(item.started_at, timestamp),
+    finished_at: nullable(item.finished_at, timestamp),
+    status: choice(item.status, agentRunStatuses),
+    stage: nullable(item.stage, agentIdentity),
+    last_sequence: positiveInteger(item.last_sequence),
+    completed_cases: agentCount(item.completed_cases),
+    reused_cases: agentCount(item.reused_cases),
+    failed_cases: agentCount(item.failed_cases ?? 0),
+    blocked_cases: agentCount(item.blocked_cases ?? 0),
+    actual_models: array(item.actual_models ?? [], 16).map(agentIdentity),
+    selection_revision: nullable(item.selection_revision, agentIdentity),
+    physical_requests: agentCount(item.physical_requests),
+    pending_calls: agentCount(item.pending_calls),
+    cache_observed_requests: agentCount(item.cache_observed_requests),
+    cache_hit_requests: agentCount(item.cache_hit_requests),
+    cache_hit_percent: nullable(item.cache_hit_percent, agentPercent),
+    cache_read_percent: nullable(item.cache_read_percent, agentPercent),
+    usage: nullable(item.usage, agentUsage),
+    usage_coverage: agentCoverage(item.usage_coverage),
+    estimated_cost_usd: agentMoney(item.estimated_cost_usd),
+    cost_coverage: agentCoverage(item.cost_coverage),
+    pending_reserve_usd: agentMoney(item.pending_reserve_usd),
+  };
+}
+
+export function decodeAgentRunPage(value: unknown): AgentRunPage {
+  const item = object(value);
+  const runs = array(item.runs, 100).map(agentRun);
+  if (new Set(runs.map((run) => run.run_id)).size !== runs.length)
+    invalidResponse();
+  return {
+    ...meta(item),
+    scope: literal(item.scope, "local-operator"),
+    runs,
+    next_cursor: nullable(item.next_cursor, validateCursor),
+  };
+}
+
+function agentEvent(value: unknown, runId: string): AgentEvent {
+  const item = object(value);
+  literal(item.schema_version, 1);
+  literal(item.scope, "local-operator");
+  return {
+    run_id: literal(item.run_id, runId),
+    sequence: positiveInteger(item.sequence),
+    timestamp: timestamp(item.timestamp),
+    kind: choice(item.kind, [
+      "run_queued",
+      "run_started",
+      "stage_changed",
+      "call_pending",
+      "call_completed",
+      "case_completed",
+      "checkpoint_reused",
+      "run_finished",
+    ]),
+    stage: nullable(item.stage, agentIdentity),
+    status: nullable(item.status, (value) => choice(value, agentRunStatuses)),
+    reason: nullable(item.reason, agentIdentity),
+    case_id: nullable(item.case_id, identifier),
+    call: nullable(item.call, (value) => {
+      const call = object(value);
+      return {
+        call_id: identifier(call.call_id),
+        case_id: identifier(call.case_id),
+        mode: nullable(call.mode, agentIdentity),
+        actual_model: nullable(call.actual_model, agentIdentity),
+        provider_request_id: nullable(call.provider_request_id, identifier),
+        requests: nullable(call.requests, (value) =>
+          agentCount(value) > 1 ? invalidResponse() : agentCount(value),
+        ),
+        elapsed_ms: nullable(call.elapsed_ms, agentCount),
+        usage: nullable(call.usage, agentUsage),
+        estimated_cost_usd: agentMoney(call.estimated_cost_usd),
+        reserve_usd: agentMoney(call.reserve_usd),
+      };
+    }),
+  };
+}
+
+export function decodeAgentRunDetail(
+  value: unknown,
+  runId: string,
+): AgentRunDetail {
+  const item = object(value);
+  const run = agentRun(item.run);
+  if (run.run_id !== runId) invalidResponse();
+  const events = array(item.events, 100).map((entry) =>
+    agentEvent(entry, runId),
+  );
+  if (
+    events.some(
+      (event, index) =>
+        event.sequence > run.last_sequence ||
+        (index > 0 && event.sequence !== events[index - 1].sequence + 1),
+    )
+  )
+    invalidResponse();
+  return {
+    ...meta(item),
+    scope: literal(item.scope, "local-operator"),
+    run,
+    events,
+    next_cursor: nullable(item.next_cursor, validateCursor),
+    has_more: boolean(item.has_more),
+  };
 }
 
 export function decodeWorkspaces(value: unknown): WorkspacePage {

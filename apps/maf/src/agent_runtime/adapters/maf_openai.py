@@ -3,7 +3,6 @@
 import json
 import re
 from collections.abc import Callable
-from typing import Final
 
 import httpx2
 from agent_framework import Agent
@@ -13,7 +12,7 @@ from agent_framework.openai import OpenAIChatClient, OpenAIChatOptions
 from openai import APITimeoutError, AsyncOpenAI
 from pydantic import BaseModel
 
-from agent_runtime.configuration import ModelProfile
+from agent_runtime.configuration import CACHE_MODE, CACHE_TTL, ModelProfile
 from agent_runtime.contracts import ErrorCode, Usage, decode_json
 from agent_runtime.runtime import FailureStage, ProviderObservation, RuntimeFailure
 
@@ -21,8 +20,6 @@ _BASE_URL = "https://api.openai.com/v1"
 _RESPONSES_URL = f"{_BASE_URL}/responses"
 _REQUEST_ID = re.compile(r"req_[a-zA-Z0-9_-]{1,120}")
 _MODEL_ID = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}")
-_CACHE_MODE: Final = "explicit"
-_CACHE_TTL: Final = "30m"
 
 
 class MafOpenAIRuntime:
@@ -56,7 +53,7 @@ class MafOpenAIRuntime:
             "reasoning": {"effort": profile.reasoning_effort},
             "max_tokens": profile.max_output_tokens,
             "service_tier": "default",
-            "prompt_cache_options": {"mode": _CACHE_MODE, "ttl": _CACHE_TTL},
+            "prompt_cache_options": {"mode": CACHE_MODE, "ttl": CACHE_TTL},
         }
         try:
             disable_instrumentation()
@@ -170,7 +167,7 @@ class _ResponsesTransport(httpx2.AsyncBaseTransport):
             "instructions": self._instructions,
             "max_output_tokens": self._profile.max_output_tokens,
             "model": self._profile.model,
-            "prompt_cache_options": {"mode": _CACHE_MODE, "ttl": _CACHE_TTL},
+            "prompt_cache_options": {"mode": CACHE_MODE, "ttl": CACHE_TTL},
             "reasoning": {"effort": self._profile.reasoning_effort},
             "service_tier": "default",
             "store": False,

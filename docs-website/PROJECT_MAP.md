@@ -37,6 +37,8 @@
 
 **Configuration editor update:** `App.tsx` owns the wrench entry below Runs; `ConfigurationView.tsx`, `YamlEditor.tsx` and `ConfirmationDialog.tsx` own the lazy editing surface and unsaved-change lifecycle. Existing client/DTOs add direct local configuration requests. `configuration/configuration.py` persists the selected YAML with atomic CAS/backups; `api/configuration_http.py` reuses the local trusted-origin boundary and a non-secret request-intent header. Operator login, keys and the Application-wide badge were removed at the user's explicit request. Configuration parsing remains owned by `configuration/document_processing.py`. See the [operator guide](docs/architecture/document-processing-configuration.md#edit-configuration-in-workbench) and [UI verification record](../tasks/completed/TASK-UI-CONFIG-001-yaml-configuration-editor.md).
 
+**Agent operations:** The Agents view reads an optional local-operator catalog and journal in Preview and Live. Workbench owns the typed API, bounded history and persisted profile selection. Standalone MAF and the evaluation caller own the catalog and safe invocation events. The agent panel shows observed token usage, estimated cost, pending reserve and checkpoint reuse. [Operator setup](../apps/workbench/api/README.md#local-agent-operations) · [TASK-UI-005](../tasks/TASK-UI-005-agent-operations-model-selection-and-live-usage.md)
+
 ```text
 rag-experiment/
 ├── AGENTS.md                       # Existing Haystack-wide agent instructions

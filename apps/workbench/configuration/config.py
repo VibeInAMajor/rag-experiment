@@ -33,6 +33,7 @@ class ApiSettings(BaseModel):
     document_processing: DocumentProcessingSettings = Field(default_factory=DocumentProcessingSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     configuration_file: str | None = Field(default=None, repr=False)
+    agent_operations_directory: str | None = Field(default=None, repr=False)
     configuration_language_override: str | None = None
     allowed_origins: tuple[str, ...] = (
         "http://localhost:5173",
@@ -56,7 +57,7 @@ class ApiSettings(BaseModel):
             raise ValueError("Configuration storage requires an absolute local file")
         return str(Path(value).resolve())
 
-    @field_validator("local_source_root")
+    @field_validator("local_source_root", "agent_operations_directory")
     @classmethod
     def _validate_local_source_root(cls, value: str | None) -> str | None:
         if value is None:
@@ -68,7 +69,7 @@ class ApiSettings(BaseModel):
             or value.startswith(("\\\\", "//"))
             or any(ord(character) < 32 for character in value)
         ):
-            raise ValueError("Local source root must be an explicit absolute local directory")
+            raise ValueError("An explicit absolute local directory is required")
         return value
 
     @field_validator("database_dsn")
@@ -151,4 +152,7 @@ class ApiSettings(BaseModel):
         local_root = environment.get("WORKBENCH_LOCAL_SOURCE_ROOT")
         if local_root is not None:
             values["local_source_root"] = local_root
+        operations_directory = environment.get("WORKBENCH_AGENT_OPERATIONS_DIR")
+        if operations_directory is not None:
+            values["agent_operations_directory"] = operations_directory
         return cls.model_validate(values)

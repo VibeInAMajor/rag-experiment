@@ -17,6 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
+from apps.workbench.api.agents_http import register_agent_routes
 from apps.workbench.api.boundary import RequestBoundary, _ClientDisconnected, error_response, request_meta
 from apps.workbench.api.configuration_http import register_configuration_routes
 from apps.workbench.api.database_dependency import DatabaseDependency, create_database_dependency
@@ -369,6 +370,7 @@ class _Routes:
                 upload_folders=ingestion_available,
                 document_details=details_available,
                 jobs=details_available,
+                agent_operations=True if self.configuration.agent_operations_directory is not None else None,
             ),
             dependencies=Dependencies(database=dependency),
             pdf_ingestion=PdfIngestionCapabilities(
@@ -699,4 +701,5 @@ def create_app(
         ),
     )
     register_configuration_routes(app, settings=configuration)
+    register_agent_routes(app, settings=configuration)
     return app

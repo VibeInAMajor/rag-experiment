@@ -187,8 +187,34 @@ Settings are parsed before startup; malformed or nonlocal configuration fails in
 | `WORKBENCH_DOCUMENT_PROCESSING_CONFIG` | `apps/workbench/document_processing.yaml` | Alternate bounded local document-processing YAML; relative to repository root |
 | `WORKBENCH_DEFAULT_LANGUAGE` | YAML value (`en` shipped) | Explicit `en` or `ru`; synchronizes default and sentence language |
 | `WORKBENCH_LOCAL_SOURCE_ROOT` | Unset (local originals unavailable) | Explicit absolute local directory; same-machine interactive Windows for native selection |
+| `WORKBENCH_AGENT_OPERATIONS_DIR` | Unset (agent operations unavailable) | An absolute local directory shared with the standalone MAF caller. Use a regular directory under the operator's account. |
 
-Administrator-only commands use `WORKBENCH_DB_ADMIN_DSN` and `WORKBENCH_DB_APP_PASSWORD`, loaded with `-IncludeAdmin`. Keep those out of the API terminal. There is no feature-enable switch; actual storage, corpus and pipeline binding must qualify.
+Administrator-only commands use `WORKBENCH_DB_ADMIN_DSN` and `WORKBENCH_DB_APP_PASSWORD`, loaded with `-IncludeAdmin`. Keep those out of the API terminal. Live search requires qualified storage, corpus and pipeline binding.
+
+### Local agent operations
+
+The optional Agents view uses the API in Preview and Live and works without the search database. From the repository root in PowerShell, generate the standalone catalog and start Workbench from the same terminal.
+
+```powershell
+$ops = New-Item -ItemType Directory -Force -Path .local/workbench-agent-operations
+$env:WORKBENCH_AGENT_OPERATIONS_DIR = $ops.FullName
+New-Item -ItemType Directory -Force -Path (Join-Path $ops.FullName 'runs') | Out-Null
+Push-Location apps/maf
+try {
+    $catalog = hatch run run --operations-catalog
+    if ($LASTEXITCODE -ne 0) { throw 'The MAF catalog could not be read.' }
+    $catalog | Set-Content -LiteralPath (Join-Path $ops.FullName 'catalog.json') -Encoding utf8
+} finally {
+    Pop-Location
+}
+hatch run workbench-api:serve
+```
+
+Start the web UI with its existing same-origin proxy. Restart an existing API process after setting the directory. Export the same directory variable in the terminal that launches the evaluator or MAF calibration. See the [MAF invocation and discovery commands](../../maf/README.md#agent-operations).
+
+The server exposes `GET /api/v1/agents`, `GET /api/v1/agents/runs` and `GET /api/v1/agents/runs/{run_id}`. The list supports scoped cursor pagination and agent, model and status filters. A detail cursor advances through committed activity. `PUT /api/v1/agents/{agent_id}/selection` requires an allowed Origin, `X-Workbench-Request: agent-operations`, `profile_id` and the observed `expected_revision`. A mismatch requires refreshing the catalog. These routes make zero provider requests.
+
+Only the local operator can access the bridge. The history keeps up to 100 terminal metadata records from the last 30 days. A record is limited to 8 MiB per run and 16 KiB per event. The writer prunes old terminal records when a run starts. A run with no new activity for five minutes and no terminal event is shown as interrupted. A later observation can resolve its status. Raw reports and checkpoints stay with their original owners. Removing the environment variable and restarting the API disables the bridge.
 
 The default pool uses one to four connections, at most 16 waiters, and three-second acquisition/statement/lock timeouts. Each search reads its persisted workspace generation and active-version hits in one read-only REPEATABLE READ transaction, through a fresh Haystack pipeline with genuine async SQL. Search snapshot qualification no longer enumerates and hashes every active chunk. Cancellation reaches transaction cleanup before its admission slot is released. Synchronous component execution explicitly refuses this loop-bound pool. The [generation operations guide](../../../docs-website/docs/architecture/persisted-index-generations.md) covers migration, reconciliation, benchmark boundaries and recovery.
 

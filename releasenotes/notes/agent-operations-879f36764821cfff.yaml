@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Workbench adds an optional ``Agents`` page for Semantic Judge. Operators can
+    inspect model eligibility, runtime limits, and token rates, persist an
+    eligible profile for future unpinned runs, and monitor observed token usage
+    and estimated cost through the local run history. Enable the bridge with
+    ``WORKBENCH_AGENT_OPERATIONS_DIR`` and a standalone MAF catalog.

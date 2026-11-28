@@ -7,6 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import {
+  Bot,
   Check,
   CircleAlert,
   Command,
@@ -66,6 +67,11 @@ import "./views/views.css";
 const ConfigurationView = lazy(() =>
   import("./views/ConfigurationView").then((module) => ({
     default: module.ConfigurationView,
+  })),
+);
+const AgentsView = lazy(() =>
+  import("./views/AgentsView").then((module) => ({
+    default: module.AgentsView,
   })),
 );
 const PipelineEditor = lazy(() =>
@@ -412,6 +418,7 @@ export function App() {
                 { id: "documents", label: "Documents", icon: FileText },
                 { id: "runs", label: "Runs", icon: Play },
                 { id: "configuration", label: "Configuration", icon: Wrench },
+                { id: "agents", label: "Agents", icon: Bot },
               ] as const
             ).map((item) => (
               <button
@@ -444,6 +451,13 @@ export function App() {
           </div>
         </nav>
         <main id="main-content" className="main-content" tabIndex={-1}>
+          {page === "agents" && (
+            <Suspense
+              fallback={<div className="result-empty">Loading agents…</div>}
+            >
+              <AgentsView />
+            </Suspense>
+          )}
           {page === "configuration" && (
             <Suspense
               fallback={

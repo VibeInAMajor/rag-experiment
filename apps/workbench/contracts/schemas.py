@@ -1,9 +1,21 @@
 """Versioned HTTP discovery contracts independent of provider implementations."""
 
+from collections.abc import Sequence
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, StringConstraints, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 Identifier = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,128}$")]
 
@@ -128,6 +140,7 @@ class Features(ContractModel):
     upload_folders: bool = False
     document_details: bool = False
     jobs: bool = False
+    agent_operations: Literal[True] | None = None
 
 
 class DatabaseDependencyStatus(ContractModel):
@@ -165,6 +178,327 @@ class CapabilitiesResponse(Meta):
     features: Features = Field(default_factory=Features)
     dependencies: Dependencies = Field(default_factory=Dependencies)
     pdf_ingestion: PdfIngestionCapabilities = Field(default_factory=PdfIngestionCapabilities)
+
+
+def _opaque_agent_id(value: str) -> str:
+    if value.lower().startswith(("sk-", "bearer", "token_", "apikey", "api-key", "password", "secret")):
+        raise ValueError("Use an opaque operations identifier")
+    return value
+
+
+def _utc_timestamp(value: str) -> str:
+    datetime.fromisoformat(value)
+    return value
+
+
+def _public_price_source(value: str) -> str:
+    source = urlsplit(value)
+    hostname = source.hostname
+    if (
+        source.scheme != "https"
+        or hostname is None
+        or "." not in hostname
+        or source.netloc != hostname
+        or source.query
+        or source.fragment
+    ):
+        raise ValueError("A price source must be a public HTTPS document URL")
+    return value
+
+
+AgentScope = Literal["local-operator"]
+AgentKey = Annotated[
+    str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"), AfterValidator(_opaque_agent_id)
+]
+AgentRevision = Annotated[
+    str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_./:-]{0,127}$"), AfterValidator(_opaque_agent_id)
+]
+AgentRunId = Annotated[
+    str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"), AfterValidator(_opaque_agent_id)
+]
+AgentCount = Annotated[int, Field(ge=0, le=2**53 - 1)]
+AgentSequence = Annotated[int, Field(ge=1, le=100_000)]
+AgentMoney = Annotated[str, StringConstraints(pattern=r"^(0|[1-9][0-9]{0,17})(\.[0-9]{1,18})?$")]
+AgentTimestamp = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|\+00:00)$"),
+    AfterValidator(_utc_timestamp),
+]
+AgentPriceSource = Annotated[
+    str, StringConstraints(max_length=512, pattern=r"^https://[a-zA-Z0-9./_-]+$"), AfterValidator(_public_price_source)
+]
+AgentRunStatus = Literal["queued", "running", "completed", "failed", "cancelled", "interrupted", "blocked"]
+AgentStage = Literal["queued", "admission", "provider", "output_validation", "evidence_validation", "finalizing"]
+AgentEventKind = Literal[
+    "run_queued",
+    "run_started",
+    "stage_changed",
+    "call_pending",
+    "call_completed",
+    "case_completed",
+    "checkpoint_reused",
+    "run_finished",
+]
+AgentReason = Literal[
+    "INVALID_INPUT",
+    "UNKNOWN_AGENT",
+    "UNKNOWN_PROFILE",
+    "UNSUPPORTED_CAPABILITY",
+    "EGRESS_DISABLED",
+    "MISSING_CREDENTIALS",
+    "TIMEOUT",
+    "RATE_LIMITED",
+    "PROVIDER_FAILURE",
+    "REFUSAL",
+    "INCOMPLETE_OUTPUT",
+    "INVALID_OUTPUT",
+    "BUDGET_EXCEEDED",
+    "CANCELLED",
+    "RESPONSE_TOO_LARGE",
+    "PRIVACY_POLICY",
+    "CONFIGURATION_ERROR",
+    "INTERRUPTED",
+    "CHECKPOINT_REUSED",
+    "JOURNAL_UNAVAILABLE",
+    "MODEL_MISMATCH",
+]
+
+
+class AgentQualification(ContractModel):
+    state: Literal["qualified", "unqualified", "blocked", "stale"]
+    revision: AgentKey | None = None
+    verified_at: AgentTimestamp | None = None
+    reason: (
+        Literal[
+            "historical_pass",
+            "joint_pass",
+            "offline_only",
+            "capacity_unverified",
+            "tariff_unverified",
+            "stale_evidence",
+        ]
+        | None
+    ) = None
+
+
+class AgentTariff(ContractModel):
+    version: AgentKey
+    provider: AgentKey
+    model: AgentKey
+    service_tier: AgentKey
+    currency: Literal["USD"] = "USD"
+    unit: Literal["per_million_tokens"] = "per_million_tokens"
+    ordinary_input: AgentMoney | None = None
+    cached_read: AgentMoney | None = None
+    cached_write: AgentMoney | None = None
+    output: AgentMoney | None = None
+    source_url: AgentPriceSource | None = None
+    effective_at: AgentTimestamp | None = None
+    verified_at: AgentTimestamp | None = None
+    cache_ttl_seconds: AgentCount | None = None
+    status: Literal["verified", "stale", "unknown"]
+
+
+class AgentProfileDefinition(ContractModel):
+    profile_id: AgentKey
+    provider: AgentKey
+    model: AgentKey
+    modes: list[AgentKey] = Field(min_length=1, max_length=24)
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh"] | None = None
+    max_estimated_input_tokens: AgentCount = Field(gt=0)
+    max_output_tokens: AgentCount = Field(gt=0)
+    max_request_bytes: AgentCount | None = None
+    max_response_bytes: AgentCount | None = None
+    timeout_seconds: AgentCount | None = None
+    reserve_usd: AgentMoney | None = None
+    cache_mode: AgentKey
+    cache_ttl_seconds: AgentCount | None = None
+    qualification: AgentQualification
+    tariff: AgentTariff | None = None
+
+    @model_validator(mode="after")
+    def _tariff_identity(self) -> "AgentProfileDefinition":
+        if self.tariff is not None and (self.tariff.provider, self.tariff.model) != (self.provider, self.model):
+            raise ValueError("A profile tariff must match the configured provider and model")
+        return self
+
+
+class AgentDefinition(ContractModel):
+    agent_id: Identifier
+    display_name: Annotated[str, StringConstraints(pattern=r"^[A-Za-z][A-Za-z0-9 ._-]{0,79}$")]
+    runtime_revision: AgentKey
+    modes: list[AgentKey] = Field(min_length=1, max_length=24)
+    default_profile_id: AgentKey
+    profiles: Sequence[AgentProfileDefinition] = Field(min_length=1, max_length=24)
+
+    @model_validator(mode="after")
+    def _references(self) -> "AgentDefinition":
+        ids = {profile.profile_id for profile in self.profiles}
+        if self.default_profile_id not in ids or len(ids) != len(self.profiles):
+            raise ValueError("Agent profiles must have distinct IDs and a registered default")
+        if any(not set(profile.modes).issubset(self.modes) for profile in self.profiles):
+            raise ValueError("Agent profiles must use registered modes")
+        return self
+
+
+class AgentSelection(ContractModel):
+    profile_id: AgentKey
+    revision: Identifier
+
+
+class AgentProfileItem(AgentProfileDefinition):
+    selectable: bool
+
+
+class AgentItem(AgentDefinition):
+    profiles: list[AgentProfileItem] = Field(min_length=1, max_length=24)
+    selection: AgentSelection
+
+
+class AgentCatalogResponse(Meta):
+    scope: AgentScope
+    agents: list[AgentItem]
+    history_available: bool
+
+
+class AgentSelectionRequest(ContractModel):
+    profile_id: AgentKey
+    expected_revision: Identifier
+
+
+class AgentSelectionResponse(Meta):
+    scope: AgentScope
+    agent_id: Identifier
+    selection: AgentSelection
+
+
+class AgentUsage(ContractModel):
+    input_tokens: AgentCount | None = None
+    ordinary_input_tokens: AgentCount | None = None
+    cached_read_tokens: AgentCount | None = None
+    cached_write_tokens: AgentCount | None = None
+    output_tokens: AgentCount | None = None
+    reasoning_tokens: AgentCount | None = None
+    total_tokens: AgentCount | None = None
+
+
+class AgentCall(ContractModel):
+    call_id: AgentKey
+    case_id: AgentKey
+    mode: AgentKey | None = None
+    actual_model: AgentKey | None = None
+    provider_request_id: AgentKey | None = None
+    requests: Literal[0, 1] | None = None
+    elapsed_ms: AgentCount | None = None
+    usage: AgentUsage | None = None
+    estimated_cost_usd: AgentMoney | None = None
+    reserve_usd: AgentMoney | None = None
+
+    @field_validator("requests", mode="before")
+    @classmethod
+    def _integer_request_count(cls, value: object) -> object:
+        if value is not None and type(value) is not int:
+            raise ValueError("Physical requests must be an integer")
+        return value
+
+
+class AgentRunIdentity(ContractModel):
+    agent_id: Identifier
+    mode: AgentKey
+    origin: Literal["evaluation", "calibration"]
+    profile_id: AgentKey
+    model: AgentKey
+    provider: AgentKey
+    runtime_revision: AgentKey
+    prompt_revision: AgentRevision | None
+    schema_revision: AgentRevision | None
+    cache_mode: AgentKey
+    tariff: AgentTariff | None = None
+    selection_revision: Identifier | None = None
+    planned_cases: AgentCount | None = None
+    budget_usd: AgentMoney | None = None
+
+
+class AgentEvent(ContractModel):
+    schema_version: Literal[1]
+    scope: AgentScope
+    run_id: AgentRunId
+    sequence: AgentSequence
+    timestamp: AgentTimestamp
+    kind: AgentEventKind
+    stage: AgentStage | None = None
+    status: AgentRunStatus | None = None
+    reason: AgentReason | None = None
+    case_id: AgentKey | None = None
+    run: AgentRunIdentity | None = None
+    call: AgentCall | None = None
+
+    @model_validator(mode="after")
+    def _event_payload(self) -> "AgentEvent":
+        if (self.kind == "run_queued") != (self.run is not None):
+            raise ValueError("A queued run requires its frozen identity")
+        if (self.kind in {"call_pending", "call_completed"}) != (self.call is not None):
+            raise ValueError("Call events require a call record")
+        if self.kind in {"run_finished", "call_completed"} and self.status not in {
+            "completed",
+            "failed",
+            "cancelled",
+            "interrupted",
+            "blocked",
+        }:
+            raise ValueError("A terminal event requires a terminal status")
+        if (
+            self.kind == "call_pending"
+            and self.call is not None
+            and any(value is not None for value in (self.call.requests, self.call.usage, self.call.estimated_cost_usd))
+        ):
+            raise ValueError("A pending call cannot report terminal usage")
+        return self
+
+
+class AgentCoverage(ContractModel):
+    known_calls: AgentCount
+    total_calls: AgentCount
+
+
+class AgentRunItem(AgentRunIdentity):
+    run_id: AgentRunId
+    status: AgentRunStatus
+    stage: AgentStage
+    queued_at: AgentTimestamp
+    started_at: AgentTimestamp | None
+    finished_at: AgentTimestamp | None
+    last_sequence: AgentSequence
+    completed_cases: AgentCount
+    failed_cases: AgentCount
+    blocked_cases: AgentCount
+    reused_cases: AgentCount
+    physical_requests: AgentCount
+    pending_calls: AgentCount
+    cache_observed_requests: AgentCount
+    cache_hit_requests: AgentCount
+    cache_hit_percent: float | None = Field(ge=0, le=100, allow_inf_nan=False)
+    cache_read_percent: float | None = Field(ge=0, le=100, allow_inf_nan=False)
+    actual_models: list[AgentKey]
+    usage: AgentUsage
+    usage_coverage: AgentCoverage
+    estimated_cost_usd: AgentMoney | None
+    cost_coverage: AgentCoverage
+    pending_reserve_usd: AgentMoney | None
+
+
+class AgentRunPage(Meta):
+    scope: AgentScope
+    runs: list[AgentRunItem]
+    next_cursor: str | None
+
+
+class AgentRunDetail(Meta):
+    scope: AgentScope
+    run: AgentRunItem
+    events: list[AgentEvent]
+    next_cursor: str
+    has_more: bool
 
 
 class SearchRequest(ContractModel):

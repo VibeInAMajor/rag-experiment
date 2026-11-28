@@ -20,6 +20,8 @@ from agent_runtime.agents.semantic_judge.instructions import INSTRUCTIONS
 from agent_runtime.composition import create_runtime
 from agent_runtime.configuration import PRICING_VERSION, SEMANTIC_REVIEW_PROFILE, ModelProfile, RunPolicy, load_profiles
 from agent_runtime.contracts import MAX_REQUEST_BYTES, ErrorCode, InvocationRequest, InvocationResult
+from agent_runtime.operations import begin_call, call_status, finish_call, run_identity
+from agent_runtime.operations_journal import OPERATIONS_DIR_ENV, OperationsJournal
 from agent_runtime.runtime import AgentApplication, ProviderObservation
 from calibration.controls import CASES, DEVELOPMENT_CASES, CalibrationCase
 from calibration.scoring import GRADE_PERCENT, OTHER_MODE_PERCENT, SUPPORT_PERCENT, score_case, summarize
@@ -62,7 +64,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         with args.report.open("x", encoding="utf-8", newline="\n") as report:
             _write({"event": "manifest", **manifest}, stream=report)
-            summary = asyncio.run(_run_live(cases, application=app, report=report, development=args.development))
+            journal = OperationsJournal.start(
+                os.environ.get(OPERATIONS_DIR_ENV),
+                run_identity(
+                    profile, origin="calibration", mode="batch", planned_cases=len(cases), budget=_MAX_RESERVED_COST
+                ),
+            )
+            try:
+                summary = asyncio.run(
+                    _run_live(
+                        cases,
+                        application=app,
+                        report=report,
+                        development=args.development,
+                        journal=journal,
+                        reserve=profile.estimated_max_cost_usd,
+                    )
+                )
+            except KeyboardInterrupt:
+                if journal:
+                    journal.emit("run_finished", status="cancelled", reason="CANCELLED")
+                raise
+            except OSError:
+                if journal:
+                    journal.emit("run_finished", status="interrupted", reason="INTERRUPTED")
+                raise
     except FileExistsError:
         _write({"status": "REPORT_EXISTS"})
         return 1
@@ -155,17 +181,28 @@ async def _preflight(
 
 
 async def _run_live(
-    cases: Sequence[CalibrationCase], *, application: AgentApplication, report: TextIO, development: bool
+    cases: Sequence[CalibrationCase],
+    *,
+    application: AgentApplication,
+    report: TextIO,
+    development: bool,
+    journal: OperationsJournal | None = None,
+    reserve: Decimal | None = None,
 ) -> dict[str, object]:
     loop = asyncio.get_running_loop()
     deadline = loop.time() + _DEADLINE_SECONDS
     results: list[InvocationResult] = []
     stop_reason = None
+    terminal_status = "completed"
+    terminal_reason: ErrorCode | str | None = None
     for case in cases:
         if loop.time() >= deadline:
             stop_reason = "RUN_DEADLINE"
+            terminal_status, terminal_reason = "interrupted", ErrorCode.TIMEOUT
             break
         observation = ProviderObservation()
+        mode = str(case.input["mode"])
+        call = begin_call(journal, mode=mode, reserve=reserve) if journal and reserve is not None else None
         try:
             async with asyncio.timeout_at(deadline):
                 result = await application.invoke(
@@ -176,7 +213,10 @@ async def _run_live(
                 )
         except TimeoutError:
             stop_reason = "RUN_DEADLINE"
+            terminal_status, terminal_reason = "interrupted", ErrorCode.TIMEOUT
             break
+        if journal and call:
+            finish_call(journal, call, result, stage=observation.failure_stage)
         results.append(result)
         score = score_case(case, result)
         record = result.model_dump(mode="json")
@@ -209,9 +249,11 @@ async def _run_live(
         )
         if result.error is not None and result.error.code in _STOP_ERRORS:
             stop_reason = result.error.code.value
+            terminal_status, terminal_reason = call_status(result.error.code), result.error.code
             break
         if result.metadata.requests and result.metadata.model not in {None, result.metadata.configured_model}:
             stop_reason = "UNEXPECTED_PROVIDER_MODEL"
+            terminal_status, terminal_reason = "failed", "MODEL_MISMATCH"
             break
 
     scores = [score_case(case, results[index] if index < len(results) else None) for index, case in enumerate(cases)]
@@ -233,6 +275,10 @@ async def _run_live(
         **summary,
     }
     _write(summary_record, stream=report)
+    if journal:
+        if summary["status"] == "NO_GO" and terminal_status == "completed":
+            terminal_status = "failed"
+        journal.emit("run_finished", stage="finalizing", status=terminal_status, reason=terminal_reason)
     return summary_record
 
 

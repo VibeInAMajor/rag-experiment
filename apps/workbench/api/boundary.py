@@ -80,6 +80,18 @@ def _configuration_path(scope: Scope) -> bool:
     return scope["path"] in {"/api/v1/configuration", "/api/v1/configuration/validate"}
 
 
+def _agent_selection_path(scope: Scope) -> bool:
+    return re.fullmatch(r"/api/v1/agents/[^/]+/selection", scope["path"]) is not None
+
+
+def _local_settings_path(scope: Scope) -> bool:
+    return _configuration_path(scope) or _agent_selection_path(scope)
+
+
+def _agent_operations_path(scope: Scope) -> bool:
+    return scope["path"] == "/api/v1/agents" or scope["path"].startswith("/api/v1/agents/")
+
+
 def _list_path(scope: Scope) -> bool:
     return (
         scope["path"] == "/api/v1/workspaces"
@@ -92,7 +104,7 @@ def _correlated_headers(
     scope: Scope, meta: Meta, allowed_origin: str | None, existing: list[tuple[bytes, bytes]]
 ) -> list[tuple[bytes, bytes]]:
     outgoing = [*existing, (b"x-request-id", meta.request_id.encode("ascii"))]
-    if _configuration_path(scope):
+    if _configuration_path(scope) or _agent_operations_path(scope):
         outgoing.append((b"cache-control", b"no-store"))
     if allowed_origin is not None:
         outgoing.extend(
@@ -169,7 +181,7 @@ class RequestBoundary:
                 scope["method"] == "POST"
                 and (_search_path(scope) or _reveal_path(scope))
                 or scope["method"] in {"POST", "PUT", "DELETE"}
-                and _configuration_path(scope)
+                and _local_settings_path(scope)
             ):
                 await self._search_request(scope, tracked_receive, correlated_send, headers, meta)
             else:
@@ -204,6 +216,8 @@ class RequestBoundary:
         response.headers["Access-Control-Allow-Methods"] = (
             "GET, POST, PUT"
             if _configuration_path(scope)
+            else "PUT"
+            if _agent_selection_path(scope)
             else "GET, POST"
             if _upload_path(scope)
             else "POST"
@@ -212,7 +226,7 @@ class RequestBoundary:
         )
         response.headers["Access-Control-Allow-Headers"] = (
             "Accept, Content-Type, X-Workbench-Request"
-            if _configuration_path(scope)
+            if _local_settings_path(scope)
             else "Accept, Content-Type, Idempotency-Key"
             if _upload_path(scope)
             else "Accept, Content-Type"
@@ -270,7 +284,7 @@ class RequestBoundary:
         origin_required = (
             scope["method"] == "POST"
             and _reveal_path(scope)
-            or _configuration_path(scope)
+            or _local_settings_path(scope)
             and scope["method"] in {"POST", "PUT", "DELETE"}
         )
         if origin_required and not origins:
@@ -299,6 +313,8 @@ class RequestBoundary:
             permitted_methods = (
                 {"GET", "POST", "PUT"}
                 if _configuration_path(scope)
+                else {"PUT"}
+                if _agent_selection_path(scope)
                 else {"GET", "POST"}
                 if _upload_path(scope)
                 else {"POST"}
@@ -308,7 +324,7 @@ class RequestBoundary:
             permitted_headers = {"accept", "content-type"}
             if _upload_path(scope):
                 permitted_headers.add("idempotency-key")
-            if _configuration_path(scope):
+            if _local_settings_path(scope):
                 permitted_headers.add("x-workbench-request")
             if method not in permitted_methods or any(
                 name.strip().lower() not in permitted_headers for name in names.split(",") if name.strip()
@@ -319,17 +335,23 @@ class RequestBoundary:
         return None
 
     def _valid_pagination(self, scope: Scope) -> bool:
-        if scope["method"] != "GET" or not _list_path(scope) or len(scope["query_string"]) > 2048:
+        if scope["method"] != "GET" or len(scope["query_string"]) > 2048:
+            return False
+        allowed = {"limit", "cursor"}
+        if scope["path"] == "/api/v1/agents/runs":
+            allowed.update(("agent_id", "status", "model"))
+        elif not _list_path(scope) and not re.fullmatch(r"/api/v1/agents/runs/[^/]+", scope["path"]):
             return False
         try:
             pairs = parse_qsl(
-                scope["query_string"].decode("utf-8"), keep_blank_values=True, strict_parsing=True, max_num_fields=2
+                scope["query_string"].decode("utf-8"),
+                keep_blank_values=True,
+                strict_parsing=True,
+                max_num_fields=len(allowed),
             )
         except (ValueError, UnicodeError):
             return False
-        return len({key for key, _value in pairs}) == len(pairs) and all(
-            key in {"limit", "cursor"} for key, _value in pairs
-        )
+        return len({key for key, _value in pairs}) == len(pairs) and all(key in allowed for key, _value in pairs)
 
     async def _upload_request(
         self, scope: Scope, receive: Receive, send: Send, headers: list[tuple[bytes, str]], meta: Meta
@@ -409,15 +431,15 @@ class RequestBoundary:
             try:
                 message = (
                     await asyncio.wait_for(receive(), timeout=max(0.001, 5 - (monotonic() - body_started)))
-                    if _configuration_path(scope)
+                    if _local_settings_path(scope)
                     else await receive()
                 )
             except TimeoutError:
                 await error_response(
                     meta,
                     status=504,
-                    code="CONFIGURATION_TIMEOUT",
-                    message="The configuration request body timed out.",
+                    code="AGENT_REQUEST_TIMEOUT" if _agent_selection_path(scope) else "CONFIGURATION_TIMEOUT",
+                    message="The request body timed out.",
                     retryable=True,
                 )(scope, receive, send)
                 return
@@ -425,7 +447,11 @@ class RequestBoundary:
                 return
             incoming = message.get("body", b"")
             if len(body) + len(incoming) > (
-                393728 if _configuration_path(scope) else 1024 if _reveal_path(scope) else 32768
+                393728
+                if _configuration_path(scope)
+                else 1024
+                if _reveal_path(scope) or _agent_selection_path(scope)
+                else 32768
             ):
                 response = error_response(
                     meta, status=413, code="PAYLOAD_TOO_LARGE", message="Request body exceeds the byte limit."

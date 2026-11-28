@@ -31,6 +31,9 @@ vi.mock("./views/ConfigurationView", () => ({
     </section>
   ),
 }));
+vi.mock("./views/AgentsView", () => ({
+  AgentsView: () => <h1>Agents</h1>,
+}));
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -42,6 +45,7 @@ it.each([
   "documents",
   "runs",
   "configuration",
+  "agents",
   "settings",
 ] as const)("keeps %s and the explicit mode after a remount", async (page) => {
   window.history.replaceState(null, "", `/?page=${page}&mode=live`);
@@ -86,7 +90,7 @@ it("round-trips the editor URL without consuming content anchors or unrelated qu
   ).toEqual({ page: "editor", mode: "preview" });
 });
 
-it("places Configuration directly after Runs with a wrench and an active page state", async () => {
+it("places Configuration and Agents after Runs and preserves the dirty navigation guard", async () => {
   render(<App />);
   const navigation = screen.getByRole("navigation", {
     name: "Main navigation",
@@ -97,6 +101,7 @@ it("places Configuration directly after Runs with a wrench and an active page st
     "Documents",
     "Runs",
     "Configuration",
+    "Agents",
     "Settings",
   ]);
   const configuration = within(navigation).getByRole("button", {
@@ -108,23 +113,20 @@ it("places Configuration directly after Runs with a wrench and an active page st
   expect(configuration.getAttribute("aria-current")).toBe("page");
   expect(window.location.hash).toBe("#configuration");
   fireEvent.click(screen.getByRole("button", { name: "Change configuration" }));
-  fireEvent.click(
-    within(navigation).getByRole("button", { name: "Documents" }),
-  );
+  const agents = within(navigation).getByRole("button", { name: "Agents" });
+  fireEvent.click(agents);
   expect(
     await screen.findByRole("dialog", { name: "Discard unsaved changes?" }),
   ).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Keep editing" }));
   expect(configuration.getAttribute("aria-current")).toBe("page");
-  fireEvent.click(
-    within(navigation).getByRole("button", { name: "Documents" }),
-  );
+  fireEvent.click(agents);
   fireEvent.click(
     await screen.findByRole("button", { name: "Discard changes" }),
   );
-  expect(
-    await screen.findByRole("heading", { name: "Documents" }),
-  ).toBeTruthy();
+  expect(await screen.findByRole("heading", { name: "Agents" })).toBeTruthy();
+  expect(agents.getAttribute("aria-current")).toBe("page");
+  expect(window.location.search).toContain("page=agents");
 });
 
 it("opens a refreshed configuration URL and keeps navigation in place during a save", async () => {

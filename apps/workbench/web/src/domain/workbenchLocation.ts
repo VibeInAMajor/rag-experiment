@@ -6,6 +6,7 @@ const pages = [
   "documents",
   "runs",
   "configuration",
+  "agents",
   "settings",
 ] as const;
 export type WorkbenchPage = (typeof pages)[number];

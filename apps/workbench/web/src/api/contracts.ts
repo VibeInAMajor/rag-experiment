@@ -72,6 +72,7 @@ export type BackendCapabilities = ApiMeta & {
     upload_folders?: boolean;
     document_details: boolean;
     jobs: boolean;
+    agent_operations?: boolean;
   };
   pdf_ingestion: PdfIngestionCapabilities;
   dependencies: {
@@ -84,6 +85,170 @@ export type BackendCapabilities = ApiMeta & {
       chunk_count?: number | null;
     };
   };
+};
+
+export type AgentSelection = { profile_id: string; revision: string };
+export type AgentMoney = string | null;
+export type AgentTariff = {
+  version: string;
+  provider: string;
+  model: string;
+  service_tier: string;
+  currency: "USD";
+  unit: "per_million_tokens";
+  ordinary_input: AgentMoney;
+  cached_read: AgentMoney;
+  cached_write: AgentMoney;
+  output: AgentMoney;
+  source_url: string | null;
+  effective_at: string | null;
+  verified_at: string | null;
+  cache_ttl_seconds: number | null;
+  status: "verified" | "stale" | "unknown";
+};
+export type AgentProfile = {
+  profile_id: string;
+  provider: string;
+  model: string;
+  modes: string[];
+  reasoning_effort: string;
+  max_estimated_input_tokens: number;
+  max_output_tokens: number;
+  max_request_bytes: number | null;
+  max_response_bytes: number | null;
+  timeout_seconds: number | null;
+  reserve_usd: AgentMoney;
+  cache_mode: string;
+  cache_ttl_seconds: number | null;
+  qualification: {
+    state: "qualified" | "unqualified" | "blocked" | "stale";
+    revision: string | null;
+    verified_at: string | null;
+    reason: string | null;
+  };
+  tariff: AgentTariff | null;
+  selectable: boolean;
+};
+export type AgentOperationsAgent = {
+  agent_id: string;
+  display_name: string;
+  runtime_revision: string;
+  modes: string[];
+  default_profile_id: string;
+  selection: AgentSelection;
+  profiles: AgentProfile[];
+};
+export type AgentCatalog = ApiMeta & {
+  scope: "local-operator";
+  history_available: boolean;
+  agents: AgentOperationsAgent[];
+};
+export type AgentSelectionResult = ApiMeta & {
+  scope: "local-operator";
+  agent_id: string;
+  selection: AgentSelection;
+};
+
+export const agentRunStatuses = [
+  "queued",
+  "running",
+  "completed",
+  "failed",
+  "cancelled",
+  "interrupted",
+  "blocked",
+] as const;
+export type AgentRunStatus = (typeof agentRunStatuses)[number];
+export type AgentUsage = {
+  input_tokens: number | null;
+  ordinary_input_tokens: number | null;
+  cached_read_tokens: number | null;
+  cached_write_tokens: number | null;
+  output_tokens: number | null;
+  reasoning_tokens: number | null;
+  total_tokens: number | null;
+};
+type AgentCoverage = { known_calls: number; total_calls: number };
+export type AgentRun = {
+  run_id: string;
+  agent_id: string;
+  mode: string;
+  origin: "evaluation" | "calibration";
+  profile_id: string;
+  model: string;
+  provider: string;
+  runtime_revision: string;
+  prompt_revision: string | null;
+  schema_revision: string | null;
+  cache_mode: string;
+  tariff: AgentTariff | null;
+  planned_cases: number | null;
+  budget_usd: AgentMoney;
+  queued_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  status: AgentRunStatus;
+  stage: string | null;
+  last_sequence: number;
+  completed_cases: number;
+  reused_cases: number;
+  failed_cases: number;
+  blocked_cases: number;
+  actual_models: string[];
+  selection_revision: string | null;
+  physical_requests: number;
+  pending_calls: number;
+  cache_observed_requests: number;
+  cache_hit_requests: number;
+  cache_hit_percent: number | null;
+  cache_read_percent: number | null;
+  usage: AgentUsage | null;
+  usage_coverage: AgentCoverage;
+  estimated_cost_usd: AgentMoney;
+  cost_coverage: AgentCoverage;
+  pending_reserve_usd: AgentMoney;
+};
+export type AgentEvent = {
+  run_id: string;
+  sequence: number;
+  timestamp: string;
+  kind:
+    | "run_queued"
+    | "run_started"
+    | "stage_changed"
+    | "call_pending"
+    | "call_completed"
+    | "case_completed"
+    | "checkpoint_reused"
+    | "run_finished";
+  stage: string | null;
+  status: AgentRunStatus | null;
+  reason: string | null;
+  case_id: string | null;
+  call: {
+    call_id: string;
+    case_id: string;
+    mode: string | null;
+    actual_model: string | null;
+    provider_request_id: string | null;
+    requests: number | null;
+    elapsed_ms: number | null;
+    usage: AgentUsage | null;
+    estimated_cost_usd: AgentMoney;
+    reserve_usd: AgentMoney;
+  } | null;
+};
+export type AgentRunPage = ApiMeta & {
+  scope: "local-operator";
+  runs: AgentRun[];
+  next_cursor: string | null;
+};
+export type AgentRunDetail = ApiMeta & {
+  scope: "local-operator";
+  run: AgentRun;
+  events: AgentEvent[];
+  next_cursor: string | null;
+  has_more: boolean;
 };
 
 export type WorkspaceItem = {

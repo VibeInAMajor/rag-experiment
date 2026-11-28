@@ -1,4 +1,9 @@
 import type {
+  AgentCatalog,
+  AgentRunDetail,
+  AgentRunPage,
+  AgentRunStatus,
+  AgentSelectionResult,
   ApiMeta,
   ConfigurationDocument,
   ConfigurationValidation,
@@ -18,6 +23,10 @@ import type {
   UploadLocation,
 } from "./contracts";
 import {
+  decodeAgentCatalog,
+  decodeAgentRunDetail,
+  decodeAgentRunPage,
+  decodeAgentSelection,
   decodeCapabilities,
   decodeConfigurationDocument,
   decodeConfigurationSave,
@@ -32,6 +41,7 @@ import {
   decodeWorkspaces,
   validateCursor,
   validateResourceId,
+  validateAgentProfileId,
   decodeDocumentPage,
   decodeDocumentDetail,
   decodeActiveChunkPage,
@@ -48,6 +58,11 @@ export type WorkspaceOptions = RequestOptions & {
   cursor?: string;
   limit?: number;
 };
+export type AgentRunOptions = WorkspaceOptions & {
+  agentId?: string;
+  model?: string;
+  status?: AgentRunStatus;
+};
 export type DocumentContextOptions = RequestOptions & DocumentDecodeContext;
 export type DocumentPageOptions = WorkspaceOptions & DocumentDecodeContext;
 export type ChunkPageOptions = DocumentPageOptions;
@@ -62,6 +77,7 @@ export type DocumentUploadRequest = {
 type RequestTransport = {
   method?: "POST" | "PUT";
   configuration?: boolean;
+  operations?: boolean;
   headers?: Record<string, string>;
   timeoutMs?: number;
   maxResponseChars?: number;
@@ -107,6 +123,18 @@ export type WorkbenchApiClient = {
   getLive(options?: RequestOptions): Promise<LiveResponse>;
   getReady(options?: RequestOptions): Promise<ReadyResponse>;
   getCapabilities(options?: RequestOptions): Promise<BackendCapabilities>;
+  getAgentCatalog(options?: RequestOptions): Promise<AgentCatalog>;
+  listAgentRuns(options?: AgentRunOptions): Promise<AgentRunPage>;
+  getAgentRun(
+    runId: string,
+    options?: WorkspaceOptions,
+  ): Promise<AgentRunDetail>;
+  saveAgentSelection(
+    agentId: string,
+    profileId: string,
+    revision: string,
+    options?: RequestOptions,
+  ): Promise<AgentSelectionResult>;
   listWorkspaces(options?: WorkspaceOptions): Promise<WorkspacePage>;
   search(
     workspaceId: string,
@@ -292,15 +320,19 @@ export function createWorkbenchApiClient({
     try {
       const operation = async () => {
         if (
-          transport.configuration &&
+          (transport.configuration || transport.operations) &&
           typeof window !== "undefined" &&
           new URL(base, window.location.href).origin !== window.location.origin
         ) {
           throw new WorkbenchApiError(
-            "Configuration requires the application's same-origin API proxy.",
+            transport.operations
+              ? "Agent operations require the application's same-origin API proxy."
+              : "Configuration requires the application's same-origin API proxy.",
             {
               kind: "configuration",
-              code: "CONFIGURATION_SAME_ORIGIN_REQUIRED",
+              code: transport.operations
+                ? "AGENT_OPERATIONS_SAME_ORIGIN_REQUIRED"
+                : "CONFIGURATION_SAME_ORIGIN_REQUIRED",
             },
           );
         }
@@ -554,6 +586,41 @@ export function createWorkbenchApiClient({
     getReady: (options) => request("/health/ready", decodeReady, options),
     getCapabilities: (options) =>
       request("/capabilities", decodeCapabilities, options),
+    getAgentCatalog: (options) =>
+      request("/agents", decodeAgentCatalog, options, { operations: true }),
+    listAgentRuns: async ({ agentId, model, status, ...options } = {}) => {
+      const query = pageQuery(options);
+      if (agentId) query.set("agent_id", validateResourceId(agentId));
+      if (model) query.set("model", model);
+      if (status) query.set("status", status);
+      return request(`/agents/runs?${query}`, decodeAgentRunPage, options, {
+        operations: true,
+      });
+    },
+    getAgentRun: async (runId, options = {}) => {
+      const id = validateResourceId(runId);
+      return request(
+        `/agents/runs/${encodeURIComponent(id)}?${pageQuery(options)}`,
+        (value) => decodeAgentRunDetail(value, id),
+        options,
+        { operations: true, maxResponseChars: 500000 },
+      );
+    },
+    saveAgentSelection: async (agentId, profileId, revision, options) => {
+      const agent = validateResourceId(agentId);
+      const profile = validateAgentProfileId(profileId);
+      return request(
+        `/agents/${encodeURIComponent(agent)}/selection`,
+        (value) => decodeAgentSelection(value, agent, profile),
+        options,
+        {
+          operations: true,
+          method: "PUT",
+          headers: { "X-Workbench-Request": "agent-operations" },
+          body: { profile_id: profile, expected_revision: revision },
+        },
+      );
+    },
     listWorkspaces: (options = {}) => {
       const { cursor, limit = 50 } = options;
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)
