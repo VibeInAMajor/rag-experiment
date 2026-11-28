@@ -1,7 +1,7 @@
 # TASK-RAG-QUALITY-003 — Evaluate grounded answer correctness, completeness and citation support
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-27  
+**Updated:** 2026-11-28  
 **Status:** BLOCKED — grounded generation implementation required  
 **Priority:** P0  
 **Dependencies:** [GENERATION-001](TASK-RAG-GENERATION-001-grounded-answer-generation.md) internal implementation, [QUALITY-002](TASK-RAG-QUALITY-002-retrieval-release-gate-and-regression.md) GO, [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); source-verified answer rubric and local holdout.  
@@ -66,7 +66,7 @@ Execute [quality/content plan](RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-1
 
 ### Independent semantic assessment of generated answers — 2026-11-27
 
-Use the calibrated standalone [MAF Semantic Judge](../maf/TASK-MAF-002-semantic-judge-agent.md) through its generic judge_answer and judge_context contracts. The existing evaluator, not MAF, owns source-first reference validation, actual retrieved/selected context, answer captures, deterministic calculations and final gate. Keep the candidate generator and judge separate; do not provide generator identity, prior verdict or desired score. Freeze the judge configuration and answer rubric before the final answer holdout. Check each material claim and exact supporting original quote, question constraints, completeness, contradiction, citation and abstention; semantic UNKNOWN remains separate. MAF cannot retrieve or repair missing evidence or generate replacement answers for a candidate. Apply approved-excerpt egress and budget limits; API failure is not a failed or passed semantic answer. The judge's own calibration, accuracy limits and disagreement report accompany results. No SDK dependency or online judge in the production generation path.
+Use the configured, pinned standalone [MAF Semantic Judge](../maf/TASK-MAF-002-semantic-judge-agent.md) through its generic judge_answer and judge_context contracts. The existing evaluator, not MAF, owns source-first reference validation, actual retrieved/selected context, answer captures, deterministic calculations and final gate. Keep the candidate generator and judge separate; do not provide generator identity, prior verdict or desired score. Freeze the judge configuration and answer rubric before the final answer holdout. Check each material claim and exact supporting original quote, question constraints, completeness, contradiction, citation and abstention; semantic UNKNOWN remains separate. MAF cannot retrieve or repair missing evidence or generate replacement answers for a candidate. Apply approved-excerpt egress and budget limits; API failure is not a failed or passed semantic answer. Record the actual model/runtime, historical evidence where applicable, source-grounded accuracy limits and disagreement report. No repeat paid model qualification before answer evaluation; the RAG answer-quality gate remains unchanged. No SDK dependency or online judge in the production generation path.
 
 ## K. Security / Governance / Observability
 

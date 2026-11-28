@@ -31,7 +31,7 @@ Provision `OPENAI_API_KEY` in the launching process's environment. The app reads
 hatch run smoke --allow-external
 ```
 
-This submits the built-in synthetic input `The synthetic marker is cobalt.` using `structured-smoke` and `semantic-review`. A successful smoke returns `{"marker":"cobalt"}` and provider-reported model and usage data when available. Missing credentials or model entitlement block live qualification. The app makes a single attempt.
+This submits the built-in synthetic input `The synthetic marker is cobalt.` using `structured-smoke` and `semantic-review`. A successful smoke returns `{"marker":"cobalt"}` and provider-reported model and usage data when available. Missing credentials or model entitlement block actual external execution. The app makes a single attempt.
 
 | Profile | Model | Qualification |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ This submits the built-in synthetic input `The synthetic marker is cobalt.` usin
 
 Both Sol models use the same application limits and the same four Semantic Judge modes through direct OpenAI Responses. Supported reasoning levels are `low`, `medium`, `high`, `xhigh` and `max`. The base profile IDs above use `MAF_OPENAI_REASONING_EFFORT` (default `medium`). The loader also registers effort-specific variants for the other levels, such as `semantic-review-high`, `semantic-review-max` and `semantic-review-6.2-low`. These are real runtime profiles with the same resource caps, not frontend-only options. The operations catalog exports all five levels per model. [Shared limits and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md#shared-sol-limits-only--operator-decision) · [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [Model capabilities](https://developers.openai.com/api/docs/models)
 
-Provider support and agent qualification are separate. Historical v8 evidence applies only to the original GPT-6.1 Sol Medium default. Additional levels are discoverable but cannot be activated through qualified Workbench selection until their qualification is recorded; they do not inherit the Medium evidence. Explicit CLI invocations still require the existing caller-owned egress, classification, budget and evaluation checks.
+Provider support and agent qualification are separate. Historical v8 evidence applies only to the original GPT-6.1 Sol Medium default. The existing Workbench gate still blocks additional levels; MAF-002/UI-005 must remove it for all supported configured variants without copying historical evidence. Explicit CLI invocations still require the existing caller-owned egress, classification, budget and evaluation checks.
 
 ## JSON invocation contract v1
 
@@ -70,7 +70,7 @@ The result contains `schema_version`, `request_id`, `agent_id`, `profile_id`, `o
 
 ## Agent operations
 
-`hatch run run --operations-catalog` returns only the versioned local catalog. It reports the shared Semantic Judge limits and the published OpenAI Standard rates. GPT-6.1 Sol is the default with operator-approved historical v8 evidence. GPT-6.2 Sol has matching offline-tested limits and requires its own qualifying evidence for selection. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing)
+`hatch run run --operations-catalog` returns only the versioned local catalog. It reports the shared Semantic Judge limits and the published OpenAI Standard rates. GPT-6.1 Sol is the default with operator-approved historical v8 evidence. GPT-6.2 Sol has matching offline-tested limits. The current [MAF-002 implementation decision](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md) removes the legacy historical/joint PASS selection gate for both configured models; the checked-in UI/catalog still needs that change. No new paid model qualification is required. Historical evidence remains unchanged. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing)
 
 After the [Workbench operator setup](../workbench/api/README.md#local-agent-operations), use `hatch run run --use-operations-selection` with a version 1 Semantic Judge request that omits `profile_id`. The CLI reads the persisted selection at admission, binds its revision and emits the usual single terminal invocation result. Use `--record-operations` for an invocation with an explicitly pinned profile. Both modes retain the normal external-access and classification gates.
 

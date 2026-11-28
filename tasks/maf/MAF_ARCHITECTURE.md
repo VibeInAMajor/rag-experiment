@@ -9,6 +9,8 @@
 
 ## Decision
 
+**Current implementation policy (2026-11-28):** [MAF-002](TASK-MAF-002-semantic-judge-agent.md) reopens cache/accounting/diagnostic and configured-model admission. Both configured Sol models share the existing limits and are selectable without separate or joint paid qualification. Historical v8 calibration is evidence only; not a new model entitlement. Use offline contract/SDK-wire tests, then actual source-grounded evaluation in [DATASET-002](../quality/TASK-RAG-DATASET-002-source-grounded-ranking-judgments.md). Caller owns incremental evidence/checkpoints, aggregate budgets and RPM/TPM pacing. [UI-005](../TASK-UI-005-agent-operations-model-selection-and-live-usage.md) consumes safe journal records; [OPS-001](../TASK-RAG-OPS-001-tracing-evaluation-and-search-quality-gates.md) provides an optional trace mirror. No MAF/RAG SDK coupling.
+
 The Microsoft Agent Framework module is an independent Python application. It ships a synthetic smoke agent and a Semantic Judge with four stateless modes. Both use the versioned CLI, agent registry and runtime. The local evaluation runner exchanges requests and results through the CLI.
 
 ```mermaid

@@ -2,7 +2,7 @@
 
 `semantic-judge` is a standalone MAF agent for evaluating supplied evidence. Select the `semantic-review` profile and one of four modes. Each invocation starts fresh and returns its prompt and output schema revisions. The caller supplies authorized text and owns reference approval, corpus coverage, and downstream scoring. [Runtime transport and limits](README.md)
 
-The runtime also registers effort-specific Sol profiles for `low`, `medium`, `high`, `xhigh` and `max`, as described in the runtime README. Model support does not qualify a judge setting: the existing Medium calibration remains pinned, and other efforts do not inherit its evidence or Workbench activation eligibility.
+The runtime also registers effort-specific Sol profiles for `low`, `medium`, `high`, `xhigh` and `max`, as described in the runtime README. Model support does not qualify a judge setting: the existing Medium calibration remains pinned, and other efforts do not inherit its evidence. Under the current operator decision, Workbench activation is based on configured capabilities and ordinary admission, not paid qualification.
 
 ## Invoke the judge
 
@@ -114,7 +114,7 @@ With the approved project key in the launching process's `OPENAI_API_KEY`, run t
 hatch run calibrate --allow-external --report calibration/live-report.jsonl
 ```
 
-The runner submits authored cases and public original-source excerpts through `semantic-review`. It checks predeclared outcomes and repeats a subset across languages or opaque IDs. Use `--development` and a separate report path to run authored development probes. Check the qualification report and its gate results before using a revision to audit a dataset. An inconclusive or disputed case remains unresolved for that dataset's caller. [Calibration task and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md)
+The runner submits authored cases and public original-source excerpts through `semantic-review`. It checks predeclared outcomes and repeats a subset across languages or opaque IDs. Use `--development` and a separate report path to run authored development probes. These commands are retained for optional targeted diagnostics and historical reproducibility, not prerequisites for selecting a configured Sol model or starting an audit. The current [MAF-002 decision](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md) requires functional checks and actual source-grounded DATASET-002 evaluation, not repeated paid model qualification. An inconclusive or disputed case remains unresolved for that dataset's caller. [Calibration task and verification](../../tasks/maf/TASK-MAF-002-semantic-judge-agent.md)
 
 On a failure, the local calibration checkpoint can include a bounded `failure_stage` such as `transport`, `output_schema`, or `evidence_validation`. Verdict rejections also record a fixed `failure_reason` such as `complete_without_required_facts`, `quote_not_found`, or `quote_offsets_unpaired`. For schema failures, `failure_field` may identify a declared top-level field. The public JSON envelope carries the same error codes. The report omits rejected response text, unrecognized field names and exception messages.
 

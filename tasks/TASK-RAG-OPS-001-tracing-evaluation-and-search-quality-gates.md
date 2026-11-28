@@ -1,8 +1,8 @@
 # TASK-RAG-OPS-001 — Cross-stage tracing, quality evaluation and operational observability
 
 **Created:** 2026-11-23  
-**Updated:** 2026-11-26  
-**Status:** PROPOSED — implementation blueprint, not implemented  
+**Updated:** 2026-11-28  
+**Status:** PROPOSED — immediate optional agent observability slice; broader observability blueprint remains pending  
 **Priority:** P1  
 **Dependencies:** INDEX-001, PROFILE-001; integrate EMBED/DENSE/ANN/HYBRID and CONTENT pipelines as qualified  , [TPM-001](TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md)
 **Repository snapshot inspected:** 1aa9b2654df0f490781b2a09a5809e111c1f6651  
@@ -17,6 +17,8 @@ Cross-stage tracing, quality evaluation and operational observability
 Structured safe logs already exist, but query-time Haystack, SQL, embedding inference, RRF, evidence lookup, indexing jobs and queue workers must be tied together by a trace. Operators need answerable reasons for missing citations, low Recall@k, long-tail latency, model token cost and index readiness. Test evidence currently belongs to isolated suites; enterprise observability requires unified revisioned dashboards and non-leaking evaluation records. Never infer answer quality from latency alone.
 
 ## C. Current Repository State
+
+**Agent operations slice (2026-11-28):** at `68109dfb7583932c293db792614d23d7b858c036`, [MAF operations.py](../apps/maf/src/agent_runtime/operations.py) and [operations_journal.py](../apps/maf/src/agent_runtime/operations_journal.py) already publish a local safe journal. [Workbench operations.py](../apps/workbench/agents/operations.py), [journal.py](../apps/workbench/agents/journal.py) and [UI-005](TASK-UI-005-agent-operations-model-selection-and-live-usage.md) consume it. There is no verified Langfuse mirror for agent physical calls. Reuse this existing event source rather than adding a second logger. Implement the narrow agent observability slice now; the broader retrieval/ingestion/ANN rollout below remains separate.
 
 [boundary.py](../apps/workbench/api/boundary.py) already emits safe structured events and request/trace IDs; [postgres.py](../apps/workbench/postgres/postgres.py) logs database_operation duration and status; [lexical.py](../apps/workbench/retrieval/lexical.py) currently disables Haystack tracing in local use. [application.py](../apps/workbench/api/application.py) emits run_id, profile and duration for search. Existing [lexical fixture](../apps/workbench/retrieval/fixtures/lexical-evaluation.json) contains ten exact and three diagnostic queries, insufficient to evaluate multimodal enterprise quality. No full per-stage trace/quality dashboard is qualified.
 
@@ -96,6 +98,12 @@ MUST NOT modify historical migration 0001/0002, framework haystack/ or unrelated
 
 Reuse existing evaluation artifact owners for metric schema/version, clean/stress runs, source fidelity, chain consistency, calibration, noise, drift and correction window as defined in [quality/content plan](quality/RAG_QUALITY_AND_CONTENT_UNDERSTANDING_PLAN_2026-11-26.md). Consume aggregate counts and trace IDs from existing owners; do not build a competing evaluator, require OTEL for local metrics, log gold/raw prompts or infer production traffic from local probes. Optional alerts only after real drift/freshness baselines, with explicit thresholds and owner. Generation-dependent metrics remain NOT_EVALUATED until qualified.
 
+### Agent observability reuse — immediate narrow slice
+
+Adapt the donor [maf_diagnostics.py](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/observability/maf_diagnostics.py) and [maf_langfuse.py](https://github.com/VibeInAMajor/enterprise-ai-development-pipeline/blob/955fd049949d3fc462d555be14774e4b255aa15c/webapp/observability/maf_langfuse.py) patterns. Consume existing versioned safe journal records (run/case/physical call IDs, timestamps, outcome, model, usage, cache, cost, safe diagnostic code). MAF-002 and UI-005 own event production and local operations. Publish an optional Langfuse/OTel-compatible mirror using one trace/run and one generation per real physical call; checkpoint reuse or rejected pre-egress attempts are not provider generations. Use stable IDs and bounded cursor/deduplication across replay; do not mirror raw input/output, source data, hidden reasoning or credentials, or double-export SDK spans. Cost and usage remain sourced from the canonical local accounting; exporter errors must not affect paid work, local journal or readiness. No new mandatory server/collector, no automatic deployment, no paid smoke or model qualification. When no approved collector is configured, verify adapter behavior offline and report export disabled; real telemetry is observed only on an authorized useful run. Keep the local Agents UI functional independently.
+
+**File map:** REUSE [apps/workbench/observability/events.py](../apps/workbench/observability/events.py), [apps/maf/src/agent_runtime/operations.py](../apps/maf/src/agent_runtime/operations.py), [operations_journal.py](../apps/maf/src/agent_runtime/operations_journal.py), [apps/workbench/agents/journal.py](../apps/workbench/agents/journal.py) and existing safe read projection. ADD `apps/workbench/observability/agent_trace_export.py` and `apps/workbench/observability/tests/test_agent_trace_export.py` if no equivalent exporter exists at implementation; reuse the existing trace adapter owner otherwise. EDIT [apps/workbench/api/README.md](../apps/workbench/api/README.md) and optional approved adapter/configuration composition only as required; use secret references outside Git. Do not import MAF into Workbench or change provider calls. Test bounded export, duplicate events, failed calls with usage, redaction, unavailable collector and restart/cursor recovery. Record this slice's evidence separately; it does not complete broader OPS-001, and is not a prerequisite to DATASET-002.
+
 ## K. Security / Governance / Observability
 
 Use server-derived WorkspaceContext and FORCE RLS across all source, asset and index paths. Keep private source bytes, vectors, prompts, credentials, user identifiers and arbitrary URLs out of logs and public evidence. Treat source/model text as untrusted data. Enforce bounded CPU/GPU/DB/network requests, cancellation, timeout, retention, auditing and safe error codes with trace/job/run IDs. Test cross-workspace and provider outage negative cases.
@@ -115,6 +123,9 @@ Execute existing Hatch workbench-api:check/test/types, explicit disposable Postg
 Capture actual executed Hatch/SQL/browser commands, source and model/index SHA, actual traces, regression suite results, and failure reason codes in a test evidence artifact. If a provider is missing, mark NOT TESTED or BLOCKED, not PASS.
 
 ## M. Acceptance Criteria
+
+- [ ] Immediate agent slice: optional safe trace mirror reuses existing journal, correlates exactly one physical generation per actual call, preserves cache/cost/error metadata and survives disabled/unavailable exporter without duplicate accounting. Offline tests and usage documentation pass; observe real export only where configured during useful authorized work. No new paid model tests.
+
 
 - [ ] Trace/run/job IDs join SQL, model, retrieval and evidence stages when implemented
 - [ ] Raw text/images/DSNs/tokens do not appear in default logs under adversarial tests
