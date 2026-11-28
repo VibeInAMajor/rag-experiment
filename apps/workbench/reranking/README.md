@@ -36,6 +36,10 @@ Send plain query/document strings: the server applies the original model's instr
 
 GPU float16, eager execution and `gpu_memory_utilization=0.14` reduce initial resource demand. That setting is not a hard VRAM quota or shared admission guarantee; the GPU is shared with embedding containers. Existing embedding capacity evidence predates this additional model process: repeat shared-load qualification before application integration. No latency, throughput or retrieval-quality qualification is implied. The endpoint has no authentication and is published only on host loopback; remote access requires a separate deployment decision.
 
+## Qualification
+
+The loopback-only client and synthetic resource probe are isolated from Workbench request handling. The probe uses the running container and requires its exact ID. It reports bounded multilingual and code controls, an oversized-pair rejection, latency and shared GPU measurements. [Experiment and reproducibility record](../../../tasks/evidence/reranker-2026-11-28/report.md)
+
 ## Operations
 
 ```powershell

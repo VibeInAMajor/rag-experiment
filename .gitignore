@@ -324,3 +324,6 @@ tasks/evidence/answerability-phase-a-2026-11-28/*
 !tasks/evidence/agent-operations-qualification/
 tasks/evidence/agent-operations-qualification/*
 !tasks/evidence/agent-operations-qualification/report.md
+!tasks/evidence/reranker-2026-11-28/
+tasks/evidence/reranker-2026-11-28/*
+!tasks/evidence/reranker-2026-11-28/report.md

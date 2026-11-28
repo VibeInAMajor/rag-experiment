@@ -1,13 +1,17 @@
 # TASK-RAG-RERANK-001 — Qualify a bounded local semantic reranker against exact and hybrid candidates
 
 **Created:** 2026-11-24  
-**Updated:** 2026-11-27  
-**Status:** PROPOSED — conditional quality experiment; no model qualified  
+**Updated:** 2026-11-28
+
+**Status:** DENSE DIAGNOSTIC NO-GO. Full semantic, hybrid and identical-load latency gates remain open.
+
 **Priority:** P0  
 **Dependencies:** [QUALITY-001](TASK-RAG-QUALITY-001-current-stack-evidence-retrieval-optimization.md), [HYBRID-001](TASK-RAG-HYBRID-001-dense-lexical-rrf-fusion-and-profile-execution.md) for hybrid arm; [DATASET-001](TASK-RAG-DATASET-001-independent-evidence-gold-set.md); valid [TPM-001](../../tasks/TASK-RAG-TPM-001-adaptive-embedding-capacity-and-cross-project-reuse.md) admission for embedding queries.  
 **Repository snapshot inspected:** d6cba6580e308fbb37266b779dce5b6880309a44  
 **Target:** tasks/quality/TASK-RAG-RERANK-001-local-semantic-reranker-qualification.md  
 **Implementation order:** [Quality roadmap](IMPLEMENTATION_ORDER.md)
+
+[Actual qualification report](../evidence/reranker-2026-11-28/report.md)
 
 ## A. Title
 
@@ -45,6 +49,10 @@ Record model artifact digest/license/tokenizer, pair input format, maximum pair 
 
 Reuse [embedding evaluator](../../scripts/workbench_embedding_evaluate.py), [Live Dense evaluator](../../scripts/workbench_dense_evaluate.py), [DenseService / QueryEmbedder](../../apps/workbench/retrieval/dense.py), [DocumentJoiner](../../haystack/components/joiners/document_joiner.py); inspect actual installed ranker integrations before adding a narrow experimental adapter; no upstream Haystack change.
 
+The execution recheck is against `cce197a`. The named local container from OPS-002 is the only reranker under test. Its narrow diagnostic client lives under `apps/workbench/reranking/` with offline wire tests, independent of API composition. The protected OPEN replay belongs to `.local/evaluation-holdout/quality-check/rag_quality/ranking/rerank_replay.py` and its local tests. It reuses the frozen matched `ui-comparison-2026-11-25/after` artifacts, original-span verification, the existing 2,048-token context packer, and family-clustered statistics. The same caller's `rag_quality/ranking/rerank_pilot_overlap.py` measures coverage and bounds against the three eligible v8 regression families. Keep provider diagnostics and hardware sampling in `scripts/workbench_reranker_probe.py` and sanitized results under this task's evidence directory.
+
+Before model scoring, freeze the Dense-only diagnostic arm at candidate depths 10, 20 and 50, with the same 5-result and 2,048-token evaluation cutoffs on both orders. Use the 306 frozen OPEN queries, including 261 answerable cases; keep no-answer rows out of source-fact denominators. Material diagnostic gain requires at least 5 percentage points in any-complete-fact@1, with no decline in all-facts@5 or all-facts within the fixed budget. Retain the proposed semantic and latency gates. Neither the provisional qrels nor the earlier three-family v8 pilot qualify the full reordered pool. HYBRID-001 has no eligible candidate arm. Keep the full semantic decision blocked, with any observed diagnostic NO-GO reported separately.
+
 ## J. Implementation Requirements
 
 1. Freeze QUALITY-001 tuning baseline and HYBRID candidate ranks; compare exact, RRF, exact+reranker and RRF+reranker with same corpus, candidate sizes (e.g. 20/50) and final token budget. Record candidate oracle ceiling: reranker cannot recover absent evidence.
@@ -80,13 +88,13 @@ Run hatch --version and configured scoped Hatch workbench-api:check/test/types, 
 
 ## M. Acceptance Criteria
 
-- [ ] Actual pinned local model and resource tests recorded or explicit blocker.
-- [ ] Reproducible paired quality/cost evidence and candidate ceiling analysis.
-- [ ] GO/NO-GO with measured bounds, no production claim; conditional RERANK-002 handoff.
+- [x] Actual pinned local model and resource tests recorded.
+- [x] Reproducible paired source-fact quality, stage cost and candidate ceiling analysis recorded. The identical-load end-to-end timing gate remains open.
+- [x] Measured Dense NO-GO. Retain the exact profile and hold the conditional RERANK-002 integration.
 
-- [ ] Paired hard-negative and cohort results, candidate ceiling, cost and material gain/no-go are reported; unavailable hybrid arm explicitly not evaluated.
+- [x] Paired hard-negative and cohort results, candidate ceiling, cost and material NO-GO are reported. The hybrid arm has no qualified candidate set.
 
-- [ ] Dense-only candidate qualification executed or measured NO-GO, with equal-budget ceiling and paired gains against cleaned baseline; hybrid arm added only if qualified.
+- [x] Dense-only candidate experiment completed at K10/K20/K50. None met the predeclared point gate at the same cutoffs.
 
 - [ ] Paired ranking evaluation uses eligible independent judge judgments and reports strict precision/irrelevance and three regression families; deployment/readiness not confused with qualified ranking.
 
@@ -96,10 +104,10 @@ Preserve original candidate ranks and exact profiles. Keep experiment isolated; 
 
 ## O. Mandatory Completion Checklist
 
-- [ ] Reinspect source and dependencies; record reused owners and amended scope if needed.
-- [ ] Run applicable unit, contract, integration, security, failure and regression tests.
-- [ ] Link actual commands and evidence, including blocked/unrun gates and limitations.
-- [ ] Verify immutable profile compatibility, data preservation and rollback.
+- [x] Reinspect source and dependencies, record reused owners and freeze the execution scope.
+- [x] Run scoped unit, boundary, runtime and regression checks for the isolated Dense diagnostic. Record the remaining deployment and semantic gates.
+- [x] Link actual commands and evidence, including blocked and unrun gates.
+- [x] Verify preserved candidate and source identities, the owned database fence and the existing profile. The isolated experiment requires no production rollback.
 - [ ] Record changed paths and implementation commit; mark COMPLETE only with evidence for applicable task gates.
 
 
