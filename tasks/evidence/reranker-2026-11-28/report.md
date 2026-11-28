@@ -111,6 +111,31 @@ hatch -e workbench-api run python -m rag_quality.ranking.exact_dense_context_rep
 
 The exclusive run directory has an aggregate `summary.json` (SHA-256 `95354e8988cf0be5b468ee49f30c58e95ca28e27679a8b091b7dc86aaf2a411f`) and protected paired records in `paired-contexts.json` (SHA-256 `2107314200d4fd41adaac27c6a10690e77974fb98703e5f34987d7091a1d5159`). A repeated invocation uses a new run name. All 35 targeted retrieval and reranker tests and seven local replay tests passed. An independent read-only calculation reproduced the same counts and family interval.
 
+### Exact Dense top20 at 4096
+
+The repeated exact Dense experiment allows up to 20 whole chunks at the same 4,096-token budget. The control uses at most ten chunks at 4,096. Both arms use the frozen cleaned OPEN ranks and stop at the first chunk that would exceed the budget. The replay reproduced the archived top-ten context for all 306 queries before measuring the new limit. The 45 no-answer variants stay outside the full-fact denominator.
+
+| Measure | Top 10, 4,096 tokens | Top 20, 4,096 tokens |
+| --- | ---: | ---: |
+| All required facts in context | 246/261 (94.25%) | 246/261 (94.25%) |
+| Mean source-content tokens | 2,901.6 | 3,892.8 |
+| P95 source-content tokens | 3,953 | 4,082 |
+| Mean whole chunks | 9.866 | 14.103 |
+| Unbudgeted candidate ceiling | 246/261 | 251/261 |
+
+There were zero gains and zero losses in complete contexts. The family-clustered 95% interval for the paired difference was [0.00, 0.00] percentage points. The top-20 arm used 34.2% more context tokens on average and packed more than ten chunks in 198 answerable queries. It recovered one additional individual fact (626 to 627 complete facet observations). The largest pack contained 4,095 tokens.
+
+Of the 15 still-incomplete answerable queries, five had all the required facts somewhere in the top 20. Their shortest complete ordered prefixes extended to ranks 12–19 and required 4,227–5,810 source-content tokens. Ten lacked at least one required fact within the top 20. The 95% complete-context target remains two cases away. This repeat measures evidence selection on the saved ranks. It made zero inference requests, and the local reranker still advertised a 4,096-token pair limit.
+
+From the checkout root in PowerShell with the protected OPEN evaluator:
+
+```powershell
+$env:PYTHONPATH = (Get-Location).Path + [IO.Path]::PathSeparator + (Resolve-Path '.local/evaluation-holdout/quality-check').Path
+hatch -e workbench-api run python -m rag_quality.ranking.exact_dense_context_depth_replay --run exact-dense-context-top20-4096-v1
+```
+
+The exclusive run directory contains `summary.json` (SHA-256 `5f6a1ed3d5de876899c22298c62335dbdc88220d44c5c9bedaaa28b77aa52948`) and protected `paired-contexts.json` (SHA-256 `d718450e463f51e4f1ffc904f62da6c10ce80fca8ac04029fa1b430f0bbcf850`). Ten local replay tests and 35 targeted Dense and reranker tests passed. An independent read-only replay verified all 306 original control packs and reproduced the results.
+
 ## Synthetic runtime and shared resources
 
 Each depth used four isolated controls in English, Russian, Ukrainian and code, repeated three times. The authored primary passage ranked first in all 12 executions at each depth.
